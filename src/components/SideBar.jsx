@@ -148,11 +148,17 @@ const SideBar = () => {
               </SidebarItem>
 
               {/* International (optional placeholder) */}
-              <NavLink to="/TTS/Invoice/International">
-                <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                  International
-                </li>
-              </NavLink>
+              <SidebarItem
+                label="International"
+                isOpen={sections.domesticOpen}
+                setIsOpen={() => dispatch(toggleSection("domesticOpen"))}
+              >
+                <NavLink to="/TTS/Invoice/International/ExportInvoice">
+                  <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary -ml-1">
+                    Export
+                  </li>
+                </NavLink>
+              </SidebarItem>
             </SidebarItem>
 
             <SidebarItem

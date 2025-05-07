@@ -1,8 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import assets from "../../assets/assets";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const Login = () => {
+  const vantaRef = useRef(null);
+  const [vantaEffect, setVantaEffect] = useState(null);
+
+  useEffect(() => {
+    // Check if the Vanta and Three.js libraries are loaded
+    const loadVanta = async () => {
+      const VANTA = await import("../../assets/dist/vanta.clouds.min.js"); // Adjust path if needed
+      if (!vantaEffect && vantaRef.current) {
+        setVantaEffect(
+          VANTA.default({
+            el: vantaRef.current,
+            THREE: THREE,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.0,
+            minWidth: 200.0,
+          })
+        );
+      }
+    };
+    loadVanta();
+
+    return () => {
+      if (vantaEffect) vantaEffect.destroy();
+    };
+  }, [vantaEffect]);
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted");
@@ -10,7 +37,10 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   return (
-    <div className="w-full min-h-screen flex flex-col md:flex-row">
+    <div
+      className="w-full min-h-screen flex flex-col md:flex-row"
+      ref={vantaRef}
+    >
       {/* Left Side - Shaped Design */}
       <div
         className="w-[95%] md:w-[50%] h-72 md:h-[97vh] relative flex justify-center items-center rounded-3xl overflow-hidden m-2"
@@ -37,9 +67,9 @@ const Login = () => {
 
       {/* Right Side - Form Section */}
       <div className="w-full md:w-1/2 flex justify-center items-center py-8 md:py-0 px-4 sm:px-6">
-        <div className="bg-white p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-md">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-500 mb-6">
-            Welcome Back!
+        <div className="bg-[#f2ecf284] p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-md">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-500 mb-4">
+          Sundaram Industries Pvt Ltd
           </h1>
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Username Field */}
@@ -52,7 +82,7 @@ const Login = () => {
               />
               <label
                 htmlFor="username"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600"
               >
                 Username
               </label>
@@ -68,7 +98,7 @@ const Login = () => {
               />
               <label
                 htmlFor="password"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 bg-white px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10  px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600"
               >
                 Password
               </label>
