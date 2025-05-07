@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alice&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    /* Add your theme variables here */
+
+    --color-background: #F7F2EF;
+    --font-primary: "Nunito", "sans-serif";
+    --font-secondary: "Alice", "serif";
+    --color-primary: #707070;
+    --color-text-hover: #E5E5E5;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;  /* Width of the scrollbar */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #343434; /* Thumb color */
+    border-radius: 5px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background-color: #c6c8cb; /* Track color */
+  }
+  
