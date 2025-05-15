@@ -2,7 +2,7 @@ import React from 'react'
 import TableComponent from '../../../../components/TableComponent'
 import { IoMdSearch } from 'react-icons/io'
 
-const Invoice = () => {
+const CustomInvoice = () => {
   return (
     <div className="w-full p-4 rounded-2xl">
       <div className="flex flex-col md:flex-row w-full py-3 px-3 items-center gap-4 justify-between">
@@ -38,4 +38,4 @@ const Invoice = () => {
   )
 }
 
-export default Invoice
+export default CustomInvoice

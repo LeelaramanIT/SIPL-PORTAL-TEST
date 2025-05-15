@@ -17,8 +17,8 @@ const initialState = {
   },
 };
 
-const sidebarSlice = createSlice({
-  name: "sidebar",
+const globalSlice  = createSlice({
+  name: "global",
   initialState,
   reducers: {
     toggleSidebar: (state) => {
@@ -32,8 +32,9 @@ const sidebarSlice = createSlice({
       const { section, value } = action.payload;
       state.sections[section] = value;
     },
+    
   },
 });
 
-export const { toggleSidebar, toggleSection, setSection } = sidebarSlice.actions;
-export default sidebarSlice.reducer;
+export const { toggleSidebar, toggleSection, setSection } = globalSlice.actions;
+export default globalSlice.reducer;

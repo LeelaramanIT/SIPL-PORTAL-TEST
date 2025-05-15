@@ -11,13 +11,13 @@ import { NavLink } from "react-router-dom";
 import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { SiAwsorganizations } from "react-icons/si";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleSidebar } from "../store/SidebarSlice.jsx";
+import { toggleSidebar } from "../Redux/Slices/GlobalSlice.jsx";
 
 const SideBar = () => {
 
  const dispatch = useDispatch();
- const open = useSelector((store)=>store.sidebar.open);
- const sections = useSelector((store)=>store.sidebar.sections)
+ const open = useSelector((store)=>store.global.open);
+ const sections = useSelector((store)=>store.global.sections)
 
   const toggleSection = (section) => {
     setSections((prev) => ({
@@ -63,7 +63,7 @@ const SideBar = () => {
           </NavLink>
 
           {/* Masters */}
-          <SidebarItem
+          <div onClick={()=>{!open ? dispatch(toggleSidebar()) : ''}}><SidebarItem
             icon={FaUsers}
             label="Masters"
             isOpen={sections.mastersOpen}
@@ -114,10 +114,10 @@ const SideBar = () => {
                 </li>
               </NavLink>
             </SidebarItem>
-          </SidebarItem>
+          </SidebarItem></div>
 
           {/*TTS Menu  */}
-          <SidebarItem
+          <div onClick={()=>{!open ? dispatch(toggleSidebar()) : ''}}><SidebarItem
             icon={SiAwsorganizations}
             label="TTS"
             isOpen={sections.TTSOpen}
@@ -153,7 +153,7 @@ const SideBar = () => {
                 isOpen={sections.domesticOpen}
                 setIsOpen={() => dispatch(toggleSection("domesticOpen"))}
               >
-                <NavLink to="/TTS/Invoice/International/ExportInvoice">
+                <NavLink to="/TTS/Invoice/International/Export">
                   <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary -ml-1">
                     Export
                   </li>
@@ -161,29 +161,7 @@ const SideBar = () => {
               </SidebarItem>
             </SidebarItem>
 
-            <SidebarItem
-              icon={GoOrganization}
-              label="Organization"
-              isOpen={sections.organizationOpen}
-              setIsOpen={() => dispatch(toggleSection("organizationOpen"))}
-            >
-              <NavLink to={"/Masters/Organization/OrganizationCreate"}>
-                <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                  Create Branch
-                </li>
-              </NavLink>
-              <NavLink to={"/Masters/Organization/OrganizationUpdate"}>
-                <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                  Update Branch
-                </li>
-              </NavLink>
-              <NavLink to={"/Masters/Organization/OrganizationView"}>
-                <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                  View Branch
-                </li>
-              </NavLink>
-            </SidebarItem>
-          </SidebarItem>
+          </SidebarItem></div>
 
           <NavLink to={"/Settings"}>
             <SidebarItem icon={IoMdSettings} label="Settings" />

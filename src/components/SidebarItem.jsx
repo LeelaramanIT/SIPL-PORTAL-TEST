@@ -1,12 +1,13 @@
-import React from 'react';
 import { FaAngleDown, FaAngleUp } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSection } from '../store/sidebarSlice';
+import { toggleSection } from '../Redux/Slices/GlobalSlice';
 
 const SidebarItem = ({ icon: Icon, label, children }) => {
   const dispatch = useDispatch();
-  const open = useSelector((state) => state.sidebar.open);
-  const isOpen = useSelector((state) => state.sidebar.sections[label] || false);
+  const open = useSelector((state) => state.global.open);
+  console.log("side.........",open);
+  
+  const isOpen = useSelector((state) => state.global.sections[label] || false);
   const hasChildren = !!children;
 
   const handleClick = () => {

@@ -1,8 +1,12 @@
 import React from "react";
+import Invoice from "../TTS/Invoice/International/Export Invoice/InvoiceBill";
+import InvoiceBill from "../TTS/Invoice/International/Export Invoice/InvoiceBill";
 
 const Home = () => {
   return (
-    <div className="w-full h-full flex justify-center items-center">Home</div>
+ <>
+  Home
+ </>
   );
 };
 

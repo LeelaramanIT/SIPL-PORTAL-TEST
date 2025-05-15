@@ -1,57 +1,40 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import assets from "../../assets/assets";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import axios from "axios";
 
 const Login = () => {
-  const vantaRef = useRef(null);
-  const [vantaEffect, setVantaEffect] = useState(null);
+  const email = useRef();
+  const password = useRef();
 
-  useEffect(() => {
-    // Check if the Vanta and Three.js libraries are loaded
-    const loadVanta = async () => {
-      const VANTA = await import("../../assets/dist/vanta.clouds.min.js"); // Adjust path if needed
-      if (!vantaEffect && vantaRef.current) {
-        setVantaEffect(
-          VANTA.default({
-            el: vantaRef.current,
-            THREE: THREE,
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.0,
-            minWidth: 200.0,
-          })
-        );
-      }
-    };
-    loadVanta();
-
-    return () => {
-      if (vantaEffect) vantaEffect.destroy();
-    };
-  }, [vantaEffect]);
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted");
+    try {
+      const res = await axios.post("http://localhost:3000/postdata", {
+        email: email.current.value,
+        password: password.current.value,
+      });
+      console.log(res.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div
       className="w-full min-h-screen flex flex-col md:flex-row"
-      ref={vantaRef}
+      style={{
+        backgroundImage: `url(${assets.company})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       {/* Left Side - Shaped Design */}
-      <div
-        className="w-[95%] md:w-[50%] h-72 md:h-[97vh] relative flex justify-center items-center rounded-3xl overflow-hidden m-2"
-        style={{
-          backgroundImage: `url(${assets.LogoDevition})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          // clipPath: "polygon(0 0, 100% 0, 85% 100%, 0% 100%)",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-xs"></div>
+      <div className="w-[95%] md:w-[50%] h-72 md:h-[97vh] relative flex justify-center items-center rounded-3xl overflow-hidden m-2">
+        {/* Glass Effect Overlay */}
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-0 border border-white/20 rounded-3xl"></div>
 
         <div className="w-full h-full flex flex-col justify-center items-center z-10 text-white gap-4 p-4 sm:p-6">
           <img
@@ -67,9 +50,9 @@ const Login = () => {
 
       {/* Right Side - Form Section */}
       <div className="w-full md:w-1/2 flex justify-center items-center py-8 md:py-0 px-4 sm:px-6">
-        <div className="bg-[#f2ecf284] p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-md">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-500 mb-4">
-          Sundaram Industries Pvt Ltd
+        <div className="p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-md backdrop-blur-md bg-white/30 border border-white/30">
+          <h1 className="text-2xl sm:text-xl font-bold text-center text-slate-800 mb-10">
+            Sundaram Industries Pvt Ltd
           </h1>
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Username Field */}
@@ -77,12 +60,13 @@ const Login = () => {
               <input
                 type="text"
                 id="username"
-                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-400 appearance-none focus:outline-none focus:ring-0 focus:border-slate-800 peer"
                 placeholder=" "
+                ref={email}
               />
               <label
                 htmlFor="username"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-slate-800"
               >
                 Username
               </label>
@@ -93,12 +77,13 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
-                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-400 appearance-none focus:outline-none focus:ring-0 focus:border-slate-800 peer"
                 placeholder=" "
+                ref={password}
               />
               <label
                 htmlFor="password"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10  px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10  px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-slate-800"
               >
                 Password
               </label>
@@ -120,7 +105,7 @@ const Login = () => {
             </div>
             {/* Login Button */}
             <button
-              className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 rounded-md text-white"
+              className="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 rounded-md text-white"
               type="submit"
             >
               Login

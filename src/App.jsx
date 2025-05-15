@@ -3,9 +3,23 @@ import { Toaster } from "react-hot-toast";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./router/Router"; // Make sure this import is correct
 import { Provider } from "react-redux";
-import { store } from "./store/app";
+import { store } from "./Redux/Store/app";
+import AOS from "aos";
+import 'aos/dist/aos.css'; // Import AOS styles
+import { useEffect } from "react";
+
+
 
 function App() {
+
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: false, // Set to false if you want to animate every time
+    });
+  }, []);
+  
+
   return (
     <>
       <Toaster
