@@ -1,6 +1,6 @@
 import React from 'react'
 
-const AdditionalDetailsForm = () => {
+const AdditionalDetailsForm = ({onClose}) => {
   return (
     <div className="p-4 bg-gray-100 border rounded-md space-y-4">
       <h3 className="text-lg font-semibold">Additional Details</h3>

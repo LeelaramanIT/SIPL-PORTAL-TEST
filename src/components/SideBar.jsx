@@ -1,4 +1,3 @@
-import React from "react";
 import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
 import assets from "../assets/assets.js";
 import { IoMdSettings } from "react-icons/io";

@@ -13,7 +13,7 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <div className="w-full h-full rounded-2xl bg-[#FFFFFF]">
+        <div className="flex-1 overflow-auto rounded-2xl bg-[#FFFFFF] custom-scrollbar">
           <Outlet />
         </div>
       </div>

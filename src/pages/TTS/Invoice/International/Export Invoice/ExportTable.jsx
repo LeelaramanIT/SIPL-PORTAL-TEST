@@ -87,20 +87,20 @@ const ExportTable = ({ headers, data }) => {
   return (
     <div
       ref={tableRef} // Add ref to the table container
-      className="w-full h-[35.5rem] flex flex-col justify-between rounded-sm bg-background overflow-y-auto custom-scrollbar text-primary"
+      className="w-full h-[38rem] flex flex-col justify-between rounded-sm bg-background overflow-y-auto custom-scrollbar text-primary"
     >
-      <table className="w-full table-fixed">
+      <table className="w-full table-fixed text-center">
         <thead>
           <tr>
             {headers?.map((heading, index) => (
               <th
                 key={index}
-                className="py-1 px-3 text-left text-[14px] sticky top-0 bg-background z-10 text-black"
+                className="py-1 px-3 text-center text-[13px] sticky top-0 bg-background z-10 text-black"
               >
                 {heading.label}
-              </th>
+              </th> 
             ))}
-            <th className="py-1 px-3 text-left sticky top-0 bg-background z-10 text-black">
+            <th className="py-1 px-3 text-center sticky top-0 bg-background z-10 text-black">
               Actions
             </th>
           </tr>
@@ -124,7 +124,7 @@ const ExportTable = ({ headers, data }) => {
                 {/* Button for each row */}
                 <button
                   onClick={() => {navigate('Prepare');dispatch(getExportInvoice(row))}}// Replace this with your function
-                  className="bg-slate-800 hover:bg-slate-600 text-white px-4 py-1 rounded"
+                  className="bg-slate-800 hover:bg-slate-600 text-white px-4 py-1 rounded text-center"
                 >
                   Action
                 </button>

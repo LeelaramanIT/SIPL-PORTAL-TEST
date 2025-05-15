@@ -1,0 +1,39 @@
+/* You can add this to your main CSS or Tailwind config */
+.react-datepicker-popper {
+  z-index: 9999 !important; /* higher than your table/header */
+}
+
+.react-datepicker {
+  background-color: #f8fafc; /* light slate */
+  border: 1px solid #94a3b8; /* slate border */
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #1e293b; /* slate-800 */
+  color: white;
+}
+
+.react-datepicker__header {
+  background-color: #F7F2EF; /* slate-800 */
+  color: black  ;
+}
+
+.react-datepicker__year-select,
+.react-datepicker__month-select {
+  background-color: #1e293b; /* dark background (slate-800) */
+  color: #ffffff; /* white text */
+  border: 1px solid #94a3b8; /* slate-400 */
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem; /* text-sm */
+}
+
+/* Optional: improve focus state */
+.react-datepicker__year-select:focus,
+.react-datepicker__month-select:focus {
+  outline: none;
+  border-color: #38bdf8; /* sky-400 */
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+  background-color: #334155; /* darker slate on focus */
+}

@@ -4,23 +4,23 @@ import ExportTable from "./ExportTable";
 import SearchBar from "../../../../../components/SearchBar";
 import Dropdown from "../../../../../components/DropDown";
 import gsap from "gsap";
+import DatePickerComponent from "../../../../../components/DatePicker/DatePicker";
 
 const ExportInvoice = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumn, setSelectedColumn] = useState("all");
-  const [startDate, setStartDate] = useState(new Date(0));
+  const [startDate, setStartDate] = useState(new Date());
 
   const animateRef = useRef([]);
 
-useEffect(() => {
-  gsap.fromTo(
-    animateRef.current,
-    { opacity: 0, y: 20 },
-    { opacity: 1, y: 0, duration: 0.5 }
-  );
-}, []);
-
+  useEffect(() => {
+    gsap.fromTo(
+      animateRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5 }
+    );
+  }, []);
 
   //   const animateRows = () => {
   //   if (animateRef.current.length > 0) {
@@ -84,6 +84,17 @@ useEffect(() => {
   const tableData = useMemo(() => generateTableData(50), []);
 
   const filteredData = useMemo(() => {
+    if (
+      ["orderDate", "customerDispatchedDate", "ppcRfdDate"].includes(
+        selectedColumn
+      )
+    ) {
+      return tableData.filter((row) => {
+        const rowDate = new Date(row[selectedColumn]).toDateString();
+        const selected = new Date(startDate).toDateString();
+        return rowDate === selected;
+      });
+    }
     if (!searchQuery.trim()) return tableData;
 
     return tableData.filter((row) => {
@@ -98,10 +109,10 @@ useEffect(() => {
         value && String(value).toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
-  }, [searchQuery, tableData, selectedColumn]);
-  const handleDateChange = (date) =>{
+  }, [searchQuery, tableData, selectedColumn, startDate]);
+  const handleDateChange = (date) => {
     setStartDate(date);
-  }
+  };
 
   return (
     <div ref={animateRef} className="w-full py-1 px-2.5 rounded-2xl">
@@ -112,11 +123,20 @@ useEffect(() => {
             items={[{ label: "All", key: "all" }, ...headers]} // Include "All" option
             onSelect={handleDropdownSelect}
           />
-          <SearchBar
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onSearch={() => {}}
-          />
+          {!["orderDate", "customerDispatchedDate", "ppcRfdDate"].includes(
+            selectedColumn
+          ) ? (
+            <SearchBar
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onSearch={() => {}}
+            />
+          ) : (
+            <DatePickerComponent
+              startDate={startDate}
+              handleDateChange={handleDateChange}
+            />
+          )}
         </div>
 
         <button
@@ -127,8 +147,8 @@ useEffect(() => {
         </button>
       </div>
 
-      <div className="w-full h-[35.5rem] rounded-sm bg-background overflow-auto flex flex-col">
-      <ExportTable headers={headers} data={filteredData}/>
+      <div className="w-full h-[37rem] rounded-sm bg-background overflow-auto flex flex-col">
+        <ExportTable headers={headers} data={filteredData} />
       </div>
     </div>
   );

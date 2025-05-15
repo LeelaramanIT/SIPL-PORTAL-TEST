@@ -9,7 +9,7 @@ import ToggleButton from './ToggleButton.jsx';
 const Navbar = () => {
   const navigate = useNavigate();
   return (
-    <div className="h-[70px] flex justify-between items-center px-4">
+    <div className="h-[63px] flex justify-between items-center px-4">
       {/* Left Side */}
       <BreadCrumbs/>  
 
