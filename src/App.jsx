@@ -7,6 +7,9 @@ import { store } from "./Redux/Store/app";
 import AOS from "aos";
 import 'aos/dist/aos.css'; // Import AOS styles
 import { useEffect } from "react";
+import '@fortawesome/fontawesome-free/css/all.min.css';
+export const BackendUrl = import.meta.env.VITE_BASE_URL
+
 
 
 

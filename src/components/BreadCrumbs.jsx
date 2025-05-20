@@ -9,7 +9,7 @@ const BreadCrumbs = () => {
     
 
     return (
-        <div className='w-fit h-fit p-2 text-gray-500 text-sm'>
+        <div className='w-fit h-fit p-2 text-gray-500 text-sm dark:text-white'>
             {pathSegments.map((segment, index) => (
                 <span key={index} className='capitalize'>
                     {segment === 'home' ? 'Home' : segment.replace('-', ' ')}

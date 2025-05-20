@@ -1,9 +1,9 @@
-import React from "react";
+// import React from "react";
 // import './invoice.css'
 const InvoiceBill = () => {
   
   return (
-    <div className="flex justify-center items-center w-full h-[90%]">
+    <div className="flex justify-center items-center w-full h-[100%]">
     <div className="text-[8px] scroll-auto">
       <p style={{ textIndent: "0pt", textAlign: "left" }}>
         <br />
@@ -12,6 +12,7 @@ const InvoiceBill = () => {
         style={{ borderCollapse: "collapse", marginLeft: "3pt" }}
         cellSpacing="0"
       >
+      <thead>
         <tr style={{ height: "11pt" }}>
           <td
             style={{
@@ -40,7 +41,9 @@ const InvoiceBill = () => {
             </p>
           </td>
         </tr>
+        </thead>
 
+        <tbody>
         <tr style={{ height: "32pt" }}>
           <td
             style={{
@@ -1356,6 +1359,7 @@ const InvoiceBill = () => {
             </p>
           </td>
         </tr>
+        </tbody>
       </table>
     </div>
     </div>

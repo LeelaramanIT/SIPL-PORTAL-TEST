@@ -1,117 +1,197 @@
-import React, { useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import assets from "../../assets/assets";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import axios from "axios";
+import { NavLink } from "react-router-dom";
+import gsap from "gsap";
+import { BackendUrl } from "../../App";
+import toast from "react-hot-toast";
+const videoOption = [assets.Mountain, assets.SKY];
+const randomIndex = Math.floor(Math.random() * videoOption.length);
 
 const Login = () => {
-  const email = useRef();
+  const username = useRef();
   const password = useRef();
+  const [showPassword, setShowPassword] = useState(false);
+  const [video, setVideo] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:3000/postdata", {
-        email: email.current.value,
-        password: password.current.value,
+      const res = await axios.post(`${BackendUrl}/api/Auth/login`, {
+        username: username.current.value,
+        Password: password.current.value,
       });
       console.log(res.data);
+      if (res.status === 200) {
+         toast.success('Login Successfully')   
+      }
+      
+     
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
     }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
+  const div1 = useRef([]);
+  const div2 = useRef([]);
+  const div3 = useRef([]);
+  const div4 = useRef([]);
+  const div5 = useRef([]);
+  const div6 = useRef([]);
+  const div7 = useRef([]);
+
+  useEffect(() => {
+    gsap.fromTo(
+      [
+        div1.current,
+        div2.current,
+        div3.current,
+        div4.current,
+        div5.current,
+        div6.current,
+        div7.current,
+      ],
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.3,
+        stagger: 0.1,
+        ease: "power2.out",
+      }
+    );
+
+    setVideo(videoOption[randomIndex]);
+  }, []);
 
   return (
     <div
-      className="w-full min-h-screen flex flex-col md:flex-row"
+      className="w-full min-h-screen flex justify-center items-center relative overflow-hidden bg-black/5"
       style={{
-        backgroundImage: `url(${assets.company})`,
+        // backgroundImage: `url(${assets.SKY1})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      {/* Left Side - Shaped Design */}
-      <div className="w-[95%] md:w-[50%] h-72 md:h-[97vh] relative flex justify-center items-center rounded-3xl overflow-hidden m-2">
-        {/* Glass Effect Overlay */}
-        <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-0 border border-white/20 rounded-3xl"></div>
+      <img
+        ref={div1}
+        src={assets.TVSLOGO}
+        className="absolute z-10 top-5 left-5 w-[15rem]"
+      />
+      {/* Background Video */}
+      {video && (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute top-0 left-0 w-full h-full object-cover z-0"
+        >
+          <source src={video} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      )}
 
-        <div className="w-full h-full flex flex-col justify-center items-center z-10 text-white gap-4 p-4 sm:p-6">
-          <img
-            className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32"
-            src={assets.TVSLogo}
-            alt="TVS Logo"
-          />
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-green-100 text-center">
-            Sundaram Industries Pvt Ltd
-          </h1>
-        </div>
-      </div>
-
-      {/* Right Side - Form Section */}
-      <div className="w-full md:w-1/2 flex justify-center items-center py-8 md:py-0 px-4 sm:px-6">
-        <div className="p-6 sm:p-8 rounded-lg shadow-2xl w-full max-w-md backdrop-blur-md bg-white/30 border border-white/30">
-          <h1 className="text-2xl sm:text-xl font-bold text-center text-slate-800 mb-10">
-            Sundaram Industries Pvt Ltd
-          </h1>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Username Field */}
-            <div className="relative">
-              <input
-                type="text"
-                id="username"
-                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-400 appearance-none focus:outline-none focus:ring-0 focus:border-slate-800 peer"
-                placeholder=" "
-                ref={email}
-              />
-              <label
-                htmlFor="username"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-slate-800"
-              >
-                Username
-              </label>
-            </div>
-
-            {/* Password Field */}
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-400 appearance-none focus:outline-none focus:ring-0 focus:border-slate-800 peer"
-                placeholder=" "
-                ref={password}
-              />
-              <label
-                htmlFor="password"
-                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10  px-2 mx-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-slate-800"
-              >
-                Password
-              </label>
-              <div
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
-              </div>
-            </div>
-            {/* Forgot Password Link */}
-            <div className="text-right text-sm">
-              <a
-                href="#"
-                className="text-red-600 hover:text-red-800 hover:underline transition duration-150"
-              >
-                Forgot Password?
-              </a>
-            </div>
-            {/* Login Button */}
-            <button
-              className="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 rounded-md text-white"
-              type="submit"
+      {/* Login Form Container */}
+      <div
+        ref={div2}
+        className="relative z-10 w-full max-w-md p-6 sm:p-8 rounded-2xl shadow-2xl backdrop-blur-md bg-white/5 border border-white/30"
+      >
+        <h1
+          ref={div3}
+          className={`text-2xl sm:text-[1.8rem] font-bold text-center font-heading ${
+            randomIndex === 1 ? "text-slate-900" : "text-white"
+          } mb-10 select-none`}
+        >
+          Sundaram Industries Pvt Ltd
+        </h1>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Username Field */}
+          <div ref={div4} className="relative">
+            <input
+              type="text"
+              id="username"
+              ref={username}
+              placeholder=" "
+              required
+              className={`block px-2.5 pb-2.5 pt-4 w-full text-sm ${
+                randomIndex === 1
+                  ? "text-slate-900 border-gray-800/40"
+                  : "text-white focus:border-gray-50 border-gray-100"
+              } bg-transparent rounded-lg border  appearance-none focus:outline-none focus:ring-0 peer`}
+            />
+            <label
+              htmlFor="username"
+              className={`absolute text-sm duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2
+  ${randomIndex === 1 ? "text-slate-900" : "text-white"}
+  peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 
+  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6.5 
+  peer-valid:top-2 peer-valid:scale-75 peer-valid:-translate-y-6.5`}
             >
-              Login
-            </button>
-          </form>
-        </div>
+              Username
+            </label>
+          </div>
+
+          {/* Password Field */}
+          <div ref={div5} className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              ref={password}
+              required
+              placeholder=" "
+              className={`block px-2.5 pb-2.5 pt-4 w-full text-sm ${
+                randomIndex === 1
+                  ? "text-slate-900 border-gray-800/40"
+                  : "text-white focus:border-gray-50 border-gray-100"
+              } bg-transparent rounded-lg border  appearance-none focus:outline-none focus:ring-0 peer`}
+            />
+            <label
+              htmlFor="password"
+              className={`absolute text-sm duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2
+  ${randomIndex === 1 ? "text-slate-900" : "text-white"}
+  peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 
+  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6.5 
+  peer-valid:top-2 peer-valid:scale-75 peer-valid:-translate-y-6.5`}
+            >
+              Password
+            </label>
+            <div
+              className={`absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer ${
+            randomIndex === 1 ? "text-slate-900" : "text-white"
+          } text-slate-900/70`}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
+            </div>
+          </div>
+
+          {/* Forgot Password */}
+          <div ref={div6} className="text-sm flex justify-between ">
+            <NavLink
+              to={""}
+              className={`${randomIndex === 1 ? 'text-gray-950':'text-gray-50' } hover:text-gray-700 hover:underline transition duration-150 select-none`}
+            >
+              Create Account?
+            </NavLink>
+            <NavLink
+              to={""}
+              className="text-red-500 hover:text-red-600 hover:underline transition duration-150 select-none"
+            >
+              Forgot Password?
+            </NavLink>
+          </div>
+
+          {/* Login Button */}
+          <button
+            ref={div7}
+            type="submit"
+            className="w-full select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
+          >
+            Login
+          </button>
+        </form>
       </div>
     </div>
   );

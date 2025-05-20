@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   open: false,
+  theme: localStorage.theme || "system",  
   sections: {
     mastersOpen: false,
     userMasterOpen: false,
@@ -17,7 +18,7 @@ const initialState = {
   },
 };
 
-const globalSlice  = createSlice({
+const globalSlice = createSlice({
   name: "global",
   initialState,
   reducers: {
@@ -32,9 +33,12 @@ const globalSlice  = createSlice({
       const { section, value } = action.payload;
       state.sections[section] = value;
     },
-    
+    setTheme: (state, action) => {
+      state.theme = action.payload;
+      localStorage.theme = action.payload;
+    },
   },
 });
 
-export const { toggleSidebar, toggleSection, setSection } = globalSlice.actions;
+export const { toggleSidebar, toggleSection, setSection,setTheme } = globalSlice.actions;
 export default globalSlice.reducer;
