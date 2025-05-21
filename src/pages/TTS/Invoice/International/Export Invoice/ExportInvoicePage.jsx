@@ -7,7 +7,7 @@ import gsap from "gsap";
 import DatePickerComponent from "../../../../../components/DatePicker/DatePicker";
 import TitleText from "../../../../../components/TitleText";
 import { useDispatch } from "react-redux";
-import { getExportInvoice } from "../../../../../Redux/Slices/InvoiceSlice";
+import { getExportInvoice,getExportInvoiceAll } from "../../../../../Redux/Slices/InvoiceSlice";
 import Button from "../../../../../components/Button";
 
 const ExportInvoice = () => {
@@ -27,6 +27,10 @@ const ExportInvoice = () => {
       { opacity: 1, y: 0, duration: 0.5 }
     );
   }, []);
+
+  useEffect(()=>{
+    dispatch(getExportInvoiceAll())
+  },[])
 
   const headers = [
     { label: "Customer", key: "customer" },

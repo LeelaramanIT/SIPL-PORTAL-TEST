@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "Domestic/Customer", element: <CustomerInvoice /> },
           { path: "Domestic/Custom", element: <CustomInvoice /> },
-          { path: "International/Export", element: <ExportInvoice /> },
+          { path: "International/Export", element: <ExportInvoice />},
           {path: "International/Export/Prepare", element: <ExportInvoicePrepare /> },
         ],
       },

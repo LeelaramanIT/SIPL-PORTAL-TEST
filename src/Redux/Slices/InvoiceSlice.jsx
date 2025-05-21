@@ -1,10 +1,27 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BackendUrl } from "../../App";
 
 // Initial State
 const initialState = {
   export: {
-    data: [],
+    datas: {
+      id: '',
+      custCode: "",
+      custfullname: "",
+      orderRefNo: "",
+      workorderno: "",
+      completedDate: "",
+      dispatchedDate: "",
+      ppC_Date: "",
+      shipmentType: "",
+      containerLoadFrom: "",
+      rfD_Date: "",
+      usercurrency: "",
+      totalqty: "",
+      totalwt: "",
+    },
+
     invoiceData: [],
     loading: false,
     error: null,
@@ -34,6 +51,12 @@ const invoiceSlice = createSlice({
       state.export.loading = false;
       state.export.error = action.payload;
     },
+    setExportdatas:(state,action)=>{
+      state.export.datas = action.payload;
+      state.export.loading = false;
+      state.export.error = action.payload;
+    }
+    
   },
 });
 
@@ -53,8 +76,19 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   }
 };
 
+// get the all exports data 
+export const getExportInvoiceAll = () => async (dispatch) =>{
+  try {
+    dispatch(setExportLoading());
+    const res = await axios.get(`${BackendUrl}/api/Invoice/GettingInvoiceReadyOrders`)
+    dispatch(setExportdatas(res.data)); // dispatch the data to the store
+  } catch (error) {
+    dispatch(setExportError(error.message));
+    console.error("Failed to fetch invoices Data:", error);
+  }
+}
 // Exports
-export const { setExportInvoice, setExportLoading, setExportError } =
+export const { setExportInvoice, setExportLoading, setExportError, setExportdatas } =
   invoiceSlice.actions;
 
 export default invoiceSlice.reducer;
