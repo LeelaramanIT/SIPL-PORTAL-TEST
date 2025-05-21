@@ -8,6 +8,7 @@ import DatePickerComponent from "../../../../../components/DatePicker/DatePicker
 import TitleText from "../../../../../components/TitleText";
 import { useDispatch } from "react-redux";
 import { getExportInvoice } from "../../../../../Redux/Slices/InvoiceSlice";
+import Button from "../../../../../components/Button";
 
 const ExportInvoice = () => {
   const navigate = useNavigate();
@@ -26,24 +27,6 @@ const ExportInvoice = () => {
       { opacity: 1, y: 0, duration: 0.5 }
     );
   }, []);
-
-  //   const animateRows = () => {
-  //   if (animateRef.current.length > 0) {
-  //     gsap.fromTo(
-  //       animateRef.current,
-  //       {
-  //         opacity: 0,
-  //         y: 20,
-  //       },
-  //       {
-  //         opacity: 1,
-  //         y: 0,
-  //         duration: 0.3,
-  //         stagger: 0.05,
-  //       }
-  //     );
-  //   }
-  // };
 
   const headers = [
     { label: "Customer", key: "customer" },
@@ -147,12 +130,13 @@ const ExportInvoice = () => {
           )}
         </div>
 
-        <button
+        {/* <button
           onClick={() => navigate("/Masters/UserMaster/UserCreate")}
           className="bg-slate-800 text-white py-1.5 px-5 rounded-md hover:bg-slate-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition duration-300 w-full md:w-auto"
         >
           + Add Invoice
-        </button>
+        </button> */}
+        <Button onClick={() => navigate("/Masters/UserMaster/UserCreate")} text={'+ Add Invoice'} className={''}/>
       </div>
       <TitleText title={"Export Invoice"} className="my-2" />
       <div className="w-full h-[33.5rem] rounded-sm bg-background overflow-auto gap-5 flex flex-col">

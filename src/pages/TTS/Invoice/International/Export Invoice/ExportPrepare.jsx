@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
 import TitleText from "../../../../../components/TitleText.jsx";
 import gsap from "gsap";
+import Button from "../../../../../components/Button.jsx";
+import { IoMdClose } from "react-icons/io";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
@@ -198,7 +200,7 @@ const ExportInvoicePrepare = () => {
                 }`}
                 ref={(el) => (rowsRef.current[idx] = el)}
               >
-                <td className="py-0.5 px-2 rounded-b-sm">{item?.category}</td>
+                <td className="py-0.5 px-2 rounded-bl-sm">{item?.category}</td>
                 <td className="py-0.5 px-2">{item?.platform}</td>
                 <td className="py-0.5 px-2">{item?.tyreSize}</td>
                 <td className="py-0.5 px-2">{item?.rim}</td>
@@ -211,7 +213,7 @@ const ExportInvoicePrepare = () => {
                 <td className="py-0.5 px-2">{item?.fwt}</td>
                 <td className="py-0.5 px-2">{item?.additionalInfo}</td>
                 <td className="py-0.5 px-2">{item?.plant}</td>
-                <td className="py-0.5 px-2 break-all rounded-b-sm">
+                <td className="py-0.5 px-2 break-all rounded-br-sm">
                   {item.partNo}
                 </td>
               </tr>
@@ -231,15 +233,11 @@ const ExportInvoicePrepare = () => {
 
       {/* Section 3: Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center">
-        <button
+        <Button
           onClick={() => setShowDetailsForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-        >
-          + Add Additional Details
-        </button>
-        <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition">
-          Submit Invoice
-        </button>
+          text={"+ Add Additional Details"}
+        />
+        <Button onClick={""} text={"Submit Invoice"} />
       </div>
 
       {/* Additional Details Form */}
@@ -249,7 +247,15 @@ const ExportInvoicePrepare = () => {
           <div className="absolute inset-0 bg-black/0  backdrop-blur-[1rem] z-0" />
 
           {/* Form wrapper */}
-          <div className="relative z-10 bg-white dark:bg-gray-900 p-6 rounded-lg shadow-2xl w-full max-w-5xl h-[30rem] border border-gray-300 dark:border-gray-700">
+          <div className="relative z-10 bg-white dark:bg-gray-900 p-6 rounded-lg overflow-auto custom-scrollbar shadow-2xl w-full max-w-5xl h-[30rem] border border-gray-300 dark:border-gray-700">
+            <button
+              onClick={() => setShowDetailsForm(false)}
+              className="absolute top-9 right-8 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
+            >
+              <IoMdClose className="text-2xl" />
+            </button>
+
+            <TitleText title={"Additional Details"} />
             <AdditionalDetailsForm onClose={() => setShowDetailsForm(false)} />
           </div>
         </div>

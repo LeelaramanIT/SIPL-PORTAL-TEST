@@ -11,6 +11,7 @@ import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { SiAwsorganizations } from "react-icons/si";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSidebar, toggleSection } from "../Redux/Slices/GlobalSlice.jsx";
+import { useCallback } from "react";
 
 const SideBar = () => {
   const dispatch = useDispatch();
@@ -18,9 +19,9 @@ const SideBar = () => {
   const sections = useSelector((store) => store.global.sections);
 
   // Local helper to dispatch toggleSection action with section key
-  const handleToggleSection = (section) => {
+  const handleToggleSection = useCallback(()=>{(section) => {
     dispatch(toggleSection(section));
-  };
+  }},[dispatch])
 
   return (
     <div
