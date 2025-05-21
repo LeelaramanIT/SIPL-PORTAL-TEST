@@ -6,7 +6,7 @@ import Dropdown from "../../../../../components/DropDown";
 import gsap from "gsap";
 import DatePickerComponent from "../../../../../components/DatePicker/DatePicker";
 import TitleText from "../../../../../components/TitleText";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getExportInvoice,getExportInvoiceAll } from "../../../../../Redux/Slices/InvoiceSlice";
 import Button from "../../../../../components/Button";
 
@@ -30,7 +30,8 @@ const ExportInvoice = () => {
 
   useEffect(()=>{
     dispatch(getExportInvoiceAll())
-  },[])
+
+  },[dispatch])
 
   const headers = [
     { label: "Customer", key: "customer" },
@@ -73,7 +74,8 @@ const ExportInvoice = () => {
     setSelectedColumn(item.key || "all"); 
   };
 
-  const tableData = useMemo(() => generateTableData(50), []);
+  const tableData = useSelector((state) => state.invoice.export.datas);
+  // const tableData = useMemo(() => generateTableData(50), []);
 
   const filteredData = useMemo(() => {
     if (
