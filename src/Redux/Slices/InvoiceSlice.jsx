@@ -5,7 +5,7 @@ import { BackendUrl } from "../../App";
 // Initial State
 const initialState = {
   export: {
-    datas: {
+    datas: [{
       id: '',
       custCode: "",
       custfullname: "",
@@ -20,7 +20,7 @@ const initialState = {
       usercurrency: "",
       totalqty: "",
       totalwt: "",
-    },
+    }],
 
     invoiceData: [],
     loading: false,

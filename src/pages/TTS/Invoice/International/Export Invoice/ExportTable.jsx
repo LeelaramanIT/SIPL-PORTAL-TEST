@@ -16,10 +16,10 @@ const ExportTable = ({
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = data.slice(startIndex, endIndex);
+  const paginatedData = data?.slice(startIndex, endIndex);
 
   const handleNext = () => {
-    if (endIndex < data.length) setCurrentPage(currentPage + 1);
+    if (endIndex < data?.length) setCurrentPage(currentPage + 1);
   };
 
   const handlePrev = () => {
@@ -136,7 +136,7 @@ const ExportTable = ({
           <button
             onClick={handleNext}
             disabled={endIndex >= data.length}
-            className={`h-8 px-4 text-base font-medium text-white ${
+            className={`h-8 px-4 text-base font-medium text-gray-300 ${
               endIndex >= data.length
                 ? "bg-gray-100 cursor-not-allowed"
                 : "bg-gray-800 hover:bg-gray-900 dark:bg-gray-700"

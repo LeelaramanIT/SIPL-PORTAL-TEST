@@ -9,6 +9,7 @@ import TitleText from "../../../../../components/TitleText";
 import { useDispatch, useSelector } from "react-redux";
 import { getExportInvoice,getExportInvoiceAll } from "../../../../../Redux/Slices/InvoiceSlice";
 import Button from "../../../../../components/Button";
+import TableSkeleton from "./TableSkeleton";
 
 const ExportInvoice = () => {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ const ExportInvoice = () => {
 
   const animateRef = useRef([]);
 
+  const loading = useSelector((state) => state.invoice.export.loading);
+  
+  
   useEffect(() => {
     gsap.fromTo(
       animateRef.current,
@@ -30,20 +34,19 @@ const ExportInvoice = () => {
 
   useEffect(()=>{
     dispatch(getExportInvoiceAll())
-
   },[dispatch])
 
   const headers = [
-    { label: "Customer", key: "customer" },
+    { label: "Customer", key: "custfullname" },
     { label: "Order Ref No", key: "orderRefNo" },
-    { label: "Work Order", key: "workOrder" },
-    { label: "Order Date", key: "orderDate" },
-    { label: "Customer Dispatched Date", key: "customerDispatchedDate" },
-    { label: "PPC RFD Date", key: "ppcRfdDate" },
+    { label: "Work Order", key: "workorderno" },
+    { label: "Order Date", key: "completedDate" },
+    { label: "Customer Dispatched Date", key: "dispatchedDate" },
+    { label: "PPC RFD Date", key: "rfD_Date" },
     { label: "Shipment Type", key: "shipmentType" },
-    { label: "Final Loading At", key: "finalLoadingAt" },
-    { label: "Qty", key: "qty" },
-    { label: "FWT", key: "fwt" },
+    { label: "Final Loading At", key: "containerLoadFrom" },
+    { label: "Qty", key: "totalqty" },
+    { label: "FWT", key: "totalwt" },
   ];
 
   const generateTableData = (num) => {
@@ -75,6 +78,8 @@ const ExportInvoice = () => {
   };
 
   const tableData = useSelector((state) => state.invoice.export.datas);
+  console.log(tableData);
+  
   // const tableData = useMemo(() => generateTableData(50), []);
 
   const filteredData = useMemo(() => {
@@ -146,7 +151,7 @@ const ExportInvoice = () => {
       </div>
       <TitleText title={"Export Invoice"} className="my-2" />
       <div className="w-full h-[33.5rem] rounded-sm bg-background overflow-auto gap-5 flex flex-col">
-        <ExportTable
+        {loading?<TableSkeleton/>:<ExportTable
           headers={headers}
           data={filteredData}
           rowClassName={(row, index) => {
@@ -166,7 +171,7 @@ const ExportInvoice = () => {
               Action
             </button>
           )}
-        />
+        />}
       </div>
     </div>
   );
