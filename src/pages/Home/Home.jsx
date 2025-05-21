@@ -1,5 +1,5 @@
 import axios from "axios";
-// import InvoiceBill from "../TTS/Invoice/International/Export Invoice/InvoiceBill";
+import InvoiceBill from "../TTS/Invoice/International/Export Invoice/InvoiceBill";
 import { BackendUrl } from "../../App";
 
 const Home = () => {
@@ -12,9 +12,9 @@ const Home = () => {
   return (
  <>
  <div>
-  {/* <InvoiceBill/> */}
+  <InvoiceBill/>
 
-  <button onClick={handleApiCall}>get invoice</button>
+  {/* <button onClick={handleApiCall}>get invoice</button> */}
   </div>
  </>
   );
