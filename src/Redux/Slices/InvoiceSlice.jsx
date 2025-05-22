@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BackendUrl } from "../../App";
+import { BackendUrl } from "../../main";
 
 // Initial State
 const initialState = {
@@ -66,7 +66,7 @@ export const getExportInvoice = (payload) => async (dispatch) => {
     dispatch(setExportLoading());
 
     // Example GET request with query params
-    const res = await axios.get("/api/invoice", {
+    const res = await axios.get("/invoice", {
       params: payload, // payload is like { id: 123 }
     });
     dispatch(setExportInvoice(payload));
@@ -80,7 +80,7 @@ export const getExportInvoice = (payload) => async (dispatch) => {
 export const getExportInvoiceAll = () => async (dispatch) =>{
   try {
     dispatch(setExportLoading());
-    const res = await axios.get(`${BackendUrl}/api/Invoice/GettingInvoiceReadyOrders`)
+    const res = await axios.get(`${BackendUrl}/Invoice/GettingInvoiceReadyOrders`)
     dispatch(setExportdatas(res.data)); // dispatch the data to the store
   } catch (error) {
     dispatch(setExportError(error.message));

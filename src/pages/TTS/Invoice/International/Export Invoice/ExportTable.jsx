@@ -69,7 +69,7 @@ const ExportTable = ({
             {headers.map((heading, index) => (
               <th
                 key={index}
-                className="py-1 px-3 text-center text-[13px] sticky top-0 bg-background z-10 text-black dark:bg-gray-500 "
+                className="py-4 px-3 text-center text-[13px] sticky top-0 bg-background z-10 text-black dark:bg-gray-500 "
               >
                 {heading.label}
               </th>
@@ -138,7 +138,7 @@ const ExportTable = ({
             disabled={endIndex >= data.length}
             className={`h-8 px-4 text-base font-medium text-gray-300 ${
               endIndex >= data.length
-                ? "bg-gray-100 cursor-not-allowed"
+                ? "bg-gray-500 cursor-not-allowed"
                 : "bg-gray-800 hover:bg-gray-900 dark:bg-gray-700"
             } rounded-e`}
           >

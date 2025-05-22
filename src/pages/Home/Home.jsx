@@ -1,11 +1,11 @@
 import axios from "axios";
 import InvoiceBill from "../TTS/Invoice/International/Export Invoice/InvoiceBill";
-import { BackendUrl } from "../../App";
+import { BackendUrl } from "../../config";
 
 const Home = () => {
 
   const handleApiCall = async()=>{
-    const res = await axios.get(`${BackendUrl}/api/Invoice/getInvoiceNo`)
+    const res = await axios.get(`${BackendUrl}/Invoice/getInvoiceNo`)
     console.log(res.data);
     console.log(res.status);
   }

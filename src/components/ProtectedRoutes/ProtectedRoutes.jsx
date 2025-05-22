@@ -1,11 +1,9 @@
-import React from 'react'
+import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoutes = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  const isLoggedIn = window.sessionStorage.getItem("loggedIn") === "true";
+  
+  return isLoggedIn ? <Outlet /> : <Navigate to="/login"/>;
+};
 
-export default ProtectedRoutes
+export default ProtectedRoutes;

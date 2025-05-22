@@ -1,10 +1,10 @@
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import assets from "../../assets/assets";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import axios from "axios";
-import { NavLink } from "react-router-dom";
+import { NavLink,useNavigate } from "react-router-dom";
 import gsap from "gsap";
-import { BackendUrl } from "../../App";
+import { useDispatch, useSelector } from "react-redux";
+import { userLogin } from "../../Redux/Slices/AuthSlice";
 import toast from "react-hot-toast";
 const videoOption = [assets.Mountain, assets.SKY];
 const randomIndex = Math.floor(Math.random() * videoOption.length);
@@ -14,24 +14,33 @@ const Login = () => {
   const password = useRef();
   const [showPassword, setShowPassword] = useState(false);
   const [video, setVideo] = useState(null);
+  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const {loading,error,loggedIn} = useSelector((state)=>state.auth)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${BackendUrl}/api/Auth/login`, {
-        username: username.current.value,
-        Password: password.current.value,
-      });
-      console.log(res.data);
-      if (res.status === 200) {
-         toast.success('Login Successfully')   
-      }
-      
-     
+      dispatch(userLogin({username:username.current.value,password:password.current.value}))
     } catch (error) {
       console.log(error.message);
     }
   };
+
+  useEffect(() => {
+  if (loggedIn) {
+    toast.success("Login successful!");
+    navigate("/");
+  }
+}, [loggedIn, navigate]);
+
+useEffect(() => {
+  if (error) {
+    toast.error(error); // ✅ Show login error
+  }
+}, [error]);
+
+
 
   const div1 = useRef([]);
   const div2 = useRef([]);

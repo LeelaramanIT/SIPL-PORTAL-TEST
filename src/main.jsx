@@ -2,6 +2,7 @@
 import "./index.css";
 import App from "./App.jsx";
 import { createRoot } from "react-dom/client";
+export const BackendUrl = import.meta.env.VITE_BASE_URL
 
 // // ✅ Ensure dark mode is applied before rendering
 // if (

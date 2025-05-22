@@ -7,7 +7,10 @@ import gsap from "gsap";
 import DatePickerComponent from "../../../../../components/DatePicker/DatePicker";
 import TitleText from "../../../../../components/TitleText";
 import { useDispatch, useSelector } from "react-redux";
-import { getExportInvoice,getExportInvoiceAll } from "../../../../../Redux/Slices/InvoiceSlice";
+import {
+  getExportInvoice,
+  getExportInvoiceAll,
+} from "../../../../../Redux/Slices/InvoiceSlice";
 import Button from "../../../../../components/Button";
 import TableSkeleton from "./TableSkeleton";
 
@@ -22,8 +25,7 @@ const ExportInvoice = () => {
   const animateRef = useRef([]);
 
   const loading = useSelector((state) => state.invoice.export.loading);
-  
-  
+
   useEffect(() => {
     gsap.fromTo(
       animateRef.current,
@@ -32,9 +34,9 @@ const ExportInvoice = () => {
     );
   }, []);
 
-  useEffect(()=>{
-    dispatch(getExportInvoiceAll())
-  },[dispatch])
+  useEffect(() => {
+    dispatch(getExportInvoiceAll());
+  }, [dispatch]);
 
   const headers = [
     { label: "Customer", key: "custfullname" },
@@ -74,19 +76,16 @@ const ExportInvoice = () => {
   };
 
   const handleDropdownSelect = (item) => {
-    setSelectedColumn(item.key || "all"); 
+    setSelectedColumn(item.key || "all");
   };
 
   const tableData = useSelector((state) => state.invoice.export.datas);
-  console.log(tableData);
-  
+
   // const tableData = useMemo(() => generateTableData(50), []);
 
   const filteredData = useMemo(() => {
     if (
-      ["orderDate", "customerDispatchedDate", "ppcRfdDate"].includes(
-        selectedColumn
-      )
+      ["completedDate", "dispatchedDate", "rfD_Date"].includes(selectedColumn)
     ) {
       return tableData.filter((row) => {
         const rowDate = new Date(row[selectedColumn]).toDateString();
@@ -94,6 +93,7 @@ const ExportInvoice = () => {
         return rowDate === selected;
       });
     }
+
     if (!searchQuery.trim()) return tableData;
 
     return tableData.filter((row) => {
@@ -109,6 +109,7 @@ const ExportInvoice = () => {
       );
     });
   }, [searchQuery, tableData, selectedColumn, startDate]);
+
   const handleDateChange = (date) => {
     setStartDate(date);
   };
@@ -125,7 +126,7 @@ const ExportInvoice = () => {
             items={[{ label: "All", key: "all" }, ...headers]} // Include "All" option
             onSelect={handleDropdownSelect}
           />
-          {!["orderDate", "customerDispatchedDate", "ppcRfdDate"].includes(
+          {!["completedDate", "dispatchedDate", "rfD_Date"].includes(
             selectedColumn
           ) ? (
             <SearchBar
@@ -147,31 +148,39 @@ const ExportInvoice = () => {
         >
           + Add Invoice
         </button> */}
-        <Button onClick={() => navigate("/Masters/UserMaster/UserCreate")} text={'+ Add Invoice'} className={''}/>
+        <Button
+          onClick={() => navigate("/Masters/UserMaster/UserCreate")}
+          text={"+ Add Invoice"}
+          className={""}
+        />
       </div>
       <TitleText title={"Export Invoice"} className="my-2" />
       <div className="w-full h-[33.5rem] rounded-sm bg-background overflow-auto gap-5 flex flex-col">
-        {loading?<TableSkeleton/>:<ExportTable
-          headers={headers}
-          data={filteredData}
-          rowClassName={(row, index) => {
-            if (index === 0) return "rounded-l-xl";
-            if (index === row.length - 1) return "rounded-r-xl";
-            return "";
-          }}
-          renderAction={(row) => (
-            <button
-              // onClick={() => handleAction(row)}
-              onClick={() => {
-                navigate("Prepare");
-                dispatch(getExportInvoice(row));
-              }}
-              className="bg-slate-800 hover:bg-slate-600 text-white px-4 py-1 rounded text-center"
-            >
-              Action
-            </button>
-          )}
-        />}
+        {loading ? (
+          <TableSkeleton />
+        ) : (
+          <ExportTable
+            headers={headers}
+            data={filteredData}
+            rowClassName={(row, index) => {
+              if (index === 0) return "rounded-l-xl";
+              if (index === row.length - 1) return "rounded-r-xl";
+              return "";
+            }}
+            renderAction={(row) => (
+              <button
+                // onClick={() => handleAction(row)}
+                onClick={() => {
+                  navigate("Prepare");
+                  dispatch(getExportInvoice(row));
+                }}
+                className="bg-slate-800 hover:bg-slate-600 text-white px-4 py-1 rounded text-center"
+              >
+                Action
+              </button>
+            )}
+          />
+        )}
       </div>
     </div>
   );
