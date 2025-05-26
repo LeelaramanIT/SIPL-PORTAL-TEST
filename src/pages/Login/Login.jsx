@@ -194,13 +194,13 @@ useEffect(() => {
           </div>
 
           {/* Login Button */}
-          <button
+          {loading ? <LogginButton/>:  <button
             ref={div7}
             type="submit"
             className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
           >
-            {loading ? <LogginButton/> :'Login'}
-          </button>
+          Login
+          </button> }
         </form>
       </div>
     </div>

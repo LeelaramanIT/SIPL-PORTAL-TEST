@@ -59,7 +59,7 @@ const authSlice = createSlice({
 export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
-    const res = await api.post("/Auth/login", credentials ,{withCredentials:true});
+    const res = await api.post("/Auth/login", credentials );
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));
