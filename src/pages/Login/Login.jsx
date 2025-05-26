@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogin } from "../../Redux/Slices/AuthSlice";
 import toast from "react-hot-toast";
+import LogginButton from '../../components/LoadingButton'
 const videoOption = [assets.Mountain, assets.SKY];
 const randomIndex = Math.floor(Math.random() * videoOption.length);
 
@@ -198,7 +199,7 @@ useEffect(() => {
             type="submit"
             className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
           >
-            {loading ? <img src={assets.LoadingBTN}/>:'Login'}
+            {loading ? <LogginButton/> :'Login'}
           </button>
         </form>
       </div>
