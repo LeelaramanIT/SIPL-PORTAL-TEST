@@ -18,9 +18,9 @@ const ExportInvoicePrepare = () => {
     sidewall: "Black",
     basicPrice: 250.0,
     qty: 4 + i,
-    totalPrice: 250.0 * (4 + i),
-    fwt: `${500 + i * 10}kg`,
-    additionalInfo: "None",
+    totalPrice: 250.82 * (4 + i),
+    fwt: 500.399 + i * 10.389,
+    additionalInfo: "NO GRADE MARKINGS & BARCODE STICKERS ON TYRE",
     plant: `Plant ${String.fromCharCode(65 + (i % 3))}`, // A, B, C
     partNo: `P-167807C18060713${i.toString().padStart(2, "0")}A`,
   }));
@@ -28,9 +28,12 @@ const ExportInvoicePrepare = () => {
   const rowsRef = useRef([]);
 
   const grandTotal = invoiceData.reduce(
-    (sum, item) => sum + item.totalPrice,
+    (sum, item) => sum + item?.totalPrice,
     0
   );
+
+  const totalQTY = invoiceData.reduce((sum, item) => sum + item.qty, 0);
+  const totalFWT = invoiceData.reduce((sum, item) => sum + item.fwt, 0);
 
   const header = [
     "CATEGORY",
@@ -101,74 +104,66 @@ const ExportInvoicePrepare = () => {
       {/* Section 1: Invoice Header Info */}
       <div
         ref={div2}
-        className="max-h-[200px] overflow-auto p-4 border border-[#e2e8f0] dark:border-gray-700 rounded-md shadow-md bg-white dark:bg-gray-800"
+        className="p-2 border border-gray-300 dark:border-gray-700 rounded-xl shadow-lg bg-white dark:bg-gray-800"
       >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-            Customer Name: Kaja Moideen
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Customer Name: <span className="font-normal">Kaja Moideen</span>
           </h2>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
             Order Ref #:{" "}
-            <span className="text-gray-800 dark:text-white">ORD-123456</span>
+            <span className="text-gray-900 dark:text-white">ORD-123456</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700 dark:text-gray-300">
+        {/* Details Grid */}
+        <div className="p-2 grid bg-background dark:bg-gray-700 shadow rounded-md grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800 dark:text-gray-300">
           {/* Left Column */}
-          <div className="space-y-2">
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Desired Ship Date:{" "}
-              </span>
-              <span>2025-06-01</span>
-            </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Ordered Date:{" "}
-              </span>
+          <div className="space-y-4">
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Ordered Date:</span>
               <span>2025-05-14</span>
             </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Bill To:{" "}
-              </span>
-              <span>
-                Customer Address Info Laborum do sint sit pariatur consequat
-                dolore...
-              </span>
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Desired Ship Date:</span>
+              <span>2025-06-01</span>
             </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Special Instruction:{" "}
-              </span>
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Bill To:</span>
+              <div>
+                <div className="font-normal">Kaja Moideen</div>
+                <div>
+                  Customer Address Info Laborum do sint sit pariatur consequat
+                  dolore....
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Special Instruction:</span>
               <span>Handle with care</span>
             </div>
           </div>
 
           {/* Right Column */}
-          <div className="space-y-2">
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Delivery Method:{" "}
-              </span>
+          <div className="space-y-4">
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Delivery Method:</span>
               <span>Air Freight</span>
             </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Packing Method:{" "}
-              </span>
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Packing Method:</span>
               <span>Wooden Crates</span>
             </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Ship To:{" "}
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Ship To:</span>
+              <span>
+                Receiver Address Info Customer Address Info Laborum do sint sit
+                pariatur consequat dolore....
               </span>
-              <span>Receiver Address Info</span>
             </div>
-            <div>
-              <span className="font-semibold text-gray-800 dark:text-white">
-                Special Notes:{" "}
-              </span>
+            <div className="grid grid-cols-[150px_1fr] gap-2">
+              <span className="font-semibold">Special Notes:</span>
               <span>Urgent delivery required</span>
             </div>
           </div>
@@ -182,11 +177,50 @@ const ExportInvoicePrepare = () => {
         <table className="w-full text-sm text-left table-fixed">
           <thead className="bg-[#f7f2ef] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
             <tr>
-              {header.map((header) => (
-                <th key={header} className="p-1 text-center text-[13px]">
-                  {header}
+              {/* {header.map((header) => ( */}
+                <th  className="p-1 text-center text-[13px]">
+                  CATEGORY
                 </th>
-              ))}
+                <th  className="p-1 text-center text-[13px]">
+                  PLATFORM
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  TYRE SIZE
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  RIM
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  TYPE
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  BRAND
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  SIDEWALL
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  BASIC PRICE
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  QTY
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  TOTAL PRICE
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                FWT
+                </th>
+                <th colSpan={4} className="p-1 text-center text-[13px]">
+                  ADDITIONAL INFO
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  PLANT
+                </th>
+                <th  className="p-1 text-center text-[13px]">
+                  PART-NO
+                </th>
+              {/* ))} */}
             </tr>
           </thead>
           <tbody>
@@ -209,9 +243,15 @@ const ExportInvoicePrepare = () => {
                 <td className="py-0.5 px-2">{item?.sidewall}</td>
                 <td className="py-0.5 px-2">{item?.basicPrice}</td>
                 <td className="py-0.5 px-2">{item?.qty}</td>
-                <td className="py-0.5 px-2">{item?.totalPrice}</td>
-                <td className="py-0.5 px-2">{item?.fwt}</td>
-                <td className="py-0.5 px-2">{item?.additionalInfo}</td>
+                <td className="py-0.5 px-2">{item?.totalPrice.toFixed(2)}</td>
+                <td className="py-0.5 px-2">{item?.fwt.toFixed(3)}</td>
+                <td colSpan={4}
+                  className="py-0.5  px-2 whitespace-nowrap overflow-hidden"
+                  title={item?.additionalInfo}
+                >
+                  {item?.additionalInfo}
+                </td>
+
                 <td className="py-0.5 px-2">{item?.plant}</td>
                 <td className="py-0.5 px-2 break-all rounded-br-sm">
                   {item.partNo}
@@ -221,11 +261,13 @@ const ExportInvoicePrepare = () => {
           </tbody>
           <tfoot className="font-semibold text-gray-800 dark:text-white">
             <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
-              <td colSpan={9} className="text-right px-4 py-2">
+              <td colSpan={8} className="text-right px-4 py-2">
                 Grand Total:
               </td>
+              <td className="px-4 py-2 text-center">{totalQTY}</td>
               <td className="px-4 py-2 text-center">{grandTotal.toFixed(2)}</td>
-              <td colSpan={4}></td>
+              <td className="px-4 py-2 text-center">{totalFWT.toFixed(3)}</td>
+              <td colSpan={6}></td>
             </tr>
           </tfoot>
         </table>

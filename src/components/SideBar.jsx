@@ -54,7 +54,7 @@ const SideBar = () => {
           <NavLink to={"/"}>
             <SidebarItem icon={IoHome} label="Home" />
           </NavLink>
-          <NavLink to={"/dashboard"}>
+          <NavLink to={"/Dashboard"}>
             <SidebarItem icon={RxDashboard} label="Dashboard" />
           </NavLink>
 

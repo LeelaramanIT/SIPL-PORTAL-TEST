@@ -10,4 +10,5 @@ export const store = configureStore({
     invoice: invoiceReducer,
     auth: authReducer,
   },
+  // devTools:false,
 });

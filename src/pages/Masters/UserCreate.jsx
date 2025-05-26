@@ -1,8 +1,7 @@
-import React from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
+import Button from "../../components/Button";
 
-const UserCreate = () => {
+const ShipmentDetailsForm = ({ onClose }) => {
   const {
     register,
     handleSubmit,
@@ -11,66 +10,101 @@ const UserCreate = () => {
   } = useForm();
 
   const onSubmit = (data) => {
-    console.log("Submitted Data:", data);
-    toast.success("User details submitted successfully!");
+    console.log(data);
     reset();
+    onClose();
   };
 
-  return (
-    <div className="w-full mx-auto p-6 bg-white rounded-t-2xl shadow-lg h-full">
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-h-[80vh] overflow-y-auto">
-          {/* GST Information */}
-          <div className="col-span-4">
-            <h3 className="text-lg font-semibold">GST Information</h3>
-          </div>
+  const inputClass = `
+    w-full px-3 py-2   border border-gray-300 rounded-md text-gray-900 dark:text-white
+    bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400
+  `;
 
-          {[
-            "GST Number",
-            "Trade Name",
-            "Legal Name",
-            "State Code",
-            "Constitution of Business",
-            "Taxpayer Type",
-            "Registration Date",
-            "Principal Place of Business",
-            "Additional Place of Business",
-            "Contact Person Name",
-          ].map((field, index) => (
-            <div className="relative z-0" key={index}>
-              <input
-                type="text"
-                {...register(field.toLowerCase().replace(/ /g, "_"), {
-                  required: `${field} is required`,
-                })}
-                className="peer block w-full appearance-none border-0 border-b border-gray-500 bg-transparent py-2.5 px-0 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0"
-                placeholder=" "
-              />
-              <label
-                className="absolute top-3 -z-10 origin-[0] -translate-y-6 scale-75 transform text-sm text-gray-500 duration-300 
-            peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100
-            peer-focus:left-0 peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:text-blue-600"
-              >
-                {field}
-              </label>
-            </div>
-          ))}
-          
-          <div className="col-span-4">
-            {/* Submit Button */}
-            <div className="col-span-4 flex justify-end mt-6 pt-4">
-              <button
-                type="submit"
-                className="bg-slate-800 text-white w-20 py-2 rounded-lg hover:bg-slate-700 transition duration-300"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
+  const labelClass = "block mb-1 font-semibold text-gray-700 dark:text-gray-300";
+
+  const fields = [
+    { label: "Exporter Authorized Address", name: "exporterAddress", type: "text" },
+    { label: "Invoice No", name: "invoiceNo", type: "text" },
+    { label: "Date", name: "invoiceDate", type: "date" },
+    { label: "Pre-Carriage by", name: "preCarriage", type: "select", options: ["Truck", "Rail", "Sea", "Air"] },
+    { label: "Country of Origin of Goods", name: "originCountry", type: "select", options: ["India", "China", "USA", "Germany"] },
+    { label: "Port of Loading", name: "portOfLoading", type: "select", options: ["Chennai", "Mumbai", "Kolkata"] },
+    { label: "Bill of Lading No", name: "billOfLadingNo", type: "text" },
+  ];
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl  mx-auto p-6 bg-white dark:bg-gray-900 rounded-md shadow-md space-y-6 text-gray-800 dark:text-gray-200">
+      <h2 className="text-xl font-bold mb-4">
+        SHIPMENT TYPE: <span className="text-blue-600">DIRECT</span> &nbsp; | &nbsp; WORK ORDER: <span className="text-blue-600">24-25(1123)</span>
+      </h2>
+
+      {fields.map(({ label, name, type, options }) => (
+        <div key={name} className="flex flex-col">
+          <label htmlFor={name} className={labelClass}>
+            {label}
+          </label>
+          {type === "select" ? (
+            <select
+              id={name}
+              {...register(name, { required: `${label} is required` })}
+              className={inputClass}
+            >
+              <option value="">Select</option>
+              {options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id={name}
+              type={type}
+              {...register(name, { required: `${label} is required` })}
+              className={inputClass}
+            />
+          )}
+          {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name].message}</p>}
         </div>
-      </form>
-    </div>
+      ))}
+
+      <div className="flex flex-col">
+        <label htmlFor="paymentTerms" className={labelClass}>
+          Payment Terms
+        </label>
+        <textarea
+          id="paymentTerms"
+          {...register("paymentTerms", { required: "Payment terms are required" })}
+          rows={6}
+          className={inputClass + " resize-none"}
+          defaultValue={`01. UNIT PRICES ARE INR EX-WORKS , MMN.
+
+02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS
+
+03. PAYMENT TERMS: 30% ADVANCE AGAINST RECEIPT OF PROFORMA THROUGH EMAIL/FAX AND BALANCE 70% PAYMENT AFTER INSPECTION - PRIOR DISPATCH OF MATERIAL.
+
+04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
+
+05. SINCE THE SHIPMENT IS AN FCL CARGO, TYRES WILL BE STRETCH WRAPPED INDIVIDUALLY AND SENT IN LOOSE CONDITION.`}
+        />
+        {errors.paymentTerms && <p className="text-red-500 text-sm mt-1">{errors.paymentTerms.message}</p>}
+      </div>
+
+      <div className="flex justify-end space-x-4">
+        <Button
+          onClick={onClose}
+          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-5 py-2 rounded"
+          text="Cancel"
+          type="button"
+        />
+        <Button
+          className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-5 py-2 rounded"
+          text="Save"
+          type="submit"
+        />
+      </div>
+    </form>
   );
 };
 
-export default UserCreate;
+export default ShipmentDetailsForm;

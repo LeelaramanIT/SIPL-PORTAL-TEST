@@ -28,14 +28,15 @@ const authSlice = createSlice({
       state.roles = roles;
       state.menus = menus;
       state.loggedIn = true;
+      state.loading = false;
 
-      sessionStorage.setItem("token", token);
-      sessionStorage.setItem("username", username);
-      sessionStorage.setItem("roles", JSON.stringify(roles));
-      sessionStorage.setItem("menus", JSON.stringify(menus));
+      // sessionStorage.setItem("token", token);
+      // sessionStorage.setItem("username", username);
+      // sessionStorage.setItem("roles", JSON.stringify(roles));
+      // sessionStorage.setItem("menus", JSON.stringify(menus));
       sessionStorage.setItem("loggedIn", "true");
 
-      toast.success("Login Successfull");
+      // toast.success("Login Successfull");
     },
     logout: (state) => {
       (state.token = null),
@@ -47,6 +48,7 @@ const authSlice = createSlice({
       sessionStorage.clear();
       toast.success("Logged out successfully");
     },
+
     loginFailure: (state, action) => {
       state.loading = false;
       state.error = action.payload;
@@ -57,7 +59,7 @@ const authSlice = createSlice({
 export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
-    const res = await api.post("/Auth/login", credentials);
+    const res = await api.post("/Auth/login", credentials,{withCredentials:true});
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));

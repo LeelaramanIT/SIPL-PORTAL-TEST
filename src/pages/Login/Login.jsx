@@ -196,9 +196,9 @@ useEffect(() => {
           <button
             ref={div7}
             type="submit"
-            className="w-full select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
+            className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
           >
-            Login
+            {loading ? <img src={assets.LoadingBTN}/>:'Login'}
           </button>
         </form>
       </div>

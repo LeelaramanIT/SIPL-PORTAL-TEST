@@ -14,6 +14,7 @@ import CustomInvoice from "../pages/TTS/Invoice/Domostic/CustomInvoice";
 import MasterLayout from "../layout/MastarLayout";
 import ExportInvoicePrepare from "../pages/TTS/Invoice/International/Export Invoice/ExportPrepare";
 import ProtectedRoutes from "../components/ProtectedRoutes/ProtectedRoutes";
+import ProtectedPage from "../pages/NotFound/protectedPage";
 
 export const router = createBrowserRouter([
   {
@@ -25,7 +26,7 @@ export const router = createBrowserRouter([
       element: <MainLayout />, // This renders layout
       children: [
         { index: true, element: <Home /> },
-        { path: "dashboard", element: <Dashboard /> },
+        { path: "Dashboard", element: <Dashboard /> },
         {
           path: "Masters",
           element: <MasterLayout />,
@@ -51,4 +52,5 @@ export const router = createBrowserRouter([
 },
 { path: "/login", element: <Login /> },
 { path: "*", element: <NotFoundPage /> },
+{ path: "Protected", element: <ProtectedPage /> },
 ]);
