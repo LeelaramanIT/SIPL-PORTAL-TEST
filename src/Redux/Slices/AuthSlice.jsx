@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../utils/axios";
 import { toast } from "react-hot-toast";
 
+
 const initialState = {
   token: sessionStorage.getItem("token") || null,
   username: sessionStorage.getItem("username") || null,
@@ -44,7 +45,6 @@ const authSlice = createSlice({
         (state.roles = []),
         (state.menus = []),
         (state.loggedIn = false);
-
       sessionStorage.clear();
     },
 
@@ -58,7 +58,7 @@ const authSlice = createSlice({
 export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
-    const res = await api.post("/Auth/login", credentials,{withCredentials:true});
+    const res = await api.post("/Auth/login", credentials, { withCredentials: true });
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));
@@ -70,12 +70,13 @@ export const userLogin = (credentials) => async (dispatch) => {
   }
 };
 
-export const userLogout = () => async (dispatch) => {
+export const userLogout = (navigate) => async (dispatch) => {
   try {
     dispatch(logout());
-    const res = await api.get("/Auth/logout",{withCredentials:true});
+    const res = await api.get("/Auth/logout", { withCredentials: true });
     if (res.status === 200) {
-      toast.success("Logged out successfully");
+      navigate('/login')
+      toast.success(res.data.message);
     }
   } catch (error) {
     const errorMessage =
