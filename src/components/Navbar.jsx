@@ -6,7 +6,7 @@ import BreadCrumbs from './BreadCrumbs';
 import { useNavigate } from 'react-router-dom';
 import ToggleButton from './ToggleButton.jsx';
 import DarkModeToggle from './DarkModeToggle/DarkModeToggle.jsx';
-import { logout } from '../Redux/Slices/AuthSlice.jsx';
+import { logout, userLogout } from '../Redux/Slices/AuthSlice.jsx';
 import { useDispatch, useSelector } from 'react-redux';
 
 const Navbar = () => {
@@ -25,7 +25,7 @@ const Navbar = () => {
         <img className='w-10 h-10 rounded-full border-primary border cursor-pointer' src={assets.DefaultLogo} alt='UserLogo'/>
         <p className='cursor-pointer text-primary dark:text-white'>{username?username:'User'}</p>
         <IoMdNotificationsOutline className="text-[1.5rem] cursor-pointer text-primary dark:text-white"/>
-        <TbLogout className="text-[1.5rem] cursor-pointer text-primary dark:text-white" onClick={()=>{dispatch(logout());navigate('/login')}}/>
+        <TbLogout className="text-[1.5rem] cursor-pointer text-primary dark:text-white" onClick={()=>{dispatch(userLogout());navigate('/login')}}/>
       </div>
     </div>
   )

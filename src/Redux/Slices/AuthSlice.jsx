@@ -34,7 +34,7 @@ const authSlice = createSlice({
       // sessionStorage.setItem("username", username);
       // sessionStorage.setItem("roles", JSON.stringify(roles));
       // sessionStorage.setItem("menus", JSON.stringify(menus));
-      sessionStorage.setItem("  ", "true");
+      sessionStorage.setItem("loggedIn", "true");
 
       // toast.success("Login Successfull");
     },
@@ -46,7 +46,6 @@ const authSlice = createSlice({
         (state.loggedIn = false);
 
       sessionStorage.clear();
-      toast.success("Logged out successfully");
     },
 
     loginFailure: (state, action) => {
@@ -63,6 +62,20 @@ export const userLogin = (credentials) => async (dispatch) => {
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));
+    }
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || error.message || "Login faild";
+    dispatch(loginFailure(errorMessage));
+  }
+};
+
+export const userLogout = () => async (dispatch) => {
+  try {
+    dispatch(logout());
+    const res = await api.get("/Auth/logout",{withCredentials:true});
+    if (res.status === 200) {
+      toast.success("Logged out successfully");
     }
   } catch (error) {
     const errorMessage =
