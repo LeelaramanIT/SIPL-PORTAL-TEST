@@ -34,7 +34,7 @@ const authSlice = createSlice({
       // sessionStorage.setItem("username", username);
       // sessionStorage.setItem("roles", JSON.stringify(roles));
       // sessionStorage.setItem("menus", JSON.stringify(menus));
-      sessionStorage.setItem("loggedIn", "true");
+      sessionStorage.setItem("  ", "true");
 
       // toast.success("Login Successfull");
     },

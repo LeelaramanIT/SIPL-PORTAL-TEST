@@ -3,7 +3,6 @@ import assets from "../assets/assets";
 
 const LoadingButton = () => {
   return (
-    <div>
       <button
         disabled
         type="button"
@@ -12,7 +11,6 @@ const LoadingButton = () => {
         <img src={assets.LoadingAnimation} className="w-[2rem] h-[1.5rem] text-white"/>
         Loading...
       </button>
-    </div>
   );
 };
 

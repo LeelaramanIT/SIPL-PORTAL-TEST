@@ -52,39 +52,67 @@ const ExportInvoicePrepare = () => {
     "PART-NO",
   ];
 
-  const animateRows = () => {
-    const element = rowsRef.current.filter(Boolean);
-    if (element.length > 0) {
-      gsap.fromTo(
-        element,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.3, stagger: 0.05 }
-      );
+const animateRows = () => {
+  const rows = rowsRef.current.filter(Boolean);
+
+  const tl = gsap.timeline();
+
+  tl.fromTo(
+    [div1.current, div2.current, div3.current, div4.current, div5.current],
+    { opacity: 0, y: 50 },
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      stagger: 0.2,
+      ease: "power2.out",
     }
-    gsap.fromTo(
-      [div1.current, div2.current, div3.current, div4.current, div5.current],
-      { opacity: 0, x: -50 },
+  );
+
+  if (rows.length > 0) {
+    tl.fromTo(
+      rows,
+      { opacity: 0, y: 30 },
       {
         opacity: 1,
-        x: 0,
-        duration: 0.5,
-        stagger: 0.2,
+        y: 0,
+        duration: 0.3,
+        stagger: 0.1,
         ease: "power2.out",
-      }
+      },
+      "+=0.2" // slight pause before rows start
     );
-  };
+  }
+};
+
+
 
   const div1 = useRef(null);
   const div2 = useRef(null);
   const div3 = useRef(null);
   const div4 = useRef(null);
   const div5 = useRef(null);
+  const formRef = useRef(null);
+
 
   useEffect(() => {
     animateRows();
   }, []);
 
   useEffect(() => {
+    if (showDetailsForm && formRef.current) {
+    gsap.fromTo(
+      formRef.current,
+      { opacity: 0, scale: 0.8, y: 50 },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.4,
+        ease: "power3.out",
+      }
+    );
+  } 
     if (showDetailsForm) {
       document.body.classList.add("overflow-hidden");
     } else {
@@ -93,6 +121,8 @@ const ExportInvoicePrepare = () => {
 
     return () => document.body.classList.remove("overflow-hidden");
   }, [showDetailsForm]);
+
+
 
   return (
     <div
@@ -289,7 +319,7 @@ const ExportInvoicePrepare = () => {
           <div className="absolute inset-0 bg-black/0  backdrop-blur-[1rem] z-0" />
 
           {/* Form wrapper */}
-          <div className="relative z-10 bg-white dark:bg-gray-900 p-6 rounded-lg overflow-auto custom-scrollbar shadow-2xl w-full max-w-5xl h-[30rem] border border-gray-300 dark:border-gray-700">
+          <div ref={formRef} className="relative z-10 bg-white dark:bg-gray-900 p-6 rounded-lg overflow-auto custom-scrollbar shadow-2xl w-full max-w-5xl h-[30rem] border border-gray-300 dark:border-gray-700">
             <button
               onClick={() => setShowDetailsForm(false)}
               className="absolute top-9 right-8 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"

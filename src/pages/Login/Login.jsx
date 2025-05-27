@@ -7,14 +7,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { userLogin } from "../../Redux/Slices/AuthSlice";
 import toast from "react-hot-toast";
 import LogginButton from '../../components/LoadingButton'
-const videoOption = [assets.Mountain, assets.SKY];
-const randomIndex = Math.floor(Math.random() * videoOption.length);
+
+const randomIndex = Math.floor(Math.random() * 2);
+const videoOption = randomIndex === 1 ?  assets.SKY : assets.Mountain;
+
 
 const Login = () => {
   const username = useRef();
   const password = useRef();
   const [showPassword, setShowPassword] = useState(false);
-  const [video, setVideo] = useState(null);
   const navigate = useNavigate()
   const dispatch = useDispatch();
   const {loading,error,loggedIn} = useSelector((state)=>state.auth)
@@ -71,8 +72,6 @@ useEffect(() => {
         ease: "power2.out",
       }
     );
-
-    setVideo(videoOption[randomIndex]);
   }, []);
 
   return (
@@ -90,7 +89,7 @@ useEffect(() => {
         className="absolute z-10 top-5 left-5 w-[15rem]"
       />
       {/* Background Video */}
-      {video && (
+      {videoOption && (
         <video
           autoPlay
           loop
@@ -98,7 +97,7 @@ useEffect(() => {
           playsInline
           className="absolute top-0 left-0 w-full h-full object-cover z-0"
         >
-          <source src={video} type="video/mp4" />
+          <source src={videoOption} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       )}
