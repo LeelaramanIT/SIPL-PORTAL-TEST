@@ -5,7 +5,7 @@ import SearchBar from "../../../../../components/SearchBar";
 import Dropdown from "../../../../../components/DropDown";
 import gsap from "gsap";
 import DatePickerComponent from "../../../../../components/DatePicker/DatePicker";
-import TitleText from "../../../../../components/TitleText";
+import TitleText from "../../../../..//components/TitleText";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getExportInvoice,

@@ -1,32 +1,46 @@
 import { FaAngleDown, FaAngleUp } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSection } from '../Redux/Slices/GlobalSlice';
+import { toggleSection } from '../../Redux/Slices/GlobalSlice';
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 
-const SidebarItem = ({ icon: Icon, label, children }) => {
+const SidebarItem = ({ icon: Icon, label, sectionKey, children }) => {
   const dispatch = useDispatch();
   const open = useSelector((state) => state.global.open);
-  const isOpen = useSelector((state) => state.global.sections[label] || false);
+
+  const key = sectionKey || label.replace(/\s+/g, '').toLowerCase(); // Fallback
+  const isOpen = useSelector((state) => state.global.sections[key] || false);
   const hasChildren = !!children;
 
   const contentRef = useRef(null);
 
   const handleClick = () => {
     if (hasChildren && open) {
-      dispatch(toggleSection(label));
+      dispatch(toggleSection(key));
     }
   };
 
   useEffect(() => {
-    if (contentRef.current) {
-      gsap.to(contentRef.current, {
-        height: isOpen ? 'auto' : 0,
-        opacity: isOpen ? 1 : 0,
-        duration: 0.3,
-        ease: 'power1',
-        display: isOpen ? 'block' : 'none',
-      });
+    const el = contentRef.current;
+    if (el) {
+      if (isOpen) {
+        gsap.to(el, {
+          height: el.scrollHeight,
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power1.out',
+          onComplete: () => {
+            el.style.height = 'auto';
+          },
+        });
+      } else {
+        gsap.to(el, {
+          height: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power1.in',
+        });
+      }
     }
   }, [isOpen]);
 
@@ -35,9 +49,9 @@ const SidebarItem = ({ icon: Icon, label, children }) => {
       <li
         className={`w-full h-12 flex items-center px-4 ${
           open ? '' : 'justify-center'
-        } cursor-pointer \
-        ${isOpen ? 'text-black dark:text-white' : 'text-primary dark:text-white'} \
-        hover:text-black dark:hover:text-white hover:bg-text-hover dark:hover:bg-gray-700 \
+        } cursor-pointer
+        ${isOpen ? 'text-black dark:text-white' : 'text-primary dark:text-white'}
+        hover:text-black dark:hover:text-white hover:bg-text-hover dark:hover:bg-gray-700
         text-[0.8rem]`}
         onClick={handleClick}
       >

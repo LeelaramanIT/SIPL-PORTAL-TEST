@@ -1,5 +1,5 @@
 import axios from "axios";
-import InvoiceBill from "../TTS/Invoice/International/Export Invoice/InvoiceBill";
+import InvoiceBill from "../TTS/International/Invoice/Export Invoice/InvoiceBill";
 import { BackendUrl } from "../../config";
 
 const Home = () => {

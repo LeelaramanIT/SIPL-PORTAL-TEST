@@ -6,7 +6,7 @@ import './invoice.css'
 const InvoiceBill = () => {
 
   return (
-    <div className="flex justify-center items-center w-full h-[100%]">
+    <div className="flex justify-center items-center w-full h-[100%] dark:text-white">
       <div className="text-[8px] scroll-auto">
         <p className="TextP" style={{ textIndent: "0pt", textAlign: "left" }}>
           <br />

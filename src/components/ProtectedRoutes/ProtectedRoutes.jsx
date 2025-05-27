@@ -18,10 +18,10 @@ const ProtectedRoutes = () => {
   
   const permissionKey = routePermissions[currentPath];
 
-  // if(permissionKey && !menus.includes(permissionKey)){
-  //   toast.error('Access denied. Authentication required.');
-  //   return <ProtectedPage />
-  // }
+  if(permissionKey && !menus.includes(permissionKey)){
+    toast.error('Access denied. Authentication required.');
+    return <ProtectedPage />
+  }
   return <Outlet />  
 };
 

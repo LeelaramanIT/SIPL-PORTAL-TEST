@@ -1,16 +1,16 @@
 import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
-import assets from "../assets/assets.js";
+import assets from "../../assets/assets.js";
 import { IoMdSettings } from "react-icons/io";
 import { IoHome } from "react-icons/io5";
 import { RxDashboard } from "react-icons/rx";
 import { FaUsers, FaUser } from "react-icons/fa";
 import { GoOrganization } from "react-icons/go";
-import SidebarItem from "./SidebarItem";
+import SidebarItem from "./SidebarItem.jsx";
 import { NavLink } from "react-router-dom";
 import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { SiAwsorganizations } from "react-icons/si";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleSidebar, toggleSection } from "../Redux/Slices/GlobalSlice.jsx";
+import { toggleSidebar, toggleSection } from "../../Redux/Slices/GlobalSlice.jsx";
 import { useCallback } from "react";
 
 const SideBar = () => {
@@ -19,9 +19,12 @@ const SideBar = () => {
   const sections = useSelector((store) => store.global.sections);
 
   // Local helper to dispatch toggleSection action with section key
-  const handleToggleSection = useCallback(()=>{(section) => {
-    dispatch(toggleSection(section));
-  }},[dispatch])
+  const handleToggleSection = useCallback(
+    (section) => {
+      dispatch(toggleSection(section));
+    },
+    [dispatch]
+  );
 
   return (
     <div
@@ -63,28 +66,16 @@ const SideBar = () => {
             <SidebarItem
               icon={FaUsers}
               label="Masters"
-              isOpen={sections.mastersOpen}
-              setIsOpen={() => handleToggleSection("mastersOpen")}
+              sectionKey="mastersOpen"
             >
               <SidebarItem
                 icon={FaUser}
                 label="User Master"
-                isOpen={sections.userMasterOpen}
-                setIsOpen={() => handleToggleSection("userMasterOpen")}
+                sectionKey="userMasterOpen"
               >
-                <NavLink to={"/Masters/UserMaster/UserCreate"}>
+                <NavLink to="/Masters/UserMaster/UserCreate">
                   <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
                     User Create
-                  </li>
-                </NavLink>
-                <NavLink to={"/Masters/UserMaster/UserUpdate"}>
-                  <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                    User Update
-                  </li>
-                </NavLink>
-                <NavLink to={"/Masters/UserMaster/ViewUsers"}>
-                  <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                    View Users
                   </li>
                 </NavLink>
               </SidebarItem>
@@ -92,22 +83,11 @@ const SideBar = () => {
               <SidebarItem
                 icon={GoOrganization}
                 label="Organization"
-                isOpen={sections.organizationOpen}
-                setIsOpen={() => handleToggleSection("organizationOpen")}
+                sectionKey="organizationOpen"
               >
-                <NavLink to={"/Masters/Organization/OrganizationCreate"}>
+                <NavLink to="/Masters/Organization/OrganizationCreate">
                   <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
                     Create Branch
-                  </li>
-                </NavLink>
-                <NavLink to={"/Masters/Organization/OrganizationUpdate"}>
-                  <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                    Update Branch
-                  </li>
-                </NavLink>
-                <NavLink to={"/Masters/Organization/OrganizationView"}>
-                  <li className="cursor-pointer hover:bg-text-hover px-4 py-2 text-[0.9rem] text-primary">
-                    View Branch
                   </li>
                 </NavLink>
               </SidebarItem>
@@ -119,41 +99,30 @@ const SideBar = () => {
             <SidebarItem
               icon={SiAwsorganizations}
               label="TTS"
-              isOpen={sections.TTSOpen}
-              setIsOpen={() => handleToggleSection("TTSOpen")}
+              sectionKey="TTSOpen"
             >
-              <SidebarItem
-                icon={LiaFileInvoiceDollarSolid}
-                label="Invoice"
-                isOpen={sections.invoiceOpen}
-                setIsOpen={() => handleToggleSection("invoiceOpen")}
-              >
-                {/* Domestic Dropdown */}
+              <SidebarItem label="Domestic" sectionKey="domesticOpen">
                 <SidebarItem
-                  label="Domestic"
-                  isOpen={sections.domesticOpen}
-                  setIsOpen={() => handleToggleSection("domesticOpen")}
+                  icon={LiaFileInvoiceDollarSolid}
+                  label="Invoice"
+                  sectionKey="DomesticInvoiceOpen"
                 >
-                  <NavLink to="/TTS/Invoice/Domestic/CustomerInvoice">
+                  <NavLink to="/TTS/Domestic/Invoice/CustomerInvoice">
                     <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary">
                       Customer
                     </li>
                   </NavLink>
-                  <NavLink to="/TTS/Invoice/Domestic/CustomInvoice">
-                    <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary">
-                      Custom
-                    </li>
-                  </NavLink>
                 </SidebarItem>
+              </SidebarItem>
 
-                {/* International */}
+              <SidebarItem label="International" sectionKey="internationalOpen">
                 <SidebarItem
-                  label="International"
-                  isOpen={sections.internationalOpen}  // Fixed to use internationalOpen key instead of domesticOpen
-                  setIsOpen={() => handleToggleSection("internationalOpen")}
+                  icon={LiaFileInvoiceDollarSolid}
+                  label="Invoice"
+                  sectionKey="InternationalInvoiceOpen"
                 >
-                  <NavLink to="/TTS/Invoice/International/Export">
-                    <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary -ml-1">
+                  <NavLink to="/TTS/International/Invoice/Export">
+                    <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary">
                       Export
                     </li>
                   </NavLink>

@@ -7,12 +7,12 @@ import UserCreate from "../pages/Masters/UserCreate";
 import ListUserMaster from "../pages/Masters/ListUserMaster";
 import Settings from "../pages/Settings/Settings";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
-import CustomerInvoice from "../pages/TTS/Invoice/Domostic/CustomerInvoice";
-import ExportInvoice from "../pages/TTS/Invoice/International/Export Invoice/ExportInvoicePage";
+import CustomerInvoice from "../pages/TTS/Domostic/Invoice/CustomerInvoice";
+import ExportInvoice from "../pages/TTS/International/Invoice/Export Invoice/ExportInvoicePage";
 import InvoiceLayout from "../layout/InvoiceLayout";
-import CustomInvoice from "../pages/TTS/Invoice/Domostic/CustomInvoice";
+import CustomInvoice from "../pages/TTS/Domostic/Invoice/CustomInvoice";
 import MasterLayout from "../layout/MastarLayout";
-import ExportInvoicePrepare from "../pages/TTS/Invoice/International/Export Invoice/ExportPrepare";
+import ExportInvoicePrepare from "../pages/TTS/International/Invoice/Export Invoice/ExportPrepare";
 import ProtectedRoutes from "../components/ProtectedRoutes/ProtectedRoutes";
 import ProtectedPage from "../pages/NotFound/protectedPage";
 
@@ -36,13 +36,19 @@ export const router = createBrowserRouter([
           ]
         },
         {
-          path: "TTS/Invoice",
+          path: "TTS/Domestic",
           element: <InvoiceLayout />,
           children: [
-            { path: "Domestic/Customer", element: <CustomerInvoice /> },
-            { path: "Domestic/Custom", element: <CustomInvoice /> },
-            { path: "International/Export", element: <ExportInvoice /> },
-            { path: "International/Export/Prepare", element: <ExportInvoicePrepare /> },
+            { path: "Invoice/Customer", element: <CustomerInvoice /> },
+            { path: "Invoice/Custom", element: <CustomInvoice /> },
+          ],
+        },
+        {
+          path: "TTS/International",
+          element: <InvoiceLayout />,
+          children: [
+            { path: "Invoice/Export", element: <ExportInvoice /> },
+            { path: "Invoice/Export/Prepare", element: <ExportInvoicePrepare /> },
           ],
         },
         { path: "Settings", element: <Settings /> },
