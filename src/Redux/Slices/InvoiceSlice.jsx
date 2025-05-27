@@ -80,7 +80,7 @@ export const getExportInvoice = (payload) => async (dispatch) => {
 export const getExportInvoiceAll = () => async (dispatch) =>{
   try {
     dispatch(setExportLoading());
-    const res = await api.get(`${BackendUrl}/Invoice/GettingInvoiceReadyOrders`)
+    const res = await api.get(`${BackendUrl}/Invoice/GettingInvoiceReadyOrders`,{withCredentials:true})
     dispatch(setExportdatas(res.data)); // dispatch the data to the store
   } catch (error) {
     dispatch(setExportError(error.message));
