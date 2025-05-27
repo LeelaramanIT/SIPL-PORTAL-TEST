@@ -14,6 +14,10 @@ const ProtectedRoutes = () => {
     return <Navigate to="/login" replace={true} />
   }
 
+  if (roles?.some(role => role.roleName === 'Admin')) {
+    return <Outlet /> 
+  }
+
   const currentPath = location.pathname.replace(/^\/+/, '')
   
   const permissionKey = routePermissions[currentPath];
@@ -21,8 +25,8 @@ const ProtectedRoutes = () => {
   if(permissionKey && !menus.includes(permissionKey)){
     toast.error('Access denied. Authentication required.');
     return <ProtectedPage />
-  }
-  return <Outlet />  
+  }   
+   return <Outlet /> 
 };
 
 export default ProtectedRoutes;
