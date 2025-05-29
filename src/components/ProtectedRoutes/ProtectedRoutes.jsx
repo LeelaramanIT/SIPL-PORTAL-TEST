@@ -12,6 +12,7 @@ const ProtectedRoutes = () => {
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (roles?.some((role) => role.roleName === 'Admin')) {

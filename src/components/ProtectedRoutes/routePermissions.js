@@ -1,4 +1,4 @@
-// permissionsMap.js
+// routePermissions.js
 export const routePermissions = {
   Dashboard: "Dashboard",
   "Masters/UserMaster/UserCreate": "UserCreate",
