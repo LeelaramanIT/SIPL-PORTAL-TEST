@@ -3,11 +3,12 @@ import { Toaster } from "react-hot-toast";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./router/Router"; // Make sure this import is correct
 import { Provider } from "react-redux";
-import { store } from "./Redux/Store/app";
+import { persistor, store } from "./Redux/Store/app";
 import AOS from "aos";
 import 'aos/dist/aos.css'; // Import AOS styles
 import { useEffect } from "react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { PersistGate } from "redux-persist/integration/react";
 
 
 
@@ -43,7 +44,9 @@ function App() {
         }}
       />
       <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
       <RouterProvider router={router} /> 
+      </PersistGate>
       </Provider>
     </>
   );

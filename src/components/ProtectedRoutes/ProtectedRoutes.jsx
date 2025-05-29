@@ -5,28 +5,35 @@ import toast from 'react-hot-toast';
 import ProtectedPage from '../../pages/NotFound/protectedPage';
 
 const ProtectedRoutes = () => {
-  const isLoggedIn = useSelector((state)=> state.auth.loggedIn)
-  const roles = useSelector((state)=> state.auth.roles)
-  const menus = useSelector((state)=> state.auth.menus)
-  const location = useLocation()
+  const isLoggedIn = useSelector((state) => state.auth.loggedIn);
+  const roles = useSelector((state) => state.auth.roles);
+  const menus = useSelector((state) => state.auth.menus);
+  const location = useLocation();
 
   if (!isLoggedIn) {
-    return <Navigate to="/login" replace={true} />
+    return <Navigate to="/login" replace />;
   }
 
-  if (roles?.some(role => role.roleName === 'Admin')) {
-    return <Outlet /> 
+  if (roles?.some((role) => role.roleName === 'Admin')) {
+    return <Outlet />;
   }
 
-  const currentPath = location.pathname.replace(/^\/+/, '')
-  
-  const permissionKey = routePermissions[currentPath];
+  const currentPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+  console.log('Current Path:', currentPath);
 
-  if(permissionKey && !menus.includes(permissionKey)){
+  const matchPermissionKey = Object.entries(routePermissions).find(([route]) =>
+    currentPath.startsWith(route)
+  );
+
+  const permissionKey = matchPermissionKey?.[1];
+  console.log('Permission Key:', permissionKey);
+
+  if (permissionKey && !menus.some((m) => m.menuName === permissionKey)) {
     toast.error('Access denied. Authentication required.');
-    return <ProtectedPage />
-  }   
-   return <Outlet /> 
+    return <ProtectedPage />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoutes;

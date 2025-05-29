@@ -2,16 +2,16 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../utils/axios";
 import { toast } from "react-hot-toast";
 
-
 const initialState = {
-  token: sessionStorage.getItem("token") || null,
-  username: sessionStorage.getItem("username") || null,
-  roles: JSON.parse(sessionStorage.getItem("roles") || "[]"),
-  menus: JSON.parse(sessionStorage.getItem("menus") || "[]"),
-  loggedIn: sessionStorage.getItem("loggedIn") === "true",
+  token: null,
+  username: null,
+  roles: [],
+  menus: [],
+  loggedIn: false,
   loading: false,
   error: null,
 };
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -31,11 +31,6 @@ const authSlice = createSlice({
       state.loggedIn = true;
       state.loading = false;
 
-      // sessionStorage.setItem("token", token);
-      sessionStorage.setItem("username", username);
-      sessionStorage.setItem("roles", JSON.stringify(roles));
-      sessionStorage.setItem("menus", JSON.stringify(menus));
-      sessionStorage.setItem("loggedIn", "true");
 
       // toast.success("Login Successfull");
     },
@@ -45,7 +40,6 @@ const authSlice = createSlice({
         (state.roles = []),
         (state.menus = []),
         (state.loggedIn = false);
-      sessionStorage.clear();
     },
 
     loginFailure: (state, action) => {
