@@ -18,6 +18,7 @@ const persistConfig = {
   storage,
   whitelist: ["auth"], // only persist auth slice
   transforms: [encryptor],
+  blacklist:['loading','error'] // Do NOT persist these
 };
 
 const rootReducer = combineReducers({

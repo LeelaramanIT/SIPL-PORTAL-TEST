@@ -17,15 +17,18 @@ const SideBar = () => {
   const dispatch = useDispatch();
   const open = useSelector((store) => store.global.open);
   const sections = useSelector((store) => store.global.sections);
+  const menus = useSelector((store)=> store.auth.menus)
 
-  // Local helper to dispatch toggleSection action with section key
-  const handleToggleSection = useCallback(
-    (section) => {
-      dispatch(toggleSection(section));
-    },
-    [dispatch]
-  );
+  // Check if a menu item with a specific name exists
+const isMenuAllowed = (menuName) =>
+  menus.some(menu => menu.menuName === menuName);
 
+// Check if any menu URL matches a pattern (e.g., starts with 'TTS/International')
+const hasMenuUrlPrefix = (prefix) =>
+  menus.some(menu => menu.menuUrl.startsWith(prefix));
+
+  console.log(menus)
+  
   return (
     <div
       className={`${
@@ -57,12 +60,12 @@ const SideBar = () => {
           <NavLink to={"/"}>
             <SidebarItem icon={IoHome} label="Home" />
           </NavLink>
-          <NavLink to={"/Dashboard"}>
+          {isMenuAllowed("Dashboard") && (<NavLink to={"/Dashboard"}>
             <SidebarItem icon={RxDashboard} label="Dashboard" />
-          </NavLink>
+          </NavLink>)}
 
           {/* Masters */}
-          <div onClick={() => !open && dispatch(toggleSidebar())}>
+          {hasMenuUrlPrefix("Masters/") && (<div onClick={() => !open && dispatch(toggleSidebar())}>
             <SidebarItem
               icon={FaUsers}
               label="Masters"
@@ -92,16 +95,16 @@ const SideBar = () => {
                 </NavLink>
               </SidebarItem>
             </SidebarItem>
-          </div>
+          </div>)}
 
           {/* TTS Menu */}
-          <div onClick={() => !open && dispatch(toggleSidebar())}>
+          {hasMenuUrlPrefix('TTS/') && (<div onClick={() => !open && dispatch(toggleSidebar())}>
             <SidebarItem
               icon={SiAwsorganizations}
               label="TTS"
               sectionKey="TTSOpen"
             >
-              <SidebarItem label="Domestic" sectionKey="domesticOpen">
+              {hasMenuUrlPrefix("Domestic/") && (<SidebarItem label="Domestic" sectionKey="domesticOpen">
                 <SidebarItem
                   icon={LiaFileInvoiceDollarSolid}
                   label="Invoice"
@@ -113,27 +116,28 @@ const SideBar = () => {
                     </li>
                   </NavLink>
                 </SidebarItem>
-              </SidebarItem>
+              </SidebarItem>)}
 
-              <SidebarItem label="International" sectionKey="internationalOpen">
+              {hasMenuUrlPrefix("TTS/International/") && <SidebarItem label="International" sectionKey="internationalOpen">
                 <SidebarItem
                   icon={LiaFileInvoiceDollarSolid}
                   label="Invoice"
                   sectionKey="InternationalInvoiceOpen"
                 >
-                  <NavLink to="/TTS/International/Invoice/Export">
+                  {isMenuAllowed("ExportInvoice") && (<NavLink to="/TTS/International/Invoice/Export">
                     <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary">
                       Export
                     </li>
-                  </NavLink>
+                  </NavLink>)}
                 </SidebarItem>
-              </SidebarItem>
-            </SidebarItem>
-          </div>
+              </SidebarItem>}
 
-          <NavLink to={"/Settings"}>
+            </SidebarItem>
+          </div>)}
+
+          {isMenuAllowed("Settings") && (<NavLink to={"/Settings"}>
             <SidebarItem icon={IoMdSettings} label="Settings" />
-          </NavLink>
+          </NavLink>)}
         </ul>
       </div>
       {/* dark mode toggle */}

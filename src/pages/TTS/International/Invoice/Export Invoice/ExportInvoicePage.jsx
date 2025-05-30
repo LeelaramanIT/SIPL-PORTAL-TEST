@@ -142,12 +142,6 @@ const ExportInvoice = () => {
           )}
         </div>
 
-        {/* <button
-          onClick={() => navigate("/Masters/UserMaster/UserCreate")}
-          className="bg-slate-800 text-white py-1.5 px-5 rounded-md hover:bg-slate-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition duration-300 w-full md:w-auto"
-        >
-          + Add Invoice
-        </button> */}
         <Button
           onClick={() => navigate("/Masters/UserMaster/UserCreate")}
           text={"+ Add Invoice"}

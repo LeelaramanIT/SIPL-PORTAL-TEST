@@ -134,7 +134,7 @@ const animateRows = () => {
       {/* Section 1: Invoice Header Info */}
       <div
         ref={div2}
-        className="p-2 border border-gray-300 dark:border-gray-700 rounded-xl shadow-lg bg-white dark:bg-gray-800"
+        className="px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-sm shadow-lg bg-white dark:bg-gray-800"
       >
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
@@ -319,7 +319,7 @@ const animateRows = () => {
           <div className="absolute inset-0 bg-black/0  backdrop-blur-[1rem] z-0" />
 
           {/* Form wrapper */}
-          <div ref={formRef} className="relative z-10 bg-white dark:bg-gray-900 p-6 rounded-lg overflow-auto custom-scrollbar shadow-2xl w-full max-w-5xl h-[30rem] border border-gray-300 dark:border-gray-700">
+          <div ref={formRef} className="relative z-10 bg-white dark:bg-gray-900 p-6 rounded-lg overflow-auto custom-scrollbar shadow-2xl w-full max-w-5xl h-[40rem] border border-gray-300 dark:border-gray-700">
             <button
               onClick={() => setShowDetailsForm(false)}
               className="absolute top-9 right-8 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"

@@ -5,17 +5,16 @@ import toast from 'react-hot-toast';
 import ProtectedPage from '../../pages/NotFound/protectedPage';
 
 const ProtectedRoutes = () => {
-  const isLoggedIn = useSelector((state) => state.auth.loggedIn);
-  const roles = useSelector((state) => state.auth.roles);
-  const menus = useSelector((state) => state.auth.menus);
+  const isLoggedIn = useSelector((state) => state.auth?.loggedIn);
+  const roles = useSelector((state) => state.auth?.roles);
+  const menus = useSelector((state) => state.auth?.menus);
   const location = useLocation();
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
-    return <Navigate to="/login" replace />;
   }
 
-  if (roles?.some((role) => role.roleName === 'Admin')) {
+  if (roles?.some((role) => role?.roleName === 'Admin')) {
     return <Outlet />;
   }
 
