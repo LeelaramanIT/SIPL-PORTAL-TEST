@@ -1,48 +1,50 @@
 import { useEffect, useRef, useState } from "react";
 import assets from "../../assets/assets";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { NavLink,useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogin } from "../../Redux/Slices/AuthSlice";
 import toast from "react-hot-toast";
-import LogginButton from '../../components/LoadingButton'
+import LoadingButton from "../../components/LoadingButton";
 
 const randomIndex = Math.floor(Math.random() * 2);
-const videoOption = randomIndex === 1 ?  assets.SKY : assets.Mountain;
-
+const videoOption = randomIndex === 1 ? assets.SKY : assets.Mountain;
 
 const Login = () => {
   const username = useRef();
   const password = useRef();
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {loading,error,loggedIn} = useSelector((state)=>state.auth)
+  const { loading, error, loggedIn } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      dispatch(userLogin({username:username.current.value,password:password.current.value}))
+      dispatch(
+        userLogin({
+          username: username.current.value,
+          password: password.current.value,
+        })
+      );
     } catch (error) {
       console.log(error.message);
     }
   };
 
   useEffect(() => {
-  if (loggedIn) {
-    toast.success("Login successful!");
-    navigate("/");
-  }
-}, [loggedIn, navigate]);
+    if (loggedIn) {
+      toast.success("Login successful!");
+      navigate("/");
+    }
+  }, [loggedIn, navigate]);
 
-useEffect(() => {
-  if (error) {
-    toast.error(error); // ✅ Show login error
-  }
-}, [error]);
-
-
+  useEffect(() => {
+    if (error) {
+      toast.error(error); // ✅ Show login error
+    }
+  }, [error]);
 
   const div1 = useRef([]);
   const div2 = useRef([]);
@@ -168,8 +170,8 @@ useEffect(() => {
             </label>
             <div
               className={`absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer ${
-            randomIndex === 1 ? "text-slate-900" : "text-white"
-          } text-slate-900/70`}
+                randomIndex === 1 ? "text-slate-900" : "text-white"
+              } text-slate-900/70`}
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
@@ -180,7 +182,9 @@ useEffect(() => {
           <div ref={div6} className="text-sm flex justify-between ">
             <NavLink
               to={""}
-              className={`${randomIndex === 1 ? 'text-gray-950':'text-gray-50' } hover:text-gray-700 hover:underline transition duration-150 select-none`}
+              className={`${
+                randomIndex === 1 ? "text-gray-950" : "text-gray-50"
+              } hover:text-gray-700 hover:underline transition duration-150 select-none`}
             >
               Create Account?
             </NavLink>
@@ -193,13 +197,17 @@ useEffect(() => {
           </div>
 
           {/* Login Button */}
-          {loading ? <LogginButton/>:  <button
-            ref={div7}
-            type="submit"
-            className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
-          >
-          Login
-          </button> }
+          {loading ? (
+            <LoadingButton text={'Loading...'} className='w-full py-2 px-4' />
+          ) : (
+            <button
+              ref={div7}
+              type="submit"
+              className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
+            >
+              Login
+            </button>
+          )}
         </form>
       </div>
     </div>

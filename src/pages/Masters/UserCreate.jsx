@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import Button from "../../components/Button";
+import Button from "../../components/InputFields/Button";
 
 const ShipmentDetailsForm = ({ onClose }) => {
   const {

@@ -27,8 +27,6 @@ const isMenuAllowed = (menuName) =>
 const hasMenuUrlPrefix = (prefix) =>
   menus.some(menu => menu.menuUrl.startsWith(prefix));
 
-  console.log(menus)
-  
   return (
     <div
       className={`${
