@@ -5,10 +5,12 @@ import gsap from "gsap";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate()
 
   const invoiceData = Array.from({ length: 20 }, (_, i) => ({
     category: "Truck",
@@ -267,7 +269,7 @@ const ExportInvoicePrepare = () => {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
-        <Button onClick={() => {}} text="Preview PDF" />
+        <Button onClick={() => {navigate("/TTS/International/Invoivce/Export/BillPDF")}} text="Preview PDF" />
         <Button
           onClick={() => setShowDetailsForm(true)}
           text="+ Add Additional Details"

@@ -15,6 +15,7 @@ import MasterLayout from "../layout/MastarLayout";
 import ExportInvoicePrepare from "../pages/TTS/International/Invoice/Export Invoice/ExportPrepare";
 import ProtectedRoutes from "../components/ProtectedRoutes/ProtectedRoutes";
 import ProtectedPage from "../pages/NotFound/protectedPage";
+import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invoice/ExportInvoiceBillPDF";
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
           children: [
             { path: "Invoice/Export", element: <ExportInvoice /> },
             { path: "Invoice/Export/Prepare", element: <ExportInvoicePrepare /> },
+            { path: "Invoivce/Export/BillPDF", element: <ExportInvoiceBillPDF/> }
           ],
         },
         { path: "Settings", element: <Settings /> },

@@ -8,5 +8,6 @@ export default defineConfig({
     react()],
   optimizeDeps: {
     include: ['redux-persist-transform-encrypt'],
+    // exclude: ['@react-pdf/renderer'],
   },
 })

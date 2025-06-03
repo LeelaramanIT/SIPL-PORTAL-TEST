@@ -2,15 +2,15 @@
 
 import { Link } from "react-router-dom";
 
-import './invoice.css'
+import "./invoice.css";
 const InvoiceBill = () => {
-
   return (
     <div className="flex justify-center items-center w-full h-[100%] dark:text-white">
       <div className="text-[8px] scroll-auto">
         <p className="TextP" style={{ textIndent: "0pt", textAlign: "left" }}>
           <br />
         </p>
+
         <table
           style={{ borderCollapse: "collapse", marginLeft: "3pt" }}
           cellSpacing="0"
@@ -49,9 +49,7 @@ const InvoiceBill = () => {
           <tbody>
             <tr style={{ height: "32pt" }}>
               <td
-                style={{
-                  width: "219pt",
-                  borderTopStyle: "solid",
+                style={{width: "219pt", borderTopStyle: "solid",
                   borderTopWidth: "1pt",
                   borderLeftStyle: "solid",
                   borderLeftWidth: "1pt",
@@ -96,8 +94,8 @@ const InvoiceBill = () => {
                     textAlign: "left",
                   }}
                 >
-                  ( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN
-                  TYRE &amp; WHEEL SYSTEMS)
+                  ( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION
+                  SUN TYRE &amp; WHEEL SYSTEMS)
                 </p>
                 <p
                   className="s1 TextP"
@@ -510,8 +508,8 @@ const InvoiceBill = () => {
                     paddingLeft: "1pt",
                   }}
                 >
-                  100% Payment in 90 days from the date of Bill of Lading Remitted
-                  in SUNDARAM INDUSTRIES PVT LIMITED
+                  100% Payment in 90 days from the date of Bill of Lading
+                  Remitted in SUNDARAM INDUSTRIES PVT LIMITED
                 </p>
               </td>
             </tr>
@@ -651,7 +649,6 @@ const InvoiceBill = () => {
                     textAlign: "left",
                     paddingLeft: "1pt",
                   }}
-
                 >
                   Port of Discharge NEWYORK
                 </p>
@@ -966,7 +963,14 @@ const InvoiceBill = () => {
                 <p style={{ textIndent: "0pt", textAlign: "left" }}>
                   <br />
                 </p>
-                <p className="s1 TextP" style={{ textIndent: "0pt", textAlign: "left", paddingLeft: "1pt", }}>
+                <p
+                  className="s1 TextP"
+                  style={{
+                    textIndent: "0pt",
+                    textAlign: "left",
+                    paddingLeft: "1pt",
+                  }}
+                >
                   4012 90 20
                 </p>
                 <p style={{ textIndent: "0pt", textAlign: "left" }}>
@@ -1288,8 +1292,8 @@ const InvoiceBill = () => {
                     paddingLeft: "1pt",
                   }}
                 >
-                  (USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE
-                  ONLY)
+                  (USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS
+                  FIVE ONLY)
                 </p>
                 <p style={{ textIndent: "0pt", textAlign: "left" }}>
                   <br />
@@ -1312,7 +1316,6 @@ const InvoiceBill = () => {
                     paddingLeft: "183pt",
                     textIndent: "0pt",
                     textAlign: "left",
-                    
                   }}
                 >
                   DECLARATION
@@ -1341,10 +1344,17 @@ const InvoiceBill = () => {
                     paddingLeft: "1pt",
                   }}
                 >
-                  The above shipment is under Advance Licence & EPCG Scheme. Advance
-                  Licence No. 0411007094 dt. 14.03.2024 &
+                  The above shipment is under Advance Licence & EPCG Scheme.
+                  Advance Licence No. 0411007094 dt. 14.03.2024 &
                 </p>
-                <p className="s1 TextP" style={{ textIndent: "0pt", textAlign: "left",paddingLeft:"1pt", }}>
+                <p
+                  className="s1 TextP"
+                  style={{
+                    textIndent: "0pt",
+                    textAlign: "left",
+                    paddingLeft: "1pt",
+                  }}
+                >
                   EPCG SCHEME NO: 0431006716 Date 12/01/2024
                 </p>
                 <p style={{ textIndent: "0pt", textAlign: "left" }}>
@@ -1356,8 +1366,8 @@ const InvoiceBill = () => {
                     textIndent: "0pt",
                     lineHeight: "5pt",
                     textAlign: "left",
-                    paddingLeft:"1pt",
-                    paddingBottom:"25pt",
+                    paddingLeft: "1pt",
+                    paddingBottom: "25pt",
                     // color:"red"
                   }}
                 >
@@ -1393,9 +1403,9 @@ const InvoiceBill = () => {
                     textAlign: "center",
                   }}
                 >
-                  SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam
-                  Tyres Private Limited) Regd Office: 'NO. 10 <br/>Jawahar road
-                  Chokkikulam, Madurai - 625002.
+                  SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as
+                  T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10 <br />
+                  Jawahar road Chokkikulam, Madurai - 625002.
                 </p>
                 <p
                   className="s5 TextP"
@@ -1405,10 +1415,18 @@ const InvoiceBill = () => {
                     textAlign: "left",
                   }}
                 >
-                  <Link href="mailto:crm@sun-tws.com" className="s7" target="_blank">
+                  <Link
+                    href="mailto:crm@sun-tws.com"
+                    className="s7"
+                    target="_blank"
+                  >
                     CIN:U51901TN2018PTC121156 Email:{" "}
                   </Link>
-                  <Link href="http://www.sun-tws.com/" className="s7" target="_blank">
+                  <Link
+                    href="http://www.sun-tws.com/"
+                    className="s7"
+                    target="_blank"
+                  >
                     crm@sun-tws.com , Website:{" "}
                   </Link>
                   www.sun-tws.com , Tel: 044 - 43857129
