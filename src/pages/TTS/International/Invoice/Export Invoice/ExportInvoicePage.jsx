@@ -51,30 +51,6 @@ const ExportInvoice = () => {
     { label: "FWT", key: "totalwt" },
   ];
 
-  const generateTableData = (num) => {
-    const shipmentTypes = ["Air", "Sea", "Road"];
-    const loadingLocations = ["Factory A", "Factory B", "Warehouse"];
-
-    return Array.from({ length: num }, (_, index) => ({
-      customer: `Customer ${index + 1}`,
-      orderRefNo: `REF${1000 + index}`,
-      workOrder: `WO-${2000 + index}`,
-      orderDate: new Date().toISOString().split("T")[0],
-      customerDispatchedDate: new Date(Date.now() + 86400000 * index)
-        .toISOString()
-        .split("T")[0],
-      ppcRfdDate: new Date(Date.now() + 86400000 * (index + 2))
-        .toISOString()
-        .split("T")[0],
-      shipmentType:
-        shipmentTypes[Math.floor(Math.random() * shipmentTypes.length)],
-      finalLoadingAt:
-        loadingLocations[Math.floor(Math.random() * loadingLocations.length)],
-      qty: Math.floor(Math.random() * 1000) + 1,
-      fwt: `${(Math.random() * 100).toFixed(2)} kg`,
-    }));
-  };
-
   const handleDropdownSelect = (item) => {
     setSelectedColumn(item.key || "all");
   };
@@ -104,9 +80,10 @@ const ExportInvoice = () => {
       }
 
       const value = row[selectedColumn];
-      return (
-        value && String(value).toLowerCase().includes(searchQuery.toLowerCase())
-      );
+     return (
+  value && String(value).toLowerCase() === searchQuery.toLowerCase()
+);
+
     });
   }, [searchQuery, tableData, selectedColumn, startDate]);
 
@@ -161,12 +138,12 @@ const ExportInvoice = () => {
               if (index === row.length - 1) return "rounded-r-xl";
               return "";
             }}
-            renderAction={(row) => (
+            renderAction={(row, index) => (
               <button
                 // onClick={() => handleAction(row)}
                 onClick={() => {
                   navigate("Prepare");
-                  dispatch(getExportInvoice(row));
+                  dispatch(getExportInvoice(row, index));
                 }}
                 className="bg-slate-800 hover:bg-slate-600 text-white px-4 py-1 rounded text-center"
               >

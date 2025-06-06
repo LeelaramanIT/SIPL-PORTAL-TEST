@@ -1,46 +1,44 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
 import TitleText from "../../../../../components/TitleText.jsx";
 import gsap from "gsap";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import TableSkeleton from "./TableSkeleton.jsx";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const location = useLocation();
+  const loading = useSelector((state) => state.invoice.export.loading);
 
-  const invoiceData = Array.from({ length: 20 }, (_, i) => ({
-    category: "Truck",
-    platform: "6-Wheel",
-    tyreSize: "295/80R22.5",
-    rim: "22.5",
-    type: "Radial",
-    brand: "Michelin",
-    sidewall: "Black",
-    basicPrice: 250.0,
-    qty: 4 + i,
-    totalPrice: 250.82 * (4 + i),
-    fwt: 500.399 + i * 10.389,
-    additionalInfo: "NO GRADE MARKINGS & BARCODE STICKERS ON TYRE",
-    plant: `Plant ${String.fromCharCode(65 + (i % 3))}`,
-    partNo: `P-167807C18060713${i.toString().padStart(2, "0")}A`,
-  }));
-  
+  const invoiceDataRaw = useSelector(
+    (state) => state?.invoice?.export?.invoiceData?.salesData
+  );
+
+
+  const invoiceData = useMemo(() => {
+    return Array.isArray(invoiceDataRaw) ? invoiceDataRaw : [];
+  }, [invoiceDataRaw]);
+
   const rowsRef = useRef([]);
   const div1 = useRef(null);
   const div2 = useRef(null);
   const formRef = useRef(null);
 
-  const grandTotal = invoiceData.reduce(
-    (sum, item) => sum + item.totalPrice,
-    0
-  );
-  const totalQTY = invoiceData.reduce((sum, item) => sum + item.qty, 0);
-  const totalFWT = invoiceData.reduce((sum, item) => sum + item.fwt, 0);
+  const grandTotal = useMemo(() => {
+    return invoiceData.reduce((sum, item) => sum + item.totalPrice, 0);
+  }, [invoiceData]);
+  const totalQTY = useMemo(() => {
+    return invoiceData.reduce((sum, item) => sum + item.qty, 0);
+  }, [invoiceData]);
 
+  const totalFWT = useMemo(() => {
+    return invoiceData.reduce((sum, item) => sum + item.fwt, 0);
+  }, [invoiceData]);
   useEffect(() => {
     const rows = rowsRef.current.filter(Boolean);
     const tl = gsap.timeline();
@@ -187,89 +185,100 @@ const ExportInvoicePrepare = () => {
       <TitleText title="Item Details" />
 
       {/* Table */}
-      <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
-        <table className="w-full text-sm text-left table-fixed">
-          <thead className="bg-[#f7f2ef] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
-            <tr>
-              {[
-                "CATEGORY",
-                "PLATFORM",
-                "TYRE SIZE",
-                "RIM",
-                "TYPE",
-                "BRAND",
-                "SIDEWALL",
-                "BASIC PRICE",
-                "QTY",
-                "TOTAL PRICE",
-                "FWT",
-                "ADDITIONAL INFO",
-                "PLANT",
-                "PART-NO",
-              ].map((head, idx) =>
-                idx === 11 ? (
-                  <th
-                    key={idx}
-                    colSpan={2}
-                    className="px-1  text-center text-[13px]"
-                  >
-                    {head}
-                  </th>
-                ) : (
-                  <th key={idx} className="px-1 py-4 text-center text-[13px]">
-                    {head}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {invoiceData.map((item, idx) => (
-              <tr
-                key={idx}
-                ref={(el) => (rowsRef.current[idx] = el)}
-                className={`text-[13px] text-center ${
-                  idx % 2 === 0
-                    ? "bg-[#E2E8F0] dark:bg-gray-700"
-                    : "bg-white dark:bg-gray-800"
-                } text-gray-700 dark:text-gray-300`}
-              >
-                <td>{item.category}</td>
-                <td>{item.platform}</td>
-                <td>{item.tyreSize}</td>
-                <td>{item.rim}</td>
-                <td>{item.type}</td>
-                <td>{item.brand}</td>
-                <td>{item.sidewall}</td>
-                <td>{item.basicPrice}</td>
-                <td>{item.qty}</td>
-                <td>{item.totalPrice.toFixed(2)}</td>
-                <td>{item.fwt.toFixed(3)}</td>
-                <td colSpan={2} title={item.additionalInfo}>
-                  {item.additionalInfo}
-                </td>
-                <td>{item.plant}</td>
-                <td className="break-all">{item.partNo}</td>
+      {loading && invoiceData ? (
+        <TableSkeleton />
+      ) : (
+        <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
+          <table className="w-full text-sm text-left table-fixed">
+            <thead className="bg-[#f7f2ef] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
+              <tr>
+                {[
+                  "CATEGORY",
+                  "PLATFORM",
+                  "TYRE SIZE",
+                  "RIM",
+                  "TYPE",
+                  "BRAND",
+                  "SIDEWALL",
+                  "BASIC PRICE",
+                  "QTY",
+                  "TOTAL PRICE",
+                  "FWT",
+                  "ADDITIONAL INFO",
+                  "PLANT",
+                  "PART-NO",
+                ].map((head, idx) =>
+                  idx === 11 ? (
+                    <th
+                      key={idx}
+                      colSpan={2}
+                      className="px-1  text-center text-[13px]"
+                    >
+                      {head}
+                    </th>
+                  ) : (
+                    <th key={idx} className="px-1 py-4 text-center text-[13px]">
+                      {head}
+                    </th>
+                  )
+                )}
               </tr>
-            ))}
-          </tbody>
-          <tfoot className="font-semibold text-gray-800 dark:text-white">
-            <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
-              <td colSpan={8} className="text-right px-4 py-2">
-                Grand Total:
-              </td>
-              <td className="px-4 py-2 text-center">{totalQTY}</td>
-              <td className="px-4 py-2 text-center">{grandTotal.toFixed(2)}</td>
-              <td className="px-4 py-2 text-center">{totalFWT.toFixed(3)}</td>
-              <td colSpan={4}></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {invoiceData.map((item, idx) => (
+                <tr
+                  key={idx}
+                  ref={(el) => (rowsRef.current[idx] = el)}
+                  className={`text-[13px] text-center ${
+                    idx % 2 === 0
+                      ? "bg-[#E2E8F0] dark:bg-gray-700"
+                      : "bg-white dark:bg-gray-800"
+                  } text-gray-700 dark:text-gray-300`}
+                >
+                  <td>{item.category}</td>
+                  <td>{item.platform}</td>
+                  <td>{item.tyreSize}</td>
+                  <td>{item.rim}</td>
+                  <td>{item.type}</td>
+                  <td>{item.brand}</td>
+                  <td>{item.sidewall}</td>
+                  <td>{item.basicPrice}</td>
+                  <td>{item.qty}</td>
+                  <td>{item.totalPrice.toFixed(2)}</td>
+                  <td>{item.fwt.toFixed(3)}</td>
+                  <td colSpan={2} title={item.additionalInfo}>
+                    {item.additionalInfo}
+                  </td>
+                  <td>{item.plant}</td>
+                  <td className="break-all">{item.partNo}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="font-semibold text-gray-800 dark:text-white">
+              <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
+                <td colSpan={8} className="text-right px-4 py-2">
+                  Grand Total:
+                </td>
+                <td className="px-4 py-2 text-center">{totalQTY}</td>
+                <td className="px-4 py-2 text-center">
+                  {grandTotal.toFixed(2)}
+                </td>
+                <td className="px-4 py-2 text-center">{totalFWT.toFixed(3)}</td>
+                <td colSpan={4}></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
-        <Button onClick={() => {navigate("/TTS/International/Invoivce/Export/BillPDF")}} text="Preview PDF" />
+        <Button
+          onClick={() => {
+            navigate("/TTS/International/Invoivce/Export/BillPDF");
+          }}
+          text="Preview PDF"
+        />
         <Button
           onClick={() => setShowDetailsForm(true)}
           text="+ Add Additional Details"
@@ -279,10 +288,10 @@ const ExportInvoicePrepare = () => {
 
       {/* Additional Details Form */}
       {showDetailsForm && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
           <div
             ref={formRef}
-            className="relative bg-white dark:bg-gray-900 p-6 rounded-lg layout-scroll shadow-xl w-full max-w-5xl max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+            className="relative bg-white mt-[22rem] dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-5xl max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
           >
             <TitleText title="Additional Invoice Details" />
             <button

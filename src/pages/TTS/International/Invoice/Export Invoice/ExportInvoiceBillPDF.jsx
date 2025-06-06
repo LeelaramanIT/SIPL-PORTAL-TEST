@@ -6,6 +6,87 @@ import {
   StyleSheet,
   PDFViewer,
 } from "@react-pdf/renderer";
+import Button from "../../../../../components/InputFields/Button";
+import { useNavigate } from "react-router-dom";
+import { IoChevronBackCircleOutline } from "react-icons/io5";
+
+const data = {
+  orderRefNo: "192420378",
+  date: "1/21/2025",
+  buyersOrderNo: "Ref: SIPL/ADVANCE TIRE PO #7360578/AUG-24",
+  refDate: "E MAIL DATE 29th AUG-24",
+  otherReferences: "SDF Form",
+  exporter:
+    "SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE & WHEEL SYSTEMS)~A1-F3/A, Sidco Industrial Estate  Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, PAN NO: AAGCT6465R~GSTIN NO: 33AAGCT6465R2ZJ",
+  consignee: {
+    name: "M/S, ADVANCE TIRES",
+    address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
+  },
+  customerAgent: {
+    name: "M/S, ADVANCE TIRES",
+    address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
+  },
+  preCarriageBy: "BY SEA",
+  placeOfReceipt: "CHENNAI-INDIA",
+  vesselFlightNo: "1234",
+  portOfLoading: "CHENNAI-INDIA",
+  portOfDischarge: "NEWYORK",
+  finalDestination: "MILLSTONE TWP, NJ- USA",
+  buyerIfOtherThanConsignee:
+    "SUMMIT SUPPLY GROUP LLC ~ DC-ALLENTOWN, ~ PA 6461 SNOWDRIFT RD ALLENTOWN ~ PA 18106-9514 UNITAD STATES",
+  countryOfOrigin: "INDIA",
+  countryOfDestination: "USA",
+  deliveryTerms: "THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.",
+  paymentTerms:
+    "100% Payment in 90 days from the date of Bill of Lading Remitted in SUNDARAM INDUSTRIES PVT LIMITED",
+  bankDetails: {
+    accountHolder:
+      "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
+    address:
+      "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
+    accountNumber: "40582959714",
+    bank: "State Bank of India, Egmore, Chennai-600008.",
+    swiftCode: "SBININBB174",
+  },
+  containerDetails: {
+    size: "1 x 20'",
+    containerNo: "TEMU309862-1",
+    linerSealNo: "OOLKHF7308",
+    otsNo: "iTEK03254133",
+  },
+  packingDetails: {
+    itcHsNo: "4012 90 20",
+    description: "128 LOOSE TYRES",
+  },
+  goodsDescription: [
+    "Automobile tyres reinforced with Nylon tyre Cord warp sheet / Rayon Tyre cord warp sheet.",
+    "SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%",
+  ],
+  quantityKgs: 15496.8,
+  unitPriceUsd: 2.64525,
+  totalPricesUsd: [40992.84, 1229.79],
+  grandTotalUsd: 39763.05,
+  amountInWords:
+    "USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE ONLY",
+  grossWeight: "15496.800 KGS",
+  netWeight: "15496.800 KGS",
+  declaration:
+    "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
+  licenceDetails: {
+    description:
+      "The above shipment is under Advance Licence & EPCG Scheme. S.No-I Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR Licence No. 0411007094 date. 14.03.2024)",
+    igstLUT:
+      "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
+  },
+  authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
+  footer: {
+    line1:
+      "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
+    line2: "Jawahar road Chokkikulam, Madurai - 625002.",
+    line3:
+      "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
+  },
+};
 
 const BORDER_THIN = "0.5px solid black";
 const BORDER_BOLD = "1.5px solid black";
@@ -29,8 +110,9 @@ const styles = StyleSheet.create({
   },
   // heading
   heading: {
-    fontSize: 9,
-    padding: 1,
+    fontWeight: "bold",
+    fontSize: 8,
+    padding: 0.5,
   },
 
   // row1
@@ -41,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignContent: "center",
     marginTop: "20px",
-    height: 15,
+    padding: "1px",
     borderTop: BORDER_BOLD,
     borderRight: BORDER_BOLD,
     borderLeft: BORDER_BOLD,
@@ -52,7 +134,7 @@ const styles = StyleSheet.create({
     width: "100%",
     display: "flex",
     flexDirection: "row",
-    height: "120px",
+    height: "105px",
     borderLeft: BORDER_BOLD,
     borderRight: BORDER_BOLD,
     borderBottom: BORDER_THIN,
@@ -61,14 +143,14 @@ const styles = StyleSheet.create({
 
   // row2 left side
   row2left: {
-    width: "60.5%",
-    height: "120px",
+    width: "52%",
+    height: "105px",
   },
 
   // row2 right side
   row2right: {
-    width: "40%",
-    height: 130,
+    width: "53%",
+    height: "104px",
     flexDirection: "column",
   },
 
@@ -82,14 +164,23 @@ const styles = StyleSheet.create({
   // row2 right side 2
   row2right2: {
     width: "100%",
-    height: 50,
+    padding: "0.1px",
     borderBottom: BORDER_THIN,
     borderLeft: BORDER_THIN,
   },
   // row2 right side 3
   row2right3: {
     width: "100%",
-    height: 38, // So the total = 100
+    height: 38,
+    justifyContent: "flex-end",
+    alignItems: "flex-start",
+    textAlign: "center",
+    borderLeft: BORDER_THIN,
+    borderBottom: BORDER_THIN,
+  },
+  row2right4: {
+    width: "100%",
+    height: 32, // So the total = 100
     borderLeft: BORDER_THIN,
   },
   // row3
@@ -97,28 +188,34 @@ const styles = StyleSheet.create({
     width: "100%",
     display: "flex",
     flexDirection: "row",
-    height: "180px",
+    height: "220px",
     borderBottom: BORDER_THIN,
     borderLeft: BORDER_BOLD,
   },
   // row3 left side
   row3left: {
-    width: "60%",
-    height: "180px",
+    width: "52%",
+    height: "220px",
     display: "flex",
     flexDirection: "column",
   },
   // row3 left side 1
   row3left1: {
-    height: "150px",
+    height: "180px",
     borderBottom: BORDER_THIN,
-    justifyContent: "center",
+    display: "flex",
+    justifyContent: "space-between",
   },
   // row3 left side 2
   row3left2: {
-    height: 40,
+    height: "50px",
     flexDirection: "row",
   },
+  // row3left3: {
+  //   height: "110px",
+  //   flexDirection: "row",
+  //   backgroundColor: "black",
+  // },
   // row3 left side 2 row 1
   row3left2row1: {
     width: "50%",
@@ -142,7 +239,6 @@ const styles = StyleSheet.create({
   // row3 left side 3 row 1
   row3left3row1: {
     width: "50%",
-    height: "100%",
     justifyContent: "center",
   },
   // row3 left side 3 row 2
@@ -160,20 +256,20 @@ const styles = StyleSheet.create({
 
   // row3 right side
   row3right: {
-    width: "40%",
+    width: "53.4%",
     borderLeft: BORDER_THIN,
     borderRight: BORDER_BOLD,
   },
   // row3 right side 1 row
   row3right1: {
-    height: "50px",
-    justifyContent: "center",
+    height: "72px",
+    justifyContent: "flex-start",
     borderBottom: BORDER_THIN,
   },
 
   // row3 right side 2 row
   row3right2: {
-    height: "19px",
+    padding: "1px",
     display: "flex",
     justifyContent: "space-around",
     flexDirection: "row",
@@ -181,25 +277,24 @@ const styles = StyleSheet.create({
   },
   row3right2row1: {
     width: "50%",
+    height: "100%",
+    textAlign: "center",
     borderRight: BORDER_THIN,
   },
   row3right2row2: {
     width: "50%",
+    height: "100%",
+    textAlign: "center",
   },
   // row3 right side 2 row 1
   row3right3: {
-    height: "19px",
-    display: "flex",
-    justifyContent: "space-around",
-    alignItems: "center",
     flexDirection: "row",
     borderBottom: BORDER_THIN,
   },
   row3right4: {
-    height: "92px",
+    height: "60%",
     display: "flex",
-    alignContent: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
   // row4
   row4: {
@@ -254,7 +349,7 @@ const styles = StyleSheet.create({
 
   row4_1value: {
     height: "180px",
-    justifyContent: "center",
+    justifyContent: "space-evenly",
     textAlign: "center",
     borderBottom: BORDER_THIN,
   },
@@ -287,21 +382,33 @@ const styles = StyleSheet.create({
     height: "180px",
     width: "100%",
     display: "flex",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
     borderLeft: BORDER_BOLD,
     borderBottom: BORDER_THIN,
     borderRight: BORDER_BOLD,
   },
   row6: {
-    height: "40px",
+    height: "30px",
     width: "100%",
+    paddingTop: "5px",
     borderLeft: BORDER_BOLD,
     borderBottom: BORDER_BOLD,
     borderRight: BORDER_BOLD,
   },
   text: {
     fontSize: 7,
-    padding: 5,
+    paddingLeft: "3px",
+    paddingVertical: "2px",
+  },
+  textValue: {
+    fontSize: 6,
+    paddingHorizontal: "3px",
+    paddingVertical: "1px",
+    fontWeight: "bold",
+  },
+  textlight: {
+    fontSize: "6px",
+    paddingHorizontal: "3px",
   },
   textb: {
     fontSize: 7,
@@ -312,7 +419,13 @@ const styles = StyleSheet.create({
 
 // PDF content component
 const InvoicePDF = ({ data }) => (
-  <Document>
+  <Document
+    title={`Invoice_No_${data?.orderRefNo || "Default"}`}
+    author="siplsuntws"
+    subject="Customs Export Invoice PDF"
+    creator="Your React App"
+    producer="React PDF Generator"
+  >
     <Page size="A4" style={styles.page}>
       <View style={styles.row1}>
         <Text style={styles.heading}>INVOICE CUM PACKING LIST</Text>
@@ -320,81 +433,138 @@ const InvoicePDF = ({ data }) => (
       <View style={styles.row2}>
         <View style={styles.row2left}>
           <Text style={styles.text}>EXPORTER:</Text>
-          <Text style={styles.text}>SUNDARAM INDUSTRIES PRIVATE LIMITED</Text>
-          <Text style={styles.text}>
-            ( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE
-            & WHEEL SYSTEMS)
-          </Text>
-          <Text style={styles.text}>A1-F3/A, Sidco Industrial Estate</Text>
-          <Text style={styles.text}>
-            Maraimalai Nagar - 603 209, Tamil Nadu , India
-          </Text>
-          <Text style={styles.text}>
-            IEC CODE NO: AAGCT6465R, GSTIN NO: 33AAGCT6465R2ZJ PAN NO:
-          </Text>
-          <Text style={styles.text}>AAGCT6465R</Text>
+          <View>
+            {(data?.exporter
+              ? data.exporter.split("~")
+              : `SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE & WHEEL SYSTEMS)~A1-F3/A, Sidco Industrial Estate  Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, PAN NO: AAGCT6465R~GSTIN NO: 33AAGCT6465R2ZJ`.split(
+                  "~"
+                )
+            ).map((line, index) => (
+              <Text key={index} style={styles.textValue}>
+                {line.trim()}
+              </Text>
+            ))}
+          </View>
         </View>
         <View style={styles.row2right}>
           <View style={styles.row2right1}>
-            <Text style={styles.text}>Invoice No: 192420378</Text>
-            <Text style={styles.text}>DATE : 1/21/2025</Text>
+            <Text style={styles.text}>
+              INVOICE NO:{" "}
+              <Text style={styles.textValue}>
+                {data?.orderRefNo || "192420378"}
+              </Text>
+            </Text>
+            <Text style={styles.text}>
+              DATE :{" "}
+              <Text style={styles.textValue}>{data.date || "1/21/2025"}</Text>
+            </Text>
           </View>
           <View style={styles.row2right2}>
-            <Text style={styles.text}>Buyers Order No Ref:</Text>
             <Text style={styles.text}>
-              REF: SIPL/ADVANCE TIRE PO #7360578/AUG-24
+              Buyers Order No:
+              <Text style={styles.textValue}>
+                {data?.buyersOrderNo ||
+                  "Ref: SIPL/ADVANCE TIRE PO #7360578/AUG-24"}
+              </Text>
             </Text>
-            <Text style={styles.text}>E MAIL DATE 29th AUG-24</Text>
           </View>
           <View style={styles.row2right3}>
+            <Text style={styles.text}>
+              REF DATE:
+              <Text style={styles.textValue}>
+                {data?.refDate || "E MAIL DATE 29th AUG-24"}
+              </Text>
+            </Text>
+          </View>
+          <View style={styles.row2right4}>
             <Text style={styles.text}>Other Reference(s)</Text>
-            <Text style={styles.text}>SDF Form</Text>
+            <Text style={styles.textValue}>
+              {data?.otherReferences || "SDF Form"}
+            </Text>
           </View>
         </View>
       </View>
       <View style={styles.row3}>
         <View style={styles.row3left}>
           <View style={styles.row3left1}>
-            <Text style={styles.text}>CONSIGNEE:</Text>
-            <Text style={styles.text}>M/S, ADVANCE TIRES</Text>
-            <Text style={styles.text}>1000 Rike Dr.</Text>
-            <Text style={styles.text}>Millstone Twp. NJ 08535</Text>
+            <View>
+              <Text style={styles.text}>CONSIGNEE:</Text>
+              <Text style={styles.textValue}>
+                {data.consignee.name || "M/S, ADVANCE TIRES"}
+              </Text>
+              {data?.consignee?.address
+                ? data.consignee.address.map((item, index) => (
+                    <Text key={index} style={styles.textValue}>
+                      {item.trim()}
+                    </Text>
+                  ))
+                : null}
+              {/* <Text style={styles.textValue}>"1000 Rike Dr."</Text> */}
+              {/* <Text style={styles.textValue}>{"Millstone Twp. NJ 08535"}</Text> */}
+            </View>
+            <View>
+              <Text style={styles.text}>CUSTOMER AGENT</Text>
+              <Text style={styles.textValue}>{data.customerAgent.name||"M/S, ADVANCE TIRE"}</Text>
+              {data?.customerAgent?.address
+                ? data.consignee.address.map((item, index) => (
+                    <Text key={index} style={styles.textValue}>
+                      {item.trim()}
+                    </Text>
+                  ))
+                : null}
+              {/* <Text style={styles.textValue}>1000 Rike Dr.</Text> */}
+              {/* <Text style={styles.textValue}>Millstone Twp. NJ 08535</Text> */}
+            </View>
           </View>
           <View style={styles.row3left2}>
             <View style={styles.row3left2row1}>
               <Text style={styles.text}>Pre Carriage by</Text>
-              <Text style={styles.text}>BY SEA</Text>
+              <Text style={styles.textValue}>{data?.preCarriageBy || "BY SEA"}</Text>
             </View>
             <View style={styles.row3left2row2}>
-              <Text style={styles.text}>
-                Place of Receipt by Pre-carrier CHENNAI-INDIA
-              </Text>
+              <Text style={styles.text}>Place of Receipt by Pre-carrier</Text>
+              <Text style={styles.textValue}>{data?.placeOfReceipt ||"CHENNAI-INDIA"}</Text>
             </View>
           </View>
           <View style={styles.row3left3}>
             <View style={styles.row3left3row1}>
               <Text style={styles.text}>Vessel/Flight No</Text>
+              <Text style={styles.textValue}>{data?.vesselFlightNo || "1234"}</Text>
             </View>
             <View style={styles.row3left3row2}>
-              <Text style={styles.text}>Port of Loading CHENNAI-INDIA</Text>
+              <Text style={styles.text}>Port of Loading</Text>
+              <Text style={styles.textValue}>{data?.portOfLoading || "CHENNAI-INDIA"}</Text>
             </View>
           </View>
           <View style={styles.row3left4}>
             <View style={styles.row3left2row1}>
-              <Text style={styles.text}>Port of Discharge NEWYORK</Text>
+              <Text style={styles.text}>Port of Discharge</Text>
+              <Text style={styles.textValue}>{data?.portOfDischarge || "NEWYORK"}</Text>
             </View>
             <View style={styles.row3left2row2}>
-              <Text style={styles.text}>
-                Final Destination MILLSTONE TWP, NJ- USA
-              </Text>
+              <Text style={styles.text}>Final Destination</Text>
+              <Text style={styles.textValue}>{data?.finalDestination || "MILLSTONE TWP, NJ- USA"}</Text>
             </View>
           </View>
         </View>
         <View style={styles.row3right}>
           <View style={styles.row3right1}>
-            <Text style={styles.text}>Buyer (if otherthan Consignee)</Text>
+            <Text style={styles.text}>Buyer if otherthan Consignee</Text>
+            <View>
+              {(data?.buyerIfOtherThanConsignee
+              ? data.buyerIfOtherThanConsignee.split("~")
+              : `SUMMIT SUPPLY GROUP LLC ~ DC-ALLENTOWN, ~ PA 6461 SNOWDRIFT RD ALLENTOWN ~ PA 18106-9514 UNITAD STATES`.split(
+                  "~"
+                )
+            ).map((line, index) => (
+              <Text key={index} style={styles.textValue}>
+                {line.trim()}
+              </Text>
+            ))}
+            </View>
+            {/* <Text style={styles.textValue}></Text>/ */}
           </View>
-          <View style={styles.row3right2}>
+          <View style={styles.row3right3}>
             <View style={styles.row3right2row1}>
               <Text style={styles.text}>Country of Origin of goods</Text>
             </View>
@@ -404,21 +574,37 @@ const InvoicePDF = ({ data }) => (
           </View>
           <View style={styles.row3right3}>
             <View style={styles.row3right2row1}>
-              <Text style={styles.text}>INDIA</Text>
+              <Text style={styles.textValue}>{data?.countryOfOrigin || "INDIA"}</Text>
             </View>
             <View style={styles.row3right2row2}>
-              <Text style={styles.text}>USA</Text>
+              <Text style={styles.textValue}>{data?.countryOfDestination || "USA"}</Text>
             </View>
           </View>
           <View style={styles.row3right4}>
-            <Text style={styles.text}> TERMS OF DELIVERY AND PAYMENT: </Text>
-            <Text style={styles.text}>
-              THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.
+            <View>
+              <Text style={styles.text}> TERMS OF DELIVERY AND PAYMENT: </Text>
+              <Text style={styles.textValue}>
+                THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.
+              </Text>
+            </View>
+            <Text style={styles.textValue}>
+              PAYMENT TERMS: 100% Payment in 90 days from the date of Bill of
+              Lading Remitted in SUNDARAM INDUSTRIES PVT LIMITED
             </Text>
-            <Text style={styles.text}>
-              100% Payment in 90 days from the date of Bill of Lading Remitted
-              in SUNDARAM INDUSTRIES PVT LIMITED
-            </Text>
+            <View>
+              <Text style={styles.textlight}>
+                Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE
+                LIMITED), KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA
+                INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032
+              </Text>
+              <View>
+                <Text style={styles.textValue}>
+                  ACCOUNT NO: 40582959714 State Bank of India, Egmore,
+                  Chennai-600008.
+                </Text>
+                <Text style={styles.textValue}>Swift Code: SBININBB174</Text>
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -426,7 +612,8 @@ const InvoicePDF = ({ data }) => (
       <View style={styles.row4}>
         <View style={styles.row4_1}>
           <View style={styles.row4_1heading}>
-            <Text>Marks & Nos/ Container No</Text>
+            <Text>Marks & Nos/</Text>
+            <Text>Container No</Text>
           </View>
           <View style={styles.row4_1value}>
             <Text style={styles.text}>Container Size 1 x 20'</Text>
@@ -463,7 +650,7 @@ const InvoicePDF = ({ data }) => (
           <View style={styles.row4_1botm}>
             <View style={styles.row4_1botm1}></View>
             <View style={styles.row4_1botmtotal}>
-              <Text>TOTAL</Text>
+              <Text style={styles.heading}>TOTAL: </Text>
             </View>
           </View>
         </View>
@@ -475,7 +662,7 @@ const InvoicePDF = ({ data }) => (
             <Text style={styles.text}>15496.800</Text>
           </View>
           <View style={styles.row4_1botm}>
-            <Text>15496.800</Text>
+            <Text style={styles.heading}>15496.800</Text>
           </View>
         </View>
         <View style={styles.row4_5}>
@@ -496,42 +683,88 @@ const InvoicePDF = ({ data }) => (
             <Text style={styles.text}>1229.79</Text>
           </View>
           <View style={styles.row4_1botm}>
-            <Text>39763.05</Text>
+            <Text style={styles.heading}>39763.05</Text>
           </View>
         </View>
       </View>
       {/* row5 */}
       <View style={styles.row5}>
-        <Text style={styles.text}>
+        <Text style={styles.textValue}>
           (USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE
           ONLY)
         </Text>
-        <Text style={styles.text}>
-          GROSS WT: 15496.800 KGS NETT WT : 15496.800 KGS
+        <View>
+          <Text style={styles.textValue}>GROSS WT: 15496.800 KGS</Text>
+          <Text style={styles.textValue}>NETT WT : 15496.800 KGS</Text>
+        </View>
+        <View></View>
+        <Text style={{ textAlign: "center", fontWeight: "bold" }}>
+          DECLARATION
         </Text>
-        <Text style={{ textAlign: "center" }}>DECLARATION</Text>
-        <Text style={styles.text}>
+        <Text style={styles.textValue}>
           WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE
           OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.
         </Text>
-        <Text style={styles.text}>
-          The above shipment is under Advance Licence & EPCG Scheme. Advance
-          Licence No. 0411007094 dt. 14.03.2024 & EPCG SCHEME NO: 0431006716
-          Date 12/01/2024
-        </Text>
-        <Text style={{ fontSize: "7", padding: "5", color: "red" }}>
-          IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025
-        </Text>
+
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            width: "100%",
+            height: "90px",
+          }}
+        >
+          <View
+            style={{
+              width: "50%",
+              height: "100%",
+              textAlign: "left",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={styles.textValue}>
+              The above shipment is under Advance Licence & EPCG Scheme. S.No-I
+              Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR
+              Licence No. 0411007094 date. 14.03.2024)
+            </Text>
+            <View style={{ display: "flex", flexDirection: "row" }}>
+              <Text style={{ fontSize: "7", padding: "5", color: "red" }}>
+                IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till
+                31.03.2025
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              width: "50%",
+              height: "100%",
+              textAlign: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={styles.textValue}>
+              FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED
+            </Text>
+            <Text style={styles.textValue}>Authorized Signatory</Text>
+          </View>
+        </View>
       </View>
+      {/* row6 */}
       <View style={styles.row6}>
-        <Text style={styles.textb}>
+        <Text
+          style={{ fontWeight: "bold", fontSize: "7", textAlign: "center" }}
+        >
           SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres
           Private Limited) Regd Office: 'NO. 10
         </Text>
-        <Text style={{ textAlign: "center", fontSize: "7" }}>
+        <Text
+          style={{ fontWeight: "bold", fontSize: "7", textAlign: "center" }}
+        >
           Jawahar road Chokkikulam, Madurai - 625002.
         </Text>
-        <Text style={{ fontWeight: "bold", fontSize: "7" }}>
+        <Text
+          style={{ fontWeight: "bold", fontSize: "7", textAlign: "center" }}
+        >
           CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website:
           www.sun-tws.com , Tel: 044 - 43857129
         </Text>
@@ -542,10 +775,22 @@ const InvoicePDF = ({ data }) => (
 
 // Viewer component
 const ExportInvoiceBillPDF = () => {
+  const navigate = useNavigate();
   return (
-    <div>
+    <div className="w-full p-1 bg-background">
+      <div className="w-full h-12 bg-background rounded-lg flex justify-evenly items-center">
+        <Button
+          icon={<IoChevronBackCircleOutline />}
+          type="button"
+          onClick={() => {
+            navigate("/TTS/International/Invoice/Export/Prepare");
+          }}
+          text={"Back"}
+          className={""}
+        />
+      </div>
       <PDFViewer style={styles.pdf}>
-        <InvoicePDF data={{}} />
+        <InvoicePDF data={data} />
       </PDFViewer>
     </div>
   );

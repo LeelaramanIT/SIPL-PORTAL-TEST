@@ -3,9 +3,10 @@ import globalReducer from "../Slices/GlobalSlice";
 import invoiceReducer from "../Slices/InvoiceSlice";
 import authReducer from "../Slices/AuthSlice";
 import storage from "redux-persist/lib/storage";
-import { encryptTransform } from "redux-persist-transform-encrypt"; // ✅ Correct import
+import { encryptTransform } from "redux-persist-transform-encrypt";
 import { persistReducer, persistStore } from "redux-persist";
 
+// Encryption config
 const encryptor = encryptTransform({
   secretKey: import.meta.env.VITE_REDUX_SECRET_KEY,
   onError: (error) => {
@@ -13,27 +14,39 @@ const encryptor = encryptTransform({
   },
 });
 
-const persistConfig = {
-  key: "root",
+const authPersistConfig = {
+  key: "auth",
+  version: 1,
   storage,
-  whitelist: ["auth"], // only persist auth slice
   transforms: [encryptor],
-  blacklist:['loading','error'] // Do NOT persist these
 };
 
+const invoicePersistConfig = {
+  key: "invoice",
+  version: 1,
+  storage,
+  transforms: [encryptor],
+};
+
+
+
+const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceReducer);
+const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
+
+// Root reducer
 const rootReducer = combineReducers({
-  global: globalReducer,
-  invoice: invoiceReducer,
-  auth: authReducer,
+  global: globalReducer, 
+  invoice: persistedInvoiceReducer,
+  auth: persistedAuthReducer,
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
-
+// Store setup
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
   devTools: import.meta.env.MODE === "development",
 });
 
+// Persistor
 export const persistor = persistStore(store);
