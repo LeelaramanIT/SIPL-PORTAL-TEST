@@ -1,9 +1,17 @@
 // src/store/sidebarSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
+const getInitialTheme = () => {
+  if (typeof window !== "undefined" && localStorage.theme) {
+    return localStorage.theme;
+  }
+  return "light";
+};
+
+
 const initialState = {
   open: false,
-  theme: localStorage.theme || "system",  
+  theme: getInitialTheme(),  
   sections: {
     mastersOpen: false,
     userMasterOpen: false,
@@ -26,6 +34,7 @@ const globalSlice = createSlice({
       state.open = !state.open;
     },
     toggleSection: (state, action) => {
+      
       const section = action.payload;
       state.sections[section] = !state.sections[section];
     },

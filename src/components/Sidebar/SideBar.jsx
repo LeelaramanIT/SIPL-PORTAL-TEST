@@ -11,7 +11,8 @@ import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { SiAwsorganizations } from "react-icons/si";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSidebar, toggleSection } from "../../Redux/Slices/GlobalSlice.jsx";
-import { useCallback } from "react";
+import { GiCartwheel } from "react-icons/gi";
+import ThemeSwitcher from "../ThemeSwitcher.jsx";
 
 const SideBar = () => {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ const hasMenuUrlPrefix = (prefix) =>
     <div
       className={`${
         open ? "w-52 max-w-[280px]" : "w-20"
-      } bg-[#f7f2ef] text-black duration-300 flex flex-col overflow-y-auto custom-scrollbar min-h-screen dark:bg-gray-900`}
+      } bg-[var(--color-background)] text-black duration-300 flex flex-col overflow-y-auto custom-scrollbar min-h-screen dark:bg-gray-900`}
     >
       {/* Header */}
       <div className="w-full h-12 flex items-center px-4">
@@ -102,6 +103,7 @@ const hasMenuUrlPrefix = (prefix) =>
               label="TTS"
               sectionKey="TTSOpen"
             >
+            {/* Domestic menus */}
               {hasMenuUrlPrefix("Domestic/") && (<SidebarItem label="Domestic" sectionKey="domesticOpen">
                 <SidebarItem
                   icon={LiaFileInvoiceDollarSolid}
@@ -128,18 +130,37 @@ const hasMenuUrlPrefix = (prefix) =>
                     </li>
                   </NavLink>)}
                 </SidebarItem>
+                {/* Rim */}
+                <SidebarItem
+                  icon={GiCartwheel}
+                  label="RIM"
+                  sectionKey="InternationalRIM"
+                >
+                  {isMenuAllowed("ExportInvoice") && (<NavLink to="/TTS/International/Invoice/Export">
+                    <li className="cursor-pointer hover:bg-text-hover p-1 text-[0.9rem] text-primary">
+                      Rim invert
+                    </li>
+                  </NavLink>)}
+                </SidebarItem>
               </SidebarItem>}
+
+            
 
             </SidebarItem>
           </div>)}
+
+          
 
           {isMenuAllowed("Settings") && (<NavLink to={"/Settings"}>
             <SidebarItem icon={IoMdSettings} label="Settings" />
           </NavLink>)}
         </ul>
       </div>
+      
       {/* dark mode toggle */}
-      <div className="flex justify-center items-center"></div>
+      <div className="flex justify-center items-center">
+      <ThemeSwitcher/>
+      </div>
     </div>
   );
 };

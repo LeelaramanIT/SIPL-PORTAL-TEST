@@ -26,7 +26,7 @@ setIsOpen(false);
 };
 
 return (
-<div className="flex relative min-w-[10%] bg-slate-800  dark:bg-gray-600 rounded-md text-white" ref={dropdownRef} >
+<div className="flex relative min-w-[10%] bg-[var(--color-primary)]  dark:bg-gray-600 rounded-md text-white" ref={dropdownRef} >
 <button onClick={toggleDropdown} className="w-full bg-transparent text-white dark:text-gray-300 text-sm border border-slate-200 dark:border-gray-500 rounded-md pl-3 pr-2 py-2 transition duration-300 ease-in-out focus:outline-none focus:border-slate-400 dark:focus:border-gray-400 hover:border-slate-300 dark:hover:border-gray-400 shadow-sm focus:shadow flex justify-between items-center" >
 {selected}
 <ChevronDown

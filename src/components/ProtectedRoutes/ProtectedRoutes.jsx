@@ -19,14 +19,13 @@ const ProtectedRoutes = () => {
   }
 
   const currentPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
-  console.log('Current Path:', currentPath);
 
   const matchPermissionKey = Object.entries(routePermissions).find(([route]) =>
     currentPath.startsWith(route)
   );
 
   const permissionKey = matchPermissionKey?.[1];
-  console.log('Permission Key:', permissionKey);
+
 
   if (permissionKey && !menus.some((m) => m.menuName === permissionKey)) {
     toast.error('Access denied. Authentication required.');

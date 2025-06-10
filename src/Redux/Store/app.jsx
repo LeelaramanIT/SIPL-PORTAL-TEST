@@ -28,16 +28,25 @@ const invoicePersistConfig = {
   transforms: [encryptor],
 };
 
+const globalPersistConfig = {
+  key: "global",
+  version: 1,
+  storage,
+  transforms: [encryptor],
+}
+
 
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceReducer);
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
+const persistedGlobalReducer = persistReducer(globalPersistConfig, globalReducer);
 
 // Root reducer
 const rootReducer = combineReducers({
-  global: globalReducer, 
+  global: persistedGlobalReducer, 
   invoice: persistedInvoiceReducer,
   auth: persistedAuthReducer,
+
 });
 
 // Store setup

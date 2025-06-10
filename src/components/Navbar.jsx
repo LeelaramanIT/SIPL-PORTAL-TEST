@@ -17,7 +17,7 @@ const Navbar = () => {
     await persistor.purge();
   }
   return (
-    <div className="h-[63px] flex justify-between items-center px-4 duration-400 dark:bg-gray-900 select-none">
+    <div className="h-[63px] flex  justify-between items-center px-4 duration-400 dark:bg-gray-900 select-none">
       {/* Left Side */}
       <BreadCrumbs />
 

@@ -139,7 +139,7 @@ const ExportInvoicePrepare = () => {
         </div>
 
         {/* Grid Details */}
-        <div className="p-10 grid bg-background dark:bg-gray-700 shadow rounded-md grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800 dark:text-gray-300">
+        <div className="p-10 grid bg-[var(--color-background)] dark:bg-gray-700 shadow rounded-md grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800 dark:text-gray-300">
           <div className="space-y-4">
             {[
               ["Ordered Date:", "2025-05-14"],
@@ -190,7 +190,7 @@ const ExportInvoicePrepare = () => {
       ) : (
         <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
           <table className="w-full text-sm text-left table-fixed">
-            <thead className="bg-[#f7f2ef] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
+            <thead className="bg-[var(--color-background)] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
               <tr>
                 {[
                   "CATEGORY",
@@ -231,7 +231,7 @@ const ExportInvoicePrepare = () => {
                   ref={(el) => (rowsRef.current[idx] = el)}
                   className={`text-[13px] text-center ${
                     idx % 2 === 0
-                      ? "bg-[#E2E8F0] dark:bg-gray-700"
+                      ? "bg-[var(--color-secondary)] dark:bg-gray-700"
                       : "bg-white dark:bg-gray-800"
                   } text-gray-700 dark:text-gray-300`}
                 >
@@ -275,7 +275,7 @@ const ExportInvoicePrepare = () => {
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
         <Button
           onClick={() => {
-            navigate("/TTS/International/Invoivce/Export/BillPDF");
+            navigate("/TTS/International/Invoice/Export/BillPDF");
           }}
           text="Preview PDF"
         />

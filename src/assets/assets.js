@@ -16,6 +16,7 @@ import SKY1 from "./img/sky1.gif";
 import Mountain from "./img/Mountain.mp4";
 import LoadingBTN from "./img/loading.gif";
 import LoadingAnimation from "./img/LoadingAnimation.svg";
+import SUN_TWS from "./img/SUN-TWS.jpg";
 
 const assets = {
   LoginBG,
@@ -36,6 +37,7 @@ const assets = {
   Mountain,
   LoadingBTN,
   LoadingAnimation,
+  SUN_TWS,
 };
 
 export default assets;

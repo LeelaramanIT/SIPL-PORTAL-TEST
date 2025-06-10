@@ -8,16 +8,137 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 
-@theme {
-    /* Add your theme variables here */
+/* Base Theme (default) */
+:root {
+  --color-background: #f8f9fa;
+  --color-primary: #1F2937; /* dark slate */
+  --color-primary-hover: #374151;
+  --color-secondary: #E5E7EB;
+  --color-text: #111827;
+  --color-text-hover: #ffffff;
+  --font-primary: "Nunito", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+.theme-dark {
+  --color-background: #111827;
+  --color-primary: #1f2937;
+  --color-primary-hover: #374151;
+  --color-secondary: #1e293b;
+  --color-text: #f3f4f6;
+  --color-text-hover: #d1d5db;
+}
 
-    --color-background: #F7F2EF;
-    --font-primary: "Nunito", "sans-serif";
-    --font-heading:"Roboto Flex", "sans-serif",  
-    --font-secondary: "Roboto Flex", ""; /* This the font for full application */
-    --color-primary: #707070;
-    --color-text-hover: #E5E5E5;
-  }
+/* Theme 1 - Light */
+.theme-light {
+  --color-background: #F7F2EF;
+  --color-primary: #1D293D;
+  --color-primary-hover: #43536d;
+  --color-secondary: #F2DFD4;
+  --color-text-hover: #E5E5E5;
+  --color-text: #f3f4f6;
+  --font-primary: "Nunito", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 2 - Dark */
+.theme-Light-Sky-Blue {
+  --color-background: #e0f2fe; /* Soft sky background */
+  --color-primary: #38bff8;    /* Light sky blue */
+  --color-primary-hover: #0EA5E9; /* Slightly darker blue on hover */
+  --color-secondary: #F0F9FF;  /* Very light blue-gray for contrast */
+  --color-text-hover: #0284C7; /* Medium sky text hover */
+  --font-primary: "Poppins", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 3 - Green */
+.theme-green {
+  --color-background: #F0FFF4;
+  --color-primary: #10B981;
+  --color-primary-hover: #207157;
+  --color-secondary: #D1FAE5;
+  --color-text-hover: #A7F3D0;
+  --font-primary: "Inter", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 4 - Orange */
+.theme-orange {
+  --color-background: #FFF7ED;
+  --color-primary: #F97316;
+  --color-primary-hover: #C2410C;
+  --color-secondary: #FED7AA;
+  --color-text-hover: #FDBA74;
+  --font-primary: "Montserrat", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 5 - Purple */
+.theme-purple {
+  --color-background: #F3E8FF;
+  --color-primary: #8B5CF6;
+  --color-primary-hover: #6D28D9;
+  --color-secondary: #DDD6FE;
+  --color-text-hover: #C4B5FD;
+  --font-primary: "Raleway", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 6 - Red */
+.theme-red {
+  --color-background: #FFEDEF;
+  --color-primary: #EF4444;
+  --color-primary-hover: #B91C1C;
+  --color-secondary: #FCA5A5;
+  --color-text-hover: #F87171;
+  --font-primary: "Open Sans", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 7 - Blue */
+.theme-blue {
+  --color-background: #eff6ff;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-secondary: #bfdbfe;
+  --color-text: #1e3a8a;
+  --color-text-hover: #ffffff;
+}
+
+
+/* Theme 8 - Yellow */
+.theme-yellow {
+  --color-background: #FFFBEA;
+  --color-primary: #F59E0B;
+  --color-primary-hover: #B45309;
+  --color-secondary: #FEF3C7;
+  --color-text-hover: #FCD34D;
+  --font-primary: "Ubuntu", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 9 - Cyan */
+.theme-cyan {
+  --color-background: #ECFEFF;
+  --color-primary: #06B6D4;
+  --color-primary-hover: #0E7490;
+  --color-secondary: #CFFAFE;
+  --color-text-hover: #22D3EE;
+  --font-primary: "Work Sans", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
+/* Theme 10 - Pink */
+.theme-pink {
+  --color-background: #FFF1F2;
+  --color-primary: #EC4899;
+  --color-primary-hover: #9D174D;
+  --color-secondary: #FBCFE8;
+  --color-text-hover: #F472B6;
+  --font-primary: "Nunito", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;  
@@ -47,3 +168,28 @@ input:-webkit-autofill:focus {
 body.modal-open .layout-scroll {
   overflow: hidden !important;
 }
+
+/* Selected menu item */
+.ant-menu-light .ant-menu-item-selected {
+  background-color: var(--color-primary) !important;
+  color: black !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #1f2937 !important;
+  color: white !important;
+}
+
+/* Hover effect */
+.ant-menu-light .ant-menu-item:hover {
+  background-color: var(--color-primary-hover) !important;
+  color: var(--color-text-hover) !important;
+}
+
+.ant-menu-dark .ant-menu-item:hover {
+   background-color: #1e293b !important;
+  color: black !important;
+}
+
+
+

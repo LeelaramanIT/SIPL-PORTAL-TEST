@@ -127,15 +127,13 @@ export const getExportInvoiceAll = () => async (dispatch) => {
     totalwt: `${((i + 1) * 12.5).toFixed(2)}`
   };
 });
-console.log(dummyData);
-
 
     // dispatch(setExportLoading());
     // const res = await api.get(
     //   `${BackendUrl}/Invoice/GettingInvoiceReadyOrders`
     // );
     dispatch(setExportdatas(dummyData));// dispatch the data to the store
-    console.log(dummyData);
+    // console.log(dummyData);
     
     // dispatch(setExportdatas(res.data)); // dispatch the data to the store
     

@@ -142,10 +142,10 @@ const ExportInvoice = () => {
               <button
                 // onClick={() => handleAction(row)}
                 onClick={() => {
-                  navigate("Prepare");
+                  navigate("/TTS/International/Invoice/ExportInvoicePrepare");
                   dispatch(getExportInvoice(row, index));
                 }}
-                className="bg-slate-800 hover:bg-slate-600 text-white px-4 py-1 rounded text-center"
+                className="bg-[var(--color-primary)] dark:bg-slate-900 dark:hover:bg-slate-600 hover:bg[var(--color-primary-hover)] text-white px-4 py-1 rounded text-center"
               >
                 Action
               </button>

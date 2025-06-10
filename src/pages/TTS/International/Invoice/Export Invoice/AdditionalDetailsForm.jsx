@@ -15,12 +15,9 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
 
   const onSubmit = async (data) => {
   console.log("Form submitted:", data);
-  console.log("isSubmitting before delay:", isSubmitting);
 
   // Simulate async delay (e.g., API call)
   await new Promise((resolve) => setTimeout(resolve, 9000)); // 2 seconds
-
-  console.log("isSubmitting after delay:", isSubmitting);
 
   reset();
   onClose();
@@ -30,7 +27,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
   return (
 
     <div className="">
-    <div className="w-full h-10 flex justify-evenly items-center"><h1 className="text-gray-800 font-medium dark:text-white">SHIPMENT TYPE: <spam className="font-bold">DIRECT</spam></h1><h1 className="text-gray-800 font-medium dark:text-white">WORK ORDER: <span className="font-bold">LOAD 307</span></h1></div>
+    <div className="w-full h-10 flex justify-evenly items-center"><h1 className="text-gray-800 font-medium dark:text-white">SHIPMENT TYPE: <span className="font-bold">DIRECT</span></h1><h1 className="text-gray-800 font-medium dark:text-white">WORK ORDER: <span className="font-bold">LOAD 307</span></h1></div>
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="text-sm mt-6 text-gray-800 dark:text-gray-200 w-full grid grid-cols-1 md:grid-cols-3 gap-4 "
@@ -81,7 +78,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
           }}
           disabled={isSubmitting}
         />
-        {isSubmitting ?<LoadingButton className={'p-1'} text={'Submiting...'} />:<Button type="submit" text="Submit" disabled={isSubmitting} />}
+        {isSubmitting ?<LoadingButton className={'p-1 bg-[var(--color-primary)]'} text={'Submiting...'} />:<Button type="submit" text="Submit" disabled={isSubmitting} />}
       </div>
     </form>
     </div>

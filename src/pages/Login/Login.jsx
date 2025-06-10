@@ -198,7 +198,7 @@ const Login = () => {
 
           {/* Login Button */}
           {loading ? (
-            <LoadingButton text={'Loading...'} className='w-full py-2 px-4' />
+            <LoadingButton text={'Loading...'} className='w-full py-2 px-4 bg-slate-900 hover:bg-slate-800' />
           ) : (
             <button
               ref={div7}

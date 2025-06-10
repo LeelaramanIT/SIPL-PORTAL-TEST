@@ -5,7 +5,8 @@ export const routePermissions = {
   "Masters/UserMaster/ListUserMaster": "ListUserMaster",
   "TTS/Domestic/Invoice/CustInvoice": "DomesticCustInvoice",
   "TTS/Domestic/Invoice/CustomerInvoice": "DomesticCustomerInvoice",
-  "TTS/International/Invoice/Export": "ExportInvoice",
-  "TTS/International/Invoice/Export/Prepare": "ExportInvoicePrepare",
+  "TTS/International/Invoice/ExportInvoice": "ExportInvoice",
+  "TTS/International/Invoice/ExportInvoicePrepare": "ExportInvoicePrepare",
+  "TTS/International/Invoice/Export/BillPDF": "ExportInvoiceBILLPDF",
   Settings: "Settings",
 };

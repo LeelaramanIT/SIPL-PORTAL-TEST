@@ -48,9 +48,9 @@ export const router = createBrowserRouter([
           path: "TTS/International",
           element: <InvoiceLayout />,
           children: [
-            { path: "Invoice/Export", element: <ExportInvoice /> },
-            { path: "Invoice/Export/Prepare", element: <ExportInvoicePrepare /> },
-            { path: "Invoivce/Export/BillPDF", element: <ExportInvoiceBillPDF/> }
+            { path: "Invoice/ExportInvoice", element: <ExportInvoice /> },
+            { path: "Invoice/ExportInvoicePrepare", element: <ExportInvoicePrepare /> },
+            { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF/> }
           ],
         },
         { path: "Settings", element: <Settings /> },

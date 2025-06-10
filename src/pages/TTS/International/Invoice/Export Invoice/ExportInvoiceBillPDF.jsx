@@ -783,7 +783,7 @@ const ExportInvoiceBillPDF = () => {
           icon={<IoChevronBackCircleOutline />}
           type="button"
           onClick={() => {
-            navigate("/TTS/International/Invoice/Export/Prepare");
+            navigate("/TTS/International/Invoice/ExportInvoicePrepare");
           }}
           text={"Back"}
           className={""}
