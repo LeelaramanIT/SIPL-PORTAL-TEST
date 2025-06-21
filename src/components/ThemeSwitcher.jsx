@@ -12,6 +12,7 @@ const themes = [
   { name: "yellow", color: "#F59E0B", label: "Yellow" },
   { name: "cyan", color: "#06B6D4", label: "Cyan" },
   { name: "pink", color: "#EC4899", label: "Pink" },
+  { name: "navi-blue", color: "#1E3A8A", label: "Navi Blue" },
 ];
 
 // Helper function to get current theme label

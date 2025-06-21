@@ -139,6 +139,18 @@
   --font-secondary: "Roboto Flex", sans-serif;
 }
 
+/* Theme 11 - Navi Blue */
+.theme-navi-blue {
+  --color-background: #f8f9fa;
+  --color-primary: #1F2937; /* dark slate */
+  --color-primary-hover: #374151;
+  --color-secondary: #E5E7EB;
+  --color-text: #111827;
+  --color-text-hover: #ffffff;
+  --font-primary: "Nunito", sans-serif;
+  --font-secondary: "Roboto Flex", sans-serif;
+}
+
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;  
