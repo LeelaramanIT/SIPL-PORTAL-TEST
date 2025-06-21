@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { userLogin } from "../../Redux/Slices/AuthSlice";
 import toast from "react-hot-toast";
 import LoadingButton from "../../components/LoadingButton";
+import ThemeSwitcher from "../../components/ThemeSwitcher";
 
 const randomIndex = Math.floor(Math.random() * 2);
 const videoOption = randomIndex === 1 ? assets.SKY : assets.Mountain;
@@ -90,6 +91,12 @@ const Login = () => {
         src={assets.TVSLOGO}
         className="absolute z-10 top-5 left-5 w-[15rem]"
       />
+      
+      {/* Theme Switcher for Login Page */}
+      <div className="absolute z-20 top-5 right-5">
+        <ThemeSwitcher variant="navbar" />
+      </div>
+      
       {/* Background Video */}
       {videoOption && (
         <video

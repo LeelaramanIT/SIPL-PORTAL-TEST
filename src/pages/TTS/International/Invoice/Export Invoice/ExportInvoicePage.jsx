@@ -80,10 +80,7 @@ const ExportInvoice = () => {
       }
 
       const value = row[selectedColumn];
-     return (
-  value && String(value).toLowerCase() === searchQuery.toLowerCase()
-);
-
+      return value && String(value).toLowerCase() === searchQuery.toLowerCase();
     });
   }, [searchQuery, tableData, selectedColumn, startDate]);
 
@@ -92,66 +89,78 @@ const ExportInvoice = () => {
   };
 
   return (
-    <div
-      ref={animateRef}
-      className="w-full py-1 px-2.5 rounded-2xl dark:bg-gray-800 text-black dark:text-white"
-    >
-      <div className="flex flex-col md:flex-row w-full py-3 px-3 items-center gap-4 justify-between">
-        <div className="w-[80%] flex justify-start items-center">
-          <Dropdown
-            label="Filter"
-            items={[{ label: "All", key: "all" }, ...headers]} // Include "All" option
-            onSelect={handleDropdownSelect}
-          />
-          {!["completedDate", "dispatchedDate", "rfD_Date"].includes(
-            selectedColumn
-          ) ? (
-            <SearchBar
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onSearch={() => {}}
-            />
-          ) : (
-            <DatePickerComponent
-              startDate={startDate}
-              handleDateChange={handleDateChange}
-            />
-          )}
-        </div>
+    <div className="px-6 pt-4 bg-white max-w-full mx-auto">
+      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-2">
+        Export Invoice
+      </h1>
 
-        <Button
-          onClick={() => navigate("/Masters/UserMaster/UserCreate")}
-          text={"+ Add Invoice"}
-          className={""}
-        />
-      </div>
-      <TitleText title={"Export Invoice"} className="my-2" />
-      <div className="w-full h-[33.5rem] rounded-sm bg-background overflow-auto gap-5 flex flex-col">
-        {loading ? (
-          <TableSkeleton />
-        ) : (
-          <ExportTable
-            headers={headers}
-            data={filteredData}
-            rowClassName={(row, index) => {
-              if (index === 0) return "rounded-l-xl";
-              if (index === row.length - 1) return "rounded-r-xl";
-              return "";
-            }}
-            renderAction={(row, index) => (
-              <button
-                // onClick={() => handleAction(row)}
-                onClick={() => {
-                  navigate("/TTS/International/Invoice/ExportInvoicePrepare");
-                  dispatch(getExportInvoice(row, index));
+      <div className="bg-[var(--color-background)] px-2 py-4 rounded-lg border border-[var(--color-secondary)]">
+        <div
+          ref={animateRef}
+          className="w-full py-1 px-2.5 rounded-2xl text-[var(--color-text)]"
+        >
+          <div className="flex flex-col md:flex-row w-full py-1 px-1 items-center gap-4 justify-between mb-4">
+            <div className="w-[80%] flex justify-start items-center">
+              <Dropdown
+                label="Filter"
+                items={[{ label: "All", key: "all" }, ...headers]} // Include "All" option
+                onSelect={handleDropdownSelect}
+              />
+              {!["completedDate", "dispatchedDate", "rfD_Date"].includes(
+                selectedColumn
+              ) ? (
+                <SearchBar
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onSearch={() => {}}
+                />
+              ) : (
+                <DatePickerComponent
+                  startDate={startDate}
+                  handleDateChange={handleDateChange}
+                />
+              )}
+            </div>
+
+            <Button
+              onClick={() => navigate("/Masters/UserMaster/UserCreate")}
+              text={"+ Add Invoice"}
+              className={
+                "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-hover)]"
+              }
+            />
+          </div>
+
+          <div className="w-full h-[31.5rem] rounded-sm bg-[var(--color-background)] overflow-auto gap-5 flex flex-col">
+            {loading ? (
+              <TableSkeleton />
+            ) : (
+              <ExportTable
+                headers={headers}
+                data={filteredData}
+                rowClassName={(row, index) => {
+                  if (index === 0) return "rounded-l-xl";
+                  if (index === row.length - 1) return "rounded-r-xl";
+                  return "";
                 }}
-                className="bg-[var(--color-primary)] dark:bg-slate-900 dark:hover:bg-slate-600 hover:bg[var(--color-primary-hover)] text-white px-4 py-1 rounded text-center"
-              >
-                Action
-              </button>
+                renderAction={(row, index) => (
+                  <button
+                    // onClick={() => handleAction(row)}
+                    onClick={() => {
+                      navigate(
+                        "/TTS/International/Invoice/ExportInvoicePrepare"
+                      );
+                      dispatch(getExportInvoice(row, index));
+                    }}
+                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-hover)] px-4 py-1 rounded text-center"
+                  >
+                    Action
+                  </button>
+                )}
+              />
             )}
-          />
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

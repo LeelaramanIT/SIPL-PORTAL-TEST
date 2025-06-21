@@ -16,11 +16,11 @@ const ShipmentDetailsForm = ({ onClose }) => {
   };
 
   const inputClass = `
-    w-full px-3 py-2   border border-gray-300 rounded-md text-gray-900 dark:text-white
-    bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400
+    w-full px-3 py-2 border border-[var(--color-secondary)] rounded-md text-[var(--color-text)]
+    bg-[var(--color-background)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]
   `;
 
-  const labelClass = "block mb-1 font-semibold text-gray-700 dark:text-gray-300";
+  const labelClass = "block mb-1 font-semibold text-[var(--color-text)]";
 
   const fields = [
     { label: "Exporter Authorized Address", name: "exporterAddress", type: "text" },
@@ -33,51 +33,59 @@ const ShipmentDetailsForm = ({ onClose }) => {
   ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl  mx-auto p-6 bg-white dark:bg-gray-900 rounded-md shadow-md space-y-6 text-gray-800 dark:text-gray-200">
-      <h2 className="text-xl font-bold mb-4">
-        SHIPMENT TYPE: <span className="text-blue-600">DIRECT</span> &nbsp; | &nbsp; WORK ORDER: <span className="text-blue-600">24-25(1123)</span>
-      </h2>
+    <div className='p-6 max-w-4xl mx-auto'>
+      <h1 className='text-2xl font-bold text-[var(--color-primary)] mb-6'>Create User</h1>
+      
+      <div className='bg-[var(--color-background)] p-6 rounded-lg border border-[var(--color-secondary)]'>
+        <h2 className='text-lg font-semibold text-[var(--color-primary)] mb-4'>User Information</h2>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="p-4 bg-[var(--color-background)] border border-[var(--color-secondary)] rounded-md">
+            <h3 className="text-md font-semibold text-[var(--color-primary)] mb-4">
+              SHIPMENT TYPE: <span className="text-[var(--color-primary)]">DIRECT</span> &nbsp; | &nbsp; WORK ORDER: <span className="text-[var(--color-primary)]">24-25(1123)</span>
+            </h3>
+          </div>
 
-      {fields.map(({ label, name, type, options }) => (
-        <div key={name} className="flex flex-col">
-          <label htmlFor={name} className={labelClass}>
-            {label}
-          </label>
-          {type === "select" ? (
-            <select
-              id={name}
-              {...register(name, { required: `${label} is required` })}
-              className={inputClass}
-            >
-              <option value="">Select</option>
-              {options.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              id={name}
-              type={type}
-              {...register(name, { required: `${label} is required` })}
-              className={inputClass}
-            />
-          )}
-          {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name].message}</p>}
-        </div>
-      ))}
+          {fields.map(({ label, name, type, options }) => (
+            <div key={name} className="flex flex-col">
+              <label htmlFor={name} className={labelClass}>
+                {label}
+              </label>
+              {type === "select" ? (
+                <select
+                  id={name}
+                  {...register(name, { required: `${label} is required` })}
+                  className={inputClass}
+                >
+                  <option value="">Select</option>
+                  {options.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id={name}
+                  type={type}
+                  {...register(name, { required: `${label} is required` })}
+                  className={inputClass}
+                />
+              )}
+              {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name].message}</p>}
+            </div>
+          ))}
 
-      <div className="flex flex-col">
-        <label htmlFor="paymentTerms" className={labelClass}>
-          Payment Terms
-        </label>
-        <textarea
-          id="paymentTerms"
-          {...register("paymentTerms", { required: "Payment terms are required" })}
-          rows={6}
-          className={inputClass + " resize-none"}
-          defaultValue={`01. UNIT PRICES ARE INR EX-WORKS , MMN.
+          <div className="flex flex-col">
+            <label htmlFor="paymentTerms" className={labelClass}>
+              Payment Terms
+            </label>
+            <textarea
+              id="paymentTerms"
+              {...register("paymentTerms", { required: "Payment terms are required" })}
+              rows={6}
+              className={inputClass + " resize-none"}
+              defaultValue={`01. UNIT PRICES ARE INR EX-WORKS , MMN.
 
 02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS
 
@@ -86,24 +94,26 @@ const ShipmentDetailsForm = ({ onClose }) => {
 04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
 
 05. SINCE THE SHIPMENT IS AN FCL CARGO, TYRES WILL BE STRETCH WRAPPED INDIVIDUALLY AND SENT IN LOOSE CONDITION.`}
-        />
-        {errors.paymentTerms && <p className="text-red-500 text-sm mt-1">{errors.paymentTerms.message}</p>}
-      </div>
+            />
+            {errors.paymentTerms && <p className="text-red-500 text-sm mt-1">{errors.paymentTerms.message}</p>}
+          </div>
 
-      <div className="flex justify-end space-x-4">
-        <Button
-          onClick={onClose}
-          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-5 py-2 rounded"
-          text="Cancel"
-          type="button"
-        />
-        <Button
-          className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-5 py-2 rounded"
-          text="Save"
-          type="submit"
-        />
+          <div className="flex justify-end space-x-4">
+            <Button
+              onClick={onClose}
+              className="bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/80 text-[var(--color-text)] px-5 py-2 rounded"
+              text="Cancel"
+              type="button"
+            />
+            <Button
+              className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-hover)] px-5 py-2 rounded"
+              text="Save"
+              type="submit"
+            />
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 };
 

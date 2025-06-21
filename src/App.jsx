@@ -9,6 +9,7 @@ import 'aos/dist/aos.css';
 import { useEffect } from "react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { PersistGate } from "redux-persist/integration/react";
+import ThemeSwitcher from "./components/ThemeSwitcher";
 
 // 🟢 Moved this to a child so useSelector is safe
 function ThemedApp() {
@@ -32,7 +33,12 @@ function ThemedApp() {
     }
   }, [theme]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ThemeSwitcher variant="floating" />
+    </>
+  );
 }
 
 function App() {

@@ -4,6 +4,7 @@ import assets from "../assets/assets.js";
 import BreadCrumbs from "./BreadCrumbs";
 import { useNavigate } from "react-router-dom";
 import DarkModeToggle from "./DarkModeToggle/DarkModeToggle.jsx";
+import ThemeSwitcher, { getCurrentThemeLabel } from "./ThemeSwitcher.jsx";
 import { userLogout } from "../Redux/Slices/AuthSlice.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { persistor } from "../Redux/Store/app.jsx";

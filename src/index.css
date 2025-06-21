@@ -30,12 +30,12 @@
 
 /* Theme 1 - Light */
 .theme-light {
-  --color-background: #F7F2EF;
-  --color-primary: #1D293D;
-  --color-primary-hover: #43536d;
-  --color-secondary: #F2DFD4;
-  --color-text-hover: #E5E5E5;
-  --color-text: #f3f4f6;
+  --color-background: #F8FAFC; /* Light gray-blue background */
+  --color-primary: #2563EB;    /* Modern blue primary */
+  --color-primary-hover: #1D4ED8; /* Darker blue on hover */
+  --color-secondary: #E2E8F0;  /* Light gray secondary */
+  --color-text: #1E293B;       /* Dark slate text */
+  --color-text-hover: #FFFFFF; /* White text on hover */
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
 }
