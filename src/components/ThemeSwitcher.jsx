@@ -2,17 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
 const themes = [
-  { name: "light", color: "#2563EB", label: "Light" },
-  { name: "Light-Sky-Blue", color: "#93C5FD", label: "Sky Blue" },
-  { name: "green", color: "#10B981", label: "Green" },
-  { name: "orange", color: "#F97316", label: "Orange" },
-  { name: "purple", color: "#8B5CF6", label: "Purple" },
-  { name: "red", color: "#EF4444", label: "Red" },
-  { name: "blue", color: "#3B82F6", label: "Blue" },
-  { name: "yellow", color: "#F59E0B", label: "Yellow" },
-  { name: "cyan", color: "#06B6D4", label: "Cyan" },
-  { name: "pink", color: "#EC4899", label: "Pink" },
-  { name: "navi-blue", color: "#1E3A8A", label: "Navi Blue" },
+  { name: "light", color: "#2563EB", label: "Light", icon: "☀️" },
+  { name: "Light-Sky-Blue", color: "#93C5FD", label: "Sky Blue", icon: "🌤️" },
+  { name: "green", color: "#10B981", label: "Green", icon: "🌿" },
+  { name: "orange", color: "#F97316", label: "Orange", icon: "🍊" },
+  { name: "purple", color: "#8B5CF6", label: "Purple", icon: "🔮" },
+  { name: "red", color: "#EF4444", label: "Red", icon: "❤️" },
+  { name: "blue", color: "#3B82F6", label: "Blue", icon: "🌊" },
+  { name: "yellow", color: "#F59E0B", label: "Yellow", icon: "⭐" },
+  { name: "cyan", color: "#06B6D4", label: "Cyan", icon: "💎" },
+  { name: "pink", color: "#EC4899", label: "Pink", icon: "🌸" },
+  { name: "navi-blue", color: "#1E3A8A", label: "Navi Blue", icon: "🌙" },
 ];
 
 // Helper function to get current theme label
@@ -27,8 +27,12 @@ export default function ThemeSwitcher({ variant = "floating" }) {
   const [currentTheme, setCurrentTheme] = useState(
     localStorage.getItem("theme") || "light"
   );
+  const [isDarkMode, setIsDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true"
+  );
   const buttonsRef = useRef([]);
   const wrapperRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -38,22 +42,53 @@ export default function ThemeSwitcher({ variant = "floating" }) {
   }, [currentTheme]);
 
   useEffect(() => {
+    const html = document.documentElement;
+    if (isDarkMode) {
+      html.classList.add("dark");
+    } else {
+      html.classList.remove("dark");
+    }
+    localStorage.setItem("darkMode", isDarkMode);
+  }, [isDarkMode]);
+
+  useEffect(() => {
     const validButtons = buttonsRef.current.filter(Boolean);
 
     if (isOpen) {
       gsap.fromTo(
         validButtons,
-        { opacity: 0.5, x: -20, display: "none" },
+        { opacity: 0, scale: 0.8, y: 20 },
         {
           opacity: 1,
-          x: 0,
-          display: "block",
-          duration: 0.3,
+          scale: 1,
+          y: 0,
+          duration: 0.4,
           stagger: 0.05,
-          ease: "power1",
+          ease: "back.out(1.7)",
         }
       );
-    } 
+
+      gsap.fromTo(
+        containerRef.current,
+        { opacity: 0, scale: 0.9, y: -10 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.3,
+          ease: "back.out(1.7)",
+        }
+      );
+    } else {
+      gsap.to(validButtons, {
+        opacity: 0,
+        scale: 0.8,
+        y: 20,
+        duration: 0.2,
+        stagger: 0.02,
+        ease: "power2.in",
+      });
+    }
   }, [isOpen]);
 
   // Detect outside clicks
@@ -73,13 +108,23 @@ export default function ThemeSwitcher({ variant = "floating" }) {
     };
   }, []);
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   // Navbar variant
   if (variant === "navbar") {
     return (
       <div ref={wrapperRef} className="relative">
         {isOpen && (
-          <div className="absolute top-full right-0 mt-2 p-3 rounded-xl shadow-lg flex gap-2 bg-[var(--color-background)] border border-[var(--color-secondary)] min-w-[280px]">
-            <div className="grid grid-cols-5 gap-2">
+          <div 
+            ref={containerRef}
+            className="absolute top-full right-0 mt-2 p-4 rounded-xl shadow-2xl glass border border-[var(--color-border)] min-w-[320px] animate-fade-in"
+          >
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold text-[var(--color-text)] mb-2">Choose Theme</h3>
+            </div>
+            <div className="grid grid-cols-5 gap-3">
               {themes.map((theme, index) => (
                 <button
                   key={theme.name}
@@ -89,15 +134,16 @@ export default function ThemeSwitcher({ variant = "floating" }) {
                     setIsOpen(false);
                   }}
                   title={`Switch to ${theme.label} theme`}
-                  className={`w-[40px] h-[40px] rounded-lg transition duration-300 border-2 flex items-center justify-center ${
+                  className={`w-[45px] h-[45px] rounded-xl transition-all duration-300 border-2 flex flex-col items-center justify-center gap-1 hover:scale-110 hover:shadow-lg ${
                     currentTheme === theme.name
-                      ? "border-[var(--color-primary)] shadow-lg"
+                      ? "border-[var(--color-accent)] shadow-lg scale-105"
                       : "border-transparent hover:border-[var(--color-secondary)]"
                   }`}
-                  style={{ backgroundColor: theme.color, display: "none" }}
+                  style={{ backgroundColor: theme.color }}
                 >
+                  <span className="text-xs">{theme.icon}</span>
                   {currentTheme === theme.name && (
-                    <span className="text-white text-xs">✓</span>
+                    <span className="text-white text-xs font-bold">✓</span>
                   )}
                 </button>
               ))}
@@ -107,7 +153,7 @@ export default function ThemeSwitcher({ variant = "floating" }) {
 
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-sm font-bold cursor-pointer transition-colors duration-200"
+          className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-sm font-bold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
           aria-label="Toggle Theme Picker"
         >
           🎨
@@ -120,30 +166,42 @@ export default function ThemeSwitcher({ variant = "floating" }) {
   return (
     <div
       ref={wrapperRef}
-      className="fixed bottom-3 left-6 z-10"
+      className="fixed bottom-6 left-6 z-50 flex flex-col gap-3"
     >
       {isOpen && (
-        <div className="mt-2 p-3 rounded-xl shadow-lg flex gap-2 bg-[var(--color-background)]">
-          {themes.map((theme, index) => (
-            <button
-              key={theme.name}
-              ref={(el) => (buttonsRef.current[index] = el)}
-              onClick={() => setCurrentTheme(theme.name)}
-              title={`Switch to ${theme.label} theme`}
-              className={`w-[30px] h-[30px] rounded-full transition duration-300 border ${
-                currentTheme === theme.name
-                  ? "border-[3px] border-[var(--color-primary-hover)]"
-                  : "border-transparent"
-              }`}
-              style={{ backgroundColor: theme.color, display: "none" }}
-            />
-          ))}
+        <div 
+          ref={containerRef}
+          className="mb-3 p-4 rounded-2xl shadow-2xl glass border border-[var(--color-border)] animate-fade-in-up"
+        >
+          <div className="mb-3">
+            <h3 className="text-sm font-semibold text-[var(--color-text)] mb-2">Themes</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {themes.map((theme, index) => (
+              <button
+                key={theme.name}
+                ref={(el) => (buttonsRef.current[index] = el)}
+                onClick={() => setCurrentTheme(theme.name)}
+                title={`Switch to ${theme.label} theme`}
+                className={`w-[35px] h-[35px] rounded-lg transition-all duration-300 border-2 flex items-center justify-center hover:scale-110 hover:shadow-md ${
+                  currentTheme === theme.name
+                    ? "border-[var(--color-accent)] shadow-lg scale-105"
+                    : "border-transparent hover:border-[var(--color-secondary)]"
+                }`}
+                style={{ backgroundColor: theme.color }}
+              >
+                {currentTheme === theme.name && (
+                  <span className="text-white text-xs font-bold">✓</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-[var(--color-primary)] dark:bg-gray-700 text-white w-10 h-10 rounded-full shadow-md flex items-center justify-center text-lg font-bold cursor-pointer"
+        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-lg font-bold cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-xl animate-bounce-in"
         aria-label="Toggle Theme Picker"
       >
         🎨
