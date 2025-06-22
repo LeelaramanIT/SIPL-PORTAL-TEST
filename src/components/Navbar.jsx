@@ -4,7 +4,6 @@ import assets from "../assets/assets.js";
 import BreadCrumbs from "./BreadCrumbs";
 import { useNavigate } from "react-router-dom";
 import DarkModeToggle from "./DarkModeToggle/DarkModeToggle.jsx";
-import ThemeSwitcher, { getCurrentThemeLabel } from "./ThemeSwitcher.jsx";
 import { userLogout } from "../Redux/Slices/AuthSlice.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { persistor } from "../Redux/Store/app.jsx";
@@ -18,7 +17,7 @@ const Navbar = () => {
     await persistor.purge();
   }
   return (
-    <div className="h-[63px] flex  justify-between items-center px-4 duration-400 dark:bg-gray-900 select-none">
+    <div className="h-[63px] flex  justify-between items-center px-4 duration-400 dark:bg-[#001529] select-none">
       {/* Left Side */}
       <BreadCrumbs />
 
@@ -27,7 +26,7 @@ const Navbar = () => {
         {/* <ToggleButton/> */}
         <DarkModeToggle />
         <img
-          className="w-10 h-10 rounded-full border-primary border cursor-pointer"
+          className="w-10 h-10 rounded-full border-primary border cursor-pointer "
           src={assets.DefaultLogo}
           alt="UserLogo"
         />

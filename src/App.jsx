@@ -22,13 +22,16 @@ function ThemedApp() {
   useEffect(() => {
     const html = document.documentElement;
     html.classList.remove(
-      "theme-light",
-      "theme-dark",
-      "theme-green",
-      "theme-orange",
-      "theme-purple"
+      'theme-dark',
+      'theme-light',
+      'theme-green',
+      'theme-orange',
+      'theme-purple',
+      'theme-red',
+      'theme-pink',
+      'theme-navi-blue',
     );
-    if (theme) {
+    if (theme!='dark' && theme) {
       html.classList.add(`theme-${theme}`);
     }
   }, [theme]);

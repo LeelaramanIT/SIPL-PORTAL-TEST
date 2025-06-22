@@ -2,13 +2,12 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "../../src/components/Navbar";
 import SideBar from "../components/Sidebar/SideBar";
-import SideBarMU from "../components/Sidebar/SideBarMU";
 
 const MainLayout = () => {
   return (
     <div className="w-full h-screen flex bg-[var(--color-background)] dark:bg-gray-900">
       {/* <SideBar /> */}
-      <SideBarMU />
+      <SideBar />
 
       <div className="flex-1 flex flex-col">
         <Navbar />

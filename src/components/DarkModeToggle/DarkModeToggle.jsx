@@ -1,13 +1,12 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setTheme } from "../../Redux/Slices/GlobalSlice";
+import { setIsDark } from "../../Redux/Slices/GlobalSlice";
 import "./DarkModeToggle.css";
 
 const DarkModeToggle = () => {
-  const theme = useSelector((state) => state.global.theme);
+  const isDark = useSelector((state) => state.global.isDark);
   const dispatch = useDispatch();
 
-  const isDark = theme === "dark";
 
   useEffect(() => {
     const root = document.documentElement;
@@ -19,8 +18,9 @@ const DarkModeToggle = () => {
   }, [isDark]);
 
   const toggleTheme = () => {
-    dispatch(setTheme(isDark ? "light" : "dark"));
+    dispatch(setIsDark(!isDark)); // send a boolean
   };
+  
 
   return (
     <div>

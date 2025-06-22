@@ -1,30 +1,16 @@
 // src/store/sidebarSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-const getInitialTheme = () => {
-  if (typeof window !== "undefined" && localStorage.theme) {
-    return localStorage.theme;
-  }
-  return "light";
-};
 
 
 const initialState = {
   open: false,
-  theme: getInitialTheme(),  
-  sections: {
-    mastersOpen: false,
-    userMasterOpen: false,
-    organizationOpen: false,
-    otherOption: false,
-    alertOpen: false,
-    alertUserOpen: false,
-    alertMasterOpen: false,
-    invoiceOpen: false,
-    domesticOpen: false,
-    TTSOpen: false,
-  },
+  theme: 'light',
+  isDark: localStorage.getItem('darkMode') === 'true',
+
 };
+
+console.log(localStorage.getItem("darkMode"));
 
 const globalSlice = createSlice({
   name: "global",
@@ -33,21 +19,16 @@ const globalSlice = createSlice({
     toggleSidebar: (state) => {
       state.open = !state.open;
     },
-    toggleSection: (state, action) => {
-      
-      const section = action.payload;
-      state.sections[section] = !state.sections[section];
-    },
-    setSection: (state, action) => {
-      const { section, value } = action.payload;
-      state.sections[section] = value;
-    },
     setTheme: (state, action) => {
       state.theme = action.payload;
       localStorage.theme = action.payload;
     },
+    setIsDark: (state, action) => {
+      state.isDark = action.payload;
+      localStorage.setItem('darkMode', action.payload); // action.payload will be a boolean
+    }    
   },
 });
 
-export const { toggleSidebar, toggleSection, setSection,setTheme } = globalSlice.actions;
+export const { toggleSidebar,setTheme,setIsDark } = globalSlice.actions;
 export default globalSlice.reducer;
