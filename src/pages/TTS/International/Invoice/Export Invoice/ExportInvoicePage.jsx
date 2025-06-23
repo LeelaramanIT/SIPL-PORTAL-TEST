@@ -89,7 +89,7 @@ const ExportInvoice = () => {
   };
 
   return (
-    <div className="px-6 pt-4 bg-white max-w-full mx-auto">
+    <div className="px-6 pt-4 max-w-full mx-auto">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-2">
         Export Invoice
       </h1>

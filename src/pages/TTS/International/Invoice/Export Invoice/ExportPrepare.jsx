@@ -4,15 +4,13 @@ import TitleText from "../../../../../components/TitleText.jsx";
 import gsap from "gsap";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import TableSkeleton from "./TableSkeleton.jsx";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const location = useLocation();
   const loading = useSelector((state) => state.invoice.export.loading);
 
   const invoiceDataRaw = useSelector(
@@ -121,63 +119,168 @@ const ExportInvoicePrepare = () => {
   return (
     <div
       ref={div1}
-      className="w-full flex-1 flex flex-col layout-scroll p-4 gap-2 dark:bg-gray-900 dark:text-gray-100"
+      className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100"
     >
       <TitleText title="Client Details" />
+      
+      {/* Enhanced Client Details Card */}
       <div
         ref={div2}
-        className="px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-sm shadow-lg bg-white dark:bg-gray-800"
+        className="group relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-1"
       >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Customer Name: <span className="font-normal">Kaja Moideen</span>
-          </h2>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            Order Ref #:{" "}
-            <span className="text-gray-900 dark:text-white">ORD-123456</span>
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-purple-50/30 dark:from-blue-900/20 dark:to-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+        
+        {/* Header Section */}
+        <div className="relative px-6 py-5 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <span className="text-white font-bold text-lg">KM</span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  Kaja Moideen
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Primary Customer</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg border border-green-200 dark:border-green-700 group-hover:scale-105 transition-transform duration-300">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                Order Ref #: <span className="text-green-900 dark:text-green-100">ORD-123456</span>
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Grid Details */}
-        <div className="p-10 grid bg-[var(--color-background)] dark:bg-gray-700 shadow rounded-md grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800 dark:text-gray-300">
-          <div className="space-y-4">
-            {[
-              ["Ordered Date:", "2025-05-14"],
-              ["Desired Ship Date:", "2025-06-01"],
-              [
-                "Bill To:",
-                <>
-                  <div className="font-normal">Kaja Moideen</div>
-                  <div>
-                    Customer Address Info Laborum do sint sit pariatur consequat
-                    dolore....
+        {/* Enhanced Grid Details */}
+        <div className="relative p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                Order Information
+              </h3>
+              {[
+                {
+                  label: "Ordered Date",
+                  value: "2025-05-14",
+                  icon: "📅",
+                  color: "blue"
+                },
+                {
+                  label: "Desired Ship Date",
+                  value: "2025-06-01",
+                  icon: "🚢",
+                  color: "green"
+                },
+                {
+                  label: "Bill To",
+                  value: (
+                    <>
+                      <div className="font-medium text-gray-900 dark:text-white">Kaja Moideen</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Customer Address Info Laborum do sint sit pariatur consequat dolore....
+                      </div>
+                    </>
+                  ),
+                  icon: "📍",
+                  color: "purple"
+                },
+                {
+                  label: "Special Instruction",
+                  value: "Handle with care",
+                  icon: "⚠️",
+                  color: "orange"
+                }
+              ].map((item, i) => (
+                <div 
+                  key={i} 
+                  className="group/item relative p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item.color}-100 to-${item.color}-200 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">
+                        {item.label}
+                      </div>
+                      <div className="text-gray-900 dark:text-white">
+                        {item.value}
+                      </div>
+                    </div>
                   </div>
-                </>,
-              ],
-              ["Special Instruction:", "Handle with care"],
-            ].map(([label, value], i) => (
-              <div key={i} className="grid grid-cols-[150px_1fr] gap-2">
-                <span className="font-semibold text-[17px]">{label}</span>
-                <span>{value}</span>
-              </div>
-            ))}
-          </div>
+                  {/* Hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              ))}
+            </div>
 
-          <div className="space-y-4">
-            {[
-              ["Delivery Method:", "Air Freight"],
-              ["Packing Method:", "Wooden Crates"],
-              [
-                "Ship To:",
-                "Receiver Address Info Customer Address Info Laborum do sint sit pariatur consequat dolore....",
-              ],
-              ["Special Notes:", "Urgent delivery required"],
-            ].map(([label, value], i) => (
-              <div key={i} className="grid grid-cols-[150px_1fr] gap-2">
-                <span className="font-semibold text-[17px]">{label}</span>
-                <span>{value}</span>
-              </div>
-            ))}
+            {/* Right Column */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+                Shipping Information
+              </h3>
+              {[
+                {
+                  label: "Delivery Method",
+                  value: "Air Freight",
+                  icon: "✈️",
+                  color: "blue"
+                },
+                {
+                  label: "Packing Method",
+                  value: "Wooden Crates",
+                  icon: "📦",
+                  color: "brown"
+                },
+                {
+                  label: "Ship To",
+                  value: "Receiver Address Info Customer Address Info Laborum do sint sit pariatur consequat dolore....",
+                  icon: "🏠",
+                  color: "green"
+                },
+                {
+                  label: "Special Notes",
+                  value: "Urgent delivery required",
+                  icon: "⚡",
+                  color: "yellow"
+                }
+              ].map((item, i) => (
+                <div 
+                  key={i} 
+                  className="group/item relative p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item.color}-100 to-${item.color}-200 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">
+                        {item.label}
+                      </div>
+                      <div className="text-gray-900 dark:text-white">
+                        {item.value}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Status indicator */}
+        <div className="absolute top-4 right-4">
+          <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full border border-green-200 dark:border-green-700">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-xs font-medium text-green-700 dark:text-green-300">Active</span>
           </div>
         </div>
       </div>

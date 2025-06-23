@@ -12,7 +12,7 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <div className="flex-1 layout-scroll overflow-auto rounded-2xl bg-[#FFFFFF] dark:bg-gray-800 custom-scrollbar">
+        <div className="flex-1 layout-scroll overflow-auto rounded-2xl dark:bg-gray-800 custom-scrollbar">
           <Outlet />
         </div>
       </div>
