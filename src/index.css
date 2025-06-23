@@ -18,6 +18,7 @@
   --color-text-hover: #ffffff;
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-thered: #F4F3FE;
 }
 .theme-dark {
   --color-background: #111827;
