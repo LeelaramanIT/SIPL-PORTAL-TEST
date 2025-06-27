@@ -1,5 +1,6 @@
 import { Layout, Menu } from "antd";
 import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
+import { MdOutlineManageAccounts } from "react-icons/md";
 import { IoHome, IoSettingsOutline } from "react-icons/io5";
 import { RxDashboard } from "react-icons/rx";
 import { SiAwsorganizations } from "react-icons/si";
@@ -50,6 +51,7 @@ const SideBar = () => {
       style={siderStyle}
       className="dark:bg-gray-900"
       trigger={null}
+      
     >
       {/* Logo & Toggle */}
       <div className="flex items-center justify-between h-16 p-4 dark:bg-gray-900">
@@ -130,12 +132,21 @@ const SideBar = () => {
             )}
           </Menu.SubMenu>
         )}
+        <Menu.SubMenu key="Master" title="Masters" icon={<MdOutlineManageAccounts />}>
+          <Menu.Item key="/Master/Users">
+            Users
+          </Menu.Item>
+          <Menu.Item key="/Master/Ureate">
+            Cretae
+          </Menu.Item>
+        </Menu.SubMenu>
 
         {isMenuAllowed("Settings") && (
           <Menu.Item key="/Settings" icon={<IoSettingsOutline />}>
             Settings
           </Menu.Item>
         )}
+
       </Menu>
 
       {/* Theme Toggle */}

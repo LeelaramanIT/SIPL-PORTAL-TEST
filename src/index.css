@@ -19,7 +19,9 @@
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
   --color-thered: #F4F3FE;
+  --color-gradient: linear-gradient(to bottom right, #f8f9fa, #E5E7EB, #1F2937);
 }
+
 .theme-dark {
   --color-background: #111827;
   --color-primary: #1f2937;
@@ -27,32 +29,32 @@
   --color-secondary: #1e293b;
   --color-text: #f3f4f6;
   --color-text-hover: #d1d5db;
+  --color-gradient: linear-gradient(to bottom right, #111827, #1f2937, #374151);
 }
 
-/* Theme 1 - Light */
 .theme-light {
-  --color-background: #F8FAFC; /* Light gray-blue background */
-  --color-primary: #2563EB;    /* Modern blue primary */
-  --color-primary-hover: #1D4ED8; /* Darker blue on hover */
-  --color-secondary: #E2E8F0;  /* Light gray secondary */
-  --color-text: #1E293B;       /* Dark slate text */
-  --color-text-hover: #FFFFFF; /* White text on hover */
+  --color-background: #F8FAFC;
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-secondary: #E2E8F0;
+  --color-text: #1E293B;
+  --color-text-hover: #FFFFFF;
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #1D4ED8, #5180e6, #1D4ED8);
 }
 
-/* Theme 2 - Dark */
 .theme-Light-Sky-Blue {
-  --color-background: #e0f2fe; /* Soft sky background */
-  --color-primary: #38bff8;    /* Light sky blue */
-  --color-primary-hover: #0EA5E9; /* Slightly darker blue on hover */
-  --color-secondary: #F0F9FF;  /* Very light blue-gray for contrast */
-  --color-text-hover: #0284C7; /* Medium sky text hover */
+  --color-background: #e0f2fe;
+  --color-primary: #38bff8;
+  --color-primary-hover: #0EA5E9;
+  --color-secondary: #F0F9FF;
+  --color-text-hover: #0284C7;
   --font-primary: "Poppins", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #0EA5E9, #38bff8, #0EA5E9);
 }
 
-/* Theme 3 - Green */
 .theme-green {
   --color-background: #F0FFF4;
   --color-primary: #10B981;
@@ -61,9 +63,9 @@
   --color-text-hover: #A7F3D0;
   --font-primary: "Inter", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #1c634d, #10B981, #1c634d);
 }
 
-/* Theme 4 - Orange */
 .theme-orange {
   --color-background: #FFF7ED;
   --color-primary: #F97316;
@@ -72,9 +74,9 @@
   --color-text-hover: #FDBA74;
   --font-primary: "Montserrat", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #a43a10, #F97316, #a43a10);
 }
 
-/* Theme 5 - Purple */
 .theme-purple {
   --color-background: #F3E8FF;
   --color-primary: #8B5CF6;
@@ -83,9 +85,9 @@
   --color-text-hover: #C4B5FD;
   --font-primary: "Raleway", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #411686, #774fd6, #411686);
 }
 
-/* Theme 6 - Red */
 .theme-red {
   --color-background: #FFEDEF;
   --color-primary: #EF4444;
@@ -94,9 +96,9 @@
   --color-text-hover: #F87171;
   --font-primary: "Open Sans", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #8a0606, #EF4444, #8a0606);
 }
 
-/* Theme 7 - Blue */
 .theme-blue {
   --color-background: #eff6ff;
   --color-primary: #3b82f6;
@@ -104,10 +106,9 @@
   --color-secondary: #bfdbfe;
   --color-text: #1e3a8a;
   --color-text-hover: #ffffff;
+  --color-gradient: linear-gradient(to bottom right, #022675  , #3B82F6, #022675);
 }
 
-
-/* Theme 8 - Yellow */
 .theme-yellow {
   --color-background: #FFFBEA;
   --color-primary: #F59E0B;
@@ -116,9 +117,9 @@
   --color-text-hover: #FCD34D;
   --font-primary: "Ubuntu", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #9d4909, #F59E0B, #9d4909);
 }
 
-/* Theme 9 - Cyan */
 .theme-cyan {
   --color-background: #ECFEFF;
   --color-primary: #06B6D4;
@@ -127,9 +128,9 @@
   --color-text-hover: #22D3EE;
   --font-primary: "Work Sans", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #0d5366, #1c99af, #0d5366);
 }
 
-/* Theme 10 - Pink */
 .theme-pink {
   --color-background: #FFF1F2;
   --color-primary: #EC4899;
@@ -138,19 +139,21 @@
   --color-text-hover: #F472B6;
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #680f33, #EC4899, #680f33);
 }
 
-/* Theme 11 - Navi Blue */
 .theme-navi-blue {
   --color-background: #f8f9fa;
-  --color-primary: #1F2937; /* dark slate */
+  --color-primary: #1F2937;
   --color-primary-hover: #374151;
   --color-secondary: #E5E7EB;
-  --color-text: #111827;
-  --color-text-hover: #ffffff;
+  --color-text: #ffffff;
+  --color-text-hover: #111827;
   --font-primary: "Nunito", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
+  --color-gradient: linear-gradient(to bottom right, #0F172A, #1E3A8A, #0F172A); 
 }
+
 
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -185,7 +188,7 @@ body.modal-open .layout-scroll {
 /* Selected menu item */
 .ant-menu-light .ant-menu-item-selected {
   background-color: var(--color-primary) !important;
-  color: black !important;
+  color:var(--color-text) !important;
 }
 
 .ant-menu-dark .ant-menu-item-selected {

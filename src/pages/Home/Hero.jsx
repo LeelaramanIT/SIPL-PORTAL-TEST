@@ -1,13 +1,16 @@
 import { ArrowRight, Factory, Cog, Users } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 const Hero = () => {
+  const theme = useSelector((state) => state.global.theme);
   return (
     <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
+          {/* <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}>  
+          </div> */}
       </div>
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
@@ -15,7 +18,7 @@ const Hero = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Welcome to <span className="text-blue-400">SIPL</span>
+                Welcome to <span className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary-hover)]"}`}>SIPL</span>
                 <br />
                 <span className="text-gray-300">Employee Portal</span>
               </h1>
@@ -26,11 +29,11 @@ const Hero = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 shadow-lg">
+              <button className={`bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 shadow-lg`}>
                 Access Your Dashboard
                 <ArrowRight size={20} />
               </button>
-              <button className="border-2 border-white/30 hover:border-white text-white px-8 py-4 rounded-lg font-semibold transition-all duration-200 hover:bg-white/10">
+              <button className={`border-1 ${theme==="navi-blue"?'border-white/30 hover:border-white':"border-[var(--color-primary)] hover:border-[var(--color-primary-hover)]"} text-white px-8 py-4 rounded-lg font-semibold transition-all duration-200 hover:bg-white/10`}>
                 My Projects
               </button>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setTheme } from "../Redux/Slices/GlobalSlice";
 
 const themes = [
   { name: "light", color: "#2563EB", label: "Light", icon: "☀️" },
@@ -26,12 +27,14 @@ export default function ThemeSwitcher({ variant = "floating" }) {
   const buttonsRef = useRef([]);
   const wrapperRef = useRef(null);
   const containerRef = useRef(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const html = document.documentElement;
     themes.forEach((t) => html.classList.remove(`theme-${t.name}`));
     html.classList.add(`theme-${currentTheme}`);
     localStorage.setItem("theme", currentTheme);
+    dispatch(setTheme(currentTheme));
   }, [currentTheme]);
 
   useEffect(() => {

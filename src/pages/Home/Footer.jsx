@@ -1,13 +1,15 @@
 import { Mail, Phone, MapPin } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 const Footer = () => {
+  const theme = useSelector((state) => state.global.theme);
   return (
     <footer className="bg-gray-900 text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-2xl font-bold mb-4">
-              <span className="text-blue-400">SUNDARAM</span> INDUSTRIES
+              <span className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary)]"}`}>SUNDARAM</span> INDUSTRIES
             </h3>
             <p className="text-gray-300 mb-6">
               Leading manufacturer of high-quality tyres and rims, committed to excellence in production and innovation.
@@ -20,11 +22,11 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-gray-300">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Dashboard</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Active Projects</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Manufacturing</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Quality Control</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Reports</a></li>
+              <li><a href="#" className={`${theme==="navi-blue"?'hover:text-blue-400':"hover:text-[var(--color-primary)]"} transition-colors`}>Dashboard</a></li>
+              <li><a href="#" className={`${theme==="navi-blue"?'hover:text-blue-400':"hover:text-[var(--color-primary)]"} transition-colors`}>Active Projects</a></li>
+              <li><a href="#" className={`${theme==="navi-blue"?'hover:text-blue-400':"hover:text-[var(--color-primary)]"} transition-colors`}>Manufacturing</a></li>
+              <li><a href="#" className={`${theme==="navi-blue"?'hover:text-blue-400':"hover:text-[var(--color-primary)]"} transition-colors`}>Quality Control</a></li>
+              <li><a href="#" className={`${theme==="navi-blue"?'hover:text-blue-400':"hover:text-[var(--color-primary)]"} transition-colors`}>Reports</a></li>
             </ul>
           </div>
 
@@ -32,15 +34,15 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Contact Information</h4>
             <div className="space-y-3 text-gray-300">
               <div className="flex items-center gap-3">
-                <Mail size={18} className="text-blue-400" />
+                <Mail size={18} className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary)]"}`} />
                 <span>info@sundaramindustries.com</span>
               </div>
               <div className="flex items-center gap-3">
-                <Phone size={18} className="text-blue-400" />
+                <Phone size={18} className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary)]"}`} />
                 <span>+91 XX XXXX XXXX</span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin size={18} className="text-blue-400" />
+                <MapPin size={18} className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary)]"}`} />
                 <span>Manufacturing Plant, India</span>
               </div>
             </div>

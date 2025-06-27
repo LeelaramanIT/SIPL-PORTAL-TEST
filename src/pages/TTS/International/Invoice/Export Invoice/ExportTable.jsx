@@ -61,7 +61,7 @@ const ExportTable = ({
   return (
     <div
       ref={tableRef}
-      className="w-full h-[38rem] flex flex-col justify-between rounded-xs  bg-[var(--color-background)] overflow-y-auto custom-scrollbar text-primary dark:bg-gray-900 dark:text-gray-100 "
+      className="w-full h-[38rem] flex flex-col justify-between rounded-xs bg-[#eaeaef] shadow-md  overflow-y-auto custom-scrollbar text-primary dark:bg-gray-900 dark:text-gray-100 "
     >
       <table className="w-full table-fixed text-center">
         <thead>
@@ -69,13 +69,13 @@ const ExportTable = ({
             {headers.map((heading, index) => (
               <th
                 key={index}
-                className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[var(--color-background)] z-10 text-black dark:bg-gray-500 "
+                className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--color-primary)] dark:bg-gray-500 "
               >
                 {heading.label}
               </th>
             ))}
             {renderAction && (
-              <th className="py-1 px-3 text-center sticky top-0 bg-[var(--color-background)] z-10 text-black dark:bg-gray-500 ">
+              <th className="py-1 px-3 text-center sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--color-primary)] dark:bg-gray-500 ">
                 Actions
               </th>
             )}
@@ -86,8 +86,8 @@ const ExportTable = ({
           {paginatedData.map((row, rowIndex) => {
             const isEven = rowIndex % 2 === 0;
             const baseBg = isEven
-              ? "bg-white dark:bg-gray-800"
-              : "bg-[var(--color-secondary)] dark:bg-gray-700";
+              ? "bg-white dark:bg-gray-800 hover:bg-[#F4F4FE] hover:text-[var(--color-primary)] text-black"
+              : "bg-[#EAEAEF] dark:bg-gray-700 hover:bg-[#F4F4FE] hover:text-[var(--color-primary)] text-black";
 
             return (
               <tr

@@ -94,7 +94,7 @@ const ExportInvoice = () => {
         Export Invoice
       </h1>
 
-      <div className="bg-[var(--color-background)] px-2 py-4 rounded-lg border border-[var(--color-secondary)]">
+      <div className="bg-[#F4F4FE] shadow-md px-2 py-4 rounded-lg border border-[var(--color-secondary)]">
         <div
           ref={animateRef}
           className="w-full py-1 px-2.5 rounded-2xl text-[var(--color-text)]"
@@ -126,7 +126,7 @@ const ExportInvoice = () => {
               onClick={() => navigate("/Masters/UserMaster/UserCreate")}
               text={"+ Add Invoice"}
               className={
-                "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-hover)]"
+                "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text)]"
               }
             />
           </div>
@@ -152,7 +152,7 @@ const ExportInvoice = () => {
                       );
                       dispatch(getExportInvoice(row, index));
                     }}
-                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-hover)] px-4 py-1 rounded text-center"
+                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text)] px-4 py-1 rounded text-center"
                   >
                     Action
                   </button>
