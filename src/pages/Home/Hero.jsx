@@ -47,7 +47,7 @@ const Hero = () => {
                     <Factory size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Production Management</h3>
+                    <h3 className="text-lg font-semibold text-white">Production Management</h3>
                     <p className="text-gray-300">Track tyre & rim manufacturing progress</p>
                   </div>
                 </div>
@@ -59,7 +59,7 @@ const Hero = () => {
                     <Cog size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Quality Control</h3>
+                    <h3 className="text-lg font-semibold text-white">Quality Control</h3>
                     <p className="text-gray-300">Monitor standards and compliance</p>
                   </div>
                 </div>
@@ -71,7 +71,7 @@ const Hero = () => {
                     <Users size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Team Communication</h3>
+                    <h3 className="text-lg font-semibold text-white">Team Communication</h3>
                     <p className="text-gray-300">Collaborate with your colleagues</p>
                   </div>
                 </div>

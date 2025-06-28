@@ -34,13 +34,13 @@ const Stats = () => {
   ];
 
   return (
-    <section className="py-24 bg-slate-900 text-white">
+    <section className="py-24 bg-slate-900 dark:bg-gray-950 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary)]"}`}>Sundaram</span> Industries by the Numbers
           </h2>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 dark:text-gray-400 max-w-2xl mx-auto">
             Driving excellence in manufacturing with proven results and continuous innovation.
           </p>
         </div>
@@ -57,10 +57,10 @@ const Stats = () => {
               <div className={`text-4xl font-bold ${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary)] group-hover:text-[var(--color-primary-hover)]"} mb-2`}>
                 {stat.number}
               </div>
-              <div className="text-xl font-semibold mb-2">
+              <div className="text-xl font-semibold mb-2 text-white">
                 {stat.label}
               </div>
-              <div className="text-gray-400">
+              <div className="text-gray-400 dark:text-gray-300">
                 {stat.description}
               </div>
             </div>
