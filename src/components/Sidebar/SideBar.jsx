@@ -19,9 +19,14 @@ const SideBar = () => {
   const isDark = useSelector((state) => state.global.isDark);
   
   const menus = useSelector((store) => store.auth.menus);
+
+  console.log(menus);
+  
+  
   const role = useSelector((store) => store.auth.roles);
 
   const handleClick = ({ key }) => navigate(key);
+  
 
   const siderStyle = {
     display: "flex",
@@ -30,17 +35,20 @@ const SideBar = () => {
   };
 
   const isAdmin = role?.[0]?.RoleName === "Admin";
+
+  
   
 
   const isMenuAllowed = (menuName) => {
     if (isAdmin) return true;
-    return menus?.some((menu) => menu.menuName === menuName);
+    return menus?.some((menu) => menu.MenuName === menuName);
   };
   
+   
 
   const hasMenuUrlPrefix = (prefix) => {
     if (isAdmin) return true;
-    return menus?.some((menu) => menu.menuUrl?.startsWith(prefix));
+    return menus?.some((menu) => menu.MenuUrl?.startsWith(prefix));
   };
 
   return (
@@ -134,14 +142,14 @@ const SideBar = () => {
             )}
           </Menu.SubMenu>
         )}
-        <Menu.SubMenu key="Master" title="Masters" icon={<MdOutlineManageAccounts />}>
-          <Menu.Item key="/Master/Users">
+        {hasMenuUrlPrefix('/Master') && (<Menu.SubMenu key="Master" title="Masters" icon={<MdOutlineManageAccounts />}>
+          {isMenuAllowed('userMaster') && (<Menu.Item key="/Master/Users">
             Users
-          </Menu.Item>
-          <Menu.Item key="/Master/Ureate">
+          </Menu.Item>)}
+          {(isMenuAllowed('userMasterCreate') && <Menu.Item key="/Master/Ureate">
             Cretae
-          </Menu.Item>
-        </Menu.SubMenu>
+          </Menu.Item>)}
+        </Menu.SubMenu>)}
 
         {isMenuAllowed("Settings") && (
           <Menu.Item key="/Settings" icon={<IoSettingsOutline />}>

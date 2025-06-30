@@ -22,12 +22,12 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess: (state, action) => {
-      const { token, username, roles, menus } = action.payload;
+      const { Token, username, roles, Menus } = action.payload;
 
-      state.token = token;
+      state.token = Token;
       state.username = username;
       state.roles = roles;
-      state.menus = menus;
+      state.menus = Menus;
       state.loggedIn = true;
       state.loading = false;
 
@@ -53,7 +53,7 @@ export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
     const res = await api.post("/Auth/logins", credentials, { withCredentials: true });
-    console.log(res);
+    console.log(res.data);
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));

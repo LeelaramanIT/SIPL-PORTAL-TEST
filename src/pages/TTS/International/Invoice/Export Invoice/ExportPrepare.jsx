@@ -1,262 +1,165 @@
-  import { useEffect, useMemo, useRef, useState } from "react";
-  import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
-  import TitleText from "../../../../../components/TitleText.jsx";
-  import gsap from "gsap";
-  import Button from "../../../../../components/InputFields/Button.jsx";
-  import { IoMdClose } from "react-icons/io";
-  import { useSelector } from "react-redux";
-  import { useNavigate } from "react-router-dom";
-  import TableSkeleton from "./TableSkeleton.jsx";
+import { useMemo, useState } from "react";
+import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
+import Button from "../../../../../components/InputFields/Button.jsx";
+import { IoMdClose } from "react-icons/io";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import TableSkeleton from "./TableSkeleton.jsx";
 
-  const ExportInvoicePrepare = () => {
-    const [showDetailsForm, setShowDetailsForm] = useState(false);
-    const navigate = useNavigate();
-    const loading = useSelector((state) => state.invoice.export.loading);
+const ExportInvoicePrepare = () => {
+  const [showDetailsForm, setShowDetailsForm] = useState(false);
+  const navigate = useNavigate();
+  const loading = useSelector((state) => state.invoice.export.loading);
 
-    const invoiceDataRaw = useSelector(
-      (state) => state?.invoice?.export?.invoiceData?.salesData
-    );
-
-
-    const invoiceData = useMemo(() => {
-      return Array.isArray(invoiceDataRaw) ? invoiceDataRaw : [];
-    }, [invoiceDataRaw]);
-
-    const rowsRef = useRef([]);
-    const div1 = useRef(null);
-    const div2 = useRef(null);
-    const formRef = useRef(null);
-
-    const grandTotal = useMemo(() => {
-      return invoiceData.reduce((sum, item) => sum + item.totalPrice, 0);
-    }, [invoiceData]);
-    const totalQTY = useMemo(() => {
-      return invoiceData.reduce((sum, item) => sum + item.qty, 0);
-    }, [invoiceData]);
-
-    const totalFWT = useMemo(() => {
-      return invoiceData.reduce((sum, item) => sum + item.fwt, 0);
-    }, [invoiceData]);
-   
-    useEffect(() => {
-  const tl = gsap.timeline();
-
-  // Fade and scale up the title
-  tl.fromTo(
-    div1.current,
-    { opacity: 0, scale: 0.98 },
-    { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }
+  const invoiceDataRaw = useSelector(
+    (state) => state?.invoice?.export?.invoiceData?.salesData
   );
 
-  // Fade and scale up the client details
-  tl.fromTo(
-    div2.current,
-    { opacity: 0, scale: 0.98 },
-    { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" },
-    "-=0.3"
+  const invoiceData = useMemo(
+    () => (Array.isArray(invoiceDataRaw) ? invoiceDataRaw : []),
+    [invoiceDataRaw]
   );
 
-  // Fade + slight upward motion + stagger for table rows
-  const rows = rowsRef.current.filter(Boolean);
-  if (rows.length > 0) {
-    tl.fromTo(
-      rows,
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, stagger: 0.08, ease: "power3.out", duration: 0.4 },
-      "-=0.2"
-    );
-  }
-}, []);
+  const grandTotal = useMemo(() => {
+    return invoiceData.reduce((sum, item) => sum + item.totalPrice, 0);
+  }, [invoiceData]);
 
-    
-    
+  const totalQTY = useMemo(() => {
+    return invoiceData.reduce((sum, item) => sum + item.qty, 0);
+  }, [invoiceData]);
 
-    useEffect(() => {
-      if (showDetailsForm && formRef.current) {
-        gsap.fromTo(
-          formRef.current,
-          { opacity: 0, scale: 0.8, y: 50 },
-          {
-            opacity: 1,
-            scale: 1,
-            y: 0,
-            duration: 0.4,
-            ease: "power3.out",
-          }
-        );
-      }
-    }, [showDetailsForm]);
+  const totalFWT = useMemo(() => {
+    return invoiceData.reduce((sum, item) => sum + item.fwt, 0);
+  }, [invoiceData]);
 
-    const handleCloseForm = () => {
-      if (formRef.current) {
-        gsap.to(formRef.current, {
-          opacity: 0,
-          scale: 0.8,
-          y: 50,
-          duration: 0.3,
-          ease: "power3.in",
-          onComplete: () => setShowDetailsForm(false),
-        });
-      } else {
-        setShowDetailsForm(false);
-      }
-    };
-
-    useEffect(() => {
-      const layoutScrollContainer = document.querySelector(".layout-scroll");
-      if (layoutScrollContainer) {
-        layoutScrollContainer.style.overflow = showDetailsForm
-          ? "hidden"
-          : "auto";
-      }
-      return () => {
-        if (layoutScrollContainer) layoutScrollContainer.style.overflow = "auto";
-      };
-    }, [showDetailsForm]);
-
-    useEffect(() => {
-      document.body.classList.toggle("modal-open", showDetailsForm);
-    }, [showDetailsForm]);
-
-    return (
-      <div
-        ref={div1}
-        className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100"
-      >
-        {/* <TitleText title="Client Details" /> */}
-        <h1 ref={div2} className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200 flex justify-between items-center">Client Details</h1>
-        
-        {/* Enhanced Client Details Card */}
-      <ClientDetailsSection div2={div2} />
-
-        {/* <TitleText title="Item Details" /> */}
-        <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200 flex justify-between items-center">Item Details</h1>
-
-        {/* Table */}
-        {loading && invoiceData ? (
-          <TableSkeleton />
-        ) : (
-          <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
-            <table className="w-full text-sm text-left table-fixed shadow-lg">
-              <thead className="bg-[#ECECEC] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
-                <tr className="shadow-md">
-                  {[
-                    "CATEGORY",
-                    "PLATFORM",
-                    "TYRE SIZE",
-                    "RIM",
-                    "TYPE",
-                    "BRAND",
-                    "SIDEWALL",
-                    "BASIC PRICE",
-                    "QTY",
-                    "TOTAL PRICE",
-                    "FWT",
-                    "ADDITIONAL INFO",
-                    "PLANT",
-                    "PART-NO",
-                  ].map((head, idx) =>
-                    idx === 11 ? (
-                      <th
-                        key={idx}
-                        colSpan={2}
-                        className="px-1  text-center text-[13px] hover:text-[var(--color-primary)]"
-                      >
-                        {head}
-                      </th>
-                    ) : (
-                      <th key={idx} className="px-1 py-4 text-center text-[13px] hover:text-[var(--color-primary)]">
-                        {head}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {invoiceData.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    ref={(el) => (rowsRef.current[idx] = el)}
-                    className={`text-[13px] text-center ${
-                      idx % 2 === 0
-                        ? "bg-[#F4F3FE] dark:bg-gray-700"
-                        : "bg-white dark:bg-gray-800"
-                    } text-gray-700 dark:text-gray-300 hover:text-[var(--color-primary)]`}
-                  >
-                    <td>{item.category}</td>
-                    <td>{item.platform}</td>
-                    <td>{item.tyreSize}</td>
-                    <td>{item.rim}</td>
-                    <td>{item.type}</td>
-                    <td>{item.brand}</td>
-                    <td>{item.sidewall}</td>
-                    <td>{item.basicPrice}</td>
-                    <td>{item.qty}</td>
-                    <td>{item.totalPrice.toFixed(2)}</td>
-                    <td>{item.fwt.toFixed(3)}</td>
-                    <td colSpan={2} title={item.additionalInfo}>
-                      {item.additionalInfo}
-                    </td>
-                    <td>{item.plant}</td>
-                    <td className="break-all">{item.partNo}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="font-semibold text-gray-800 dark:text-white">
-                <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
-                  <td colSpan={8} className="text-right px-4 py-2">
-                    Grand Total:
-                  </td>
-                  <td className="px-4 py-2 text-center">{totalQTY}</td>
-                  <td className="px-4 py-2 text-center">
-                    {grandTotal.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-center">{totalFWT.toFixed(3)}</td>
-                  <td colSpan={4}></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
-          <Button
-            onClick={() => {
-              navigate("/TTS/International/Invoice/Export/BillPDF");
-            }}
-            text="Preview PDF"
-          />
-          <Button
-            onClick={() => setShowDetailsForm(true)}
-            text="+ Add Additional Details"
-          />
-          <Button onClick={() => {}} text="Submit Invoice" />
-        </div>
-
-        {/* Additional Details Form */}
-        {showDetailsForm && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
-            <div
-              ref={formRef}
-              className="relative bg-white mt-[45rem] dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-5xl max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
-            >
-              <TitleText title="Additional Invoice Details" />
-              <button
-                onClick={handleCloseForm}
-                className="absolute top-9 right-8 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
-              >
-                <IoMdClose className="text-2xl" />
-              </button>
-              <AdditionalDetailsForm onClose={handleCloseForm} />
-            </div>
-          </div>
-        )}
-      </div>
-    );
+  const handleCloseForm = () => {
+    setShowDetailsForm(false);
   };
 
-  export default ExportInvoicePrepare;
+  return (
+    <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+        Client Details
+      </h1>
+
+      <ClientDetailsSection />
+
+      <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+        Item Details
+      </h1>
+
+      {loading && invoiceData.length ? (
+        <TableSkeleton />
+      ) : (
+        <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
+          <table className="w-full text-sm text-left table-fixed shadow-lg">
+            <thead className="bg-[#ECECEC] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
+              <tr>
+                {[
+                  "CATEGORY",
+                  "PLATFORM",
+                  "TYRE SIZE",
+                  "RIM",
+                  "TYPE",
+                  "BRAND",
+                  "SIDEWALL",
+                  "BASIC PRICE",
+                  "QTY",
+                  "TOTAL PRICE",
+                  "FWT",
+                  "ADDITIONAL INFO",
+                  "PLANT",
+                  "PART-NO",
+                ].map((head, idx) => (
+                  <th
+                    key={idx}
+                    colSpan={idx === 11 ? 2 : 1}
+                    className="px-1 py-4 text-center text-[13px]"
+                  >
+                    {head}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invoiceData.map((item, idx) => (
+                <tr
+                  key={idx}
+                  className={`text-[13px] text-center ${
+                    idx % 2 === 0
+                      ? "bg-[#F4F3FE] dark:bg-gray-700"
+                      : "bg-white dark:bg-gray-800"
+                  } text-gray-700 dark:text-gray-300`}
+                >
+                  <td>{item.category}</td>
+                  <td>{item.platform}</td>
+                  <td>{item.tyreSize}</td>
+                  <td>{item.rim}</td>
+                  <td>{item.type}</td>
+                  <td>{item.brand}</td>
+                  <td>{item.sidewall}</td>
+                  <td>{item.basicPrice}</td>
+                  <td>{item.qty}</td>
+                  <td>{item.totalPrice.toFixed(2)}</td>
+                  <td>{item.fwt.toFixed(3)}</td>
+                  <td colSpan={2} title={item.additionalInfo}>
+                    {item.additionalInfo}
+                  </td>
+                  <td>{item.plant}</td>
+                  <td className="break-all">{item.partNo}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="font-semibold text-gray-800 dark:text-white">
+              <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
+                <td colSpan={8} className="text-right px-4 py-2">
+                  Grand Total:
+                </td>
+                <td className="px-4 py-2 text-center">{totalQTY}</td>
+                <td className="px-4 py-2 text-center">
+                  {grandTotal.toFixed(2)}
+                </td>
+                <td className="px-4 py-2 text-center">
+                  {totalFWT.toFixed(3)}
+                </td>
+                <td colSpan={4}></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
+        <Button
+          onClick={() => navigate("/TTS/International/Invoice/Export/BillPDF")}
+          text="Preview PDF"
+        />
+        <Button onClick={() => setShowDetailsForm(true)} text="+ Add Additional Details" />
+        <Button onClick={() => {}} text="Submit Invoice" />
+      </div>
+
+      {/* Modal Form */}
+      {showDetailsForm && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
+          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-5xl max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
+            <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">Additional Invoice Details</h2>
+            <button
+              onClick={handleCloseForm}
+              className="absolute top-5 right-5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
+            >
+              <IoMdClose className="text-2xl" />
+            </button>
+            <AdditionalDetailsForm onClose={handleCloseForm} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ExportInvoicePrepare;
+
 
 
   function ClientDetailsSection({ div2 }) {
