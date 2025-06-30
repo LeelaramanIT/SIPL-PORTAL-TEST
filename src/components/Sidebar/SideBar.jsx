@@ -29,12 +29,14 @@ const SideBar = () => {
     ...(isDark === false && { backgroundColor: "var(--color-background)" }),
   };
 
-  const isAdmin = role?.[0]?.roleName === "Admin";
+  const isAdmin = role?.[0]?.RoleName === "Admin";
+  
 
   const isMenuAllowed = (menuName) => {
     if (isAdmin) return true;
     return menus?.some((menu) => menu.menuName === menuName);
   };
+  
 
   const hasMenuUrlPrefix = (prefix) => {
     if (isAdmin) return true;

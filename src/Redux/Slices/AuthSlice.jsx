@@ -52,7 +52,8 @@ const authSlice = createSlice({
 export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
-    const res = await api.post("/Auth/login", credentials, { withCredentials: true });
+    const res = await api.post("/Auth/logins", credentials, { withCredentials: true });
+    console.log(res);
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));
@@ -69,6 +70,7 @@ export const userLogout = (navigate) => async (dispatch) => {
   try {
     dispatch(logout());
     const res = await api.get("/Auth/logout", { withCredentials: true });
+    
     if (res.status === 200) {
       navigate('/login')
       toast.success(res.data.message);

@@ -14,7 +14,7 @@ const ProtectedRoutes = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (roles?.some((role) => role?.roleName === 'Admin')) {
+  if (roles?.some((role) => role?.RoleName === 'Admin')) {
     return <Outlet />;
   }
 
