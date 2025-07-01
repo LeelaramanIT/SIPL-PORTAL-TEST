@@ -9,8 +9,10 @@ import toast from "react-hot-toast";
 import LoadingButton from "../../components/LoadingButton";
 import ThemeSwitcher from "../../components/ThemeSwitcher";
 
-const randomIndex = Math.floor(Math.random() * 2);
-const videoOption = randomIndex === 1 ? assets.SKY : assets.Mountain;
+const options = [assets.SKY, assets.IceMountain, assets.Mountain];
+const randomIndex = Math.floor(Math.random() * options.length);
+const videoOption = options[randomIndex];
+
 
 const Login = () => {
   const username = useRef();
@@ -119,7 +121,7 @@ const Login = () => {
         <h1
           ref={div3}
           className={`text-2xl sm:text-[1.8rem] font-bold text-center font-heading ${
-            randomIndex === 1 ? "text-slate-900" : "text-white"
+            randomIndex === 1 ? "text-slate-900" : randomIndex === 2 ? "text-white" : "text-slate-900"
           } mb-10 select-none`}
         >
           Sundaram Industries Pvt Ltd
