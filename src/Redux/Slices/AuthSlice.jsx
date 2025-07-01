@@ -53,7 +53,6 @@ export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
     const res = await api.post("/Auth/logins", credentials, { withCredentials: true });
-    console.log(res.data);
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));

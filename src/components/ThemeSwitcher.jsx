@@ -17,12 +17,9 @@ const themes = [
   { name: "navi-blue", color: "#1E3A8A", label: "Navi Blue", icon: "🌙" },
 ];
 
-
 export default function ThemeSwitcher({ variant = "floating" }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState(
-    localStorage.getItem("theme") || "light"
-  );
+  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme") || "light");
   const isDark = useSelector((state) => state.global.isDark);
   const buttonsRef = useRef([]);
   const wrapperRef = useRef(null);
@@ -47,35 +44,45 @@ export default function ThemeSwitcher({ variant = "floating" }) {
     localStorage.setItem("darkMode", isDark);
   }, [isDark]);
 
+  // ✅ Updated GSAP animation effect
   useEffect(() => {
-    const validButtons = buttonsRef.current.filter(Boolean);
-
     if (isOpen) {
-      gsap.fromTo(
-        validButtons,
-        { opacity: 0, scale: 0.8, y: 20 },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.4,
-          stagger: 0.05,
-          ease: "back.out(1.7)",
-        }
-      );
+      const timeout = setTimeout(() => {
+        const validButtons = buttonsRef.current.filter(Boolean);
 
-      gsap.fromTo(
-        containerRef.current,
-        { opacity: 0, scale: 0.9, y: -10 },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.3,
-          ease: "back.out(1.7)",
+        if (validButtons.length) {
+          gsap.fromTo(
+            validButtons,
+            { opacity: 0, scale: 0.8, y: 20 },
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.4,
+              stagger: 0.05,
+              ease: "back.out(1.7)",
+            }
+          );
         }
-      );
+
+        if (containerRef.current) {
+          gsap.fromTo(
+            containerRef.current,
+            { opacity: 0, scale: 0.9, y: -10 },
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.3,
+              ease: "back.out(1.7)",
+            }
+          );
+        }
+      }, 0);
+
+      return () => clearTimeout(timeout);
     } else {
+      const validButtons = buttonsRef.current.filter(Boolean);
       gsap.to(validButtons, {
         opacity: 0,
         scale: 0.8,
@@ -87,13 +94,9 @@ export default function ThemeSwitcher({ variant = "floating" }) {
     }
   }, [isOpen]);
 
-  // Detect outside clicks
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(event.target)
-      ) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     }
@@ -104,19 +107,21 @@ export default function ThemeSwitcher({ variant = "floating" }) {
     };
   }, []);
 
-  // Navbar variant
   if (variant === "navbar") {
     return (
       <div ref={wrapperRef} className="relative">
         {isOpen && (
-          <div 
+          <div
             ref={containerRef}
             className="absolute top-full right-0 mt-2 p-4 rounded-xl shadow-2xl glass border border-[var(--color-border)] min-w-[320px] animate-fade-in"
           >
             <div className="mb-3">
-              <h3 className="text-sm font-semibold dark:text-white text-[var(--color-text)] mb-2">Choose Theme</h3>
+              <h3 className="text-sm font-semibold dark:text-white text-[var(--color-text)] mb-2">
+                Choose Theme
+              </h3>
             </div>
             <div className="grid grid-cols-5 gap-3">
+              {buttonsRef.current = []}
               {themes.map((theme, index) => (
                 <button
                   key={theme.name}
@@ -142,7 +147,6 @@ export default function ThemeSwitcher({ variant = "floating" }) {
             </div>
           </div>
         )}
-
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-sm font-bold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
@@ -154,21 +158,20 @@ export default function ThemeSwitcher({ variant = "floating" }) {
     );
   }
 
-  // Floating variant (original)
   return (
-    <div
-      ref={wrapperRef}
-      className="fixed bottom-6 left-6 z-50 flex flex-col gap-3"
-    >
+    <div ref={wrapperRef} className="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
       {isOpen && (
-        <div 
+        <div
           ref={containerRef}
           className="mb-3 p-4 rounded-2xl shadow-2xl glass border border-[var(--color-border)] animate-fade-in-up"
         >
           <div className="mb-3">
-            <h3 className="text-sm font-semibold dark:text-white text-[var(--color-text)] mb-2">Themes</h3>
+            <h3 className="text-sm font-semibold dark:text-white text-[var(--color-text)] mb-2">
+              Themes
+            </h3>
           </div>
           <div className="grid grid-cols-3 gap-2">
+            {buttonsRef.current = []}
             {themes.map((theme, index) => (
               <button
                 key={theme.name}

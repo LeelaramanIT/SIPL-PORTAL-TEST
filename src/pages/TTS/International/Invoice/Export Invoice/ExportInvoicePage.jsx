@@ -24,7 +24,7 @@ const ExportInvoice = () => {
 
   const animateRef = useRef([]);
 
-  const loading = useSelector((state) => state.invoice.export.loading);
+  const loading = useSelector((state) => state.invoice.exportInvoices.loading);
 
   useEffect(() => {
     gsap.fromTo(
@@ -55,7 +55,10 @@ const ExportInvoice = () => {
     setSelectedColumn(item.key || "all");
   };
 
-  const tableData = useSelector((state) => state.invoice.export.datas);
+  const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
+
+  // console.log(tableData);
+  
 
 
   // const tableData = useMemo(() => generateTableData(50), []);
@@ -64,6 +67,7 @@ const ExportInvoice = () => {
     if (
       ["completedDate", "dispatchedDate", "rfD_Date"].includes(selectedColumn)
     ) {
+      if (!searchQuery.trim()) return tableData;
       return tableData.filter((row) => {
         const rowDate = new Date(row[selectedColumn]).toDateString();
         const selected = new Date(startDate).toDateString();
@@ -79,15 +83,36 @@ const ExportInvoice = () => {
           String(value).toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
-
       const value = row[selectedColumn];
-      return value && String(value).toLowerCase() === searchQuery.toLowerCase();
+      return (
+        value &&
+        String(value).toLowerCase().includes(searchQuery.toLowerCase())
+      );
     });
   }, [searchQuery, tableData, selectedColumn, startDate]);
+
 
   const handleDateChange = (date) => {
     setStartDate(date);
   };
+
+  const highlightMatch = (text, query) => {
+    if (!query || typeof text !== "string") return text;
+  
+    const regex = new RegExp(`(${query})`, "gi");
+    const parts = String(text).split(regex);
+  
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase() ? (
+        <span key={i} className="bg-yellow-200 font-semibold rounded px-1">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+  
 
   return (
     <div className="px-6 pt-4 max-w-full mx-auto">
@@ -113,7 +138,7 @@ const ExportInvoice = () => {
                 <SearchBar
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onSearch={() => {}}
+                  onSearch={() => { }}
                 />
               ) : (
                 <DatePickerComponent
@@ -139,6 +164,8 @@ const ExportInvoice = () => {
               <ExportTable
                 headers={headers}
                 data={filteredData}
+                searchQuery={searchQuery}
+                highlightMatch={highlightMatch}
                 rowClassName={(row, index) => {
                   if (index === 0) return "rounded-l-xl";
                   if (index === row.length - 1) return "rounded-r-xl";

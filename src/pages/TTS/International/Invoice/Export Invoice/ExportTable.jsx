@@ -7,6 +7,8 @@ const ExportTable = ({
   itemsPerPage = 20,
   renderAction = null,
   rowClassName = () => "",
+  searchQuery = "",
+  highlightMatch = null,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -57,6 +59,7 @@ const ExportTable = ({
     setCurrentPage(1);
     animateRows();
   }, [data]);
+  
 
   return (
     <div
@@ -95,11 +98,15 @@ const ExportTable = ({
                 ref={(el) => (rowsRef.current[rowIndex] = el)}
                 className={`text-xs ${baseBg} ${rowClassName(row, rowIndex)}`}
               >
-                {headers.map((heading, colIndex) => (
-                  <td key={colIndex} className="py-2 px-3">
-                    {row[heading.key] ?? "-"}
-                  </td>
-                ))}
+                {headers.map((heading, colIndex) => {
+                  const cellValue = row[heading.key] ?? "-";
+                  return (
+                    <td key={colIndex} className="py-2 px-3">
+                      {highlightMatch ? highlightMatch(cellValue, searchQuery) : cellValue}
+                    </td>
+                  );
+                })}
+
                 {renderAction && (
                   <td className="py-2 px-3">{renderAction(row, rowIndex)}</td>
                 )}
@@ -125,22 +132,20 @@ const ExportTable = ({
           <button
             onClick={handlePrev}
             disabled={currentPage === 1}
-            className={`h-8 px-4 text-base font-medium text-white ${
-              currentPage === 1
+            className={`h-8 px-4 text-base font-medium text-white ${currentPage === 1
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] dark:bg-gray-500"
-            } rounded-s`}
+              } rounded-s`}
           >
             Prev
           </button>
           <button
             onClick={handleNext}
             disabled={endIndex >= data.length}
-            className={`h-8 px-4 text-base font-medium text-gray-300 ${
-              endIndex >= data.length
+            className={`h-8 px-4 text-base font-medium text-gray-300 ${endIndex >= data.length
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] dark:bg-gray-700"
-            } rounded-e`}
+              } rounded-e`}
           >
             Next
           </button>

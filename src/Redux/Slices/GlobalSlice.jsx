@@ -10,8 +10,6 @@ const initialState = {
 
 };
 
-console.log(localStorage.getItem("darkMode"));
-
 const globalSlice = createSlice({
   name: "global",
   initialState,

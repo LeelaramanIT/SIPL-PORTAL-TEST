@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
@@ -10,33 +10,42 @@ import toast from "react-hot-toast";
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
   const navigate = useNavigate();
-  const loading = useSelector((state) => state.invoice.export.loading);
-  const error = useSelector((state) => state.invoice.export.error);
-  if(error){
-    toast.error(error)
-  }
-  const invoiceDataRaw = useSelector(
-    (state) => state?.invoice?.export?.invoiceData?.salesData
+  const loading = useSelector((state) => state.invoice.exportInvoices.loading);
+  const error = useSelector((state) => state.invoice.exportInvoices.error);
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+  
+  const invoiceData = useSelector(
+    (state) => state?.invoice?.exportInvoices?.invoiceDetails?.sales
   );
 
-  const invoiceData = useMemo(
-    () => (Array.isArray(invoiceDataRaw) ? invoiceDataRaw : []),
-    [invoiceDataRaw]
-  );
+  const invoiceAddress = useSelector((state)=> state?.invoice?.exportInvoices?.invoiceDetails?.address)
+  // console.log(invoiceAddress);
+  
 
-  const invoiceDetails = useSelector((state)=>state.invoice.export.invoiceData.addressData)
+  // const invoiceData = useMemo(
+  //   () => (Array.isArray(invoiceDataRaw) ? invoiceDataRaw : []),
+  //   [invoiceDataRaw]
+  // );
+  
+  console.log(invoiceData);
 
   const grandTotal = useMemo(() => {
-    return invoiceData.reduce((sum, item) => sum + item.totalPrice, 0);
+    return invoiceData?.items.reduce((sum, item) => sum + item?.basicprice * item?.itemQty, 0);
   }, [invoiceData]);
-
+  
   const totalQTY = useMemo(() => {
-    return invoiceData.reduce((sum, item) => sum + item.qty, 0);
+    return invoiceData?.items.reduce((sum, item) => sum + item?.itemQty, 0);
   }, [invoiceData]);
+  
 
   const totalFWT = useMemo(() => {
-    return invoiceData.reduce((sum, item) => sum + item.fwt, 0);
+    return invoiceData?.items.reduce((sum, item) => sum + item?.finishedWt * item?.itemQty, 0);
   }, [invoiceData]);
+  
 
   const handleCloseForm = () => {
     setShowDetailsForm(false);
@@ -47,14 +56,13 @@ const ExportInvoicePrepare = () => {
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Client Details
       </h1>
-
-      <ClientDetailsSection invoiceDetails={invoiceDetails} />
+      <ClientDetailsSection invoiceDetails={{ ...invoiceAddress, ...invoiceData }} />
 
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Item Details
       </h1>
 
-      {loading && invoiceData.length ? (
+      {loading ? (
         <TableSkeleton />
       ) : (
         <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
@@ -88,7 +96,7 @@ const ExportInvoicePrepare = () => {
               </tr>
             </thead>
             <tbody>
-              {invoiceData.map((item, idx) => (
+              {invoiceData?.items.map((item, idx) => (
                 <tr
                   key={idx}
                   className={`text-[13px] text-center ${
@@ -97,22 +105,22 @@ const ExportInvoicePrepare = () => {
                       : "bg-white dark:bg-gray-800"
                   } text-gray-700 dark:text-gray-300`}
                 >
-                  <td>{item.category}</td>
-                  <td>{item.platform}</td>
-                  <td>{item.tyreSize}</td>
-                  <td>{item.rim}</td>
-                  <td>{item.type}</td>
-                  <td>{item.brand}</td>
-                  <td>{item.sidewall}</td>
-                  <td>{item.basicPrice}</td>
-                  <td>{item.qty}</td>
-                  <td>{item.totalPrice.toFixed(2)}</td>
-                  <td>{item.fwt.toFixed(3)}</td>
-                  <td colSpan={2} title={item.additionalInfo}>
-                    {item.additionalInfo}
+                  <td>{item?.category}</td>
+                  <td>{item?.platforms}</td>
+                  <td>{item?.tyreSize}</td>
+                  <td>{item?.tyreRim}</td>
+                  <td>{item?.tyreType}</td>
+                  <td>{item?.brand}</td>
+                  <td>{item?.sidewall}</td>
+                  <td>{item?.basicprice}</td>
+                  <td>{item?.itemQty}</td>
+                  <td>{(item?.basicprice * item?.itemQty).toFixed(2)}</td>
+                  <td>{(item?.finishedWt * item?.itemQty).toFixed(3)}</td>
+                  <td colSpan={2} title={item?.additionalInfo}>
+                    {item?.additionalInfo}
                   </td>
-                  <td>{item.plant}</td>
-                  <td className="break-all">{item.partNo}</td>
+                  <td>{item?.plant}</td>
+                  <td className="break-all">{item?.itemCode}</td>
                 </tr>
               ))}
             </tbody>
@@ -168,7 +176,9 @@ export default ExportInvoicePrepare;
 
 
 
-  function ClientDetailsSection({ div2,invoiceDetails }) {
+  function ClientDetailsSection({ div2 ,invoiceDetails }) {
+    console.log(invoiceDetails);
+    
     return (
       <>
         <div
@@ -187,7 +197,7 @@ export default ExportInvoicePrepare;
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-[var(--color-primary)] dark:group-hover:text-blue-400 transition-colors duration-300">
-                    Kaja Moideen
+                    {invoiceDetails?.custfullname}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Primary Customer</p>
                 </div>
@@ -195,7 +205,7 @@ export default ExportInvoicePrepare;
               <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] dark:bg-[#1E2939] dark:to-emerald-900/30 rounded-lg border border-[var(--color-primary)] dark:border-green-700 group-hover:scale-105 transition-transform duration-300">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                  Order Ref #: <span className="text-green-900 dark:text-green-100">{invoiceDetails.orderRefNo}</span>
+                  Order Ref #: <span className="text-green-900 dark:text-green-100">{invoiceDetails?.orderRefNo}</span>
                 </span>
               </div>
             </div>
@@ -227,9 +237,18 @@ export default ExportInvoicePrepare;
                     label: "Bill To",
                     value: (
                       <>
-                        <div className="font-medium text-gray-900 dark:text-white">Kaja Moideen</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{invoiceDetails.billingCompanyName}</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Customer Address Info Laborum do sint sit pariatur consequat dolore....
+                        {invoiceDetails?.billingAddress?.split('~').join(', ')}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.billingCity},
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.billingCountry} - {invoiceDetails?.billingZipcode}.
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Email: {invoiceDetails?.billingEmailId} - Phone: {invoiceDetails?.billingMobile}
                         </div>
                       </>
                     ),
@@ -248,7 +267,7 @@ export default ExportInvoicePrepare;
                     className="group/item relative p-4 hover:text-[var(--color-primary)] bg-[var(--color-thered)] dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item.color}-100 to-${item.color}-200 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item?.color}-100 to-${item?.color}-200 dark:from-${item?.color}-900/30 dark:to-${item?.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
                         {item.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -287,7 +306,23 @@ export default ExportInvoicePrepare;
                   },
                   {
                     label: "Ship To",
-                    value: "Receiver Address Info Customer Address Info Laborum do sint sit pariatur consequat dolore....",
+                    value: 
+                    <>
+                    <div className="font-medium text-gray-900 dark:text-white">{invoiceDetails.shippingCompanyName}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {invoiceDetails?.shippingAddress?.split('~').join(', ')}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {invoiceDetails?.shippingCity},
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {invoiceDetails?.shippingCountry} - {invoiceDetails?.shippingZipcode}.
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Email: {invoiceDetails?.shippingEmailId} - Phone: {invoiceDetails?.shippingMobile}
+                    </div>  
+                  </>
+                  ,
                     icon: "🏠",
                     color: "green"
                   },

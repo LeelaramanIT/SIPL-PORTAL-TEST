@@ -53,7 +53,10 @@ const rootReducer = combineReducers({
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ serializableCheck: false }),
+    getDefaultMiddleware({
+      thunk: true, // ✅ explicitly enable thunk
+      serializableCheck: false,
+    }),
   devTools: import.meta.env.MODE === "development",
 });
 
