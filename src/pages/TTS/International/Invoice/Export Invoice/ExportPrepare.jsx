@@ -5,12 +5,16 @@ import { IoMdClose } from "react-icons/io";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import TableSkeleton from "./TableSkeleton.jsx";
+import toast from "react-hot-toast";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
   const navigate = useNavigate();
   const loading = useSelector((state) => state.invoice.export.loading);
-
+  const error = useSelector((state) => state.invoice.export.error);
+  if(error){
+    toast.error(error)
+  }
   const invoiceDataRaw = useSelector(
     (state) => state?.invoice?.export?.invoiceData?.salesData
   );
@@ -19,6 +23,8 @@ const ExportInvoicePrepare = () => {
     () => (Array.isArray(invoiceDataRaw) ? invoiceDataRaw : []),
     [invoiceDataRaw]
   );
+
+  const invoiceDetails = useSelector((state)=>state.invoice.export.invoiceData.addressData)
 
   const grandTotal = useMemo(() => {
     return invoiceData.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -42,7 +48,7 @@ const ExportInvoicePrepare = () => {
         Client Details
       </h1>
 
-      <ClientDetailsSection />
+      <ClientDetailsSection invoiceDetails={invoiceDetails} />
 
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Item Details
@@ -142,7 +148,7 @@ const ExportInvoicePrepare = () => {
       {/* Modal Form */}
       {showDetailsForm && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
-          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-5xl max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
+          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[80rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
             <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">Additional Invoice Details</h2>
             <button
               onClick={handleCloseForm}
@@ -162,7 +168,7 @@ export default ExportInvoicePrepare;
 
 
 
-  function ClientDetailsSection({ div2 }) {
+  function ClientDetailsSection({ div2,invoiceDetails }) {
     return (
       <>
         <div
@@ -189,7 +195,7 @@ export default ExportInvoicePrepare;
               <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] dark:bg-[#1E2939] dark:to-emerald-900/30 rounded-lg border border-[var(--color-primary)] dark:border-green-700 group-hover:scale-105 transition-transform duration-300">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                  Order Ref #: <span className="text-green-900 dark:text-green-100">ORD-123456</span>
+                  Order Ref #: <span className="text-green-900 dark:text-green-100">{invoiceDetails.orderRefNo}</span>
                 </span>
               </div>
             </div>
@@ -207,13 +213,13 @@ export default ExportInvoicePrepare;
                 {[
                   {
                     label: "Ordered Date",
-                    value: "2025-05-14",
+                    value: invoiceDetails?.completedDate,
                     icon: "📅",
                     color: "blue"
                   },
                   {
                     label: "Desired Ship Date",
-                    value: "2025-06-01",
+                    value: invoiceDetails?.dispatchedDate,
                     icon: "🚢",
                     color: "green"
                   },

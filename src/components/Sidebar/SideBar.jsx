@@ -19,9 +19,6 @@ const SideBar = () => {
   const isDark = useSelector((state) => state.global.isDark);
   
   const menus = useSelector((store) => store.auth.menus);
-
-  console.log(menus);
-  
   
   const role = useSelector((store) => store.auth.roles);
 
