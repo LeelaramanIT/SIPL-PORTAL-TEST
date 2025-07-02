@@ -67,7 +67,7 @@ const ExportInvoice = () => {
     if (
       ["completedDate", "dispatchedDate", "rfD_Date"].includes(selectedColumn)
     ) {
-      if (!searchQuery.trim()) return tableData;
+      // if (!searchQuery.trim()) return tableData;
       return tableData.filter((row) => {
         const rowDate = new Date(row[selectedColumn]).toDateString();
         const selected = new Date(startDate).toDateString();

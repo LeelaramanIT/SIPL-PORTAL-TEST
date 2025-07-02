@@ -5,13 +5,30 @@ import Select from "../../../../../components/InputFields/Select";
 import TextArea from "../../../../../components/InputFields/TextArea";
 import LoadingButton from "../../../../../components/LoadingButton";
 
-const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
+const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => {
+  console.log(invoiceDetails);
+  const origin = invoiceDetails?.containerLoadFrom === "MMN" || invoiceDetails?.containerLoadFrom === "PDK"
+  ? "india"
+  : "srilanka";
+
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      "Vessel/Flight": invoiceDetails?.vesselFlight || "",
+      "Invoice No": invoiceDetails?.invoiceNumber || "",
+      "BILL OF LADING NO": invoiceDetails?.billOfLading || '',
+      "CONTAINER NO": invoiceDetails?.containerNo || "",
+      "Country of origin of goods": origin || "",
+      "Port of loading": invoiceDetails?.portOfLoading || "",
+      // add other fields as needed
+    },
+  });
+
 
   const onSubmit = async (data) => {
     console.log("Form submitted:", data);
@@ -25,10 +42,10 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between gap-2 md:gap-4 items-start md:items-center text-sm text-gray-800 dark:text-white">
         <h1>
-          SHIPMENT TYPE: <span className="font-bold">DIRECT</span>
+          SHIPMENT TYPE: <span className="font-bold">{invoiceDetails?.shipmentType}</span>
         </h1>
         <h1>
-          WORK ORDER: <span className="font-bold">LOAD 307</span>
+          WORK ORDER: <span className="font-bold">{invoiceDetails.workorderno}</span>
         </h1>
         <h1>
           Date:{" "}
@@ -60,13 +77,13 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
           ]}
         />
         <InputField label="Vessel/Flight" name="Vessel/Flight" register={register} errors={errors} />
-        <InputField label="Invoice No" name="Invoice No" register={register} errors={errors} />
+        <InputField label="Invoice No" name="Invoice No" register={register} errors={errors} disabled={true} />
         <InputField label="BILL OF LADING NO" name="BILL OF LADING NO" register={register} errors={errors} />
         <SelectField label="Container Type" name="Container Type" register={register} errors={errors} options={["20'", "40'", "LCL"]} />
         <SelectField label="Pre-Carriage by" name="Pre-Carriage by" register={register} errors={errors} options={["SEA", "AIR", "ROAD"]} />
         <SelectField label="Incoterm" name="Incoterm" register={register} errors={errors} options={["FOB", "CIF", "DDU", "DDP", "C&F"]} />
         <InputField label="CONTAINER NO" name="CONTAINER NO" register={register} errors={errors} />
-        <SelectField label="Country of origin of goods" name="Country of origin of goods" register={register} errors={errors} options={["INDIA", "SRILANKA"]} />
+        <SelectField label="Country of origin of goods" name="Country of origin of goods" register={register} errors={errors} options={["INDIA", "SRILANKA"]} disabled={invoiceDetails?.containerLoadFrom !== ''} />
         <InputField label="PORT OF DISCHARGE" name="PORT OF DISCHARGE" register={register} errors={errors} />
         <InputField label="Container SEAL NO" name="Container SEAL NO" register={register} errors={errors} />
         <SelectField label="Port of loading" name="Port of loading" register={register} errors={errors} options={["CHENNAI, INDIA", "COLOMBO SRILANKA", "ENNORE, INDIA", "KATTUPALLI, INDIA", "THOOTHUKUDI, INDIA"]} />
@@ -96,8 +113,8 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
           {errors.description && <ErrorText message={errors.description.message} />}
         </div>
 
-  {/* Other Charges Headers */}
-  <div className="md:col-span-1 lg:hidden">
+        {/* Other Charges Headers */}
+        <div className="md:col-span-1 lg:hidden">
           <h1 className="text-sm text-gray-500 font-light text-center">DESCRIPTION OF OTHER CHARGES</h1>
         </div>
         <div className="md:col-span-1 lg:hidden">
@@ -139,17 +156,17 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm }) => {
 };
 
 // Input wrapper
-const InputField = ({ label, name, register, errors }) => (
+const InputField = ({ label, name, register, errors, disabled = false }) => (
   <div>
-    <Input label={label} name={name} {...register(name, { required: `${label} is required` })} />
+    <Input label={label} name={name} disabled={disabled} {...register(name, { required: `${label} is required` })} />
     {errors[name] && <ErrorText message={errors[name].message} />}
   </div>
 );
 
 // Select wrapper
-const SelectField = ({ label, name, register, errors, options }) => (
+const SelectField = ({ label, name, register, errors, options , disabled = false }) => (
   <div>
-    <Select label={label} name={name} {...register(name, { required: `Please select a ${label.toLowerCase()}` })}>
+    <Select label={label} name={name} disabled={disabled} {...register(name, { required: `Please select a ${label.toLowerCase()}` })}>
       <option className="dark:bg-gray-900 dark:text-white" value="" disabled hidden>
         Select {label}
       </option>

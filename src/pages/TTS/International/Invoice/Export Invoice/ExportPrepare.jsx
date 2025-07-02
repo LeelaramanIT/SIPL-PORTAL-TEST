@@ -17,34 +17,52 @@ const ExportInvoicePrepare = () => {
       toast.error(error);
     }
   }, [error]);
-  
+
   const invoiceData = useSelector(
     (state) => state?.invoice?.exportInvoices?.invoiceDetails?.sales
   );
 
-  const invoiceAddress = useSelector((state)=> state?.invoice?.exportInvoices?.invoiceDetails?.address)
+  const invoiceAddress = useSelector((state) => state?.invoice?.exportInvoices?.invoiceDetails?.address)
+
+  const currencySymbols = { USD: '$', GPB: '£', INR: '₹' };
+const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
+
   // console.log(invoiceAddress);
-  
+
 
   // const invoiceData = useMemo(
   //   () => (Array.isArray(invoiceDataRaw) ? invoiceDataRaw : []),
   //   [invoiceDataRaw]
   // );
-  
-  console.log(invoiceData);
 
+  // console.log({invoiceAddress});
+// calculation for items table 
   const grandTotal = useMemo(() => {
     return invoiceData?.items.reduce((sum, item) => sum + item?.basicprice * item?.itemQty, 0);
   }, [invoiceData]);
-  
+
   const totalQTY = useMemo(() => {
     return invoiceData?.items.reduce((sum, item) => sum + item?.itemQty, 0);
   }, [invoiceData]);
-  
+
 
   const totalFWT = useMemo(() => {
     return invoiceData?.items.reduce((sum, item) => sum + item?.finishedWt * item?.itemQty, 0);
   }, [invoiceData]);
+
+  // combi orders
+  const combiOrders = useMemo(() => {
+    if (invoiceData?.shipmentType !== 'COMBI' || !invoiceData?.items) return [];
+  
+    const grouped = invoiceData.items.reduce((acc, item) => {
+      const plant = item.plant;
+      if (!acc[plant]) acc[plant] = [];
+      acc[plant].push(item);
+      return acc;
+    }, {});
+  
+    return grouped;
+  }, [invoiceData?.shipmentType, invoiceData?.items]);
   
 
   const handleCloseForm = () => {
@@ -81,13 +99,15 @@ const ExportInvoicePrepare = () => {
                   "QTY",
                   "TOTAL PRICE",
                   "FWT",
+                  "RIM QTY",
+                  "RIM price",
                   "ADDITIONAL INFO",
                   "PLANT",
                   "PART-NO",
                 ].map((head, idx) => (
                   <th
                     key={idx}
-                    colSpan={idx === 11 ? 2 : 1}
+                    colSpan={idx === 13 ? 2 : idx === 2 ? 2 : 1}
                     className="px-1 py-4 text-center text-[13px]"
                   >
                     {head}
@@ -99,15 +119,14 @@ const ExportInvoicePrepare = () => {
               {invoiceData?.items.map((item, idx) => (
                 <tr
                   key={idx}
-                  className={`text-[13px] text-center ${
-                    idx % 2 === 0
+                  className={`text-[13px] text-center ${idx % 2 === 0
                       ? "bg-[#F4F3FE] dark:bg-gray-700"
                       : "bg-white dark:bg-gray-800"
-                  } text-gray-700 dark:text-gray-300`}
+                    } text-gray-700 dark:text-gray-300`}
                 >
                   <td>{item?.category}</td>
                   <td>{item?.platforms}</td>
-                  <td>{item?.tyreSize}</td>
+                  <td  colSpan={2} >{item?.tyreSize}</td>
                   <td>{item?.tyreRim}</td>
                   <td>{item?.tyreType}</td>
                   <td>{item?.brand}</td>
@@ -116,8 +135,10 @@ const ExportInvoicePrepare = () => {
                   <td>{item?.itemQty}</td>
                   <td>{(item?.basicprice * item?.itemQty).toFixed(2)}</td>
                   <td>{(item?.finishedWt * item?.itemQty).toFixed(3)}</td>
+                  <td>{(item?.rimItemQty)}</td>
+                  <td>{(item?.rimUnitPrice)}</td>
                   <td colSpan={2} title={item?.additionalInfo}>
-                    {item?.additionalInfo}
+                    {item?.additionalInfo ? item?.additionalInfo : "-"}
                   </td>
                   <td>{item?.plant}</td>
                   <td className="break-all">{item?.itemCode}</td>
@@ -126,12 +147,12 @@ const ExportInvoicePrepare = () => {
             </tbody>
             <tfoot className="font-semibold text-gray-800 dark:text-white">
               <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
-                <td colSpan={8} className="text-right px-4 py-2">
-                  Grand Total:
+                <td colSpan={9} className="text-right px-4 py-2">
+                  Grand Total :
                 </td>
                 <td className="px-4 py-2 text-center">{totalQTY}</td>
-                <td className="px-4 py-2 text-center">
-                  {grandTotal.toFixed(2)}
+                <td className="px-1 py-1 text-center">
+                 {symbol} {grandTotal.toFixed(2)}
                 </td>
                 <td className="px-4 py-2 text-center">
                   {totalFWT.toFixed(3)}
@@ -142,6 +163,94 @@ const ExportInvoicePrepare = () => {
           </table>
         </div>
       )}
+    
+      
+
+{invoiceData?.shipmentType == 'COMBI' && (
+  <>
+  <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+        Combi Orders
+      </h1>
+  <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
+    <table className="w-full text-sm text-left table-fixed shadow-lg">
+      <thead className="bg-[#ECECEC] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
+        <tr>
+          {[
+            "PLANT",
+            "TYRE QTY",
+            "TYRE PRICE",
+            "TYRE WT",
+            "RIM QTY",
+            "RIM PRICE",
+            "RIM WT",
+            "TOTAL QTY",
+            "TOTAL PRICE",
+            "TOTAL WT",
+            "RFD",
+          ].map((head, idx) => (
+            <th
+              key={idx}
+              className="px-1 py-4 text-center text-[13px]"
+            >
+              {head}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {Object.entries(combiOrders)?.map(([plant, items], idx) => {
+  // Calculate totals per plant
+  const tyreQty = items.reduce((sum, item) => sum + item.itemQty, 0);
+  const tyrePrice = items.reduce((sum, item) => sum + item.basicprice * item.itemQty, 0);
+  const tyreWt = items.reduce((sum, item) => sum + item.finishedWt * item.itemQty, 0);
+  const rimQty = items.reduce((sum, item) => sum + item.rimItemQty, 0);
+  const rimPrice = items.reduce((sum, item) => sum + item.rimUnitPrice * item.rimItemQty, 0);
+  const rimWt = 0; 
+  const totalQty = tyreQty + rimQty;
+  const totalPrice = tyrePrice + rimPrice;
+  const totalWt = tyreWt + rimWt;
+
+  return (
+    <tr
+      key={plant}
+      className={`text-[13px] text-center ${idx % 2 === 0
+        ? "bg-[#F4F3FE] dark:bg-gray-700"
+        : "bg-white dark:bg-gray-800"
+        } text-gray-700 dark:text-gray-300`}
+    >
+      <td>{plant}</td>
+      <td>{tyreQty}</td>
+      <td>{tyrePrice.toFixed(2)}</td>
+      <td>{tyreWt.toFixed(2)}</td>
+      <td>{rimQty}</td>
+      <td>{rimPrice.toFixed(2)}</td>
+      <td>{rimWt.toFixed(2)}</td>
+      <td>{totalQty}</td>
+      <td>{totalPrice.toFixed(2)}</td>
+      <td>{totalWt.toFixed(2)}</td>
+      <td>RFD</td> {/* Replace with real RFD if available */}
+    </tr>
+  );
+})}
+      </tbody>
+      <tfoot className="font-semibold text-gray-800 dark:text-white">
+        <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
+          <td colSpan={7} className="text-right px-4 py-2">
+            Total:
+          </td>
+          <td className="px-4 py-2 text-center">{totalQTY}</td>
+          <td className="px-4 py-2 text-center">{grandTotal.toFixed(2)}</td>
+          <td className="px-4 py-2 text-center">{totalFWT.toFixed(3)}</td>
+          <td className="px-4 py-2 text-center"></td>
+          
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  </>
+)}
+
+
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
@@ -150,7 +259,7 @@ const ExportInvoicePrepare = () => {
           text="Preview PDF"
         />
         <Button onClick={() => setShowDetailsForm(true)} text="+ Add Additional Details" />
-        <Button onClick={() => {}} text="Submit Invoice" />
+        <Button onClick={() => { }} text="Submit Invoice" />
       </div>
 
       {/* Modal Form */}
@@ -164,7 +273,7 @@ const ExportInvoicePrepare = () => {
             >
               <IoMdClose className="text-2xl" />
             </button>
-            <AdditionalDetailsForm onClose={handleCloseForm} />
+            <AdditionalDetailsForm onClose={handleCloseForm} invoiceDetails={{ ...invoiceAddress, ...invoiceData }} />
           </div>
         </div>
       )}
@@ -176,196 +285,208 @@ export default ExportInvoicePrepare;
 
 
 
-  function ClientDetailsSection({ div2 ,invoiceDetails }) {
-    console.log(invoiceDetails);
-    
-    return (
-      <>
-        <div
-          ref={div2}
-          className="group relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-1"
-        >
-          {/* Decorative background pattern */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-purple-50/30 dark:from-blue-900/20 dark:to-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          
-          {/* Header Section */}
-          <div className="relative px-6 py-5 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-500/5 to-purple-500/5">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white font-bold text-lg">MK</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-[var(--color-primary)] dark:group-hover:text-blue-400 transition-colors duration-300">
-                    {invoiceDetails?.custfullname}
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Primary Customer</p>
-                </div>
+function ClientDetailsSection({ div2, invoiceDetails }) {
+
+  return (
+    <>
+      <div
+        ref={div2}
+        className="group relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-1"
+      >
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 to-purple-50/30 dark:from-blue-900/20 dark:to-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+        {/* Header Section */}
+        <div className="relative px-6 py-5 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <span className="text-white font-bold text-lg">MK</span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] dark:bg-[#1E2939] dark:to-emerald-900/30 rounded-lg border border-[var(--color-primary)] dark:border-green-700 group-hover:scale-105 transition-transform duration-300">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                  Order Ref #: <span className="text-green-900 dark:text-green-100">{invoiceDetails?.orderRefNo}</span>
-                </span>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-[var(--color-primary)] dark:group-hover:text-blue-400 transition-colors duration-300">
+                  {invoiceDetails?.custfullname}
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Primary Customer</p>
               </div>
             </div>
-          </div>
-
-          {/* Enhanced Grid Details */}
-          <div className="relative p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                  <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                  Order Information
-                </h3>
-                {[
-                  {
-                    label: "Ordered Date",
-                    value: invoiceDetails?.completedDate,
-                    icon: "📅",
-                    color: "blue"
-                  },
-                  {
-                    label: "Desired Ship Date",
-                    value: invoiceDetails?.dispatchedDate,
-                    icon: "🚢",
-                    color: "green"
-                  },
-                  {
-                    label: "Bill To",
-                    value: (
-                      <>
-                        <div className="font-medium text-gray-900 dark:text-white">{invoiceDetails.billingCompanyName}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {invoiceDetails?.billingAddress?.split('~').join(', ')}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {invoiceDetails?.billingCity},
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {invoiceDetails?.billingCountry} - {invoiceDetails?.billingZipcode}.
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Email: {invoiceDetails?.billingEmailId} - Phone: {invoiceDetails?.billingMobile}
-                        </div>
-                      </>
-                    ),
-                    icon: "📍",
-                    color: "purple"
-                  },
-                  {
-                    label: "Special Instruction",
-                    value: "Handle with care",
-                    icon: "⚠️",
-                    color: "orange"
-                  }
-                ].map((item, i) => (
-                  <div 
-                    key={i} 
-                    className="group/item relative p-4 hover:text-[var(--color-primary)] bg-[var(--color-thered)] dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item?.color}-100 to-${item?.color}-200 dark:from-${item?.color}-900/30 dark:to-${item?.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
-                        {item.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold dark:text-gray-400 uppercase tracking-wide mb-1">
-                          {item.label}
-                        </div>
-                        <div className="text-gray-900 dark:text-white">
-                          {item.value}
-                        </div>
-                      </div>
-                    </div>
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                  <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
-                  Shipping Information
-                </h3>
-                {[
-                  {
-                    label: "Delivery Method",
-                    value: "Air Freight",
-                    icon: "✈️",
-                    color: "blue"
-                  },
-                  {
-                    label: "Packing Method",
-                    value: "Wooden Crates",
-                    icon: "📦",
-                    color: "brown"
-                  },
-                  {
-                    label: "Ship To",
-                    value: 
-                    <>
-                    <div className="font-medium text-gray-900 dark:text-white">{invoiceDetails.shippingCompanyName}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {invoiceDetails?.shippingAddress?.split('~').join(', ')}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {invoiceDetails?.shippingCity},
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {invoiceDetails?.shippingCountry} - {invoiceDetails?.shippingZipcode}.
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Email: {invoiceDetails?.shippingEmailId} - Phone: {invoiceDetails?.shippingMobile}
-                    </div>  
-                  </>
-                  ,
-                    icon: "🏠",
-                    color: "green"
-                  },
-                  {
-                    label: "Special Notes",
-                    value: "Urgent delivery required",
-                    icon: "⚡",
-                    color: "yellow"
-                  }
-                ].map((item, i) => (
-                  <div 
-                    key={i} 
-                    className="group/item relative hover:text-[var(--color-primary)] p-4 bg-[var(--color-thered)] dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item.color}-100 to-${item.color}-200 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
-                        {item.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold dark:text-gray-400 uppercase tracking-wide mb-1">
-                          {item.label}
-                        </div>
-                        <div className="text-gray-900 dark:text-white">
-                          {item.value}
-                        </div>
-                      </div>
-                    </div>
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Status indicator */}
-          <div className="absolute top-13 left-50">
-            <div className="flex items-center gap-2 px-3 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full border border-[var(--color-primary)] dark:border-green-700">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] dark:bg-[#1E2939] dark:to-emerald-900/30 rounded-lg border border-[var(--color-primary)] dark:border-green-700 group-hover:scale-105 transition-transform duration-300">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-green-700 dark:text-green-300">Active</span>
+              <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                Order Ref #: <span className="text-green-900 dark:text-green-100">{invoiceDetails?.orderRefNo}</span>
+              </span>
             </div>
           </div>
         </div>
-      </>
-    );
-  }
+
+        {/* Enhanced Grid Details */}
+        <div className="relative p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                Order Information
+              </h3>
+              {[
+                {
+                  label: "Ordered Date",
+                  value: invoiceDetails?.completedDate,
+                  icon: "📅",
+                  color: "blue"
+                },
+                {
+                  label: "Desired Ship Date",
+                  value: invoiceDetails?.dispatchedDate,
+                  icon: "🚢",
+                  color: "green"
+                },
+                {
+                  label: "Bill To",
+                  value: (
+                    <>
+                      <div className="font-medium text-gray-900 dark:text-white">{invoiceDetails.billingCompanyName}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.billingAddress?.split('~').join(', ')}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.billingCity},
+                      </div>
+                      {invoiceDetails.billingState && (<div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.billingState}
+                      </div>)}
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.billingCountry} - {invoiceDetails?.billingZipcode}.
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                        Contact: {invoiceDetails?.billingContactName}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Email: {invoiceDetails?.billingEmailId}  - Phone: {invoiceDetails?.billingMobile}
+                      </div>
+                    {console.log(invoiceDetails)}
+                    </>
+                  ),
+                  icon: "📍",
+                  color: "purple"
+                },
+                {
+                  label: "Special Instruction",
+                  value: invoiceDetails?.splIns ? invoiceDetails?.splIns :"Handle with care",
+                  icon: "⚠️",
+                  color: "orange"
+                }
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="group/item relative p-4 hover:text-[var(--color-primary)] bg-[var(--color-thered)] dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item?.color}-100 to-${item?.color}-200 dark:from-${item?.color}-900/30 dark:to-${item?.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold dark:text-gray-400 uppercase tracking-wide mb-1">
+                        {item.label}
+                      </div>
+                      <div className="text-gray-900 dark:text-white">
+                        {item.value}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+                Shipping Information
+              </h3>
+              {[
+                {
+                  label: "Delivery Method",
+                  value: "Air Freight",
+                  icon: "✈️",
+                  color: "blue"
+                },
+                {
+                  label: "Packing Method",
+                  value: "Wooden Crates",
+                  icon: "📦",
+                  color: "brown"
+                },
+                {
+                  label: "Ship To",
+                  value:
+                    <>
+                      <div className="font-medium text-gray-900 dark:text-white">{invoiceDetails.shippingCompanyName}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.shippingAddress?.split('~').join(', ')}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.shippingCity},
+                      </div>
+                      {invoiceDetails.shippingState && (<div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.shippingState}
+                      </div>)}
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {invoiceDetails?.shippingCountry} - {invoiceDetails?.shippingZipcode}.
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                        Contact: {invoiceDetails?.shippingContactName}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Email: {invoiceDetails?.shippingEmailId}  - Phone: {invoiceDetails?.shippingMobile}
+                      </div>
+                    </>
+                  ,
+                  icon: "🏠",
+                  color: "green"
+                },
+                {
+                  label: "Special Notes",
+                  value: invoiceDetails.specialRequset?invoiceDetails.specialRequset:"Urgent delivery required",
+                  icon: "⚡",
+                  color: "yellow"
+                }
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="group/item relative hover:text-[var(--color-primary)] p-4 bg-[var(--color-thered)] dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-500 hover:shadow-md transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.02]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${item.color}-100 to-${item.color}-200 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 flex items-center justify-center text-lg group-hover/item:scale-110 transition-transform duration-300`}>
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold dark:text-gray-400 uppercase tracking-wide mb-1">
+                        {item.label}
+                      </div>
+                      <div className="text-gray-900 dark:text-white">
+                        {item.value}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Status indicator */}
+        <div className="absolute top-13 left-50">
+          <div className="flex items-center gap-2 px-3 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full border border-[var(--color-primary)] dark:border-green-700">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-xs font-medium text-green-700 dark:text-green-300">Active</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
