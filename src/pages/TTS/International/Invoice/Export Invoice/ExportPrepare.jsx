@@ -27,15 +27,6 @@ const ExportInvoicePrepare = () => {
   const currencySymbols = { USD: '$', GPB: '£', INR: '₹' };
 const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
 
-  // console.log(invoiceAddress);
-
-
-  // const invoiceData = useMemo(
-  //   () => (Array.isArray(invoiceDataRaw) ? invoiceDataRaw : []),
-  //   [invoiceDataRaw]
-  // );
-
-  // console.log({invoiceAddress});
 // calculation for items table 
   const grandTotal = useMemo(() => {
     return invoiceData?.items.reduce((sum, item) => sum + item?.basicprice * item?.itemQty, 0);
@@ -304,7 +295,7 @@ function ClientDetailsSection({ div2, invoiceDetails }) {
                 <span className="text-white font-bold text-lg">MK</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-[var(--color-primary)] dark:group-hover:text-blue-400 transition-colors duration-300">
+                <h2 className="md:text-2xl lg:text-2xl font-bold text-gray-900 dark:text-white group-hover:text-[var(--color-primary)] dark:group-hover:text-blue-400 transition-colors duration-300">
                   {invoiceDetails?.custfullname}
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Primary Customer</p>

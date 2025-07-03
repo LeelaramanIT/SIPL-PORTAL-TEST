@@ -11,6 +11,7 @@ const initialState = {
     invoiceDetails: {
       sales: null,
       address: null,
+      pdf:null,
     },
     loading: false,
     error: null,
