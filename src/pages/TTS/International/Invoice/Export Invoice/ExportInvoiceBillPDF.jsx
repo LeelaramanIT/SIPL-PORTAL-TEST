@@ -712,7 +712,7 @@ const data = {
     year: "numeric",
   }),
   buyersOrderNo: invoice?.orderRefNo,
-  refDate: `E MAIL DATE ${formatCustomDate(invoice.rfD_Date)}`,
+  refDate: `E MAIL DATE ${formatCustomDate(invoice?.rfD_Date)}`,
   otherReferences: "SDF Form",
   exporter:
     "SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE & WHEEL SYSTEMS)~A1-F3/A, Sidco Industrial Estate  Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, PAN NO: AAGCT6465R~GSTIN NO: 33AAGCT6465R2ZJ",
