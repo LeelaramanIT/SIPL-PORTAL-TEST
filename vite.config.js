@@ -10,4 +10,7 @@ export default defineConfig({
     include: ['redux-persist-transform-encrypt'],
     // exclude: ['@react-pdf/renderer'],
   },
+  server:{
+    port:"5174"
+  }
 })

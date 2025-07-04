@@ -47,24 +47,23 @@ export default function ThemeSwitcher({ variant = "floating" }) {
   // ✅ Updated GSAP animation effect
   useEffect(() => {
     if (isOpen) {
-      const timeout = setTimeout(() => {
+      requestAnimationFrame(() => {
         const validButtons = buttonsRef.current.filter(Boolean);
-
-        if (validButtons.length) {
-          gsap.fromTo(
-            validButtons,
-            { opacity: 0, scale: 0.8, y: 20 },
-            {
-              opacity: 1,
-              scale: 1,
-              y: 0,
-              duration: 0.4,
-              stagger: 0.05,
-              ease: "back.out(1.7)",
-            }
-          );
-        }
-
+        if (!validButtons.length) return;
+  
+        gsap.fromTo(
+          validButtons,
+          { opacity: 0, scale: 0.8, y: 20 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: 0.05,
+            ease: "back.out(1.7)",
+          }
+        );
+  
         if (containerRef.current) {
           gsap.fromTo(
             containerRef.current,
@@ -78,22 +77,10 @@ export default function ThemeSwitcher({ variant = "floating" }) {
             }
           );
         }
-      }, 0);
-
-      return () => clearTimeout(timeout);
-    } else {
-      const validButtons = buttonsRef.current.filter(Boolean);
-      gsap.to(validButtons, {
-        opacity: 0,
-        scale: 0.8,
-        y: 20,
-        duration: 0.2,
-        stagger: 0.02,
-        ease: "power2.in",
       });
     }
   }, [isOpen]);
-
+  
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -175,7 +162,9 @@ export default function ThemeSwitcher({ variant = "floating" }) {
             {themes.map((theme, index) => (
               <button
                 key={theme.name}
-                ref={(el) => (buttonsRef.current[index] = el)}
+                ref={(el) => {
+                  if (el) buttonsRef.current[index] = el;
+                }}
                 onClick={() => setCurrentTheme(theme.name)}
                 title={`Switch to ${theme.label} theme`}
                 className={`w-[35px] h-[35px] rounded-lg transition-all duration-300 border-2 flex items-center justify-center hover:scale-110 hover:shadow-md ${

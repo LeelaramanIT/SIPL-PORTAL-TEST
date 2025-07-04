@@ -4,35 +4,63 @@ import Input from "../../../../../components/InputFields/Input";
 import Select from "../../../../../components/InputFields/Select";
 import TextArea from "../../../../../components/InputFields/TextArea";
 import LoadingButton from "../../../../../components/LoadingButton";
+import { useDispatch, useSelector } from "react-redux";
+import { setExportAdditionalInvoice } from "../../../../../Redux/Slices/InvoiceSlice";
 
 const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => {
-  console.log(invoiceDetails);
+  // console.log(invoiceDetails);
   const origin = invoiceDetails?.containerLoadFrom === "MMN" || invoiceDetails?.containerLoadFrom === "PDK"
   ? "india"
   : "srilanka";
 
+  const dispatch = useDispatch()
+  const invoiceData = useSelector(
+    (state) => state?.invoice?.exportInvoices?.invoiceDetails?.additionalForm
+  );
 
+  console.log(invoiceData);
+  // console.log(invoiceDetails)
+  const defaultValues = {
+    ExporterAuthorizedAddress: invoiceData?.ExporterAuthorizedAddress || '',
+    VesseFlight : invoiceData?.VesseFlight || "",
+    InvoiceNo: invoiceDetails?.invoiceNumber || "", 
+    BillOfLadingNo: invoiceData?.BillOfLadingNo || "",
+    ContainerNo: invoiceData?.ContainerNo || "",
+    CountryOfOriginOfGoods: invoiceDetails?.containerLoadFrom === "MMN" || invoiceDetails?.containerLoadFrom === "PDK" ? "india" : "srilanka",
+    PortOfLoading: invoiceData?.PortOfLoading || "",
+    PortOfDischarge : invoiceData?.PortOfDischarge || "",
+    ContainerType: invoiceData?.ContainerType || '',
+    PreCarriageby: invoiceData?.PreCarriageby || "",
+    Incoterm: invoiceData?.Incoterm || "",
+    ContainerSEALNO: invoiceData?.ContainerSEALNO || "",
+    PlaceOfReceiptByPreCarrier: invoiceData?.PlaceOfReceiptByPreCarrier || "",
+    FinalDestination: invoiceDetails?.shippingCity || "",
+    OtherCharges1: invoiceData?.OtherCharges1 || '',
+    OtherCharges2: invoiceData?.OtherCharges2 || '',
+    OtherCharges3: invoiceData?.OtherCharges3 || '',
+    Value1: invoiceData?.Value1 || "",
+    Value2: invoiceData?.Value2 || "",
+    Value3: invoiceData?.Value3 || "",
+    Description: invoiceDetails?.paymentTerms?.replace(/~~/g, "\n") ||
+      `01. UNIT PRICES FOB CHENNAI/COLOMBO,USD BY SEA .
+  02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS.
+  03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
+  04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
+  05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.`,
+  };
+  
+  
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm({
-    defaultValues: {
-      "Vessel/Flight": invoiceDetails?.vesselFlight || "",
-      "Invoice No": invoiceDetails?.invoiceNumber || "",
-      "BILL OF LADING NO": invoiceDetails?.billOfLading || '',
-      "CONTAINER NO": invoiceDetails?.containerNo || "",
-      "Country of origin of goods": origin || "",
-      "Port of loading": invoiceDetails?.portOfLoading || "",
-      // add other fields as needed
-    },
-  });
+  } = useForm({defaultValues});
 
 
   const onSubmit = async (data) => {
-    console.log("Form submitted:", data);
-    await new Promise((resolve) => setTimeout(resolve, 9000));
+    console.log("Form submitted:");
+    dispatch(setExportAdditionalInvoice(data))
     reset();
     onClose();
   };
@@ -67,7 +95,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
         {/* Main Fields */}
         <SelectField
           label="Exporter Authorized Address"
-          name="Exporter Authorized Address"
+          name="ExporterAuthorizedAddress"
           register={register}
           errors={errors}
           options={[
@@ -76,19 +104,19 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
             "SUNDARAM INDUSTRIES PRIVATE LIMITED~(Formerly Known as T.S.Rajam Tyres Pvt Limites)~KRISHNA TOWERS-3RD FLOOR, NP-31B/4,~THIRU VI KA INDUSTRIAL ESTATE ,EKKATTUTHANGAL,~CHENNAI – 600 032.INDIA~",
           ]}
         />
-        <InputField label="Vessel/Flight" name="Vessel/Flight" register={register} errors={errors} />
-        <InputField label="Invoice No" name="Invoice No" register={register} errors={errors} disabled={true} />
-        <InputField label="BILL OF LADING NO" name="BILL OF LADING NO" register={register} errors={errors} />
-        <SelectField label="Container Type" name="Container Type" register={register} errors={errors} options={["20'", "40'", "LCL"]} />
-        <SelectField label="Pre-Carriage by" name="Pre-Carriage by" register={register} errors={errors} options={["SEA", "AIR", "ROAD"]} />
+        <InputField label="Vessel/Flight" name="VesseFlight" register={register} errors={errors} />
+        <InputField label="Invoice No" name="InvoiceNo" register={register} errors={errors} disabled={true} />
+        <InputField label="BILL OF LADING NO" name="BillOfLadingNo" register={register} errors={errors} />
+        <SelectField label="Container Type" name="ContainerType" register={register} errors={errors} options={["20'", "40'", "LCL"]} />
+        <SelectField label="Pre-Carriage by" name="PreCarriageby" register={register} errors={errors} options={["SEA", "AIR", "ROAD"]} />
         <SelectField label="Incoterm" name="Incoterm" register={register} errors={errors} options={["FOB", "CIF", "DDU", "DDP", "C&F"]} />
-        <InputField label="CONTAINER NO" name="CONTAINER NO" register={register} errors={errors} />
-        <SelectField label="Country of origin of goods" name="Country of origin of goods" register={register} errors={errors} options={["INDIA", "SRILANKA"]} disabled={invoiceDetails?.containerLoadFrom !== ''} />
-        <InputField label="PORT OF DISCHARGE" name="PORT OF DISCHARGE" register={register} errors={errors} />
-        <InputField label="Container SEAL NO" name="Container SEAL NO" register={register} errors={errors} />
-        <SelectField label="Port of loading" name="Port of loading" register={register} errors={errors} options={["CHENNAI, INDIA", "COLOMBO SRILANKA", "ENNORE, INDIA", "KATTUPALLI, INDIA", "THOOTHUKUDI, INDIA"]} />
-        <SelectField label="Place of receipt by pre-carrier" name="Place of receipt by pre-carrier" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
-        <InputField label="FINAL Destination" name="FINAL Destination" register={register} errors={errors} />
+        <InputField label="CONTAINER NO" name="ContainerNo" register={register} errors={errors} />
+        <SelectField label="Country of origin of goods" name="CountryOfOriginOfGoods" register={register} errors={errors} options={["INDIA", "SRILANKA"]} disabled={invoiceDetails?.containerLoadFrom !== ''} />
+        <InputField label="PORT OF DISCHARGE" name="PortOfDischarge" register={register} errors={errors} />
+        <InputField label="Container SEAL NO" name="ContainerSEALNO" register={register} errors={errors} />
+        <SelectField label="Port of loading" name="PortOfLoading" register={register} errors={errors} options={["CHENNAI, INDIA", "COLOMBO SRILANKA", "ENNORE, INDIA", "KATTUPALLI, INDIA", "THOOTHUKUDI, INDIA"]} />
+        <SelectField label="Place of receipt by pre-carrier" name="PlaceOfReceiptByPreCarrier" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
+        <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
 
         {/* Other Charges Headers */}
         <div className="md:col-span-1 hidden lg:block">
@@ -100,7 +128,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
 
         <div className="col-span-full lg:col-span-2">
           <TextArea
-            label="Payment terms"
+            label="PAYMENT TERMS"
             rows={6}
             placeholder="Enter description..."
             defaultValue={`01. UNIT PRICES FOB CHENNAI/COLOMBO,USD BY SEA .
@@ -108,9 +136,9 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
 03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
 04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
 05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.`}
-            {...register("description", { required: "Description is required" })}
+            {...register("Description", { required: "Description is required" })}
           />
-          {errors.description && <ErrorText message={errors.description.message} />}
+          {errors.Description && <ErrorText message={errors.Description.message} />}
         </div>
 
         {/* Other Charges Headers */}
@@ -122,15 +150,15 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
         </div>
         {/* Other Charges & Values */}
         <div className="flex flex-col gap-4">
-          <SelectField label="OTHER CHARGES" name="OTHER CHARGES 1" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
-          <SelectField label="OTHER CHARGES" name="OTHER CHARGES 2" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
-          <SelectField label="OTHER CHARGES" name="OTHER CHARGES 3" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
+          <SelectField label="OTHER CHARGES" name="OtherCharges1" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
+          <SelectField label="OTHER CHARGES" name="OtherCharges2" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
+          <SelectField label="OTHER CHARGES" name="OtherCharges3" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
         </div>
 
         <div className="flex flex-col gap-4">
-          <InputField label="Value" name="Value 1" register={register} errors={errors} />
-          <InputField label="Value" name="Value 2" register={register} errors={errors} />
-          <InputField label="Value" name="Value 3" register={register} errors={errors} />
+          <InputField label="Value" name="Value1" register={register} errors={errors} />
+          <InputField label="Value" name="Value2" register={register} errors={errors} />
+          <InputField label="Value" name="Value3" register={register} errors={errors} />
         </div>
 
         {/* Form Actions */}
@@ -156,17 +184,21 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
 };
 
 // Input wrapper
-const InputField = ({ label, name, register, errors, disabled = false }) => (
+const InputField = ({ label, name, register, errors, disabled = false }) => {
+  const fileName = name.toLowerCase().replace(/\s+/g, '');
+  return (
   <div>
-    <Input label={label} name={name} disabled={disabled} {...register(name, { required: `${label} is required` })} />
+    <Input label={label} name={fileName} disabled={disabled} {...register(name, { required: `${label} is required` })} />
     {errors[name] && <ErrorText message={errors[name].message} />}
   </div>
-);
+)};
 
 // Select wrapper
-const SelectField = ({ label, name, register, errors, options , disabled = false }) => (
+const SelectField = ({ label, name, register, errors, options , disabled = false }) => {
+  const fileName = name.toLowerCase().replace(/\s+/g, '')
+  return (
   <div>
-    <Select label={label} name={name} disabled={disabled} {...register(name, { required: `Please select a ${label.toLowerCase()}` })}>
+    <Select label={label} name={fileName} disabled={disabled} {...register(name, { required: `Please select a ${label.toLowerCase()}` })}>
       <option className="dark:bg-gray-900 dark:text-white" value="" disabled hidden>
         Select {label}
       </option>
@@ -178,7 +210,7 @@ const SelectField = ({ label, name, register, errors, options , disabled = false
     </Select>
     {errors[name] && <ErrorText message={errors[name].message} />}
   </div>
-);
+)};
 
 // Error display
 const ErrorText = ({ message }) => <p className="text-red-500 text-xs mt-1">{message}</p>;

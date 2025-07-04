@@ -23,6 +23,8 @@ const ExportInvoicePrepare = () => {
   );
 
   const invoiceAddress = useSelector((state) => state?.invoice?.exportInvoices?.invoiceDetails?.address)
+  const formDAta = useSelector((state) => state?.invoice?.exportInvoices?.invoiceDetails?.additionalForm)
+  
 
   const currencySymbols = { USD: '$', GPB: '£', INR: '₹' };
 const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
@@ -143,10 +145,10 @@ const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
                 </td>
                 <td className="px-4 py-2 text-center">{totalQTY}</td>
                 <td className="px-1 py-1 text-center">
-                 {symbol} {grandTotal.toFixed(2)}
+                 {symbol} {grandTotal?.toFixed(2)}
                 </td>
                 <td className="px-4 py-2 text-center">
-                  {totalFWT.toFixed(3)}
+                  {totalFWT?.toFixed(3)}
                 </td>
                 <td colSpan={4}></td>
               </tr>
@@ -219,7 +221,7 @@ const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
       <td>{totalQty}</td>
       <td>{totalPrice.toFixed(2)}</td>
       <td>{totalWt.toFixed(2)}</td>
-      <td>RFD</td> {/* Replace with real RFD if available */}
+      <td>RFD</td> 
     </tr>
   );
 })}
@@ -230,10 +232,9 @@ const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
             Total:
           </td>
           <td className="px-4 py-2 text-center">{totalQTY}</td>
-          <td className="px-4 py-2 text-center">{grandTotal.toFixed(2)}</td>
-          <td className="px-4 py-2 text-center">{totalFWT.toFixed(3)}</td>
+          <td className="px-4 py-2 text-center">{grandTotal?.toFixed(2)}</td>
+          <td className="px-4 py-2 text-center">{totalFWT?.toFixed(3)}</td>
           <td className="px-4 py-2 text-center"></td>
-          
         </tr>
       </tfoot>
     </table>
@@ -245,12 +246,12 @@ const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
-        <Button
+        {formDAta && <Button
           onClick={() => navigate("/TTS/International/Invoice/Export/BillPDF")}
           text="Preview PDF"
-        />
-        <Button onClick={() => setShowDetailsForm(true)} text="+ Add Additional Details" />
-        <Button onClick={() => { }} text="Submit Invoice" />
+        />}
+        {!formDAta ? <Button onClick={() => setShowDetailsForm(true)} text="+ Add Additional Details" />:<Button onClick={() => setShowDetailsForm(true)} text="Edit Additional Details" />}
+        {formDAta && <Button onClick={() => { }} text="Submit Invoice" />}
       </div>
 
       {/* Modal Form */}
@@ -355,7 +356,6 @@ function ClientDetailsSection({ div2, invoiceDetails }) {
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Email: {invoiceDetails?.billingEmailId}  - Phone: {invoiceDetails?.billingMobile}
                       </div>
-                    {console.log(invoiceDetails)}
                     </>
                   ),
                   icon: "📍",
