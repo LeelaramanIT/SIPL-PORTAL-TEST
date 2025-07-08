@@ -362,8 +362,8 @@ const InvoicePDF = ({ data }) => (
             {(data?.exporter
               ? data.exporter.split("~")
               : `SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE & WHEEL SYSTEMS)~A1-F3/A, Sidco Industrial Estate  Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, PAN NO: AAGCT6465R~GSTIN NO: 33AAGCT6465R2ZJ`.split(
-                  "~"
-                )
+                "~"
+              )
             ).map((line, index) => (
               <Text key={index} style={styles.textValue}>
                 {line.trim()}
@@ -415,27 +415,34 @@ const InvoicePDF = ({ data }) => (
             <View>
               <Text style={styles.text}>CONSIGNEE:</Text>
               <Text style={styles.textValue}>
-                {data.consignee.name || "M/S, ADVANCE TIRES"}
+                {data.consignee.name || ""}
               </Text>
               {data?.consignee?.address
                 ? data.consignee.address.map((item, index) => (
-                    <Text key={index} style={styles.textValue}>
-                      {item.trim()}
-                    </Text>
-                  ))
-                : null}
-              {/* <Text style={styles.textValue}>"1000 Rike Dr."</Text> */}
-              {/* <Text style={styles.textValue}>{"Millstone Twp. NJ 08535"}</Text> */}
+                  <Text key={index} style={styles.textValue}>
+                    {item.trim()}
+                  </Text>
+                ))
+                : ''}
+             <Text style={styles.textValue}>
+                {data.consignee.city || ""}
+              </Text>
+              <Text style={styles.textValue}>
+                {data.consignee.state || ""}
+              </Text>
+              <Text style={styles.textValue}>
+                {data.consignee.country || ""}
+              </Text>
             </View>
             <View>
               <Text style={styles.text}>CUSTOMER AGENT</Text>
-              <Text style={styles.textValue}>{data.customerAgent.name||"M/S, ADVANCE TIRE"}</Text>
+              <Text style={styles.textValue}>{data.customerAgent.name || "M/S, ADVANCE TIRE"}</Text>
               {data?.customerAgent?.address
                 ? data.consignee.address.map((item, index) => (
-                    <Text key={index} style={styles.textValue}>
-                      {item.trim()}
-                    </Text>
-                  ))
+                  <Text key={index} style={styles.textValue}>
+                    {item.trim()}
+                  </Text>
+                ))
                 : null}
               {/* <Text style={styles.textValue}>1000 Rike Dr.</Text> */}
               {/* <Text style={styles.textValue}>Millstone Twp. NJ 08535</Text> */}
@@ -444,17 +451,17 @@ const InvoicePDF = ({ data }) => (
           <View style={styles.row3left2}>
             <View style={styles.row3left2row1}>
               <Text style={styles.text}>Pre Carriage by</Text>
-              <Text style={styles.textValue}>{data?.preCarriageBy || "BY SEA"}</Text>
+              <Text style={styles.textValue}>BY {data?.preCarriageBy || ""}</Text>
             </View>
             <View style={styles.row3left2row2}>
               <Text style={styles.text}>Place of Receipt by Pre-carrier</Text>
-              <Text style={styles.textValue}>{data?.placeOfReceipt ||"CHENNAI-INDIA"}</Text>
+              <Text style={styles.textValue}>{data?.placeOfReceipt || "CHENNAI-INDIA"}</Text>
             </View>
           </View>
           <View style={styles.row3left3}>
             <View style={styles.row3left3row1}>
               <Text style={styles.text}>Vessel/Flight No</Text>
-              <Text style={styles.textValue}>{data?.vesselFlightNo || "1234"}</Text>
+              <Text style={styles.textValue}>{data?.vesselFlightNo || ""}</Text>
             </View>
             <View style={styles.row3left3row2}>
               <Text style={styles.text}>Port of Loading</Text>
@@ -476,17 +483,27 @@ const InvoicePDF = ({ data }) => (
           <View style={styles.row3right1}>
             <Text style={styles.text}>Buyer if otherthan Consignee</Text>
             <View>
-              {(data?.buyerIfOtherThanConsignee
-              ? data.buyerIfOtherThanConsignee.split("~")
-              : `SUMMIT SUPPLY GROUP LLC ~ DC-ALLENTOWN, ~ PA 6461 SNOWDRIFT RD ALLENTOWN ~ PA 18106-9514 UNITAD STATES`.split(
-                  "~"
-                )
-            ).map((line, index) => (
-              <Text key={index} style={styles.textValue}>
-                {line.trim()}
+              <Text style={styles.textValue}>
+                {data?.buyerIfOtherThanConsignee?.name},
               </Text>
-            ))}
+              {Array.isArray(data?.buyerIfOtherThanConsignee?.address) &&
+                data.buyerIfOtherThanConsignee.address.map((line, index) => (
+                  <Text key={index} style={styles.textValue}>
+                    {line.trim()}
+                  </Text>
+                ))
+              }
+              <Text style={styles.textValue}>
+                {data?.buyerIfOtherThanConsignee?.city.trim()}
+              </Text>
+              <Text style={styles.textValue}>
+                {data?.buyerIfOtherThanConsignee?.state}
+              </Text>
+              <Text style={styles.textValue}>
+                {data?.buyerIfOtherThanConsignee?.country}
+              </Text>
             </View>
+
             {/* <Text style={styles.textValue}></Text>/ */}
           </View>
           <View style={styles.row3right3}>
@@ -700,91 +717,98 @@ const InvoicePDF = ({ data }) => (
 
 // Viewer component
 const ExportInvoiceBillPDF = () => {
-const {sales,address} = useSelector((state)=>state.invoice.exportInvoices.invoiceDetails)
-const invoice = {...sales,...address}
-console.log(invoice);
+  const { sales, address, additionalForm } = useSelector((state) => state.invoice.exportInvoices.invoiceDetails)
+  const invoice = { ...sales, ...address, ...additionalForm }
+  console.log(invoice);
 
-const data = {
-  orderRefNo: invoice?.invoiceNumber,
-  date: new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }),
-  buyersOrderNo: invoice?.orderRefNo,
-  refDate: `E MAIL DATE ${formatCustomDate(invoice?.rfD_Date)}`,
-  otherReferences: "SDF Form",
-  exporter:
-    "SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE & WHEEL SYSTEMS)~A1-F3/A, Sidco Industrial Estate  Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, PAN NO: AAGCT6465R~GSTIN NO: 33AAGCT6465R2ZJ",
-  consignee: {
-    name: "M/S, ADVANCE TIRES",
-    address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
-  },
-  customerAgent: {
-    name: "M/S, ADVANCE TIRES",
-    address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
-  },
-  preCarriageBy: "BY SEA",
-  placeOfReceipt: "CHENNAI-INDIA",
-  vesselFlightNo: "1234",
-  portOfLoading: "CHENNAI-INDIA",
-  portOfDischarge: "NEWYORK",
-  finalDestination: "MILLSTONE TWP, NJ- USA",
-  buyerIfOtherThanConsignee:
-    "SUMMIT SUPPLY GROUP LLC ~ DC-ALLENTOWN, ~ PA 6461 SNOWDRIFT RD ALLENTOWN ~ PA 18106-9514 UNITAD STATES",
-  countryOfOrigin: "INDIA",
-  countryOfDestination: "USA",
-  deliveryTerms: "THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.",
-  paymentTerms:
-    "100% Payment in 90 days from the date of Bill of Lading Remitted in SUNDARAM INDUSTRIES PVT LIMITED",
-  bankDetails: {
-    accountHolder:
-      "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
-    address:
-      "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
-    accountNumber: "40582959714",
-    bank: "State Bank of India, Egmore, Chennai-600008.",
-    swiftCode: "SBININBB174",
-  },
-  containerDetails: {
-    size: "1 x 20'",
-    containerNo: "TEMU309862-1",
-    linerSealNo: "OOLKHF7308",
-    otsNo: "iTEK03254133",
-  },
-  packingDetails: {
-    itcHsNo: "4012 90 20",
-    description: "128 LOOSE TYRES",
-  },
-  goodsDescription: [
-    "Automobile tyres reinforced with Nylon tyre Cord warp sheet / Rayon Tyre cord warp sheet.",
-    "SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%",
-  ],
-  quantityKgs: 15496.8,
-  unitPriceUsd: 2.64525,
-  totalPricesUsd: [40992.84, 1229.79],
-  grandTotalUsd: 39763.05,
-  amountInWords:
-    "USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE ONLY",
-  grossWeight: "15496.800 KGS",
-  netWeight: "15496.800 KGS",
-  declaration:
-    "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
-  licenceDetails: {
-    description:
-      "The above shipment is under Advance Licence & EPCG Scheme. S.No-I Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR Licence No. 0411007094 date. 14.03.2024)",
-    igstLUT:
-      "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
-  },
-  authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
-  footer: {
-    line1:
-      "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
-    line2: "Jawahar road Chokkikulam, Madurai - 625002.",
-    line3:
-      "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
-  },
-};
+  const data = {
+    orderRefNo: invoice?.invoiceNumber,
+    date: new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }),
+    buyersOrderNo: invoice?.orderRefNo,
+    refDate: `E MAIL DATE ${formatCustomDate(invoice?.rfD_Date)}`,
+    otherReferences: "SDF Form",
+    exporter: invoice?.ExporterAuthorizedAddress || '',
+    consignee: {
+      name: invoice?.billingCompanyName || '',
+      address: invoice?.billingAddress?.split('~') || '',
+      city: invoice?.billingCity || '',
+      state: invoice?.billingState || '',
+      country:invoice?.billingCountry || '' 
+    },
+    customerAgent: {
+      name: "M/S, ADVANCE TIRES",
+      address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
+    },
+    preCarriageBy: invoice?.PreCarriageby.toUpperCase() ||"",
+    placeOfReceipt: invoice?.PlaceOfReceiptByPreCarrier.toUpperCase() ||"",
+    vesselFlightNo: invoice?.VesseFlight || "",
+    portOfLoading: "CHENNAI-INDIA",
+    portOfDischarge: "NEWYORK",
+    finalDestination: "MILLSTONE TWP, NJ- USA",
+    buyerIfOtherThanConsignee: {
+      name: invoice?.shippingCompanyName || '',
+      address: invoice?.shippingAddress?.split('~') || '',
+      city: invoice?.shippingCity || '',
+      state:invoice?.shippingState || '',
+      country:invoice?.shippingcountry || ''
+    },
+    countryOfOrigin: "INDIA",
+    countryOfDestination: "USA",
+    deliveryTerms: "THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.",
+    paymentTerms:
+      "100% Payment in 90 days from the date of Bill of Lading Remitted in SUNDARAM INDUSTRIES PVT LIMITED",
+    bankDetails: {
+      accountHolder:
+        "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
+      address:
+        "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
+      accountNumber: "40582959714",
+      bank: "State Bank of India, Egmore, Chennai-600008.",
+      swiftCode: "SBININBB174",
+    },
+    containerDetails: {
+      size: "1 x 20'",
+      containerNo: "TEMU309862-1",
+      linerSealNo: "OOLKHF7308",
+      otsNo: "iTEK03254133",
+    },
+    packingDetails: {
+      itcHsNo: "4012 90 20",
+      description: "128 LOOSE TYRES",
+    },
+    goodsDescription: [
+      "Automobile tyres reinforced with Nylon tyre Cord warp sheet / Rayon Tyre cord warp sheet.",
+      "SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%",
+    ],
+    quantityKgs: 15496.8,
+    unitPriceUsd: 2.64525,
+    totalPricesUsd: [40992.84, 1229.79],
+    grandTotalUsd: 39763.05,
+    amountInWords:
+      "USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE ONLY",
+    grossWeight: "15496.800 KGS",
+    netWeight: "15496.800 KGS",
+    declaration:
+      "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
+    licenceDetails: {
+      description:
+        "The above shipment is under Advance Licence & EPCG Scheme. S.No-I Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR Licence No. 0411007094 date. 14.03.2024)",
+      igstLUT:
+        "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
+    },
+    authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
+    footer: {
+      line1:
+        "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
+      line2: "Jawahar road Chokkikulam, Madurai - 625002.",
+      line3:
+        "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
+    },
+  };
 
   const navigate = useNavigate();
   return (

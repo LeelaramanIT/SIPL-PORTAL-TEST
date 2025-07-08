@@ -17,16 +17,16 @@ const ProtectedRoutes = () => {
   if (roles?.some((role) => role?.RoleName === 'Admin')) {
     return <Outlet />;
   }
-
+  
   const currentPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
-
-  const matchPermissionKey = Object.entries(routePermissions).find(([route]) =>
-    currentPath.startsWith(route)
+  
+  const matchPermissionKey = Object.entries(routePermissions).find(([route]) =>{
+    return currentPath.startsWith(route)}
   );
 
+
   const permissionKey = matchPermissionKey?.[1];
-
-
+  
   if (permissionKey && !menus.some((m) => m.MenuName === permissionKey)) {
     toast.error('Access denied. Authentication required.');
     return <ProtectedPage />;

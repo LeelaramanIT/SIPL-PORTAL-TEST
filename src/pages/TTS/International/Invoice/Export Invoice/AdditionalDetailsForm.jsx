@@ -90,7 +90,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
       {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="text-sm mt-6 text-gray-800 dark:text-gray-200 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="text-sm mt-6 text-gray-800 dark:text-gray-200 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ease-out"
       >
         {/* Main Fields */}
         <SelectField
@@ -111,7 +111,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
         <SelectField label="Pre-Carriage by" name="PreCarriageby" register={register} errors={errors} options={["SEA", "AIR", "ROAD"]} />
         <SelectField label="Incoterm" name="Incoterm" register={register} errors={errors} options={["FOB", "CIF", "DDU", "DDP", "C&F"]} />
         <InputField label="CONTAINER NO" name="ContainerNo" register={register} errors={errors} />
-        <SelectField label="Country of origin of goods" name="CountryOfOriginOfGoods" register={register} errors={errors} options={["INDIA", "SRILANKA"]} disabled={invoiceDetails?.containerLoadFrom !== ''} />
+        <SelectField label="Country of origin of goods" name="CountryOfOriginOfGoods" register={register} errors={errors} options={["INDIA", "SRILANKA",'INDIA & SRILANKA']} disabled={false} />
         <InputField label="PORT OF DISCHARGE" name="PortOfDischarge" register={register} errors={errors} />
         <InputField label="Container SEAL NO" name="ContainerSEALNO" register={register} errors={errors} />
         <SelectField label="Port of loading" name="PortOfLoading" register={register} errors={errors} options={["CHENNAI, INDIA", "COLOMBO SRILANKA", "ENNORE, INDIA", "KATTUPALLI, INDIA", "THOOTHUKUDI, INDIA"]} />
@@ -185,7 +185,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
 
 // Input wrapper
 const InputField = ({ label, name, register, errors, disabled = false }) => {
-  const fileName = name.toLowerCase().replace(/\s+/g, '');
+  const fileName = name.toUpperCase().replace(/\s+/g, '');
   return (
   <div>
     <Input label={label} name={fileName} disabled={disabled} {...register(name, { required: `${label} is required` })} />
@@ -195,7 +195,8 @@ const InputField = ({ label, name, register, errors, disabled = false }) => {
 
 // Select wrapper
 const SelectField = ({ label, name, register, errors, options , disabled = false }) => {
-  const fileName = name.toLowerCase().replace(/\s+/g, '')
+  const fileName = name.toUpperCase().replace(/\s+/g, '');
+
   return (
   <div>
     <Select label={label} name={fileName} disabled={disabled} {...register(name, { required: `Please select a ${label.toLowerCase()}` })}>

@@ -7,6 +7,6 @@ export const routePermissions = {
   "TTS/Domestic/Invoice/CustomerInvoice": "DomesticCustomerInvoice",
   "TTS/International/Invoice/ExportInvoice": "ExportInvoice",
   "TTS/International/Invoice/ExportInvoicePrepare": "ExportInvoicePrepare",
-  "TTS/International/Invoice/Export/BillPDF": "ExportInvoiceBILLPDF",
+  // "TTS/International/Invoice/Export/BillPDF": "ExportInvoiceBILLPDF",
   Settings: "Settings",
 };
