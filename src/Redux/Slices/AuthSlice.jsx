@@ -40,6 +40,7 @@ const authSlice = createSlice({
         (state.roles = []),
         (state.menus = []),
         (state.loggedIn = false);
+        window.localStorage.clear()
     },
 
     loginFailure: (state, action) => {

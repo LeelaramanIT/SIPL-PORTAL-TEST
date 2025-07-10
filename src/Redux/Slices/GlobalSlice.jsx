@@ -24,7 +24,7 @@ const globalSlice = createSlice({
     setIsDark: (state, action) => {
       state.isDark = action.payload;
       localStorage.setItem('darkMode', action.payload); // action.payload will be a boolean
-    }    
+    }  
   },
 });
 

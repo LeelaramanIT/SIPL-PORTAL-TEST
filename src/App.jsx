@@ -36,6 +36,7 @@ function ThemedApp() {
     }
   }, [theme]);
 
+ 
   return (
     <>
       <RouterProvider router={router} />

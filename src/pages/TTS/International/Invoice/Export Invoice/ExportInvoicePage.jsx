@@ -97,14 +97,18 @@ const ExportInvoice = () => {
   };
 
   const highlightMatch = (text, query) => {
-    if (!query || typeof text !== "string") return text;
+    
+    if (!query || typeof text !== "string" && typeof text !== "number") return text;
   
-    const regex = new RegExp(`(${query})`, "gi");
+    // Escape special regex characters in the query string
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
+    const regex = new RegExp(`(${escapedQuery})`, "gi");
     const parts = String(text).split(regex);
   
     return parts.map((part, i) =>
-      part.toLowerCase() === query.toLowerCase() ? (
-        <span key={i} className="bg-yellow-200 font-semibold rounded px-1">
+      part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
+        <span key={i} className="bg-[var(--color-primary-hover)] text-[var(--color-text)] font-semibold rounded px-1">
           {part}
         </span>
       ) : (
@@ -113,6 +117,7 @@ const ExportInvoice = () => {
     );
   };
   
+  
 
   return (
     <div className="px-6 pt-4 max-w-full mx-auto">
@@ -120,7 +125,7 @@ const ExportInvoice = () => {
         Export Invoice
       </h1>
 
-      <div className="bg-[#F4F4FE] shadow-md px-2 py-4 rounded-lg border border-[var(--color-secondary)]">
+      <div className="bg-[#F4F4FE] shadow-md px-2 py-4 rounded-lg border border-[var(--color-secondary)] dark:border-gray-700 dark:bg-gray-900" >
         <div
           ref={animateRef}
           className="w-full py-1 px-2.5 rounded-2xl text-[var(--color-text)]"

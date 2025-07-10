@@ -15,19 +15,19 @@ const Stats = () => {
     },
     {
       icon: Users,
-      number: "150+",
+      number: "1000+",
       label: "Team Members",
       description: "Skilled professionals across departments"
     },
     {
       icon: TrendingUp,
-      number: "98%",
+      number: "99.9%",
       label: "Efficiency Rate",
       description: "Production efficiency improvement"
     },
     {
       icon: Award,
-      number: "15+",
+      number: "81+",
       label: "Years Experience",
       description: "In tyre and rim manufacturing"
     }

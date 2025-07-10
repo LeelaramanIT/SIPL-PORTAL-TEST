@@ -15,14 +15,26 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
 
   const dispatch = useDispatch()
   const invoiceData = useSelector(
-    (state) => state?.invoice?.exportInvoices?.invoiceDetails?.additionalForm
-  );
+    (state) => state?.invoice?.exportInvoices?.additionalForm);
 
-  console.log(invoiceData);
-  // console.log(invoiceDetails)
+  const decodedText = invoiceDetails?.paymentTerms?.replace(/&amp;/g, "") || "";
+
+let formattedDescription = '';
+const numberedSections = decodedText.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
+
+
+if (numberedSections?.length) {
+  formattedDescription = numberedSections
+    .map(section => section.replace(/~+/g, '\n').trim()) // line breaks inside each section
+    .join('\n\n'); // double line break between sections
+} else {
+  // fallback if no numbered sections found
+  formattedDescription = decodedText.replace(/~+/g, '\n');
+}
+
   const defaultValues = {
     ExporterAuthorizedAddress: invoiceData?.ExporterAuthorizedAddress || '',
-    VesseFlight : invoiceData?.VesseFlight || "",
+    VesselFlight : invoiceData?.VesselFlight || "",
     InvoiceNo: invoiceDetails?.invoiceNumber || "", 
     BillOfLadingNo: invoiceData?.BillOfLadingNo || "",
     ContainerNo: invoiceData?.ContainerNo || "",
@@ -41,12 +53,9 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
     Value1: invoiceData?.Value1 || "",
     Value2: invoiceData?.Value2 || "",
     Value3: invoiceData?.Value3 || "",
-    Description: invoiceDetails?.paymentTerms?.replace(/~~/g, "\n") ||
-      `01. UNIT PRICES FOB CHENNAI/COLOMBO,USD BY SEA .
-  02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS.
-  03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
-  04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
-  05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.`,
+    PaymentTerms: formattedDescription,
+    OtsNo:invoiceData?.OtsNo||'',
+    itcHsNo:invoiceDetails?.itcHsNo || '',
   };
   
   
@@ -66,7 +75,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
   };
 
   return (
-    <div className="px-4 md:px-6">
+    <div className="px-4 md:px-2 overflow-y-auto">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between gap-2 md:gap-4 items-start md:items-center text-sm text-gray-800 dark:text-white">
         <h1>
@@ -104,7 +113,7 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
             "SUNDARAM INDUSTRIES PRIVATE LIMITED~(Formerly Known as T.S.Rajam Tyres Pvt Limites)~KRISHNA TOWERS-3RD FLOOR, NP-31B/4,~THIRU VI KA INDUSTRIAL ESTATE ,EKKATTUTHANGAL,~CHENNAI – 600 032.INDIA~",
           ]}
         />
-        <InputField label="Vessel/Flight" name="VesseFlight" register={register} errors={errors} />
+        <InputField label="Vessel/Flight" name="VesselFlight" register={register} errors={errors} />
         <InputField label="Invoice No" name="InvoiceNo" register={register} errors={errors} disabled={true} />
         <InputField label="BILL OF LADING NO" name="BillOfLadingNo" register={register} errors={errors} />
         <SelectField label="Container Type" name="ContainerType" register={register} errors={errors} options={["20'", "40'", "LCL"]} />
@@ -116,6 +125,9 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
         <InputField label="Container SEAL NO" name="ContainerSEALNO" register={register} errors={errors} />
         <SelectField label="Port of loading" name="PortOfLoading" register={register} errors={errors} options={["CHENNAI, INDIA", "COLOMBO SRILANKA", "ENNORE, INDIA", "KATTUPALLI, INDIA", "THOOTHUKUDI, INDIA"]} />
         <SelectField label="Place of receipt by pre-carrier" name="PlaceOfReceiptByPreCarrier" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
+        <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+        <InputField label="OTS Number" name="OtsNo" register={register} errors={errors} />
+        <InputField label="I.T.C(H.S) No" name="itcHsNo" register={register} errors={errors} />
         <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
 
         {/* Other Charges Headers */}
@@ -131,14 +143,15 @@ const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => 
             label="PAYMENT TERMS"
             rows={6}
             placeholder="Enter description..."
-            defaultValue={`01. UNIT PRICES FOB CHENNAI/COLOMBO,USD BY SEA .
-02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS.
-03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
-04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
-05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.`}
-            {...register("Description", { required: "Description is required" })}
+            defaultValue={`
+              01. UNIT PRICES FOB CHENNAI/COLOMBO,USD BY SEA .
+              02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS.
+              03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
+              04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
+              05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.`}
+            {...register("PaymentTerms", { required: "PaymentTerms is required" })}
           />
-          {errors.Description && <ErrorText message={errors.Description.message} />}
+          {errors.PaymentTerms && <ErrorText message={errors.PaymentTerms.message} />}
         </div>
 
         {/* Other Charges Headers */}

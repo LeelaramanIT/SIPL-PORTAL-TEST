@@ -15,7 +15,7 @@ import MasterLayout from "../layout/MastarLayout";
 import ExportInvoicePrepare from "../pages/TTS/International/Invoice/Export Invoice/ExportPrepare";
 import ProtectedRoutes from "../components/ProtectedRoutes/ProtectedRoutes";
 import ProtectedPage from "../pages/NotFound/protectedPage";
-import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invoice/ExportInvoiceBillPDF";
+import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invoice/PDFViewer";
 // import ShippingSchemeSplit from "../pages/TTS/International/Invoice/Export Invoice/ShippingSchemeSplit";
 
 export const router = createBrowserRouter([

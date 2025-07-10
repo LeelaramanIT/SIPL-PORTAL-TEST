@@ -49,6 +49,7 @@
   --color-primary: #38bff8;
   --color-primary-hover: #0EA5E9;
   --color-secondary: #F0F9FF;
+  --color-text: #0f172a;
   --color-text-hover: #0284C7;
   --font-primary: "Poppins", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
@@ -60,6 +61,7 @@
   --color-primary: #10B981;
   --color-primary-hover: #207157;
   --color-secondary: #D1FAE5;
+  --color-text: #ffffff;
   --color-text-hover: #A7F3D0;
   --font-primary: "Inter", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
@@ -71,6 +73,7 @@
   --color-primary: #F97316;
   --color-primary-hover: #C2410C;
   --color-secondary: #FED7AA;
+  --color-text: #ffffff;
   --color-text-hover: #FDBA74;
   --font-primary: "Montserrat", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
@@ -82,6 +85,7 @@
   --color-primary: #8B5CF6;
   --color-primary-hover: #6D28D9;
   --color-secondary: #DDD6FE;
+  --color-text: #fcfcfc;
   --color-text-hover: #C4B5FD;
   --font-primary: "Raleway", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
@@ -93,6 +97,7 @@
   --color-primary: #EF4444;
   --color-primary-hover: #B91C1C;
   --color-secondary: #FCA5A5;
+  --color-text:#ffffff;
   --color-text-hover: #F87171;
   --font-primary: "Open Sans", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
@@ -104,7 +109,7 @@
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-secondary: #bfdbfe;
-  --color-text: #1e3a8a;
+  --color-text: #ffffff;
   --color-text-hover: #ffffff;
   --color-gradient: linear-gradient(to bottom right, #022675  , #3B82F6, #022675);
 }
@@ -114,6 +119,7 @@
   --color-primary: #F59E0B;
   --color-primary-hover: #B45309;
   --color-secondary: #FEF3C7;
+  --color-text:'#FFFBEA';
   --color-text-hover: #FCD34D;
   --font-primary: "Ubuntu", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;
@@ -125,6 +131,7 @@
   --color-primary: #06B6D4;
   --color-primary-hover: #0E7490;
   --color-secondary: #CFFAFE;
+  --color-text:'#000203';
   --color-text-hover: #22D3EE;
   --font-primary: "Work Sans", sans-serif;
   --font-secondary: "Roboto Flex", sans-serif;

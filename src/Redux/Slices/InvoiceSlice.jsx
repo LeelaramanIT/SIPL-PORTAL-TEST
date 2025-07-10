@@ -1,6 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BackendUrl } from "../../main";
 import { api } from "../../utils/axios";
 import toast from "react-hot-toast";
 
@@ -8,11 +6,8 @@ import toast from "react-hot-toast";
 const initialState = {
   exportInvoices: {
     listOFInvoices: [],
-    invoiceDetails: {
-      sales: null,
-      address: null,
-      additionalForm:null,
-    },
+    invoiceDetails: null,
+    additionalForm: null,
     loading: false,
     error: null,
   },
@@ -28,12 +23,13 @@ const invoiceSlice = createSlice({
   initialState,
   reducers: {
     setExportInvoiceSalesDetails: (state, action) => {
-      state.exportInvoices.invoiceDetails.sales = action.payload;
+      console.log(action.payload);
+      state.exportInvoices.invoiceDetails = action.payload;
       state.exportInvoices.loading = false;
       state.exportInvoices.error = null;
     },
     setExportInvoiceAddressDetails: (state, action) => {
-      state.exportInvoices.invoiceDetails.address = action.payload;
+      state.exportInvoices.additionalForm = action.payload;
     },
     setExportInvoiceLoading: (state) => {
       state.exportInvoices.loading = true;
@@ -49,12 +45,11 @@ const invoiceSlice = createSlice({
       state.exportInvoices.error = null;
     },
     resetExportInvoiceDetails: (state) => {
-      state.exportInvoices.invoiceDetails.sales = null;
-      state.exportInvoices.invoiceDetails.address = null;
-      state.exportInvoices.invoiceDetails.additionalForm = null;
+      state.exportInvoices.invoiceDetails = null;
+      state.exportInvoices.additionalForm = null;
     },
     setExportAdditionalInvoice: (state,action)=>{
-      state.exportInvoices.invoiceDetails.additionalForm = action.payload;
+      state.exportInvoices.additionalForm = action.payload;
     }
   },
 });
@@ -64,13 +59,12 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   
   try {
     dispatch(setExportInvoiceLoading());
-    dispatch(setExportInvoiceAddressDetails(payload))
 
     const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
     const data = res.data
     
-      await dispatch(setExportInvoiceSalesDetails(data));
-    
+    await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
+
   } catch (error) {
     dispatch(setExportInvoiceError(error.message));
 
@@ -81,8 +75,8 @@ export const getExportInvoice = (payload) => async (dispatch) => {
 // get the all exports data
 export const getExportInvoiceAll = () => async (dispatch) => {
   try {
-    await dispatch(setExportInvoiceLoading())
-    await dispatch(resetExportInvoiceDetails())
+  dispatch(setExportInvoiceLoading())
+  dispatch(resetExportInvoiceDetails())
     const res = await api.get(
       `/Invoice/GettingInvoiceReadyOrders`
     ,{withCredentials:true});

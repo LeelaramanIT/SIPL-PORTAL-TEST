@@ -8,6 +8,7 @@ import TableSkeleton from "./TableSkeleton.jsx";
 import toast from "react-hot-toast";
 import DialogBox from "../../../../../components/DialogBox.jsx";
 import { gsap } from 'gsap';
+import { currencies } from "../../../../../utils/currencies.js";
 
 
 const ExportInvoicePrepare = () => {
@@ -16,42 +17,44 @@ const ExportInvoicePrepare = () => {
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
   const error = useSelector((state) => state.invoice.exportInvoices.error);
   const [isOpen, setOpen] = useState(false)
+  const invoiceDetails = useSelector(
+    (state) => state?.invoice?.exportInvoices?.invoiceDetails
+  );
   useEffect(() => {
     if (error) {
       toast.error(error);
     }
   }, [error]);
 
-  const invoiceData = useSelector(
-    (state) => state?.invoice?.exportInvoices?.invoiceDetails?.sales
-  );
-
-  const invoiceAddress = useSelector((state) => state?.invoice?.exportInvoices?.invoiceDetails?.address)
-  const formDAta = useSelector((state) => state?.invoice?.exportInvoices?.invoiceDetails?.additionalForm)
 
 
-  const currencySymbols = { USD: '$', GPB: '£', INR: '₹' };
-  const symbol = currencySymbols[invoiceAddress?.usercurrency] || '₹';
+  const formDAta = useSelector((state) => state?.invoice?.exportInvoices?.additionalForm)
+
+  const getCurrency = (code)=>{
+    const currency = currencies.find(c=>c.code === code);
+    return currency ? currency : ''
+  }
+  const userCurrency = getCurrency(invoiceDetails?.usercurrency)
 
   // calculation for items table 
   const grandTotal = useMemo(() => {
-    return invoiceData?.items.reduce((sum, item) => sum + item?.basicprice * item?.itemQty, 0);
-  }, [invoiceData]);
+    return invoiceDetails?.items.reduce((sum, item) => sum + item?.basicprice * item?.itemQty, 0);
+  }, [invoiceDetails]);
 
   const totalQTY = useMemo(() => {
-    return invoiceData?.items.reduce((sum, item) => sum + item?.itemQty, 0);
-  }, [invoiceData]);
+    return invoiceDetails?.items.reduce((sum, item) => sum + item?.itemQty, 0);
+  }, [invoiceDetails]);
 
-
+  
   const totalFWT = useMemo(() => {
-    return invoiceData?.items.reduce((sum, item) => sum + item?.finishedWt * item?.itemQty, 0);
-  }, [invoiceData]);
+    return invoiceDetails?.items.reduce((sum, item) => sum + item?.finishedWt * item?.itemQty, 0);
+  }, [invoiceDetails]);
 
   // combi orders
   const combiOrders = useMemo(() => {
-    if (invoiceData?.shipmentType !== 'COMBI' || !invoiceData?.items) return [];
+    if (invoiceDetails?.shipmentType !== 'COMBI' || !invoiceDetails?.items) return [];
 
-    const grouped = invoiceData.items.reduce((acc, item) => {
+    const grouped = invoiceDetails.items.reduce((acc, item) => {
       const plant = item.plant;
       if (!acc[plant]) acc[plant] = [];
       acc[plant].push(item);
@@ -59,7 +62,7 @@ const ExportInvoicePrepare = () => {
     }, {});
 
     return grouped;
-  }, [invoiceData?.shipmentType, invoiceData?.items]);
+  }, [invoiceDetails?.shipmentType, invoiceDetails?.items]);
 
 
   const handleCloseForm = () => {
@@ -76,7 +79,7 @@ const ExportInvoicePrepare = () => {
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Client Details
       </h1>
-      <ClientDetailsSection invoiceDetails={{ ...invoiceAddress, ...invoiceData, ...formDAta }} />
+      <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta }} />
 
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Item Details
@@ -101,15 +104,15 @@ const ExportInvoicePrepare = () => {
                   "QTY",
                   "TOTAL PRICE",
                   "FWT",
-                  "RIM QTY",
-                  "RIM price",
+                  // "RIM QTY",
+                  // "RIM price",
                   "ADDITIONAL INFO",
                   "PLANT",
                   "PART-NO",
                 ].map((head, idx) => (
                   <th
                     key={idx}
-                    colSpan={idx === 13 ? 2 : idx === 2 ? 2 : 1}
+                    colSpan={idx === 11 ? 2 : idx === 2 ? 2 : 1}
                     className="px-1 py-4 text-center text-[13px]"
                   >
                     {head}
@@ -118,7 +121,7 @@ const ExportInvoicePrepare = () => {
               </tr>
             </thead>
             <tbody>
-              {invoiceData?.items.map((item, idx) => (
+              {invoiceDetails?.items.map((item, idx) => (
                 <tr
                   key={idx}
                   className={`text-[13px] text-center ${idx % 2 === 0
@@ -137,8 +140,8 @@ const ExportInvoicePrepare = () => {
                   <td>{item?.itemQty}</td>
                   <td>{(item?.basicprice * item?.itemQty).toFixed(2)}</td>
                   <td>{(item?.finishedWt * item?.itemQty).toFixed(3)}</td>
-                  <td>{(item?.rimItemQty)}</td>
-                  <td>{(item?.rimUnitPrice)}</td>
+                  {/* <td>{(item?.rimItemQty)}</td>
+                  <td>{(item?.rimUnitPrice)}</td> */}
                   <td colSpan={2} title={item?.additionalInfo}>
                     {item?.additionalInfo ? item?.additionalInfo : "-"}
                   </td>
@@ -154,12 +157,15 @@ const ExportInvoicePrepare = () => {
                 </td>
                 <td className="px-4 py-2 text-center">{totalQTY}</td>
                 <td className="px-1 py-1 text-center">
-                  {symbol} {grandTotal?.toFixed(2)}
+                  {userCurrency.symbol} {grandTotal?.toFixed(2)}
                 </td>
                 <td className="px-4 py-2 text-center">
                   {totalFWT?.toFixed(3)}
                 </td>
-                <td colSpan={4}></td>
+                <td></td>
+                <td colSpan={3}>
+                  Currency : {userCurrency.code}
+                </td>
               </tr>
             </tfoot>
           </table>
@@ -168,7 +174,7 @@ const ExportInvoicePrepare = () => {
 
 
 
-      {invoiceData?.shipmentType == 'COMBI' && (
+      {invoiceDetails?.shipmentType == 'COMBI' && (
         <>
           <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
             Combi Orders
@@ -276,7 +282,7 @@ const ExportInvoicePrepare = () => {
       {/* Modal Form */}
       {showDetailsForm && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
-          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[80rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
+          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
             <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">Additional Invoice Details</h2>
             <button
               onClick={handleCloseForm}
@@ -284,7 +290,7 @@ const ExportInvoicePrepare = () => {
             >
               <IoMdClose className="text-2xl" />
             </button>
-            <AdditionalDetailsForm onClose={handleCloseForm} invoiceDetails={{ ...invoiceAddress, ...invoiceData }} />
+            <AdditionalDetailsForm onClose={handleCloseForm} invoiceDetails={ invoiceDetails } />
           </div>
         </div>
       )}

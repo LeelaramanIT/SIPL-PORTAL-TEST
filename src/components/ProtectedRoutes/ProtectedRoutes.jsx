@@ -3,12 +3,17 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { routePermissions } from './routePermissions';
 import toast from 'react-hot-toast';
 import ProtectedPage from '../../pages/NotFound/protectedPage';
+import { useAxiosInterceptors } from '../../utils/axios';
+import { useEffect } from 'react';
 
 const ProtectedRoutes = () => {
   const isLoggedIn = useSelector((state) => state.auth?.loggedIn);
   const roles = useSelector((state) => state.auth?.roles);
   const menus = useSelector((state) => state.auth?.menus);
   const location = useLocation();
+
+    useAxiosInterceptors()
+   
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;

@@ -4,7 +4,7 @@ import assets from "../assets/assets.js";
 import BreadCrumbs from "./BreadCrumbs";
 import { useNavigate } from "react-router-dom";
 import DarkModeToggle from "./DarkModeToggle/DarkModeToggle.jsx";
-import { userLogout } from "../Redux/Slices/AuthSlice.jsx";
+import { logout, userLogout } from "../Redux/Slices/AuthSlice.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { persistor } from "../Redux/Store/app.jsx";
 
@@ -13,6 +13,7 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const username = useSelector((state) => state.auth.username);
   const handleLogout = async ()=>{
+    dispatch(logout())
     dispatch(userLogout(navigate));
     await persistor.purge();
   }
