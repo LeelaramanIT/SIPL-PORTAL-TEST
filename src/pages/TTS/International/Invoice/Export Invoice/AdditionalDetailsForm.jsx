@@ -82,7 +82,7 @@ if (numberedSections?.length) {
           SHIPMENT TYPE: <span className="font-bold">{invoiceDetails?.shipmentType}</span>
         </h1>
         <h1>
-          WORK ORDER: <span className="font-bold">{invoiceDetails.workorderno}</span>
+          WORK ORDER: <span className="font-bold">{invoiceDetails?.workorderno}</span>
         </h1>
         <h1>
           Date:{" "}
@@ -99,7 +99,7 @@ if (numberedSections?.length) {
       {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="text-sm mt-6 text-gray-800 dark:text-gray-200 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ease-out"
+        className="text-sm mt-6 text-gray-800 dark:text-gray-200 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 ease-out"
       >
         {/* Main Fields */}
         <SelectField
@@ -128,16 +128,31 @@ if (numberedSections?.length) {
         <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
         <InputField label="OTS Number" name="OtsNo" register={register} errors={errors} />
         <InputField label="I.T.C(H.S) No" name="itcHsNo" register={register} errors={errors} />
-        <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
-
         {/* Other Charges Headers */}
         <div className="md:col-span-1 hidden lg:block">
-          <h1 className="text-sm text-gray-500 font-light text-center">DESCRIPTION OF OTHER CHARGES</h1>
+          <h1 className="text-sm text-gray-500 font-light text-center">DESCRIPTION OF OTHER</h1>
         </div>
         <div className="md:col-span-1 hidden lg:block">
           <h1 className="text-sm text-gray-500 font-light text-center">PLEASE ENTER VALUE IN USD</h1>
         </div>
-
+        <div className="md:col-span-2 flex gap-4 relative">
+          <span className="absolute right-56 bottom-5">+</span>
+          <span className="absolute right-56 top-13 ">+</span>
+          <span className="absolute right-56 top-0 ">&</span>
+          <div className="flex flex-col gap-6">
+          <h1 className="text-sm text-gray-500 font-light text-center">CLAIM ADJUSTMENT</h1>          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+          </div>
+          
+          <div className="flex flex-col gap-6">
+          <h1 className="text-sm text-gray-500 font-light text-center">OTHER DISCOUNT</h1>
+          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+          </div>
+        
+        
+        </div>
+        
         <div className="col-span-full lg:col-span-2">
           <TextArea
             label="PAYMENT TERMS"
@@ -162,10 +177,13 @@ if (numberedSections?.length) {
           <h1 className="text-sm text-gray-500 font-light text-center">PLEASE ENTER VALUE IN USD</h1>
         </div>
         {/* Other Charges & Values */}
-        <div className="flex flex-col gap-4">
-          <SelectField label="OTHER CHARGES" name="OtherCharges1" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
-          <SelectField label="OTHER CHARGES" name="OtherCharges2" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
-          <SelectField label="OTHER CHARGES" name="OtherCharges3" register={register} errors={errors} options={["CHENNAI", "LANKA"]} />
+        <div className="flex flex-col  gap-4 relative">
+          <span className="absolute text-2xl top-0 -right-3">-</span>
+          <span className="absolute text-2xl top-13 -right-3">-</span>
+          <span className="absolute text-2xl top-27 -right-3">-</span>
+        <InputField label="" name="Value1" register={register} errors={errors} />
+        <InputField label="" name="Value2" register={register} errors={errors} />
+        <InputField label="" name="Value3" register={register} errors={errors} />
         </div>
 
         <div className="flex flex-col gap-4">

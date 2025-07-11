@@ -12,7 +12,7 @@ const ProtectedRoutes = () => {
   const menus = useSelector((state) => state.auth?.menus);
   const location = useLocation();
 
-    useAxiosInterceptors()
+    // useAxiosInterceptors()
    
 
   if (!isLoggedIn) {

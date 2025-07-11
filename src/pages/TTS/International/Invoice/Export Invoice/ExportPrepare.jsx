@@ -282,7 +282,7 @@ const ExportInvoicePrepare = () => {
       {/* Modal Form */}
       {showDetailsForm && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
-          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
+          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
             <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">Additional Invoice Details</h2>
             <button
               onClick={handleCloseForm}
