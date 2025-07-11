@@ -9,9 +9,12 @@ import toast from "react-hot-toast";
 import DialogBox from "../../../../../components/DialogBox.jsx";
 import { gsap } from 'gsap';
 import { currencies } from "../../../../../utils/currencies.js";
+import { AnimatePresence, motion  } from "framer-motion";
+
 
 
 const ExportInvoicePrepare = () => {
+  
   const [showDetailsForm, setShowDetailsForm] = useState(false);
   const navigate = useNavigate();
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
@@ -278,22 +281,38 @@ const ExportInvoicePrepare = () => {
         />
       </div>
 
+<AnimatePresence>
+  {showDetailsForm && (
+    <motion.div
+      key="modal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
+    >
+      <motion.div
+        key="modal-content"
+        initial={{ scale: 0.95, opacity: 0, y: 40 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 40 }}
+        transition={{ duration: 0.1, ease: "easeIn" }}
+        className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+      >
+        <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">
+          Additional Invoice Details
+        </h2>
+        <button
+          onClick={handleCloseForm}
+          className="absolute top-5 right-5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
+        >
+          <IoMdClose className="text-2xl" />
+        </button>
+        <AdditionalDetailsForm onClose={handleCloseForm} invoiceDetails={invoiceDetails} />
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
-      {/* Modal Form */}
-      {showDetailsForm && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center">
-          <div className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar">
-            <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">Additional Invoice Details</h2>
-            <button
-              onClick={handleCloseForm}
-              className="absolute top-5 right-5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
-            >
-              <IoMdClose className="text-2xl" />
-            </button>
-            <AdditionalDetailsForm onClose={handleCloseForm} invoiceDetails={ invoiceDetails } />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

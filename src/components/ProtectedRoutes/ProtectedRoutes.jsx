@@ -4,7 +4,7 @@ import { routePermissions } from './routePermissions';
 import toast from 'react-hot-toast';
 import ProtectedPage from '../../pages/NotFound/protectedPage';
 import { useAxiosInterceptors } from '../../utils/axios';
-import { useEffect } from 'react';
+``
 
 const ProtectedRoutes = () => {
   const isLoggedIn = useSelector((state) => state.auth?.loggedIn);
