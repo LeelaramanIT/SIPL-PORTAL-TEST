@@ -181,7 +181,7 @@ const ExportInvoice = () => {
                     // onClick={() => handleAction(row)}
                     onClick={() => {
                       navigate(
-                        "/TTS/International/Invoice/ExportInvoicePrepare"
+                        "/TTS/International/Invoice/ExportInvoice/Prepare"
                       );
                       dispatch(getExportInvoice(row, index));
                     }}

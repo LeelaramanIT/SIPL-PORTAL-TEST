@@ -8,7 +8,7 @@ const MainLayout = () => {
   const scrollRef = useRef(null);
   return (
     <div className="w-full h-screen flex bg-[var(--color-background)] dark:bg-gray-900">
-      <ScrollToTop scrollContainerRef={scrollRef} />
+      
       {/* <SideBar /> */}
       <SideBar />
 
@@ -19,6 +19,7 @@ const MainLayout = () => {
           <Outlet />
         </div>
       </div>
+      <ScrollToTop scrollContainerRef={scrollRef} />
     </div>
   );
 };

@@ -214,5 +214,12 @@ body.modal-open .layout-scroll {
   color: black !important;
 }
 
+.scrollable-container {
+  overflow-y: auto;
+  height: 100vh;
+  scroll-behavior: smooth;
+}
+
+
 
 

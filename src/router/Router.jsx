@@ -51,7 +51,7 @@ export const router = createBrowserRouter([
           element: <InvoiceLayout />,
           children: [
             { path: "Invoice/ExportInvoice", element: <ExportInvoice /> },
-            { path: "Invoice/ExportInvoicePrepare", element: <ExportInvoicePrepare /> },
+            { path: "Invoice/ExportInvoice/Prepare", element: <ExportInvoicePrepare /> },
             { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF/> },
             { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind/> }
           ],

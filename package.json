@@ -11,6 +11,8 @@
     "tw:init": "tailwindcss init -p"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
@@ -18,6 +20,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@headlessui/react": "^2.2.4",
+    "@mui/material": "^7.2.0",
     "@react-pdf/renderer": "^4.3.0",
     "@reduxjs/toolkit": "^2.8.0",
     "@tailwindcss/postcss": "^4.0.15",
