@@ -4,20 +4,15 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./router/Router";
 import { Provider, useSelector } from "react-redux";
 import { persistor, store } from "./Redux/Store/app";
-import AOS from "aos";
-import 'aos/dist/aos.css';
 import { useEffect } from "react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { PersistGate } from "redux-persist/integration/react";
 import ThemeSwitcher from "./components/ThemeSwitcher";
+import ScrollToTop from "./components/ScrollToTop";
 
 // 🟢 Moved this to a child so useSelector is safe
 function ThemedApp() {
   const theme = useSelector((store) => store.global.theme);
-
-  useEffect(() => {
-    AOS.init({ duration: 1000, once: false });
-  }, []);
 
   useEffect(() => {
     const html = document.documentElement;

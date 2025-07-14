@@ -8,6 +8,7 @@ const initialState = {
     listOFInvoices: [],
     invoiceDetails: null,
     additionalForm: null,
+    invoicePDF:null,
     loading: false,
     error: null,
   },
@@ -50,6 +51,9 @@ const invoiceSlice = createSlice({
     },
     setExportAdditionalInvoice: (state,action)=>{
       state.exportInvoices.additionalForm = action.payload;
+    },
+    setInvoicePDF: (state,action)=>{
+      state.exportInvoices.invoicePDF = action.payload
     }
   },
 });
@@ -88,6 +92,11 @@ export const getExportInvoiceAll = () => async (dispatch) => {
     console.error("Failed to fetch invoices Data:", error);
   }
 };
+
+export const getSubmit = () => () =>{
+  
+}
+
 // Exports
 export const {
   setExportInvoiceSalesDetails,
@@ -97,6 +106,7 @@ export const {
   setExportInvoiceList,
   resetExportInvoiceDetails,
   setExportAdditionalInvoice,
+  setInvoicePDF,
 } = invoiceSlice.actions;
 
 export default invoiceSlice.reducer;

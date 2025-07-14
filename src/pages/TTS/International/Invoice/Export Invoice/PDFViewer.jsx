@@ -1,22 +1,15 @@
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  PDFViewer,
-} from "@react-pdf/renderer";
+import { Document, StyleSheet, PDFViewer, pdf } from "@react-pdf/renderer";
 import Button from "../../../../../components/InputFields/Button";
 import { useNavigate } from "react-router-dom";
 import { IoChevronBackCircleOutline } from "react-icons/io5";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import formatCustomDate from "../../../../../utils/DateFormat";
 import InvoicePDF from "./InvoiceExportPDF";
-import { useEffect } from "react";
-
+import { useEffect, useState } from "react";
 
 const BORDER_THIN = "0.5px solid black";
 const BORDER_BOLD = "1.5px solid black";
+
 
 // Styles
 export const styles = StyleSheet.create({
@@ -346,17 +339,21 @@ export const styles = StyleSheet.create({
 
 // Viewer component
 const ExportInvoiceBillPDF = () => {
-  const navigate = useNavigate()
-  const { invoiceDetails, additionalForm } = useSelector((state) => state.invoice.exportInvoices)
+  const navigate = useNavigate();
+  const { invoiceDetails, additionalForm } = useSelector(
+    (state) => state.invoice.exportInvoices
+  );
+  const [pdfBlob, setPdfBlob] = useState(null);
 
-  const invoice = { ...invoiceDetails, ...additionalForm }
-  
+  const dispatch = useDispatch()
 
-  useEffect(()=>{
-    if(!invoice){
-      navigate('/TTS/International/Invoice/ExportInvoice')
+  const invoice = { ...invoiceDetails, ...additionalForm };
+
+  useEffect(() => {
+    if (!invoice) {
+      navigate("/TTS/International/Invoice/ExportInvoice");
     }
-  },[invoice])
+  }, [invoice]);
 
   const data = {
     orderRefNo: invoice?.invoiceNumber,
@@ -368,13 +365,13 @@ const ExportInvoiceBillPDF = () => {
     buyersOrderNo: invoice?.orderRefNo,
     refDate: `E MAIL DATE ${formatCustomDate(invoice?.rfD_Date)}`,
     otherReferences: "SDF Form",
-    exporter: invoice?.ExporterAuthorizedAddress || '',
+    exporter: invoice?.ExporterAuthorizedAddress || "",
     consignee: {
-      name: invoice?.billingCompanyName || '',
-      address: invoice?.billingAddress?.split('~') || [],
-      city: invoice?.billingCity?.toUpperCase() || '',
-      state: invoice?.billingState?.toUpperCase() || '',
-      country: invoice?.billingCountry?.toUpperCase() || ''
+      name: invoice?.billingCompanyName || "",
+      address: invoice?.billingAddress?.split("~") || [],
+      city: invoice?.billingCity?.toUpperCase() || "",
+      state: invoice?.billingState?.toUpperCase() || "",
+      country: invoice?.billingCountry?.toUpperCase() || "",
     },
     customerAgent: {
       name: "M/S, ADVANCE TIRES",
@@ -387,16 +384,16 @@ const ExportInvoiceBillPDF = () => {
     portOfDischarge: invoice?.PortOfDischarge?.toUpperCase() || "",
     finalDestination: invoice?.FinalDestination?.toUpperCase() || "",
     buyerIfOtherThanConsignee: {
-      name: invoice?.shippingCompanyName || '',
-      address: invoice?.shippingAddress?.split('~') || [],
-      city: invoice?.shippingCity?.toUpperCase() || '',
-      state: invoice?.shippingState?.toUpperCase() || '',
-      country: invoice?.shippingcountry?.toUpperCase() || ''
+      name: invoice?.shippingCompanyName || "",
+      address: invoice?.shippingAddress?.split("~") || [],
+      city: invoice?.shippingCity?.toUpperCase() || "",
+      state: invoice?.shippingState?.toUpperCase() || "",
+      country: invoice?.shippingcountry?.toUpperCase() || "",
     },
     countryOfOrigin: invoice?.CountryOfOriginOfGoods?.toUpperCase() || "",
     countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
     deliveryTerms: "THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.",
-    PaymentTerms: invoice?.PaymentTerms || '',
+    PaymentTerms: invoice?.PaymentTerms || "",
     bankDetails: {
       accountHolder:
         "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
@@ -410,7 +407,7 @@ const ExportInvoiceBillPDF = () => {
       size: invoice?.ContainerType,
       containerNo: invoice?.ContainerNo,
       linerSealNo: invoice?.ContainerSEALNO,
-      otsNo: invoice?.OtsNo || '',
+      otsNo: invoice?.OtsNo || "",
     },
     packingDetails: {
       itcHsNo: invoice?.itcHsNo,
@@ -445,7 +442,28 @@ const ExportInvoiceBillPDF = () => {
         "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
     },
   };
+
+ useEffect(() => {
+  if (!data || pdfBlob) return; // already generated
   
+  const generatePDF = async () => {
+    const blob = await pdf(
+      <Document>
+        <InvoicePDF data={data} styles={styles} />
+        <InvoicePDF data={data} styles={styles} />
+        <InvoicePDF data={data} styles={styles} />
+      </Document>
+    ).toBlob();
+    setPdfBlob(blob)
+    dispatch()
+  };
+  generatePDF();
+}, [data, styles]);
+
+  
+  
+
+
   return (
     <div className="w-full p-1 bg-background">
       <div className="w-full h-12 bg-background rounded-lg flex justify-evenly items-center">
@@ -460,16 +478,18 @@ const ExportInvoiceBillPDF = () => {
         />
       </div>
       <PDFViewer style={styles.pdf}>
-      <Document
-      title={`Invoice_No_${data?.orderRefNo || "Default"}`}
-      author="siplsuntws"
-      subject="Customs Export Invoice PDF"
-      creator="Your React App"
-      producer="React PDF Generator"
-    >
-        <InvoicePDF data={data} styles={styles} />
+        <Document
+          title={`Invoice_No_${data?.orderRefNo || "Default"}`}
+          author="siplsuntws"
+          subject="Customs Export Invoice PDF"
+          creator="Your React App"
+          producer="React PDF Generator"
+        >
+          <InvoicePDF data={data} styles={styles} />
         </Document>
+        
       </PDFViewer>
+      
     </div>
   );
 };

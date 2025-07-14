@@ -1,8 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 
 const InvoicePDF = ({ data,styles }) => (
-    
-
       <Page size="A4" style={styles.page}>
         <View style={styles.row1}>
           <Text style={styles.heading}>INVOICE CUM PACKING LIST</Text>
