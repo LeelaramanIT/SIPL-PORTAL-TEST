@@ -8,7 +8,7 @@ import TableSkeleton from "./TableSkeleton.jsx";
 import toast from "react-hot-toast";
 import DialogBox from "../../../../../components/DialogBox.jsx";
 import { gsap } from 'gsap';
-import { currencies } from "../../../../../utils/currencies.js";
+import { currencies, getCurrency } from "../../../../../utils/currencies.js";
 import { AnimatePresence, motion  } from "framer-motion";
 
 
@@ -33,10 +33,7 @@ const ExportInvoicePrepare = () => {
 
   const formDAta = useSelector((state) => state?.invoice?.exportInvoices?.additionalForm)
 
-  const getCurrency = (code)=>{
-    const currency = currencies.find(c=>c.code === code);
-    return currency ? currency : ''
-  }
+ 
   const userCurrency = getCurrency(invoiceDetails?.usercurrency)
 
   // calculation for items table 

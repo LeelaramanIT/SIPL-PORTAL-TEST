@@ -32,3 +32,7 @@ export const currencies = [
     { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
   ];
   
+  export const getCurrency = (code)=>{
+    const currency = currencies.find(c=>c.code === code);
+    return currency ? currency : ''
+  }

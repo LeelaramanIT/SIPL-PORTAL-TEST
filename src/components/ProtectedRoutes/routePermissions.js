@@ -1,6 +1,6 @@
 // routePermissions.js
 export const routePermissions = {
-  Dashboard: "Dashboard",
+  Dashboard: "Dashboard/",
   "Masters/UserMaster/UserCreate": "UserCreate",
   "Masters/UserMaster/ListUserMaster": "ListUserMaster",
   "TTS/Domestic/Invoice/CustInvoice": "DomesticCustInvoice",

@@ -14,7 +14,6 @@ const ProtectedRoutes = () => {
 
     // useAxiosInterceptors()
    
-
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }

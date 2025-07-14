@@ -6,12 +6,15 @@ import TextArea from "../../../../../components/InputFields/TextArea";
 import LoadingButton from "../../../../../components/LoadingButton";
 import { useDispatch, useSelector } from "react-redux";
 import { setExportAdditionalInvoice } from "../../../../../Redux/Slices/InvoiceSlice";
+import { getCurrency } from "../../../../../utils/currencies";
 
 const AdditionalDetailsForm = ({ onClose, handleCloseForm, invoiceDetails }) => {
   // console.log(invoiceDetails);
   const origin = invoiceDetails?.containerLoadFrom === "MMN" || invoiceDetails?.containerLoadFrom === "PDK"
   ? "india"
   : "srilanka";
+  
+  const userCurrency = getCurrency(invoiceDetails?.usercurrency)
 
   const dispatch = useDispatch()
   const invoiceData = useSelector(
@@ -31,6 +34,7 @@ if (numberedSections?.length) {
   // fallback if no numbered sections found
   formattedDescription = decodedText.replace(/~+/g, '\n');
 }
+console.log(invoiceDetails);
 
   const defaultValues = {
     ExporterAuthorizedAddress: invoiceData?.ExporterAuthorizedAddress || '',
@@ -39,7 +43,7 @@ if (numberedSections?.length) {
     BillOfLadingNo: invoiceData?.BillOfLadingNo || "",
     ContainerNo: invoiceData?.ContainerNo || "",
     CountryOfOriginOfGoods: invoiceDetails?.containerLoadFrom === "MMN" || invoiceDetails?.containerLoadFrom === "PDK" ? "india" : "srilanka",
-    PortOfLoading: invoiceData?.PortOfLoading || "",
+    PortOfLoading: invoiceDetails.PortOfLoading || invoiceData?.PortOfLoading || "",
     PortOfDischarge : invoiceData?.PortOfDischarge || "",
     ContainerType: invoiceData?.ContainerType || '',
     PreCarriageby: invoiceData?.PreCarriageby || "",
@@ -50,9 +54,8 @@ if (numberedSections?.length) {
     OtherCharges1: invoiceData?.OtherCharges1 || '',
     OtherCharges2: invoiceData?.OtherCharges2 || '',
     OtherCharges3: invoiceData?.OtherCharges3 || '',
-    Value1: invoiceData?.Value1 || "",
-    Value2: invoiceData?.Value2 || "",
-    Value3: invoiceData?.Value3 || "",
+    ClaimAdjustment: invoiceData?.Value1 || "",
+    OtherDiscount: invoiceData?.Value2 || "",
     PaymentTerms: formattedDescription,
     OtsNo:invoiceData?.OtsNo||'',
     itcHsNo:invoiceDetails?.itcHsNo || '',
@@ -130,24 +133,25 @@ if (numberedSections?.length) {
         <InputField label="I.T.C(H.S) No" name="itcHsNo" register={register} errors={errors} />
         {/* Other Charges Headers */}
         <div className="md:col-span-1 hidden lg:block">
-          <h1 className="text-sm text-gray-500 font-light text-center">DESCRIPTION OF OTHER</h1>
+          <h1 className="text-sm text-gray-500 font-light text-center">DESCRIPTION OF OTHER CHARGES</h1>
         </div>
         <div className="md:col-span-1 hidden lg:block">
-          <h1 className="text-sm text-gray-500 font-light text-center">PLEASE ENTER VALUE IN USD</h1>
+          <h1 className="text-sm text-gray-500 font-light text-center">PLEASE ENTER VALUE IN {userCurrency?.code}</h1>
         </div>
-        <div className="md:col-span-2 flex gap-4 relative">
-          <span className="absolute right-56 bottom-5">+</span>
-          <span className="absolute right-56 top-13 ">+</span>
+        <div className="md:col-span-2 flex gap-4 relative justify-between">
+          <span className="absolute right-54 font-bold bottom-5">-</span>
+          <span className="absolute right-54 top-13 font-bold ">-</span>
           <span className="absolute right-56 top-0 ">&</span>
           <div className="flex flex-col gap-6">
-          <h1 className="text-sm text-gray-500 font-light text-center">CLAIM ADJUSTMENT</h1>          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
-          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+          <h1 className="text-sm text-gray-500 font-light text-center">CLAIM ADJUSTMENT</h1>
+          <InputField label="CLAIM ADJUSTMENT" name="ClaimAdjustment" register={register} errors={errors} />
+          <InputField label="OTHER DISCOUNT" name="OtherDiscount" register={register} errors={errors} />
           </div>
           
           <div className="flex flex-col gap-6">
           <h1 className="text-sm text-gray-500 font-light text-center">OTHER DISCOUNT</h1>
-          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
-          <InputField label="FINAL Destination" name="FinalDestination" register={register} errors={errors} />
+          <InputField label="" name="ClaimAdjustmentValue" register={register} errors={errors} />
+          <InputField label="" name="OtherDiscountValue" register={register} errors={errors} />
           </div>
         
         
@@ -178,18 +182,18 @@ if (numberedSections?.length) {
         </div>
         {/* Other Charges & Values */}
         <div className="flex flex-col  gap-4 relative">
-          <span className="absolute text-2xl top-0 -right-3">-</span>
-          <span className="absolute text-2xl top-13 -right-3">-</span>
-          <span className="absolute text-2xl top-27 -right-3">-</span>
-        <InputField label="" name="Value1" register={register} errors={errors} />
-        <InputField label="" name="Value2" register={register} errors={errors} />
-        <InputField label="" name="Value3" register={register} errors={errors} />
+          <span className="absolute text-lg top-0 -right-4">+</span>
+          <span className="absolute text-lg top-13 -right-4">+</span>
+          <span className="absolute text-lg top-27 -right-4">+</span>
+        <InputField label="" name="OtherCharges1" register={register} errors={errors} />
+        <InputField label="" name="OtherCharges2" register={register} errors={errors} />
+        <InputField label="" name="OtherCharges3" register={register} errors={errors} />
         </div>
 
         <div className="flex flex-col gap-4">
-          <InputField label="Value" name="Value1" register={register} errors={errors} />
-          <InputField label="Value" name="Value2" register={register} errors={errors} />
-          <InputField label="Value" name="Value3" register={register} errors={errors} />
+          <InputField label="Value 1" name="OtherChargesVal1" register={register} errors={errors} />
+          <InputField label="Value 2" name="OtherChargesVal2" register={register} errors={errors} />
+          <InputField label="Value 3" name="OtherChargesVal3" register={register} errors={errors} />
         </div>
 
         {/* Form Actions */}

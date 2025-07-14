@@ -16,7 +16,8 @@ import ExportInvoicePrepare from "../pages/TTS/International/Invoice/Export Invo
 import ProtectedRoutes from "../components/ProtectedRoutes/ProtectedRoutes";
 import ProtectedPage from "../pages/NotFound/protectedPage";
 import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invoice/PDFViewer";
-// import ShippingSchemeSplit from "../pages/TTS/International/Invoice/Export Invoice/ShippingSchemeSplit";
+import ShippingSchemeSplitTailwind from "../pages/TTS/International/Invoice/Export Invoice/ShippingSchemeSplitTailwind";
+
 
 export const router = createBrowserRouter([
   {
@@ -52,7 +53,7 @@ export const router = createBrowserRouter([
             { path: "Invoice/ExportInvoice", element: <ExportInvoice /> },
             { path: "Invoice/ExportInvoicePrepare", element: <ExportInvoicePrepare /> },
             { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF/> },
-            // { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplit/> }
+            { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind/> }
           ],
         },
         { path: "Settings", element: <Settings /> },
