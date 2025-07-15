@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ExportTable from "./ExportTable";
 import SearchBar from "../../../../../components/SearchBar";
@@ -35,7 +35,7 @@ const ExportInvoice = () => {
     );
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     dispatch(getExportInvoiceAll(state));
   }, [dispatch]);
 
