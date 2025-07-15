@@ -12,7 +12,7 @@ const Dashboard = () => {
 
   return (
     <div className="grid grid-cols-4 grid-rows-3 gap-4 p-6 bg-gray-50 min-h-full">
-      <div className="col-span-2 row-span-1 col-start-1 bg-white rounded-lg shadow p-6 flex items-center justify-evenly
+      <div className="col-span-2 row-span-1 col-start-1 bg-white rounded-lg shadow p-4 flex items-center justify-evenly
        text-xl font-bold">
         <div className="w-1/2 flex justify-center items-center">
         <img src={employee.picture} alt="Employee" className="w-40 h-40 rounded-full shadow" />

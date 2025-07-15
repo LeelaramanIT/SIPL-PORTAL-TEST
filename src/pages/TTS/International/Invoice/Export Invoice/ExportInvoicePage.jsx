@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ExportTable from "./ExportTable";
 import SearchBar from "../../../../../components/SearchBar";
 import Dropdown from "../../../../../components/InputFields/DropDown";
@@ -16,6 +16,7 @@ import TableSkeleton from "./TableSkeleton";
 
 const ExportInvoice = () => {
   const navigate = useNavigate();
+  const {state} = useLocation()
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumn, setSelectedColumn] = useState("all");
   const [startDate, setStartDate] = useState(new Date());
@@ -122,7 +123,7 @@ const ExportInvoice = () => {
   return (
     <div className="px-6 pt-4 max-w-full mx-auto">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-2">
-        Export Invoice
+        Export {state.type} Invoice
       </h1>
 
       <div className="bg-[#F4F4FE] shadow-md px-2 py-4 rounded-lg border border-[var(--color-secondary)] dark:border-gray-700 dark:bg-gray-900" >
@@ -178,12 +179,25 @@ const ExportInvoice = () => {
                 }}
                 renderAction={(row, index) => (
                   <button
+                  
                     // onClick={() => handleAction(row)}
                     onClick={() => {
-                      navigate(
-                        "/TTS/International/Invoice/ExportInvoice/Prepare"
-                      );
-                      dispatch(getExportInvoice(row, index));
+                      if(state.type === 'Customer'){
+                        navigate(
+                          "/TTS/International/Invoice/CustomerInvoice/Prepare",{
+                            state:state
+                          }
+                        );
+                        dispatch(getExportInvoice(row, index));
+                      }
+                      if(state.type === 'Custom'){
+                        navigate(
+                          "/TTS/International/Invoice/CustomInvoice/Prepare",{
+                            state:state
+                          }
+                        );
+                        dispatch(getExportInvoice(row, index));
+                      }
                     }}
                     className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text)] px-4 py-1 rounded text-center"
                   >

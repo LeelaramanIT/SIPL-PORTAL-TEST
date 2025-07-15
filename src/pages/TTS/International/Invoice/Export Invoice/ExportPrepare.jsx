@@ -3,7 +3,7 @@ import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import TableSkeleton from "./TableSkeleton.jsx";
 import toast from "react-hot-toast";
 import DialogBox from "../../../../../components/DialogBox.jsx";
@@ -20,6 +20,7 @@ const ExportInvoicePrepare = () => {
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
   const error = useSelector((state) => state.invoice.exportInvoices.error);
   const [isOpen, setOpen] = useState(false)
+  const { state } = useLocation()
   const invoiceDetails = useSelector(
     (state) => state?.invoice?.exportInvoices?.invoiceDetails
   );
@@ -28,6 +29,11 @@ const ExportInvoicePrepare = () => {
       toast.error(error);
     }
   }, [error]);
+
+  useEffect(()=>{
+    console.log(state)
+  },[])
+
 
 
 
@@ -77,9 +83,9 @@ const ExportInvoicePrepare = () => {
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
-        Client Details
+      {state.type} Invoice Details
       </h1>
-      <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta }} />
+      <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta, ...state }} />
 
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Item Details
@@ -260,14 +266,15 @@ const ExportInvoicePrepare = () => {
 
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4">
+      <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4 mr-14">
         {formDAta && <Button
           onClick={() => navigate("/TTS/International/Invoice/Export/BillPDF")}
           text="Preview PDF"
         />}
         {!formDAta ? <Button onClick={() => setShowDetailsForm(true)} text="+ Add Additional Details" /> : <Button onClick={() => setShowDetailsForm(true)} text="Edit Additional Details" />}
         {formDAta && <Button onClick={() => setOpen(true)} text="Submit" />}
-        <DialogBox
+      </div>
+      <DialogBox
           isOpen={isOpen}
           onClose={() => setOpen(false)}
           title="Submit Invoice"
@@ -276,7 +283,6 @@ const ExportInvoicePrepare = () => {
           cancelText="Cancel"
           onConfirm={handleSubmit}
         />
-      </div>
 
 <AnimatePresence>
   {showDetailsForm && (

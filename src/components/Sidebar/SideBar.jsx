@@ -22,7 +22,23 @@ const SideBar = () => {
   
   const role = useSelector((store) => store.auth.roles);
 
-  const handleClick = ({ key }) => navigate(key);
+  const handleClick = ({ key }) => {
+    let route = key;
+    let state = {};
+  
+    if (key === '/TTS/International/Invoice/CustomerInvoice') {
+      route = key;
+      state = { type: 'Customer' };
+    }
+  
+    if (key === '/TTS/International/Invoice/CustomInvoice') {
+      route = key;
+      state = { type: 'Custom' };
+    }
+  
+    navigate(route, state.type ? { state } : undefined);
+  };
+  
   
 
   const siderStyle = {
@@ -37,7 +53,7 @@ const SideBar = () => {
   
 
   const isMenuAllowed = (menuName) => {
-    if (isAdmin) return true;
+    if (isAdmin) return true;    
     return menus?.some((menu) => menu.MenuName === menuName);
   };
   
@@ -130,9 +146,14 @@ const SideBar = () => {
               <Menu.SubMenu key="International" title="International">
                 <Menu.SubMenu key="InternationalInvoice" title="Invoice">
                   {isMenuAllowed("ExportInvoice") && (
-                    <Menu.Item key="/TTS/International/Invoice/ExportInvoice">
-                      Export
+                    <>
+                    <Menu.Item key="/TTS/International/Invoice/CustomInvoice">
+                      Custom Invoice
                     </Menu.Item>
+                    <Menu.Item key="/TTS/International/Invoice/CustomerInvoice">
+                      Customer Invoice
+                      </Menu.Item>
+                    </>
                   )}
                 </Menu.SubMenu>
               </Menu.SubMenu>

@@ -5,8 +5,10 @@ export const routePermissions = {
   "Masters/UserMaster/ListUserMaster": "ListUserMaster",
   "TTS/Domestic/Invoice/CustInvoice": "DomesticCustInvoice",
   "TTS/Domestic/Invoice/CustomerInvoice": "DomesticCustomerInvoice",
-  "TTS/International/Invoice/ExportInvoice": "ExportInvoice",
-  "TTS/International/Invoice/ExportInvoice/Prepare": "ExportInvoicePrepare",
+  "TTS/International/Invoice/Custom Invoice": "CustomInvoice",
+  "TTS/International/Invoice/Custom Invoice/Prepare": "CustomInvoicePrepare",
+  "/TTS/International/Invoice/CustomerInvoice":"ExportCustomerInvoice",
+  "TTS/International/Invoice/CustomerInvoice/Prepare": "ExportCustomerInvoicePrepare",
   // "TTS/International/Invoice/Export/BillPDF": "ExportInvoiceBILLPDF",
   Settings: "Settings",
 };
