@@ -77,15 +77,22 @@ export const getExportInvoice = (payload) => async (dispatch) => {
 };
 
 // get the all exports data
-export const getExportInvoiceAll = () => async (dispatch) => {
+export const getExportInvoiceAll = (payload) => async (dispatch) => {
   try {
   dispatch(setExportInvoiceLoading())
   dispatch(resetExportInvoiceDetails())
+  if (payload.state.type === 'Customer') {
     const res = await api.get(
       `/Invoice/GettingInvoiceReadyOrders`
     ,{withCredentials:true});
-    
     await dispatch(setExportInvoiceList(res.data));
+  }
+  if (payload.state.type === 'Custom') {
+    const res = await api.get(
+      `/Invoice/GettingInvoiceReadyOrders`
+    ,{withCredentials:true});
+    await dispatch(setExportInvoiceList(res.data));
+  }
   
   } catch (error) {
     await dispatch(setExportInvoiceError(error.message));
