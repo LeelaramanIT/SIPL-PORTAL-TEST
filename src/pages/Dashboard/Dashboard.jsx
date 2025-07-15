@@ -1,41 +1,38 @@
-import React from 'react'
+import React from "react";
 
 const Dashboard = () => {
+  // Example employee data
+  const employee = {
+    name: "John Doe",
+    department: "Engineering",
+    email: "john.doe@example.com",
+    phone: "+1 234 567 890",
+    picture: "https://randomuser.me/api/portraits/men/32.jpg", // Placeholder image
+  };
+
   return (
-    <div className='p-6 max-w-7xl mx-auto'>
-      <h1 className='text-2xl font-bold text-[var(--color-primary)] mb-6'>Dashboard</h1>
-      
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {/* Welcome Card */}
-        <div className='bg-[var(--color-background)] p-6 rounded-lg border border-[var(--color-secondary)]'>
-          <h2 className='text-lg font-semibold text-[var(--color-primary)] mb-4'>Welcome</h2>
-          <p className='text-[var(--color-text)] opacity-75'>
-            Welcome to your dashboard. Here you can view your key metrics and recent activities.
-          </p>
+    <div className="grid grid-cols-4 grid-rows-3 gap-4 p-6 bg-gray-50 min-h-full">
+      <div className="col-span-2 row-span-1 col-start-1 bg-white rounded-lg shadow p-6 flex items-center justify-evenly
+       text-xl font-bold">
+        <div className="w-1/2 flex justify-center items-center">
+        <img src={employee.picture} alt="Employee" className="w-40 h-40 rounded-full shadow" />
         </div>
-        
-        {/* Quick Stats */}
-        <div className='bg-[var(--color-background)] p-6 rounded-lg border border-[var(--color-secondary)]'>
-          <h2 className='text-lg font-semibold text-[var(--color-primary)] mb-4'>Quick Stats</h2>
-          <div className='space-y-2'>
-            <p className='text-[var(--color-text)] opacity-75'>Total Users: 1,234</p>
-            <p className='text-[var(--color-text)] opacity-75'>Active Sessions: 56</p>
-            <p className='text-[var(--color-text)] opacity-75'>Today's Revenue: $12,345</p>
-          </div>
-        </div>
-        
-        {/* Recent Activity */}
-        <div className='bg-[var(--color-background)] p-6 rounded-lg border border-[var(--color-secondary)]'>
-          <h2 className='text-lg font-semibold text-[var(--color-primary)] mb-4'>Recent Activity</h2>
-          <div className='space-y-2'>
-            <p className='text-[var(--color-text)] opacity-75'>New user registered</p>
-            <p className='text-[var(--color-text)] opacity-75'>Invoice #1234 created</p>
-            <p className='text-[var(--color-text)] opacity-75'>Payment received</p>
-          </div>
+        <div className="w-1/2 flex flex-col justify-start items-start">
+        <div className="font-semibold mb-1 text-3xl">{employee.name}</div>
+        <div className="text-gray-500 mb-2">{employee.department}</div>
+        <div className="text-base font-normal text-gray-700 mb-1">Email: {employee.email}</div>
+        <div className="text-base font-normal text-gray-700">Phone: {employee.phone}</div>
         </div>
       </div>
+      <div className="row-span-2 col-start-3 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">2</div>
+      <div className="row-span-2 col-start-4 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">3</div>
+      <div className="col-start-1 row-start-2 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">4</div>
+      <div className="col-start-2 row-start-2 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">5</div>
+      <div className="col-span-2 row-span-1 col-start-3 row-start-3 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">6</div>
+      <div className="col-start-1 row-start-3 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">7</div>
+      <div className="col-start-2 row-start-3 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">8</div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
