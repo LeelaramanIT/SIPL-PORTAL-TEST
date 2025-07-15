@@ -36,7 +36,7 @@ const ExportInvoice = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(getExportInvoiceAll());
+    dispatch(getExportInvoiceAll(state));
   }, [dispatch]);
 
   const headers = [
