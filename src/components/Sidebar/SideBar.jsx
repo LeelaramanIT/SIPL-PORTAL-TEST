@@ -9,6 +9,7 @@ import { toggleSidebar } from "../../Redux/Slices/GlobalSlice";
 import { useNavigate } from "react-router-dom";
 import assets from "../../assets/assets";
 import ThemeSwitcher from "../ThemeSwitcher";
+import { RiPagesLine } from "react-icons/ri";
 
 const { Sider } = Layout;
 
@@ -169,7 +170,7 @@ const SideBar = () => {
           </Menu.Item>)}
         </Menu.SubMenu>)}
 
-        {hasMenuUrlPrefix('/Pages') && (<Menu.SubMenu key="Pages" title="Pages" icon={<MdOutlineManageAccounts />}>
+        {hasMenuUrlPrefix('/Pages') && (<Menu.SubMenu key="Pages" title="Pages" icon={<RiPagesLine />}>
           {isMenuAllowed('Calender') && (<Menu.Item key="/Pages/Calender">
             Calender
           </Menu.Item>)}
