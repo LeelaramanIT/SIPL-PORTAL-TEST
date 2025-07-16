@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useLayoutEffect } from "react";
 import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
@@ -30,9 +30,6 @@ const ExportInvoicePrepare = () => {
     }
   }, [error]);
 
-  useEffect(()=>{
-    console.log(state)
-  },[])
 
 
 
@@ -344,7 +341,7 @@ function ClientDetailsSection({ invoiceDetails }) {
     }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     gsap.from(containerRef.current, {
       opacity: 0,
       y: 50,

@@ -17,6 +17,8 @@ import ProtectedRoutes from "../components/ProtectedRoutes/ProtectedRoutes";
 import ProtectedPage from "../pages/NotFound/protectedPage";
 import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invoice/PDFViewer";
 import ShippingSchemeSplitTailwind from "../pages/TTS/International/Invoice/Export Invoice/ShippingSchemeSplitTailwind";
+import PagesLayout from "../layout/PagesLayout";
+import Calendar from "../pages/Calendar/Calendar";
 
 
 export const router = createBrowserRouter([
@@ -57,6 +59,13 @@ export const router = createBrowserRouter([
             { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF/> },
             { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind/> }
           ],
+        },
+        {
+          path:'Pages',
+          element: <PagesLayout />,
+          children: [
+            { path:'Calender',element:<Calendar/>}
+          ]
         },
         { path: "Settings", element: <Settings /> },
       ],

@@ -27,7 +27,7 @@ const ExportInvoice = () => {
 
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     gsap.fromTo(
       animateRef.current,
       { opacity: 0, y: 20 },
@@ -37,7 +37,7 @@ const ExportInvoice = () => {
 
   useLayoutEffect(() => {
     dispatch(getExportInvoiceAll(state));
-  }, [dispatch]);
+  }, [state]);
 
   const headers = [
     { label: "Customer", key: "custfullname" },
@@ -188,7 +188,7 @@ const ExportInvoice = () => {
                             state:state
                           }
                         );
-                        dispatch(getExportInvoice(row, index));
+                        dispatch(getExportInvoice({...row, ...state}));
                       }
                       if(state.type === 'Custom'){
                         navigate(
@@ -196,7 +196,7 @@ const ExportInvoice = () => {
                             state:state
                           }
                         );
-                        dispatch(getExportInvoice(row, index));
+                        dispatch(getExportInvoice({...row, ...state}));
                       }
                     }}
                     className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text)] px-4 py-1 rounded text-center"

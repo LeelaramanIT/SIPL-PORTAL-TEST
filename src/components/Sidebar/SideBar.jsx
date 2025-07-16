@@ -169,6 +169,12 @@ const SideBar = () => {
           </Menu.Item>)}
         </Menu.SubMenu>)}
 
+        {hasMenuUrlPrefix('/Pages') && (<Menu.SubMenu key="Pages" title="Pages" icon={<MdOutlineManageAccounts />}>
+          {isMenuAllowed('Calender') && (<Menu.Item key="/Pages/Calender">
+            Calender
+          </Menu.Item>)}
+        </Menu.SubMenu>)}
+
         {isMenuAllowed("Settings") && (
           <Menu.Item key="/Settings" icon={<IoSettingsOutline />}>
             Settings

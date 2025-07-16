@@ -24,7 +24,6 @@ const invoiceSlice = createSlice({
   initialState,
   reducers: {
     setExportInvoiceSalesDetails: (state, action) => {
-      console.log(action.payload);
       state.exportInvoices.invoiceDetails = action.payload;
       state.exportInvoices.loading = false;
       state.exportInvoices.error = null;
@@ -63,11 +62,20 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   
   try {
     dispatch(setExportInvoiceLoading());
-
-    const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+    console.log(payload);
+    if(payload.type === 'Customer'){
+      const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
     const data = res.data
     
     await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
+    }
+
+    if (payload.type === 'Custom') {
+      const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+    const data = res.data
+    await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload })); 
+    }
+      
 
   } catch (error) {
     dispatch(setExportInvoiceError(error.message));
@@ -79,8 +87,6 @@ export const getExportInvoice = (payload) => async (dispatch) => {
 // get the all exports data
 export const getExportInvoiceAll = (payload) => async (dispatch) => {
   try {
-    console.log(payload);
-    
   dispatch(setExportInvoiceLoading())
   dispatch(resetExportInvoiceDetails())
   if (payload.type === "Customer") {

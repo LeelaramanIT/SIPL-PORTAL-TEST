@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
 const ExportTable = ({
@@ -49,13 +49,13 @@ const ExportTable = ({
     }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (tableRef.current) tableRef.current.scrollTop = 0;
     animateRows();
     animatePagination();
   }, [currentPage]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setCurrentPage(1);
     animateRows();
   }, [data]);
