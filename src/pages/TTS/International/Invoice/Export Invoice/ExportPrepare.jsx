@@ -20,7 +20,6 @@ const ExportInvoicePrepare = () => {
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
   const error = useSelector((state) => state.invoice.exportInvoices.error);
   const [isOpen, setOpen] = useState(false)
-  const { state } = useLocation()
   const invoiceDetails = useSelector(
     (state) => state?.invoice?.exportInvoices?.invoiceDetails
   );
@@ -29,10 +28,6 @@ const ExportInvoicePrepare = () => {
       toast.error(error);
     }
   }, [error]);
-
-
-
-
 
   const formDAta = useSelector((state) => state?.invoice?.exportInvoices?.additionalForm)
 
@@ -80,9 +75,9 @@ const ExportInvoicePrepare = () => {
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
-      {state.type} Invoice Details
+      {invoiceDetails.type} Invoice Details
       </h1>
-      <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta, ...state }} />
+      <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta}} />
 
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
         Item Details

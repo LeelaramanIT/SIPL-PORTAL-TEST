@@ -1,4 +1,5 @@
 import React from "react";
+import Calendar from "../Calendar/Calendar";
 
 const Dashboard = () => {
   // Example employee data
@@ -24,7 +25,9 @@ const Dashboard = () => {
         <div className="text-base font-normal text-gray-700">Phone: {employee.phone}</div>
         </div>
       </div>
-      <div className="row-span-2 col-start-3 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">2</div>
+      <div className="row-span-2 col-start-3 bg-white rounded-lg shadow p-1 flex items-center justify-center text-xl font-bold">
+        <Calendar variant="mini" />
+      </div>
       <div className="row-span-2 col-start-4 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">3</div>
       <div className="col-start-1 row-start-2 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">4</div>
       <div className="col-start-2 row-start-2 bg-white rounded-lg shadow p-4 flex items-center justify-center text-xl font-bold">5</div>

@@ -19,6 +19,8 @@ import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invo
 import ShippingSchemeSplitTailwind from "../pages/TTS/International/Invoice/Export Invoice/ShippingSchemeSplitTailwind";
 import PagesLayout from "../layout/PagesLayout";
 import Calendar from "../pages/Calendar/Calendar";
+import ReportsLayout from "../layout/ReportsLayout";
+import TTSReport from "../pages/Reports/TTSReports";
 
 
 export const router = createBrowserRouter([
@@ -65,6 +67,13 @@ export const router = createBrowserRouter([
           element: <PagesLayout />,
           children: [
             { path:'Calender',element:<Calendar/>}
+          ]
+        },
+        {
+          path:'Reports',
+          element: <ReportsLayout />,
+          children: [
+            { path:'TTSReports',element:<TTSReport/> },
           ]
         },
         { path: "Settings", element: <Settings /> },

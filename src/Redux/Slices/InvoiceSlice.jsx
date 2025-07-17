@@ -62,7 +62,6 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   
   try {
     dispatch(setExportInvoiceLoading());
-    console.log(payload);
     if(payload.type === 'Customer'){
       const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
     const data = res.data

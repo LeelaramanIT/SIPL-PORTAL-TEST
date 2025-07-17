@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import assets from "../../assets/assets";
 import ThemeSwitcher from "../ThemeSwitcher";
 import { RiPagesLine } from "react-icons/ri";
+import { TbReportSearch } from "react-icons/tb";
 
 const { Sider } = Layout;
 
@@ -68,11 +69,16 @@ const SideBar = () => {
   return (
     <Sider
       theme={isDark ? "dark" : "light"}
+      
       collapsible
       collapsed={collapsed}
       onCollapse={() => dispatch(toggleSidebar())}
       width={240}
-      style={siderStyle}
+      style={{
+        ...siderStyle,
+        height: '100vh',
+        overflow: 'auto',
+      }}
       className="dark:bg-gray-900"
       trigger={null}
       
@@ -101,11 +107,12 @@ const SideBar = () => {
       </div>
 
       {/* Menu */}
+      <div className="flex-1 overflow-y-auto">
       <Menu
         theme={isDark ? "dark" : "light"}
         mode="inline"
         onClick={handleClick}
-        className="flex-1 dark:bg-gray-900 dark:text-white"
+        className="flex-1 dark:bg-gray-900 dark:text-white overflow-y-auto"
         style={{
           ...(isDark === false && {
             backgroundColor: "var(--color-background)",
@@ -175,6 +182,11 @@ const SideBar = () => {
             Calender
           </Menu.Item>)}
         </Menu.SubMenu>)}
+        {hasMenuUrlPrefix('/Reports') && (<Menu.SubMenu key="Reports" title="Reports" icon={<TbReportSearch />}>
+          {isMenuAllowed('TTSReports') && (<Menu.Item key="/Reports/TTSReports">
+            TTS Reports
+          </Menu.Item>)}
+        </Menu.SubMenu>)}
 
         {isMenuAllowed("Settings") && (
           <Menu.Item key="/Settings" icon={<IoSettingsOutline />}>
@@ -183,7 +195,7 @@ const SideBar = () => {
         )}
 
       </Menu>
-
+      </div>
       {/* Theme Toggle */}
       <div className="p-2 mt-auto flex justify-center">
         <ThemeSwitcher />
