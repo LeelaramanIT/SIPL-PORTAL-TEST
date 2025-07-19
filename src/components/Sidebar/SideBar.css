@@ -1,0 +1,77 @@
+/* Standard menu item sizing and vertical centering */
+.ant-menu-item,
+.ant-menu-submenu-title {
+  height: 30px !important;
+  padding: 0 16px !important;
+  font-size: 12px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start; /* Keep text aligned to left */
+  transition: all 0.2s ease-out;
+}
+
+/* Icon sizing */
+.ant-menu-item-icon,
+.ant-menu-submenu-title .anticon {
+  font-size: 16px !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Collapsed sidebar: center icons horizontally and vertically */
+.ant-layout-sider-collapsed .ant-menu-item,
+.ant-layout-sider-collapsed .ant-menu-submenu-title {
+  padding: 0 !important;
+  justify-content: center !important;
+}
+
+/* Remove margin between icon and (now hidden) text */
+.ant-layout-sider-collapsed .ant-menu-item .anticon,
+.ant-layout-sider-collapsed .ant-menu-submenu-title .anticon {
+  margin-right: 0 !important;
+}
+
+/* Hide text when collapsed */
+.ant-layout-sider-collapsed .ant-menu-item span,
+.ant-layout-sider-collapsed .ant-menu-submenu-title span {
+  display: none !important;
+}
+
+
+/* Selected item - Dark */
+.ant-menu-dark .ant-menu-item-selected,
+.ant-menu-dark .ant-menu-item-selected > a,
+.ant-menu-dark .ant-menu-submenu-title-selected {
+  background-color: #1f2937 !important;
+  color: white !important;
+}
+
+/* Hover - Dark */
+.ant-menu-dark .ant-menu-item:hover,
+.ant-menu-dark .ant-menu-item:hover > a,
+.ant-menu-dark .ant-menu-submenu-title:hover {
+  background-color: #1e293b !important;
+  color: #e5e7eb !important;
+}
+
+/* Force icon color on hover/selected */
+.ant-menu-dark .ant-menu-item:hover .anticon,
+.ant-menu-dark .ant-menu-item-selected .anticon {
+  color: inherit !important;
+}
+
+/* Same logic for light theme (optional) */
+.ant-menu-light .ant-menu-item-selected,
+.ant-menu-light .ant-menu-item-selected > a,
+.ant-menu-light .ant-menu-submenu-title-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-text) !important;
+}
+
+.ant-menu-light .ant-menu-item:hover,
+.ant-menu-light .ant-menu-item:hover > a,
+.ant-menu-light .ant-menu-submenu-title:hover {
+  background-color: var(--color-primary-hover) !important;
+  color: var(--color-text-hover) !important;
+}
+    
