@@ -191,28 +191,6 @@ body.modal-open .layout-scroll {
   overflow: hidden !important;
 }
 
-/* Selected menu item */
-.ant-menu-light .ant-menu-item-selected {
-  background-color: var(--color-primary) !important;
-  color:var(--color-text) !important;
-}
-
-.ant-menu-dark .ant-menu-item-selected {
-  background-color: #1f2937 !important;
-  color: white !important;
-}
-
-/* Hover effect */
-.ant-menu-light .ant-menu-item:hover {
-  background-color: var(--color-primary-hover) !important;
-  color: var(--color-text-hover) !important;
-}
-
-.ant-menu-dark .ant-menu-item:hover {
-   background-color: #1e293b !important;
-  color: black !important;
-}
-
 .scrollable-container {
   overflow-y: auto;
   height: 100vh;

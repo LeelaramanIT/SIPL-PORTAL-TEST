@@ -9,7 +9,6 @@ import { Box, Typography, useMediaQuery } from '@mui/material';
 import Heading from '../../components/Heading';
 import DialogBox from '../../components/DialogBox';
 
-
 const Calendar = ({ variant = 'full' }) => {
     const [currentEvents, setCurrentEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -137,7 +136,7 @@ const Calendar = ({ variant = 'full' }) => {
                     title="Delete Event"
                     isOpen={isOpen}
                     onClose={() => setOpen(false)}
-                    message={`Are you sure you want to delete the event "${selectedEvent.event.title}"?`}
+                    message={`Are you sure you want to delete the event \"${selectedEvent.event.title}\"?`}
                     onConfirm={confirmDelete}
                     cancelText="Cancel"
                     confirmText="Delete"

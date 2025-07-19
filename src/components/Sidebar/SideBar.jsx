@@ -11,6 +11,7 @@ import assets from "../../assets/assets";
 import ThemeSwitcher from "../ThemeSwitcher";
 import { RiPagesLine } from "react-icons/ri";
 import { TbReportSearch } from "react-icons/tb";
+import './SideBar.css'
 
 const { Sider } = Layout;
 
@@ -107,7 +108,6 @@ const SideBar = () => {
       </div>
 
       {/* Menu */}
-      <div className="flex-1 overflow-y-auto">
       <Menu
         theme={isDark ? "dark" : "light"}
         mode="inline"
@@ -178,7 +178,7 @@ const SideBar = () => {
         </Menu.SubMenu>)}
 
         {hasMenuUrlPrefix('/Pages') && (<Menu.SubMenu key="Pages" title="Pages" icon={<RiPagesLine />}>
-          {isMenuAllowed('Calender') && (<Menu.Item key="/Pages/Calender">
+          {isMenuAllowed('Calender') && (<Menu.Item key="/Pages/Calendar">
             Calender
           </Menu.Item>)}
         </Menu.SubMenu>)}
@@ -195,7 +195,7 @@ const SideBar = () => {
         )}
 
       </Menu>
-      </div>
+
       {/* Theme Toggle */}
       <div className="p-2 mt-auto flex justify-center">
         <ThemeSwitcher />
