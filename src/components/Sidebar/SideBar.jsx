@@ -145,7 +145,6 @@ const SideBar = () => {
                     </Menu.Item>
                   )}
                 </Menu.SubMenu>)}
-                {isMenuAllowed("") && <Menu.Item>RIM</Menu.Item>}
               </Menu.SubMenu>
             )}
 
@@ -166,6 +165,7 @@ const SideBar = () => {
                 </Menu.SubMenu>
               </Menu.SubMenu>
             )}
+            {<Menu.Item key='/TTS/Rim/RimOverView'>RIM</Menu.Item>}
           </Menu.SubMenu>
         )}
         {hasMenuUrlPrefix('/Master') && (<Menu.SubMenu key="Master" title="Masters" icon={<MdOutlineManageAccounts />}>

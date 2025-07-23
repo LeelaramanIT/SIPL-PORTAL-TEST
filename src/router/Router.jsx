@@ -20,6 +20,11 @@ import ShippingSchemeSplitTailwind from "../pages/TTS/International/Invoice/Expo
 import Calendar from "../pages/Calendar/Calendar";
 import ReportsLayout from "../layout/ReportsLayout";
 import TTSReport from "../pages/Reports/TTSReports";
+import RimLayout from "../layout/RimLayout";
+import RimOverView from "../pages/TTS/Rim/RimOverView";
+import RimWise from "../pages/TTS/Rim/RimDataWise";
+import RimEDCWise from "../pages/TTS/Rim/RimEDCWise";
+import RimStocks from "../pages/TTS/Rim/RimStocks";
 
 
 export const router = createBrowserRouter([
@@ -62,7 +67,25 @@ export const router = createBrowserRouter([
           ],
         },
         {
-          path: 'Pages/Calendar', element:<Calendar/>
+          path:'TTS/Rim',
+          element:<RimLayout />,
+          children:[
+            {
+              path:'/TTS/Rim/RimOverView' ,index:true,element:<RimOverView/>,
+            },
+           {
+            path:'DataWise',element:<RimWise/>
+           } ,
+           {
+            path:'EDCNoWise',element:<RimEDCWise/>
+           },
+           {
+            path:'rimstock',element:<RimStocks/>
+           }
+          ]
+        },
+        {
+          path: '/Pages/Calendar', element:<Calendar/>
         },
         {
           path:'Reports',

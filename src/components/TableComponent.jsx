@@ -19,12 +19,12 @@ const TableComponent = ({ headers, data }) => {
   };
 
   return (
-    <div className="w-full h-[35.5rem] flex flex-col justify-between rounded-sm bg-background overflow-y-auto">
+    <div className="w-full h-[35.5rem] flex flex-col justify-between rounded-sm bg-background dark:bg-gray-900 overflow-y-auto">
       <table className="w-full table-fixed">
-        <thead className="text-black bg-gray-200 sticky top-0 z-10">
+        <thead className="text-black bg-gray-200 dark:bg-gray-800 sticky top-0 z-10">
           <tr>
             {headers.map((heading, index) => (
-              <th key={index} className="py-2 px-4 text-left">
+              <th key={index} className="py-2 px-4 text-left dark:text-white">
                 {heading}
               </th>
             ))}
@@ -36,7 +36,7 @@ const TableComponent = ({ headers, data }) => {
             <tr
               key={rowIndex}
               className={`text-sm ${
-                rowIndex % 2 === 0 ? "bg-slate-100" : "bg-white"
+                rowIndex % 2 === 0 ? "bg-slate-100 dark:bg-gray-700" : "bg-white dark:bg-gray-800"
               }`}
             >
               {headers.map((header, colIndex) => (
@@ -45,9 +45,9 @@ const TableComponent = ({ headers, data }) => {
                   className={`py-2 px-4 ${
                     header === "Status"
                       ? row[header.toLowerCase()] === "Active"
-                        ? "text-green-500"
-                        : "text-red-500"
-                      : ""
+                        ? "text-green-500 dark:text-green-300"
+                        : "text-red-500 dark:text-red-300"
+                      : "dark:text-white"
                   }`}
                 >
                   {row[header.toLowerCase().replace(/\s/g, "")] || "-"}

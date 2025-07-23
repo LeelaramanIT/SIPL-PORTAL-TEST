@@ -29,7 +29,7 @@ const DialogBox = ({
                 onCancel?.();
                 onClose();
               }}
-              className="px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-300"
+              className="px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white"
             >
               {cancelText}
             </button>
@@ -40,6 +40,7 @@ const DialogBox = ({
                 onClose();
               }}
               text={confirmText}
+              className="dark:bg-green-700 dark:hover:bg-green-600"
             />
           </div>
         ) : (
@@ -50,11 +51,12 @@ const DialogBox = ({
               onClose();
             }}
             text={confirmText}
+            className="dark:bg-green-700 dark:hover:bg-green-600"
           />
         )
       ]}      
     >
-      <p className="text-sm text-gray-600">{message}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-200">{message}</p>
     </Modal>
   );
 };
