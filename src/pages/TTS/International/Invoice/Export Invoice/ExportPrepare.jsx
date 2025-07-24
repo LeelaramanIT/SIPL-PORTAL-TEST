@@ -23,6 +23,8 @@ const ExportInvoicePrepare = () => {
   const invoiceDetails = useSelector(
     (state) => state?.invoice?.exportInvoices?.invoiceDetails
   );
+  console.log(invoiceDetails);
+  
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -52,7 +54,7 @@ const ExportInvoicePrepare = () => {
   const combiOrders = useMemo(() => {
     if (invoiceDetails?.shipmentType !== 'COMBI' || !invoiceDetails?.items) return [];
 
-    const grouped = invoiceDetails.items.reduce((acc, item) => {
+    const grouped = invoiceDetails?.items.reduce((acc, item) => {
       const plant = item.plant;
       if (!acc[plant]) acc[plant] = [];
       acc[plant].push(item);
@@ -75,7 +77,7 @@ const ExportInvoicePrepare = () => {
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
-      {invoiceDetails.type} Invoice Details
+      {invoiceDetails?.type} Invoice Details
       </h1>
       <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta}} />
 
