@@ -22,8 +22,7 @@ import ReportsLayout from "../layout/ReportsLayout";
 import TTSReport from "../pages/Reports/TTSReports";
 import RimLayout from "../layout/RimLayout";
 import RimOverView from "../pages/TTS/Rim/RimOverView";
-import RimWise from "../pages/TTS/Rim/RimDataWise";
-import RimEDCWise from "../pages/TTS/Rim/RimEDCWise";
+import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
 import RimStocks from "../pages/TTS/Rim/RimStocks";
 
 
@@ -71,16 +70,16 @@ export const router = createBrowserRouter([
           element:<RimLayout />,
           children:[
             {
-              path:'/TTS/Rim/RimOverView' ,index:true,element:<RimOverView/>,
+              path:'/TTS/Rim/RimOverView',element:<RimOverView/>,
             },
            {
-            path:'DataWise',element:<RimWise/>
+            path:'DataWise',element:<RimWiseAndEDCWise/>
            } ,
            {
-            path:'EDCNoWise',element:<RimEDCWise/>
+            path:'EDCNoWise',element:<RimWiseAndEDCWise/>
            },
            {
-            path:'rimstock',element:<RimStocks/>
+            path:'rimstock', index:true ,element:<RimStocks/>
            }
           ]
         },

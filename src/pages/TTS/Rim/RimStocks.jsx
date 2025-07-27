@@ -260,7 +260,7 @@ const RimStocks = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-                  <WheelSpecCard spec={spec} />   {" "}
+            <WheelSpecCard spec={spec} /> {" "}
           </motion.div>
         ))}
       </div>

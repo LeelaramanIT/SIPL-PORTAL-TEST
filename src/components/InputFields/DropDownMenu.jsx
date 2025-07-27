@@ -67,12 +67,13 @@ export default function DropDownMenu({
             }}
             sx={{
               fontSize: size === "sm" ? "0.875rem" : size === "lg" ? "1.125rem" : "1rem",
-              fontWeight: 400,
+              fontWeight: 0,
               py: 1,
               px: 1,
               borderRadius: 2,
               "&:hover": {
-                backgroundColor: "var(--color-primary)", // Tailwind's gray-700
+                backgroundColor: "var(--color-primary)",
+                color:'var(--color-text)'
               },
             }}
           >

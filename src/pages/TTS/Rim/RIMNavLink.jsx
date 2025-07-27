@@ -20,12 +20,12 @@ const RIMNavLink = () => {
               menuItems={[
                 {
                   label: "Data Wise",
-                  onClick: () => navigate('DataWise'),
+                  onClick: () => navigate('DataWise',{state:{type:'DataWise'}}),
                   className:'dark:text-white hover:bg-[var(--color-primary)] hover:text-[var(--color-text)]'
                 },
                 {
                   label: "EDC No Wise",
-                  onClick: () => navigate('EDCNoWise'),
+                  onClick: () => navigate('EDCNoWise',{state:{type:'EDCNoWise'}}),
                   className:'dark:text-white hover:bg-[var(--color-primary)] hover:text-[var(--color-text)]'
                 },
               ]}
