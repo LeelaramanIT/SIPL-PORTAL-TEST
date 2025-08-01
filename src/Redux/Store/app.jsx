@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import globalReducer from "../Slices/GlobalSlice";
 import invoiceReducer from "../Slices/InvoiceSlice";
 import authReducer from "../Slices/AuthSlice";
+import rimApplication from '../Slices/RimApplicationSlice'
 import storage from "redux-persist/lib/storage";
 import { encryptTransform } from "redux-persist-transform-encrypt";
 import { persistReducer, persistStore } from "redux-persist";
@@ -36,7 +37,6 @@ const globalPersistConfig = {
 }
 
 
-
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceReducer);
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedGlobalReducer = persistReducer(globalPersistConfig, globalReducer);
@@ -46,6 +46,7 @@ const rootReducer = combineReducers({
   global: persistedGlobalReducer, 
   invoice: persistedInvoiceReducer,
   auth: persistedAuthReducer,
+  rimApplication: rimApplication,
 
 });
 

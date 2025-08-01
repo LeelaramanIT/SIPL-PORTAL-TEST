@@ -197,6 +197,10 @@ body.modal-open .layout-scroll {
   scroll-behavior: smooth;
 }
 
-
-
+/* Custom option styling (limited support) */
+select option {
+  background-color: #f3f4f6; /* Tailwind's gray-100 */
+  padding: 0.75rem;
+  min-height: 2rem;
+}
 

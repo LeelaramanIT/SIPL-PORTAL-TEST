@@ -145,7 +145,7 @@ const ExportInvoice = () => {
                 <SearchBar
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onSearch={() => { }}
+                  onSea rch={() => { }}
                 />
               ) : (
                 <DatePickerComponent

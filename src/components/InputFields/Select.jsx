@@ -37,7 +37,7 @@ const Select = ({
             appearance-none`}
           {...rest}
         >
-          <option value="" disabled hidden>
+          <option className="" value="" disabled hidden>
             {placeholder}
           </option>
           {children}

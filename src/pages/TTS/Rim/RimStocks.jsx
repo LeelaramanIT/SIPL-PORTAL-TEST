@@ -25,6 +25,36 @@ const RimStocks = () => {
     );
   };
 
+  const Example = ()=>{
+    return(
+      <div class="max-w-xl mx-auto p-4 bg-white shadow-md rounded-xl space-y-2">
+  <h2 class="text-xl font-bold mb-4">Rim Specification</h2>
+  <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+    <div><strong>EDC No / Process ID:</strong> 00321X12</div>
+    <div><strong>Stock Qty:</strong> 15</div>
+    <div><strong>Rim Size:</strong> 6.00G-12/V</div>
+    <div><strong>Rim Type:</strong> SPLIT RIMS - 2</div>
+    <div><strong>Tyre Category:</strong> SOLID & PNEUMATIC</div>
+    <div><strong>Piloted:</strong> STUD</div>
+    <div><strong>Mounting Holes:</strong> 5</div>
+    <div><strong>PCD:</strong> 180.00</div>
+    <div><strong>Hole Dia:</strong> 16.5</div>
+    <div><strong>Hole Type:</strong> ROUND</div>
+    <div><strong>Fixing Holes:</strong> 5</div>
+    <div><strong>Fixing PCD:</strong> 190.0</div>
+    <div><strong>Fixing Dia:</strong> 14.0</div>
+    <div><strong>Fixing Type:</strong> PLAIN</div>
+    <div><strong>Bore Dia:</strong> 140.00</div>
+    <div><strong>Wall Thickness:</strong> 05.5</div>
+    <div><strong>Disc Offset:</strong> 010.0</div>
+    <div><strong>Disc Thickness:</strong> 05.0</div>
+    <div><strong>Painting Color:</strong> SILVER</div>
+  </div>
+</div>
+
+    )
+  }
+
   const dummyWheelSpecs = [
     {
       "EDC NO / PROCESS ID": "00321X12",
@@ -260,7 +290,9 @@ const RimStocks = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <WheelSpecCard spec={spec} /> {" "}
+            
+            <Example />
+            {/* <WheelSpecCard spec={spec} /> {" "} */}
           </motion.div>
         ))}
       </div>
