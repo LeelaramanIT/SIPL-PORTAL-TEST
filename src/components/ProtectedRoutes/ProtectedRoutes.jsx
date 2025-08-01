@@ -11,6 +11,7 @@ const ProtectedRoutes = () => {
   const roles = useSelector((state) => state.auth?.roles);
   const menus = useSelector((state) => state.auth?.menus);
   const location = useLocation();
+  const roleID = useSelector((state) => state.auth?.roleID);
 
     // useAxiosInterceptors()
    
@@ -18,9 +19,13 @@ const ProtectedRoutes = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (roles?.some((role) => role?.RoleName === 'Admin')) {
+  console.log(roles);
+  
+
+  if (roles?.some((role) => role?.RoleName === 'Admin') || roleID === 1) {
     return <Outlet />;
   }
+
   
   const currentPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
   

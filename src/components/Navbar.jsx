@@ -25,7 +25,6 @@ const Navbar = () => {
 
       {/* Right Side */}
       <div className="flex items-center gap-3.5 ml-auto mr-3">
-        {/* <ToggleButton/> */}
         <DarkModeToggle />
         <img
           className="w-10 h-10 rounded-full border-primary border cursor-pointer "

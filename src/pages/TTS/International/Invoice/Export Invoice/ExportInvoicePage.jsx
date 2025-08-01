@@ -92,6 +92,7 @@ const ExportInvoice = () => {
     });
   }, [searchQuery, tableData, selectedColumn, startDate]);
 
+  
 
   const handleDateChange = (date) => {
     setStartDate(date);

@@ -7,9 +7,10 @@ const initialState = {
   username: null,
   roles: [],
   menus: [],
-  loggedIn: false,
+  loggedIn: true,
   loading: false,
   error: null,
+  roleID: 1,
 };
 
 

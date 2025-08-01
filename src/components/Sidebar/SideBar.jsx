@@ -20,6 +20,7 @@ const SideBar = () => {
   const navigate = useNavigate();
   const collapsed = !useSelector((store) => store.global.open);
   const isDark = useSelector((state) => state.global.isDark);
+  const roleID = useSelector((state) => state.auth.roleID);
   
   const menus = useSelector((store) => store.auth.menus);
   
@@ -63,7 +64,7 @@ const SideBar = () => {
    
 
   const hasMenuUrlPrefix = (prefix) => {
-    if (isAdmin) return true;
+    if (isAdmin || roleID === 1) return true;
     return menus?.some((menu) => menu.MenuUrl?.startsWith(prefix));
   };
 
@@ -168,13 +169,15 @@ const SideBar = () => {
             {<Menu.Item key='/TTS/Rim/RimOverView'>RIM</Menu.Item>}
           </Menu.SubMenu>
         )}
-        {hasMenuUrlPrefix('/Master') && (<Menu.SubMenu key="Master" title="Masters" icon={<MdOutlineManageAccounts />}>
-          {isMenuAllowed('userMaster') && (<Menu.Item key="/Master/Users">
-            Users
-          </Menu.Item>)}
-          {(isMenuAllowed('userMasterCreate') && <Menu.Item key="/Master/Ureate">
-            Cretae
-          </Menu.Item>)}
+        {hasMenuUrlPrefix('/Masters') && (<Menu.SubMenu key="Masters" title="Masters" icon={<MdOutlineManageAccounts />}>
+         <Menu.SubMenu key="UserMaster" title='User Master'>
+         <Menu.Item key="/Masters/UserMaster/AllUsers">
+          All Users
+          </Menu.Item>
+          <Menu.Item key="/Master/UserMaster/AllUsers">
+          Create User
+          </Menu.Item>
+         </Menu.SubMenu>
         </Menu.SubMenu>)}
 
         {hasMenuUrlPrefix('/Pages') && (<Menu.SubMenu key="Pages" title="Pages" icon={<RiPagesLine />}>

@@ -4,7 +4,6 @@ import MainLayout from "../layout/MainLayout";
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import UserCreate from "../pages/Masters/UserCreate";
-import ListUserMaster from "../pages/Masters/ListUserMaster";
 import Settings from "../pages/Settings/Settings";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 import CustomerInvoice from "../pages/TTS/Domostic/Invoice/CustomerInvoice";
@@ -24,6 +23,7 @@ import RimLayout from "../layout/RimLayout";
 import RimOverView from "../pages/TTS/Rim/RimOverView";
 import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
 import RimStocks from "../pages/TTS/Rim/RimStocks";
+import AllUSers from "../pages/Masters/AllUsers";
 
 
 export const router = createBrowserRouter([
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
           element: <MasterLayout />,
           children: [
             { path: "UserMaster/UserCreate", element: <UserCreate /> },
-            { path: "UserMaster/ListUserMaster", element: <ListUserMaster /> }
+            { path: "/Masters/UserMaster/AllUsers", element: <AllUSers /> }
           ]
         },
         {

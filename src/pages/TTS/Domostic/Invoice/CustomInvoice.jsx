@@ -32,7 +32,7 @@ const CustomInvoice = () => {
 
       {/* Content Area */}
       <div className="w-full h-[35.5rem] rounded-sm bg-background overflow-auto">
-        <TableComponent headers={[]} data={[]}  />
+        <TableComponent headers={[]} data={[]} className={'w-full h-[35.5rem] flex flex-col justify-between rounded-sm bg-background dark:bg-gray-900 overflow-y-auto'}  />
       </div>
     </div>
   )

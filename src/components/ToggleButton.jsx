@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
 
-const ToggleButton = ({ onClick }) => {
-  const [isChecked, setIsChecked] = useState(true); // Initial state, true or false based on need
-
+const ToggleButton = ({ onClick,isChecked,setIsChecked }) => {
+  
   const handleToggle = () => {
-    setIsChecked(!isChecked); // Toggle the state
-    onClick(); // Call parent onClick if necessary
+    const newValue = !isChecked;
+    setIsChecked(newValue);
+    if (onClick) onClick(newValue);
   };
 
   return (
-    <label className="inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        checked={isChecked} // Dynamically control checked state
-        onChange={handleToggle} // Handle toggle change
-        className="sr-only peer"
-      />
-      <div className="relative w-11 h-6 bg-gray-300 rounded-full peer peer-focus:ring-1 peer-focus:ring-lightblue-300 dark:peer-focus:ring-lightblue-600 dark:bg-gray-500 peer-checked:bg-lightgreen-400 dark:peer-checked:bg-lightgreen-600">
+    <div onClick={handleToggle} className="inline-flex items-center cursor-pointer">
+      <div
+        className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors duration-300 ${
+          isChecked ? 'bg-green-500' : 'bg-red-500'
+        }`}
+      >
         <div
-          className={`after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
-            isChecked ? 'after:translate-x-full' : ''
+          className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+            isChecked ? 'translate-x-5' : ''
           }`}
-        ></div>
-      </div>    
-    </label>
+        />
+      </div>
+    </div>
   );
 };
 
