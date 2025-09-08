@@ -1,4 +1,3 @@
-import TVSLogo from "./img/TVSLogo.svg";
 import DefaultLogo from "./img/DefaultLogo.svg";
 import TVSLOGO from "./img/TVS.svg";
 import IceMountain from "./img/IceMountain.mp4";
@@ -9,7 +8,6 @@ import LoadingAnimation from "./img/LoadingAnimation.svg";
 import SUN_TWS from "./img/SUN-TWS.jpg";
 
 const assets = {
-  TVSLogo,
   TVSLOGO,
   DefaultLogo,
   SKY,

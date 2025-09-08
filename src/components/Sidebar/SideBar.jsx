@@ -51,10 +51,7 @@ const SideBar = () => {
     ...(isDark === false && { backgroundColor: "var(--color-background)" }),
   };
 
-  const isAdmin = role?.[0]?.RoleName === "Admin";
-
-  
-  
+  const isAdmin = role?.[0]?.RoleName === "Admin" || roleID === 1;
 
   const isMenuAllowed = (menuName) => {
     if (isAdmin) return true;    

@@ -15,7 +15,7 @@ const Footer = () => {
               Leading manufacturer of high-quality tyres and rims, committed to excellence in production and innovation.
             </p>
             <div className="text-sm text-gray-400 dark:text-gray-500">
-              SIPL Internal Portal - Project Management System
+              SIPL Internal Portal - Project Management System - Tyre Tracking System
             </div>
           </div>
 

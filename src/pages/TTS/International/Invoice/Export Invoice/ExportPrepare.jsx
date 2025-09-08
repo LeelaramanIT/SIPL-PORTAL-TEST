@@ -2,57 +2,86 @@ import { useEffect, useMemo, useState, useRef, useLayoutEffect } from "react";
 import AdditionalDetailsForm from "./AdditionalDetailsForm.jsx";
 import Button from "../../../../../components/InputFields/Button.jsx";
 import { IoMdClose } from "react-icons/io";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import TableSkeleton from "./TableSkeleton.jsx";
 import toast from "react-hot-toast";
 import DialogBox from "../../../../../components/DialogBox.jsx";
-import { gsap } from 'gsap';
+import { gsap } from "gsap";
 import { currencies, getCurrency } from "../../../../../utils/currencies.js";
-import { AnimatePresence, motion  } from "framer-motion";
-
-
+import { AnimatePresence, motion } from "framer-motion";
+import { setInvoiceType } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
 
 const ExportInvoicePrepare = () => {
-  
   const [showDetailsForm, setShowDetailsForm] = useState(false);
+  const dispatch = useDispatch()
   const navigate = useNavigate();
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
   const error = useSelector((state) => state.invoice.exportInvoices.error);
-  const [isOpen, setOpen] = useState(false)
+  const [isOpen, setOpen] = useState(false);
   const invoiceDetails = useSelector(
     (state) => state?.invoice?.exportInvoices?.invoiceDetails
   );
+  const invoiceType = useSelector(
+    (state) => state.invoice?.exportInvoices?.invoiceType
+  )
   console.log(invoiceDetails);
+  const [splitInputs, setSplitInputs] = useState([]);
+  const [splitItems, setSplitItems] = useState([]);
+  const [localItems, setLocalItems] = useState([]);
+const [useGlobalScheme,setUseGlobalSchme] = useState([])
+const [globalScheme,setGlobalScheme] = useState('')
   
+  useEffect(() => {
+    if (invoiceDetails?.items?.length) {
+      setSplitInputs(invoiceDetails.items.map(() => ({})));
+    }
+  }, [invoiceDetails?.items]);
+
+  
+
+useEffect(() => {
+  if (invoiceDetails?.items?.length) {
+    setLocalItems(invoiceDetails.items.map(item => ({ ...item })));
+    setSplitInputs(invoiceDetails.items.map(() => ({})));
+  }
+}, [invoiceDetails?.items]);
+
   useEffect(() => {
     if (error) {
       toast.error(error);
     }
   }, [error]);
 
-  const formDAta = useSelector((state) => state?.invoice?.exportInvoices?.additionalForm)
+  const formDAta = useSelector(
+    (state) => state?.invoice?.exportInvoices?.additionalForm
+  );
 
- 
-  const userCurrency = getCurrency(invoiceDetails?.usercurrency)
+  const userCurrency = getCurrency(invoiceDetails?.usercurrency);
 
-  // calculation for items table 
+  // calculation for items table
   const grandTotal = useMemo(() => {
-    return invoiceDetails?.items.reduce((sum, item) => sum + item?.basicprice * item?.itemQty, 0);
+    return invoiceDetails?.items.reduce(
+      (sum, item) => sum + item?.basicprice * item?.itemQty,
+      0
+    );
   }, [invoiceDetails]);
 
   const totalQTY = useMemo(() => {
     return invoiceDetails?.items.reduce((sum, item) => sum + item?.itemQty, 0);
   }, [invoiceDetails]);
 
-  
   const totalFWT = useMemo(() => {
-    return invoiceDetails?.items.reduce((sum, item) => sum + item?.finishedWt * item?.itemQty, 0);
+    return invoiceDetails?.items.reduce(
+      (sum, item) => sum + item?.finishedWt * item?.itemQty,
+      0
+    );
   }, [invoiceDetails]);
 
   // combi orders
   const combiOrders = useMemo(() => {
-    if (invoiceDetails?.shipmentType !== 'COMBI' || !invoiceDetails?.items) return [];
+    if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items)
+      return [];
 
     const grouped = invoiceDetails?.items.reduce((acc, item) => {
       const plant = item.plant;
@@ -64,32 +93,135 @@ const ExportInvoicePrepare = () => {
     return grouped;
   }, [invoiceDetails?.shipmentType, invoiceDetails?.items]);
 
-
   const handleCloseForm = () => {
     setShowDetailsForm(false);
   };
 
   const handleSubmit = () => {
-    console.log('Confirm Invoive')
-  }
+    console.log("Confirm Invoive");
+  };
 
+  const handleSplitItem = (index) => {
+    const { splitQty, scheme } = splitInputs[index] || {};
+    const originalItem = localItems[index];
+  
+    if (!splitQty || splitQty <= 0 || splitQty > originalItem.itemQty) {
+      toast.error("Invalid split quantity");
+      return;
+    }
+  
+    if (!scheme) {
+      toast.error("Please select a scheme");
+      return;
+    }
+  
+    // Update local items
+    const updatedItems = [...localItems];
+    updatedItems[index] = { ...originalItem, itemQty: originalItem.itemQty - splitQty };
+    setLocalItems(updatedItems);
+  
+    // Update split items
+    setSplitItems(prev => {
+      const existingIndex = prev.findIndex(
+        item => item.originalIndex === index && item.scheme === scheme
+      );
+      if (existingIndex > -1) {
+        return prev.map((item, i) =>
+          i === existingIndex ? { ...item, splitQty: item.splitQty + splitQty } : item
+        );
+      } else {
+        return [...prev, { ...originalItem, originalIndex: index, splitQty, scheme, isSplit: true }];
+      }
+    });
+  
+    // Reset split input
+    setSplitInputs(prev => {
+      const newInputs = [...prev];
+      newInputs[index] = {};
+      return newInputs;
+    });
+  };
+  
+  
+  
+  
+
+  const handleRemoveSplitItem = (splitItem, splitIndex) => {
+    // 1️⃣ Restore original item's quantity in localItems
+    const updatedItems = [...localItems];
+    updatedItems[splitItem.originalIndex] = {
+      ...updatedItems[splitItem.originalIndex],
+      itemQty: updatedItems[splitItem.originalIndex].itemQty + splitItem.splitQty,
+    };
+    setLocalItems(updatedItems);
+  
+    // 2️⃣ Remove the split item from splitItems state
+    setSplitItems((prev) => prev.filter((_, i) => i !== splitIndex));
+  };
+  
+
+  // const [invoiceType, setInvoiceType] = useState("Direct");
+
+  const isSplitValid = (index, originalItem) => {
+    const { splitQty, scheme } = splitInputs[index] || {};
+    return (
+      splitQty &&
+      splitQty > 0 &&
+      splitQty <= originalItem.itemQty &&
+      (scheme || "").trim() !== ""
+    );
+  };  
 
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
-      {invoiceDetails?.type} Invoice Details
+        {invoiceDetails?.type} Invoice Details
       </h1>
-      <ClientDetailsSection invoiceDetails={{ ...invoiceDetails, ...formDAta}} />
+      <ClientDetailsSection
+        invoiceDetails={{ ...invoiceDetails, ...formDAta }}
+      />
 
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
-        Item Details
-      </h1>
+      <div className="flex justify-between items-start">
+        <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+          Item Details
+        </h1>
+
+        <div className="flex justify-center gap-4 mb-4">
+        <div className="flex flex-col">
+          <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+            Invoice Type
+          </label>
+          <select
+            className="border rounded px-2 py-1"
+            onChange={(e) => dispatch(setInvoiceType(e.target.value))}
+            value={invoiceType}
+          >
+            <option value="Direct_Invoice">Direct Invoice</option>
+            <option value="Scheme_Invoice">Scheme Invoice</option>
+          </select>
+        </div>
+        {invoiceType === "Scheme_Invoice" &&
+         <div className="flex flex-col">
+          <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+            Select Scheme
+          </label>
+          <select
+            className="border rounded px-2 py-1"
+            onChange={(e) => dispatch(setInvoiceType(e.target.value))}
+            value={invoiceType}
+          >
+            <option value="Direct_Invoice">Direct Invoice</option>
+            <option value="Scheme_Invoice">Scheme Invoice</option>
+          </select>
+        </div>}
+        </div>
+      </div>
 
       {loading ? (
         <TableSkeleton />
       ) : (
         <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
-          <table className="w-full text-sm text-left table-fixed shadow-lg">
+          <table border={1} className="w-full text-sm text-left table-fixed shadow-lg">
             <thead className="bg-[#ECECEC] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
               <tr>
                 {[
@@ -109,10 +241,13 @@ const ExportInvoicePrepare = () => {
                   "ADDITIONAL INFO",
                   "PLANT",
                   "PART-NO",
+                  ...(invoiceType === "Scheme_Invoice"
+                    ? ["Split Qty", "Scheme", "Action"]
+                    : []),
                 ].map((head, idx) => (
                   <th
                     key={idx}
-                    colSpan={idx === 11 ? 2 : idx === 2 ? 2 : 1}
+                    colSpan={idx === 11 || idx === 2 || idx === 15 ? 2 : 1}
                     className="px-1 py-4 text-center text-[13px]"
                   >
                     {head}
@@ -121,37 +256,135 @@ const ExportInvoicePrepare = () => {
               </tr>
             </thead>
             <tbody>
-              {invoiceDetails?.items.map((item, idx) => (
-                <tr
-                  key={idx}
-                  className={`text-[13px] text-center ${idx % 2 === 0
-                    ? "bg-[#F4F3FE] dark:bg-gray-700"
-                    : "bg-white dark:bg-gray-800"
-                    } text-gray-700 dark:text-gray-300`}
-                >
+              {localItems.map((item, idx) => (
+                <tr key={idx} className={`text-[13px] text-center border-b border-[var(--color-primary-hover)]/30`}>
+                  {/* Existing Columns */}
                   <td>{item?.category}</td>
                   <td>{item?.platforms}</td>
-                  <td colSpan={2} >{item?.tyreSize}</td>
+                  <td colSpan={2}>{item?.tyreSize}</td>
                   <td>{item?.tyreRim}</td>
                   <td>{item?.tyreType}</td>
                   <td>{item?.brand}</td>
-                  <td>{item?.sidewall}</td>
+                  <td>{item?.sidewall || "-"}</td>
                   <td>{item?.basicprice}</td>
                   <td>{item?.itemQty}</td>
                   <td>{(item?.basicprice * item?.itemQty).toFixed(2)}</td>
                   <td>{(item?.finishedWt * item?.itemQty).toFixed(3)}</td>
-                  {/* <td>{(item?.rimItemQty)}</td>
-                  <td>{(item?.rimUnitPrice)}</td> */}
-                  <td colSpan={2} title={item?.additionalInfo}>
-                    {item?.additionalInfo ? item?.additionalInfo : "-"}
-                  </td>
+                  <td colSpan={2}>{item?.additionalInfo || "-"}</td>
                   <td>{item?.plant}</td>
                   <td className="break-all">{item?.itemCode}</td>
+
+                  {invoiceType === "Scheme_Invoice" && (
+                    <>
+                      {/* Split Qty Input */}
+                      <td>
+                        <input
+                          type="number"
+                          min="1"
+                          max={item?.itemQty}
+                          value={splitInputs[idx]?.splitQty || ""}
+                          onChange={(e) =>
+                            setSplitInputs((prev) => {
+                              const newInputs = [...prev];
+                              newInputs[idx] = {
+                                ...newInputs[idx],
+                                splitQty: Number(e.target.value),
+                              };
+                              return newInputs;
+                            })
+                          }
+                          className="w-16 border rounded px-1"
+                        />
+                      </td>
+
+                      {/* Scheme Selector */}
+                      <td colSpan={2}>
+                        <select
+                          value={splitInputs[idx]?.scheme || ""}
+                          onChange={(e) =>
+                            setSplitInputs((prev) => {
+                              const newInputs = [...prev];
+                              newInputs[idx] = {
+                                ...newInputs[idx],
+                                scheme: e.target.value,
+                              };
+                              return newInputs;
+                            })
+                          }
+                          className="border rounded px-1"
+                        >
+                          <option value="">Select Scheme</option>
+                          <option value="Advance">Advance</option>
+                          <option value="Moowr">Moowr</option>
+                        </select>
+                      </td>
+
+                      {/* Action Button */}
+                      <td>
+                        <button
+                          className={`px-2 rounded ${
+                            isSplitValid(idx, item)
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          }`}
+                          disabled={!isSplitValid(idx, item)}
+                          onClick={() => handleSplitItem(idx, item)}
+                        >
+                          Split
+                        </button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+
+              {/* Display Split Items */}
+              {splitItems.map((splitItem, i) => (
+                <tr
+                  key={`split-${i}`}
+                  className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--color-primary-hover)]/30"
+                >
+                  <td>{splitItem.category}</td>
+                  <td>{splitItem.platforms}</td>
+                  <td colSpan={2}>{splitItem.tyreSize}</td>
+                  <td>{splitItem.tyreRim}</td>
+                  <td>{splitItem.tyreType}</td>
+                  <td>{splitItem.brand}</td>
+                  <td>{splitItem.sidewall || "-"}</td>
+                  <td>{splitItem.basicprice}</td>
+
+                  <td>{splitItem.splitQty}</td>
+
+                  <td>
+                    {(splitItem.basicprice * splitItem.splitQty).toFixed(2)}
+                  </td>
+
+                  <td>
+                    {(splitItem.finishedWt * splitItem.splitQty).toFixed(3)}
+                  </td>
+
+                  <td colSpan={2}>-</td>
+                  <td>{splitItem.plant}</td>
+                  <td className="break-all">{splitItem.itemCode}</td>
+
+                  <td>{"-"}</td>
+                  <td colSpan={2}>{splitItem.scheme}</td>
+
+                  {/* Remove Button */}
+                  <td>
+                    <button
+                      className="bg-red-500 text-white px-2 rounded"
+                      onClick={() => handleRemoveSplitItem(splitItem, i)}
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
+
             <tfoot className="font-semibold text-gray-800 dark:text-white">
-              <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
+              <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10 text-xs">
                 <td colSpan={9} className="text-right px-4 py-2">
                   Grand Total :
                 </td>
@@ -163,18 +396,16 @@ const ExportInvoicePrepare = () => {
                   {totalFWT?.toFixed(3)}
                 </td>
                 <td></td>
-                <td colSpan={3}>
-                  Currency : {userCurrency.code}
-                </td>
+                <td colSpan={3}>Currency : {userCurrency.code}</td>
+                {invoiceType === "Scheme_Invoice" && <td colSpan={4}></td>}
               </tr>
             </tfoot>
-          </table>
+          </table>  
         </div>
       )}
+      
 
-
-
-      {invoiceDetails?.shipmentType == 'COMBI' && (
+      {invoiceDetails?.shipmentType == "COMBI" && (
         <>
           <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
             Combi Orders
@@ -196,10 +427,7 @@ const ExportInvoicePrepare = () => {
                     "TOTAL WT",
                     "RFD",
                   ].map((head, idx) => (
-                    <th
-                      key={idx}
-                      className="px-1 py-4 text-center text-[13px]"
-                    >
+                    <th key={idx} className="px-1 py-4 text-center text-[13px]">
                       {head}
                     </th>
                   ))}
@@ -208,11 +436,26 @@ const ExportInvoicePrepare = () => {
               <tbody>
                 {Object.entries(combiOrders)?.map(([plant, items], idx) => {
                   // Calculate totals per plant
-                  const tyreQty = items.reduce((sum, item) => sum + item.itemQty, 0);
-                  const tyrePrice = items.reduce((sum, item) => sum + item.basicprice * item.itemQty, 0);
-                  const tyreWt = items.reduce((sum, item) => sum + item.finishedWt * item.itemQty, 0);
-                  const rimQty = items.reduce((sum, item) => sum + item.rimItemQty, 0);
-                  const rimPrice = items.reduce((sum, item) => sum + item.rimUnitPrice * item.rimItemQty, 0);
+                  const tyreQty = items.reduce(
+                    (sum, item) => sum + item.itemQty,
+                    0
+                  );
+                  const tyrePrice = items.reduce(
+                    (sum, item) => sum + item.basicprice * item.itemQty,
+                    0
+                  );
+                  const tyreWt = items.reduce(
+                    (sum, item) => sum + item.finishedWt * item.itemQty,
+                    0
+                  );
+                  const rimQty = items.reduce(
+                    (sum, item) => sum + item.rimItemQty,
+                    0
+                  );
+                  const rimPrice = items.reduce(
+                    (sum, item) => sum + item.rimUnitPrice * item.rimItemQty,
+                    0
+                  );
                   const rimWt = 0;
                   const totalQty = tyreQty + rimQty;
                   const totalPrice = tyrePrice + rimPrice;
@@ -221,10 +464,11 @@ const ExportInvoicePrepare = () => {
                   return (
                     <tr
                       key={plant}
-                      className={`text-[13px] text-center ${idx % 2 === 0
-                        ? "bg-[#F4F3FE] dark:bg-gray-700"
-                        : "bg-white dark:bg-gray-800"
-                        } text-gray-700 dark:text-gray-300`}
+                      className={`text-[13px] text-center ${
+                        idx % 2 === 0
+                          ? "bg-[#F4F3FE] dark:bg-gray-700"
+                          : "bg-white dark:bg-gray-800"
+                      } text-gray-700 dark:text-gray-300`}
                     >
                       <td>{plant}</td>
                       <td>{tyreQty}</td>
@@ -247,8 +491,12 @@ const ExportInvoicePrepare = () => {
                     Total:
                   </td>
                   <td className="px-4 py-2 text-center">{totalQTY}</td>
-                  <td className="px-4 py-2 text-center">{grandTotal?.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-center">{totalFWT?.toFixed(3)}</td>
+                  <td className="px-4 py-2 text-center">
+                    {grandTotal?.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {totalFWT?.toFixed(3)}
+                  </td>
                   <td className="px-4 py-2 text-center"></td>
                 </tr>
               </tfoot>
@@ -257,66 +505,78 @@ const ExportInvoicePrepare = () => {
         </>
       )}
 
-
-
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4 mr-14">
-        {formDAta && <Button
-          onClick={() => navigate("/TTS/International/Invoice/Export/BillPDF")}
-          text="Preview PDF"
-        />}
-        {!formDAta ? <Button onClick={() => setShowDetailsForm(true)} text="+ Add Additional Details" /> : <Button onClick={() => setShowDetailsForm(true)} text="Edit Additional Details" />}
+        {formDAta && (
+          <Button
+            onClick={() =>
+              navigate("/TTS/International/Invoice/Export/BillPDF")
+            }
+            text="Preview PDF"
+          />
+        )}
+        {!formDAta ? (
+          <Button
+            onClick={() => setShowDetailsForm(true)}
+            text="+ Add Additional Details"
+          />
+        ) : (
+          <Button
+            onClick={() => setShowDetailsForm(true)}
+            text="Edit Additional Details"
+          />
+        )}
         {formDAta && <Button onClick={() => setOpen(true)} text="Submit" />}
       </div>
       <DialogBox
-          isOpen={isOpen}
-          onClose={() => setOpen(false)}
-          title="Submit Invoice"
-          message="Are you sure you want to submit this invoice? This action cannot be undone once submitted."
-          confirmText="Submit"
-          cancelText="Cancel"
-          onConfirm={handleSubmit}
-        />
+        isOpen={isOpen}
+        onClose={() => setOpen(false)}
+        title="Submit Invoice"
+        message="Are you sure you want to submit this invoice? This action cannot be undone once submitted."
+        confirmText="Submit"
+        cancelText="Cancel"
+        onConfirm={handleSubmit}
+      />
 
-<AnimatePresence>
-  {showDetailsForm && (
-    <motion.div
-      key="modal"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
-    >
-      <motion.div
-        key="modal-content"
-        initial={{ scale: 0.95, opacity: 0, y: 40 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 40 }}
-        transition={{ duration: 0.1, ease: "easeIn" }}
-        className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
-      >
-        <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">
-          Additional Invoice Details
-        </h2>
-        <button
-          onClick={handleCloseForm}
-          className="absolute top-5 right-5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
-        >
-          <IoMdClose className="text-2xl" />
-        </button>
-        <AdditionalDetailsForm onClose={handleCloseForm} invoiceDetails={invoiceDetails} />
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
-
+      <AnimatePresence>
+        {showDetailsForm && (
+          <motion.div
+            key="modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
+          >
+            <motion.div
+              key="modal-content"
+              initial={{ scale: 0.95, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 40 }}
+              transition={{ duration: 0.1, ease: "easeIn" }}
+              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+            >
+              <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">
+                Additional Invoice Details
+              </h2>
+              <button
+                onClick={handleCloseForm}
+                className="absolute top-5 right-5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
+              >
+                <IoMdClose className="text-2xl" />
+              </button>
+              <AdditionalDetailsForm
+                onClose={handleCloseForm}
+                invoiceDetails={invoiceDetails}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 export default ExportInvoicePrepare;
-
-
 
 function ClientDetailsSection({ invoiceDetails }) {
   const containerRef = useRef(null);

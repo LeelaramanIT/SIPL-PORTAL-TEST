@@ -13,6 +13,8 @@ import {
 } from "../../../../../Redux/Slices/InvoiceSlice";
 import Button from "../../../../../components/InputFields/Button";
 import TableSkeleton from "./TableSkeleton";
+import { generateTableData } from "../../../../../utils/DummyJSON";
+import { highlightMatch } from "../../../../../utils/highlightMatch";
 
 const ExportInvoice = () => {
   const navigate = useNavigate();
@@ -56,13 +58,13 @@ const ExportInvoice = () => {
     setSelectedColumn(item.key || "all");
   };
 
-  const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
+  // const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
 
   // console.log(tableData);
   
 
 
-  // const tableData = useMemo(() => generateTableData(50), []);
+  const tableData = useMemo(() => generateTableData(50), []);
 
   const filteredData = useMemo(() => {
     if (
@@ -98,26 +100,26 @@ const ExportInvoice = () => {
     setStartDate(date);
   };
 
-  const highlightMatch = (text, query) => {
+  // const highlightMatch = (text, query) => {
     
-    if (!query || typeof text !== "string" && typeof text !== "number") return text;
+  //   if (!query || typeof text !== "string" && typeof text !== "number") return text;
   
-    // Escape special regex characters in the query string
-    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  //   // Escape special regex characters in the query string
+  //   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   
-    const regex = new RegExp(`(${escapedQuery})`, "gi");
-    const parts = String(text).split(regex);
+  //   const regex = new RegExp(`(${escapedQuery})`, "gi");
+  //   const parts = String(text).split(regex);
   
-    return parts.map((part, i) =>
-      part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
-        <span key={i} className="bg-[var(--color-primary-hover)] text-[var(--color-text)] font-semibold rounded px-1">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
+  //   return parts.map((part, i) =>
+  //     part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
+  //       <span key={i} className="bg-[var(--color-primary-hover)]/10 text-[var(--color-text)] font-semibold rounded px-1">
+  //         {part}
+  //       </span>
+  //     ) : (
+  //       part
+  //     )
+  //   );
+  // };
   
   
 
@@ -145,7 +147,7 @@ const ExportInvoice = () => {
                 <SearchBar
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onSea rch={() => { }}
+                  onSearch={() => { }}
                 />
               ) : (
                 <DatePickerComponent

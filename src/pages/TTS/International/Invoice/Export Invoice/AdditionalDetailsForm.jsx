@@ -117,7 +117,7 @@ console.log(invoiceDetails);
           ]}
         />
         <InputField label="Vessel/Flight" name="VesselFlight" register={register} errors={errors} />
-        <InputField label="Invoice No" name="InvoiceNo" register={register} errors={errors} disabled={true} />
+        <InputField label="Invoice No" name="InvoiceNo" register={register} errors={errors} disabled={false} />
         <InputField label="BILL OF LADING NO" name="BillOfLadingNo" register={register} errors={errors} />
         <SelectField label="Container Type" name="ContainerType" register={register} errors={errors} options={["20'", "40'", "LCL"]} />
         <SelectField label="Pre-Carriage by" name="PreCarriageby" register={register} errors={errors} options={["SEA", "AIR", "ROAD"]} />

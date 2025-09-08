@@ -1,20 +1,20 @@
 export const highlightMatch = (text, query) => {
-    if (!query || typeof text !== 'string') return text;
-  
-    const regex = new RegExp(`(${query})`, 'gi');
-    const parts = text.split(regex);
-  
-    return parts.map((part, index) =>
-      regex.test(part) ? (
-        <mark
-          key={index}
-          className="bg-yellow-200 dark:bg-yellow-500 text-black dark:text-white px-1 rounded"
-        >
-          {part}
-        </mark>
-      ) : (
-        <span key={index}>{part}</span>
-      )
-    );
-  };
-  
+    
+  if (!query || typeof text !== "string" && typeof text !== "number") return text;
+
+  // Escape special regex characters in the query string
+  const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const regex = new RegExp(`(${escapedQuery})`, "gi");
+  const parts = String(text).split(regex);
+
+  return parts.map((part, i) =>
+    part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
+      <span key={i} className="bg-[var(--color-primary-hover)]/30 text-[var(--color-text-hover)] font-semibold rounded px-1">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+};
