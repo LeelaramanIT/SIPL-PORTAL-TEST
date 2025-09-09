@@ -10,7 +10,7 @@ import DialogBox from "../../../../../components/DialogBox.jsx";
 import { gsap } from "gsap";
 import { currencies, getCurrency } from "../../../../../utils/currencies.js";
 import { AnimatePresence, motion } from "framer-motion";
-import { setInvoiceType } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
+import { setInvoiceType,setSplitResult } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
@@ -25,27 +25,31 @@ const ExportInvoicePrepare = () => {
   const invoiceType = useSelector(
     (state) => state.invoice?.exportInvoices?.invoiceType
   )
-  console.log(invoiceDetails);
+  const splitResult = useSelector(
+    (state) => state.invoice?.exportInvoices?.splitResult
+  )
+  console.log(splitResult);
+  
   const [splitInputs, setSplitInputs] = useState([]);
   const [splitItems, setSplitItems] = useState([]);
   const [localItems, setLocalItems] = useState([]);
-const [useGlobalScheme,setUseGlobalSchme] = useState([])
-const [globalScheme,setGlobalScheme] = useState('')
-  
+  const [useGlobalScheme, setUseGlobalScheme] = useState(false);
+  const [globalScheme, setGlobalScheme] = useState('');
+
   useEffect(() => {
     if (invoiceDetails?.items?.length) {
       setSplitInputs(invoiceDetails.items.map(() => ({})));
     }
   }, [invoiceDetails?.items]);
 
-  
 
-useEffect(() => {
-  if (invoiceDetails?.items?.length) {
-    setLocalItems(invoiceDetails.items.map(item => ({ ...item })));
-    setSplitInputs(invoiceDetails.items.map(() => ({})));
-  }
-}, [invoiceDetails?.items]);
+
+  useEffect(() => {
+    if (invoiceDetails?.items?.length) {
+      setLocalItems(invoiceDetails.items.map(item => ({ ...item })));
+      setSplitInputs(invoiceDetails.items.map(() => ({})));
+    }
+  }, [invoiceDetails?.items]);
 
   useEffect(() => {
     if (error) {
@@ -105,49 +109,77 @@ useEffect(() => {
     const { splitQty, scheme } = splitInputs[index] || {};
     const originalItem = localItems[index];
   
-    if (!splitQty || splitQty <= 0 || splitQty > originalItem.itemQty) {
+    if (!splitQty || splitQty <= 0 || splitQty >= originalItem.itemQty) {
       toast.error("Invalid split quantity");
       return;
     }
   
-    if (!scheme) {
+    const appliedScheme = useGlobalScheme ? globalScheme : scheme;
+    if (!appliedScheme) {
       toast.error("Please select a scheme");
       return;
     }
   
-    // Update local items
+    // 1️⃣ Deduct qty from original row
     const updatedItems = [...localItems];
-    updatedItems[index] = { ...originalItem, itemQty: originalItem.itemQty - splitQty };
+    updatedItems[index] = {
+      ...originalItem,
+      itemQty: originalItem.itemQty - splitQty,
+      scheme: useGlobalScheme ? appliedScheme : originalItem.scheme || "", // keep scheme for consistency
+    };
     setLocalItems(updatedItems);
   
-    // Update split items
-    setSplitItems(prev => {
+    // 2️⃣ Create or update split rows
+    let updatedSplits = [];
+    setSplitItems((prev) => {
       const existingIndex = prev.findIndex(
-        item => item.originalIndex === index && item.scheme === scheme
+        (item) =>
+          item.originalIndex === index && item.scheme === appliedScheme
       );
       if (existingIndex > -1) {
-        return prev.map((item, i) =>
-          i === existingIndex ? { ...item, splitQty: item.splitQty + splitQty } : item
+        updatedSplits = prev.map((item, i) =>
+          i === existingIndex
+            ? { ...item, splitQty: item.splitQty + splitQty }
+            : item
         );
+        return updatedSplits;
       } else {
-        return [...prev, { ...originalItem, originalIndex: index, splitQty, scheme, isSplit: true }];
+        updatedSplits = [
+          ...prev,
+          {
+            ...originalItem,
+            originalIndex: index,
+            itemQty: splitQty,
+            splitQty,
+            scheme: appliedScheme,
+            isSplit: true,
+          },
+        ];
+        return updatedSplits;
       }
     });
   
-    // Reset split input
-    setSplitInputs(prev => {
+    // 3️⃣ Push combined result into Redux
+    setTimeout(() => {
+      dispatch(setSplitResult([...updatedItems, ...splitItems, ...updatedSplits]));
+    }, 0);
+  
+    // 4️⃣ Reset input
+    setSplitInputs((prev) => {
       const newInputs = [...prev];
       newInputs[index] = {};
       return newInputs;
     });
   };
   
-  
-  
-  
+
+
+
+
+
 
   const handleRemoveSplitItem = (splitItem, splitIndex) => {
-    // 1️⃣ Restore original item's quantity in localItems
+    // Restore original qty
     const updatedItems = [...localItems];
     updatedItems[splitItem.originalIndex] = {
       ...updatedItems[splitItem.originalIndex],
@@ -155,10 +187,15 @@ useEffect(() => {
     };
     setLocalItems(updatedItems);
   
-    // 2️⃣ Remove the split item from splitItems state
-    setSplitItems((prev) => prev.filter((_, i) => i !== splitIndex));
+    // Remove from splitItems
+    const newSplits = splitItems.filter((_, i) => i !== splitIndex);
+    setSplitItems(newSplits);
+  
+    // Update Redux
+    dispatch(setSplitResult([...updatedItems, ...newSplits]));
   };
   
+
 
   // const [invoiceType, setInvoiceType] = useState("Direct");
 
@@ -167,10 +204,10 @@ useEffect(() => {
     return (
       splitQty &&
       splitQty > 0 &&
-      splitQty <= originalItem.itemQty &&
+      splitQty < originalItem.itemQty &&
       (scheme || "").trim() !== ""
     );
-  };  
+  };
 
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
@@ -187,33 +224,38 @@ useEffect(() => {
         </h1>
 
         <div className="flex justify-center gap-4 mb-4">
-        <div className="flex flex-col">
-          <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
-            Invoice Type
-          </label>
-          <select
-            className="border rounded px-2 py-1"
-            onChange={(e) => dispatch(setInvoiceType(e.target.value))}
-            value={invoiceType}
-          >
-            <option value="Direct_Invoice">Direct Invoice</option>
-            <option value="Scheme_Invoice">Scheme Invoice</option>
-          </select>
-        </div>
-        {invoiceType === "Scheme_Invoice" &&
-         <div className="flex flex-col">
-          <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
-            Select Scheme
-          </label>
-          <select
-            className="border rounded px-2 py-1"
-            onChange={(e) => dispatch(setInvoiceType(e.target.value))}
-            value={invoiceType}
-          >
-            <option value="Direct_Invoice">Direct Invoice</option>
-            <option value="Scheme_Invoice">Scheme Invoice</option>
-          </select>
-        </div>}
+          <div className="flex flex-col">
+            <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+              Invoice Type
+            </label>
+            <select
+              className="border rounded px-2 py-1"
+              onChange={(e) => dispatch(setInvoiceType(e.target.value))}
+              value={invoiceType}
+            >
+              <option value="Direct_Invoice">Direct Invoice</option>
+              <option value="Scheme_Invoice">Scheme Invoice</option>
+            </select>
+          </div>
+          {invoiceType === "Scheme_Invoice" &&
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+                Select Scheme
+              </label>
+              <select
+                value={globalScheme}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setGlobalScheme(value);
+                  setUseGlobalScheme(value !== "Individual_Scheme"); 
+                }}
+                className="border rounded px-2 py-1"
+              >
+                <option value="Individual_Scheme">Individual scheme</option>
+                <option value="Advance">Advance</option>
+                <option value="Moowr">Moowr</option>
+              </select>
+            </div>}
         </div>
       </div>
 
@@ -276,13 +318,12 @@ useEffect(() => {
 
                   {invoiceType === "Scheme_Invoice" && (
                     <>
-                      {/* Split Qty Input */}
                       <td>
                         <input
                           type="number"
                           min="1"
                           max={item?.itemQty}
-                          value={splitInputs[idx]?.splitQty || ""}
+                          value={splitInputs[idx]?.splitQty ||  item?.itemQty || ''}
                           onChange={(e) =>
                             setSplitInputs((prev) => {
                               const newInputs = [...prev];
@@ -297,44 +338,47 @@ useEffect(() => {
                         />
                       </td>
 
-                      {/* Scheme Selector */}
-                      <td colSpan={2}>
-                        <select
-                          value={splitInputs[idx]?.scheme || ""}
-                          onChange={(e) =>
-                            setSplitInputs((prev) => {
-                              const newInputs = [...prev];
-                              newInputs[idx] = {
-                                ...newInputs[idx],
-                                scheme: e.target.value,
-                              };
-                              return newInputs;
-                            })
-                          }
-                          className="border rounded px-1"
-                        >
-                          <option value="">Select Scheme</option>
-                          <option value="Advance">Advance</option>
-                          <option value="Moowr">Moowr</option>
-                        </select>
-                      </td>
+                      {/* ✅ Only show dropdown if global scheme is NOT used */}
+                      {
+                        <td colSpan={2}>
+                          <select
+                            value={splitInputs[idx]?.scheme || ""}
+                            onChange={(e) =>
+                              setSplitInputs((prev) => {
+                                const newInputs = [...prev];
+                                newInputs[idx] = {
+                                  ...newInputs[idx],
+                                  scheme: e.target.value,
+                                };
+                                return newInputs;
+                              })
+                            }
+                            className="border rounded px-1"
+                          >
+                            <option value="">Select Scheme</option>
+                            <option value="Advance">Advance</option>
+                            <option value="Moowr">Moowr</option>
+                          </select>
+                        </td>
+                      }
 
-                      {/* Action Button */}
                       <td>
                         <button
-                          className={`px-2 rounded ${
-                            isSplitValid(idx, item)
+                          className={`px-2 rounded ${isSplitValid(idx, item) || (useGlobalScheme && splitInputs[idx]?.splitQty)
                               ? "bg-blue-500 text-white"
                               : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          }`}
-                          disabled={!isSplitValid(idx, item)}
-                          onClick={() => handleSplitItem(idx, item)}
+                            }`}
+                          disabled={
+                            !(isSplitValid(idx, item) || (useGlobalScheme && splitInputs[idx]?.splitQty))
+                          }
+                          onClick={() => handleSplitItem(idx)}
                         >
                           Split
                         </button>
                       </td>
                     </>
                   )}
+
                 </tr>
               ))}
 
@@ -400,10 +444,10 @@ useEffect(() => {
                 {invoiceType === "Scheme_Invoice" && <td colSpan={4}></td>}
               </tr>
             </tfoot>
-          </table>  
+          </table>
         </div>
       )}
-      
+
 
       {invoiceDetails?.shipmentType == "COMBI" && (
         <>
@@ -464,11 +508,10 @@ useEffect(() => {
                   return (
                     <tr
                       key={plant}
-                      className={`text-[13px] text-center ${
-                        idx % 2 === 0
-                          ? "bg-[#F4F3FE] dark:bg-gray-700"
-                          : "bg-white dark:bg-gray-800"
-                      } text-gray-700 dark:text-gray-300`}
+                      className={`text-[13px] text-center ${idx % 2 === 0
+                        ? "bg-[#F4F3FE] dark:bg-gray-700"
+                        : "bg-white dark:bg-gray-800"
+                        } text-gray-700 dark:text-gray-300`}
                     >
                       <td>{plant}</td>
                       <td>{tyreQty}</td>
@@ -752,31 +795,31 @@ function ClientDetailsSection({ invoiceDetails }) {
             {[
               invoiceDetails?.PreCarriageby === "air"
                 ? {
-                    label: "Delivery Method",
-                    value: "Air Freight",
-                    icon: "✈️",
-                    color: "blue",
-                  }
+                  label: "Delivery Method",
+                  value: "Air Freight",
+                  icon: "✈️",
+                  color: "blue",
+                }
                 : invoiceDetails?.PreCarriageby === "sea"
-                ? {
+                  ? {
                     label: "Delivery Method",
                     value: "Sea Freight",
                     icon: "🚢",
                     color: "green",
                   }
-                : invoiceDetails?.PreCarriageby === "road"
-                ? {
-                    label: "Delivery Method",
-                    value: "Road Freight",
-                    icon: "🚚",
-                    color: "orange",
-                  }
-                : {
-                    label: "Delivery Method",
-                    value: "Please Add Delivery Method",
-                    icon: "❗",
-                    color: "red",
-                  },
+                  : invoiceDetails?.PreCarriageby === "road"
+                    ? {
+                      label: "Delivery Method",
+                      value: "Road Freight",
+                      icon: "🚚",
+                      color: "orange",
+                    }
+                    : {
+                      label: "Delivery Method",
+                      value: "Please Add Delivery Method",
+                      icon: "❗",
+                      color: "red",
+                    },
               {
                 label: "Packing Method",
                 value: "Wooden Crates",

@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 const initialState = {
   token: null,
   username: null,
-  roles: [{userRole:"Admin"}],
+  roles: '',
   menus: [],
   loggedIn: true,
   loading: false,
@@ -23,7 +23,7 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess: (state, action) => {
-      const { Token, username, roles, Menus } = action.payload;
+      const { Token, username, roles, Menus,RoleID , Department } = action.payload;
 
       state.token = Token;
       state.username = username;

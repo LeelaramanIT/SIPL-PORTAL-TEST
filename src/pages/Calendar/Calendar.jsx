@@ -152,7 +152,7 @@ const Calendar = ({ variant = "full" }) => {
             eventsSet={(events) => setCurrentEvents(events)}
             eventClick={handleEventClick}
             // ⬇️ disable scrolling in mini version
-            dayMaxEventRows={false}
+            // dayMaxEventRows={false}
             expandRows={variant === "mini" ? true : false}
           />
         </Box>

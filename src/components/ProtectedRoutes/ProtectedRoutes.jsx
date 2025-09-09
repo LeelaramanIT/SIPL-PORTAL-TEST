@@ -22,7 +22,7 @@ const ProtectedRoutes = () => {
   console.log(roles);
   
 
-  if (roles?.some((role) => role?.RoleName === 'Admin') || roleID === 1) {
+  if ((roles === 'admin') || (roleID === 1)) {
     return <Outlet />;
   }
 
