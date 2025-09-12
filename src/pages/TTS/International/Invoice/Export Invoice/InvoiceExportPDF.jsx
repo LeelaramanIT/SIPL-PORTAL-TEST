@@ -315,9 +315,9 @@ const InvoicePDF = ({ data,styles }) => (
               }}
             >
               <Text style={styles.textValue}>
-                The above shipment is under Advance Licence & EPCG Scheme. S.No-I
+                {data?.licenceDetails?.description || `The above shipment is under Advance Licence & EPCG Scheme. S.No-I
                 Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR
-                Licence No. 0411007094 date. 14.03.2024)
+                Licence No. 0411007094 date. 14.03.2024)`}
               </Text>
               <View style={{ display: "flex", flexDirection: "row" }}>
                 <Text style={{ fontSize: "7", padding: "5", color: "red" }}>
