@@ -6,10 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import formatCustomDate from "../../../../../utils/DateFormat";
 import InvoicePDF from "./InvoiceExportPDF";
 import { useEffect, useState } from "react";
+import { SetupdatedInvoiceDetails } from "../../../../../Redux/Slices/InvoiceSlice";
+import { numberToWords } from "../../../../../utils/NumberToWords";
 
 const BORDER_THIN = "0.5px solid black";
 const BORDER_BOLD = "1.5px solid black";
-
 
 // Styles
 export const styles = StyleSheet.create({
@@ -340,129 +341,265 @@ export const styles = StyleSheet.create({
 // Viewer component
 const ExportInvoiceBillPDF = () => {
   const navigate = useNavigate();
-  const { invoiceDetails, additionalForm } = useSelector(
-    (state) => state.invoice.exportInvoices
-  );
+  const {
+    invoiceDetails,
+    additionalForm,
+    FinalInvoiceData,
+    updatedInvoiceDetails,
+  } = useSelector((state) => state.invoice.exportInvoices);
   const [pdfBlob, setPdfBlob] = useState(null);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  // console.log(FinalInvoiceData);
 
-  const invoice = { ...invoiceDetails, ...additionalForm };
+  const invoice = { ...updatedInvoiceDetails, ...additionalForm };
+
+  // console.log(invoice);
+
+  const splitInvoiceByScheme = (invoice) => {
+    const itemByScheme = invoice.items.reduce((acc, item) => {
+      if (!acc[item.scheme]) {
+        acc[item.scheme] = [];
+      }
+      acc[item.scheme].push(item);
+      return acc;
+    }, {});
+
+    const invoices = Object.entries(itemByScheme).map(([scheme, items]) => {
+      return {
+        ...invoice,
+        items, // only items of this scheme
+        scheme, // optional: attach scheme at invoice level
+      };
+    });
+
+    return invoices;
+  };
+
+  const invoices = splitInvoiceByScheme(invoice);
+
+  // console.log(invoices);
 
   useEffect(() => {
-    if (!invoice) {
+    if (!invoices) {
       navigate("/TTS/International/Invoice/ExportInvoice");
     }
-  }, [invoice]);
+  }, [invoices]);
 
-  const data = {
-    orderRefNo: invoice?.invoiceNumber,
-    date: new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }),
-    buyersOrderNo: invoice?.orderRefNo,
-    refDate: `E MAIL DATE ${formatCustomDate(invoice?.rfD_Date)}`,
-    otherReferences: "SDF Form",
-    exporter: invoice?.ExporterAuthorizedAddress || "",
-    consignee: {
-      name: invoice?.billingCompanyName || "",
-      address: invoice?.billingAddress?.split("~") || [],
-      city: invoice?.billingCity?.toUpperCase() || "",
-      state: invoice?.billingState?.toUpperCase() || "",
-      country: invoice?.billingCountry?.toUpperCase() || "",
-    },
-    customerAgent: {
-      name: "M/S, ADVANCE TIRES",
-      address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
-    },
-    preCarriageBy: invoice?.PreCarriageby?.toUpperCase() || "",
-    placeOfReceipt: invoice?.PlaceOfReceiptByPreCarrier?.toUpperCase() || "",
-    vesselFlightNo: invoice?.VesselFlight || "",
-    portOfLoading: invoice?.PortOfLoading?.toUpperCase() || "",
-    portOfDischarge: invoice?.PortOfDischarge?.toUpperCase() || "",
-    finalDestination: invoice?.FinalDestination?.toUpperCase() || "",
-    buyerIfOtherThanConsignee: {
-      name: invoice?.shippingCompanyName || "",
-      address: invoice?.shippingAddress?.split("~") || [],
-      city: invoice?.shippingCity?.toUpperCase() || "",
-      state: invoice?.shippingState?.toUpperCase() || "",
-      country: invoice?.shippingcountry?.toUpperCase() || "",
-    },
-    countryOfOrigin: invoice?.CountryOfOriginOfGoods?.toUpperCase() || "",
-    countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
-    deliveryTerms: "THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.",
-    PaymentTerms: invoice?.PaymentTerms || "",
-    bankDetails: {
-      accountHolder:
-        "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
-      address:
-        "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
-      accountNumber: "40582959714",
-      bank: "State Bank of India, Egmore, Chennai-600008.",
-      swiftCode: "SBININBB174",
-    },
-    containerDetails: {
-      size: invoice?.ContainerType,
-      containerNo: invoice?.ContainerNo,
-      linerSealNo: invoice?.ContainerSEALNO,
-      otsNo: invoice?.OtsNo || "",
-    },
-    packingDetails: {
-      itcHsNo: invoice?.itcHsNo,
-      description: "128 LOOSE TYRES",
-    },
-    goodsDescription: [
-      "Automobile tyres reinforced with Nylon tyre Cord warp sheet / Rayon Tyre cord warp sheet.",
-      "SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%",
-    ],
-    quantityKgs: 15496.8,
-    unitPriceUsd: 2.64525,
-    totalPricesUsd: [40992.84, 1229.79],
-    grandTotalUsd: 39763.05,
-    amountInWords:
-      "USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE ONLY",
-    grossWeight: "15496.800 KGS",
-    netWeight: "15496.800 KGS",
-    declaration:
-      "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
-    licenceDetails: {
-      description:
-        "The above shipment is under Advance Licence & EPCG Scheme. S.No-I Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR Licence No. 0411007094 date. 14.03.2024)",
-      igstLUT:
-        "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
-    },
-    authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
-    footer: {
-      line1:
-        "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
-      line2: "Jawahar road Chokkikulam, Madurai - 625002.",
-      line3:
-        "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
-    },
-  };
+  // const data = {
+  //   orderRefNo: invoice?.invoiceNumber,
+  //   date: new Date().toLocaleDateString("en-GB", {
+  //     day: "2-digit",
+  //     month: "2-digit",
+  //     year: "numeric",
+  //   }),
+  //   buyersOrderNo: invoice?.orderRefNo,
+  //   refDate: `E MAIL DATE ${formatCustomDate(invoice?.rfD_Date)}`,
+  //   otherReferences: "SDF Form",
+  //   exporter: invoice?.ExporterAuthorizedAddress || "",
+  //   consignee: {
+  //     name: invoice?.billingCompanyName || "",
+  //     address: invoice?.billingAddress?.split("~") || [],
+  //     city: invoice?.billingCity?.toUpperCase() || "",
+  //     state: invoice?.billingState?.toUpperCase() || "",
+  //     country: invoice?.billingCountry?.toUpperCase() || "",
+  //   },
+  //   customerAgent: {
+  //     name: "M/S, ADVANCE TIRES",
+  //     address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
+  //   },
+  //   preCarriageBy: invoice?.PreCarriageby?.toUpperCase() || "",
+  //   placeOfReceipt: invoice?.PlaceOfReceiptByPreCarrier?.toUpperCase() || "",
+  //   vesselFlightNo: invoice?.VesselFlight || "",
+  //   portOfLoading: invoice?.PortOfLoading?.toUpperCase() || "",
+  //   portOfDischarge: invoice?.PortOfDischarge?.toUpperCase() || "",
+  //   finalDestination: invoice?.FinalDestination?.toUpperCase() || "",
+  //   buyerIfOtherThanConsignee: {
+  //     name: invoice?.shippingCompanyName || "",
+  //     address: invoice?.shippingAddress?.split("~") || [],
+  //     city: invoice?.shippingCity?.toUpperCase() || "",
+  //     state: invoice?.shippingState?.toUpperCase() || "",
+  //     country: invoice?.shippingcountry?.toUpperCase() || "",
+  //   },
+  //   countryOfOrigin: invoice?.CountryOfOriginOfGoods?.toUpperCase() || "",
+  //   countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
+  //   deliveryTerms: "THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.",
+  //   PaymentTerms: invoice?.PaymentTerms || "",
+  //   bankDetails: {
+  //     accountHolder:
+  //       "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
+  //     address:
+  //       "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
+  //     accountNumber: "40582959714",
+  //     bank: "State Bank of India, Egmore, Chennai-600008.",
+  //     swiftCode: "SBININBB174",
+  //   },
+  //   containerDetails: {
+  //     size: invoice?.ContainerType,
+  //     containerNo: invoice?.ContainerNo,
+  //     linerSealNo: invoice?.ContainerSEALNO,
+  //     otsNo: invoice?.OtsNo || "",
+  //   },
+  //   packingDetails: {
+  //     itcHsNo: invoice?.itcHsNo,
+  //     description: "128 LOOSE TYRES",
+  //   },
+  //   goodsDescription: [
+  //     "Automobile tyres reinforced with Nylon tyre Cord warp sheet / Rayon Tyre cord warp sheet.",
+  //     "SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%",
+  //   ],
+  //   quantityKgs: 15496.8,
+  //   unitPriceUsd: 2.64525,
+  //   totalPricesUsd: [40992.84, 1229.79],
+  //   grandTotalUsd: 39763.05,
+  //   amountInWords:
+  //     "USD THIRTY NINE THOUSAND SEVEN HUNDRED SIXTY THREE AND CENTS FIVE ONLY",
+  //   grossWeight: "15496.800 KGS",
+  //   netWeight: "15496.800 KGS",
+  //   declaration:
+  //     "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
+  //   licenceDetails: {
+  //     description:
+  //       "The above shipment is under Advance Licence & EPCG Scheme. S.No-I Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR Licence No. 0411007094 date. 14.03.2024)",
+  //     igstLUT:
+  //       "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
+  //   },
+  //   authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
+  //   footer: {
+  //     line1:
+  //       "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
+  //     line2: "Jawahar road Chokkikulam, Madurai - 625002.",
+  //     line3:
+  //       "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
+  //   },
+  // };
 
- useEffect(() => {
-  if (!data || pdfBlob) return; // already generated
-  
-  const generatePDF = async () => {
-    const blob = await pdf(
-      <Document>
-        <InvoicePDF data={data} styles={styles} />
-        <InvoicePDF data={data} styles={styles} />
-        <InvoicePDF data={data} styles={styles} />
-      </Document>
-    ).toBlob();
-    setPdfBlob(blob)
-    dispatch()
-  };
-  generatePDF();
-}, [data, styles]);
+  const data = invoices.map((invoice) => {
+    // Calculate total quantity, total weight, total price, and grand total for each invoice
+    const totalQty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
+    const grossWeight = invoice.items.reduce(
+      (acc, item) => acc + item.finishedWt * item.itemQty,
+      0
+    );
+    const totalPrices = invoice.items.map(
+      (item) => item.basicprice * item.itemQty
+    );
+    const grandTotal = totalPrices.reduce((acc, price) => acc + price, 0);
 
-  
-  
+    return {
+      orderRefNo: invoice?.InvoiceNo,
+      date: new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      buyersOrderNo: invoice?.orderRefNo,
+      refDate: `E MAIL DATE ${new Date(invoice?.rfD_Date).toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }
+      )}`,
+      otherReferences: "SDF Form",
+      exporter: invoice?.ExporterAuthorizedAddress || "",
+      consignee: {
+        name: invoice?.billingCompanyName || "",
+        address: invoice?.billingAddress?.split("~") || [],
+        city: invoice?.billingCity?.toUpperCase() || "",
+        state: invoice?.billingState?.toUpperCase() || "",
+        country: invoice?.billingCountry?.toUpperCase() || "",
+      },
+      customerAgent: {
+        name: "M/S, ADVANCE TIRES",
+        address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
+      },
+      preCarriageBy: invoice?.PreCarriageby?.toUpperCase() || "",
+      placeOfReceipt: invoice?.PlaceOfReceiptByPreCarrier?.toUpperCase() || "",
+      vesselFlightNo: invoice?.VesselFlight || "",
+      portOfLoading: invoice?.PortOfLoading?.toUpperCase() || "",
+      portOfDischarge: invoice?.PortOfDischarge?.toUpperCase() || "",
+      finalDestination: invoice?.FinalDestination?.toUpperCase() || "",
+      buyerIfOtherThanConsignee: {
+        name: invoice?.shippingCompanyName || "",
+        address: invoice?.shippingAddress?.split("~") || [],
+        city: invoice?.shippingCity?.toUpperCase() || "",
+        state: invoice?.shippingState?.toUpperCase() || "",
+        country: invoice?.shippingCountry?.toUpperCase() || "",
+      },
+      countryOfOrigin: invoice?.CountryOfOriginOfGoods?.toUpperCase() || "",
+      countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
+      deliveryTerms: invoice?.Incoterm,
+      PaymentTerms: invoice?.PaymentTerms || "",
+      bankDetails: {
+        accountHolder:
+          "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
+        address:
+          "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
+        accountNumber: "40582959714",
+        bank: "State Bank of India, Egmore, Chennai-600008.",
+        swiftCode: "SBININBB174",
+      },
+      containerDetails: {
+        size: invoice?.ContainerType,
+        containerNo: invoice?.ContainerNo,
+        linerSealNo: invoice?.ContainerSEALNO,
+        otsNo: invoice?.OtsNo || "",
+      },
+      packingDetails: {
+        itcHsNo: invoice?.itcHsNo,
+        description: invoice?.items
+          .map(
+            (item) =>
+              `${item.itemQty} ${item.tyreSize} ${item.brand} ${item.category}`
+          )
+          .join(", "),
+      },
+      items: invoice.items,
+      quantityKgs: grossWeight,
+      unitPriceUsd: null, // This field is not directly available from the new data structure, consider how to calculate it
+      totalPricesUsd: totalPrices,
+      grandTotalUsd: grandTotal,
+      amountInWords: `USD ${numberToWords(grandTotal)}`,
+      grossWeight: `${grossWeight.toFixed(3)} KGS`,
+      netWeight: `${grossWeight.toFixed(3)} KGS`, // Assuming net and gross are same for simplicity
+      declaration:
+        "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
+      licenceDetails: {
+        description: `This shipment is under ${invoice?.items[0]?.scheme} scheme. Licence No. 0411007094 dt. 14.03.2024`,
+        igstLUT:
+          "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
+      },
+      authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
+      footer: {
+        line1:
+          "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
+        line2: "Jawahar road Chokkikulam, Madurai - 625002.",
+        line3:
+          "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
+      },
+    };
+  });
 
+  console.log(data);
+
+  // useEffect(() => {
+  //   if (!data || pdfBlob) return; // already generated
+
+  //   const generatePDF = async () => {
+  //     const blob = await pdf(
+  //       <Document>
+  //         <InvoicePDF data={data} styles={styles} />
+  //         <InvoicePDF data={data} styles={styles} />
+  //         <InvoicePDF data={data} styles={styles} />
+  //       </Document>
+  //     ).toBlob();
+  //     setPdfBlob(blob);
+  //     dispatch();
+  //   };
+  //   generatePDF();
+  // }, [data, styles]);
 
   return (
     <div className="w-full p-1 bg-background">
@@ -479,17 +616,18 @@ const ExportInvoiceBillPDF = () => {
       </div>
       <PDFViewer style={styles.pdf}>
         <Document
-          title={`Invoice_No_${data?.orderRefNo || "Default"}`}
+          title={`Invoice_No_${data[0]?.orderRefNo || "Default"}`}
           author="siplsuntws"
           subject="Customs Export Invoice PDF"
           creator="Your React App"
           producer="React PDF Generator"
         >
-          <InvoicePDF data={data} styles={styles} />
+          {data?.map((invoice, index) => (
+            // The single Document will now contain multiple pages.
+            <InvoicePDF key={index} data={invoice} styles={styles} />
+          ))}
         </Document>
-        
       </PDFViewer>
-      
     </div>
   );
 };

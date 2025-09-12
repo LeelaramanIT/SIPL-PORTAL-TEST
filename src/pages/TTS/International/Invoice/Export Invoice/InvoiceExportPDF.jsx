@@ -10,7 +10,7 @@ const InvoicePDF = ({ data,styles }) => (
             <Text style={styles.text}>EXPORTER:</Text>
             <View>
               {(data?.exporter
-                ? data.exporter.split("~")
+                ? data?.exporter.split("~")
                 : `SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited) ( DIVISION SUN TYRE & WHEEL SYSTEMS)~A1-F3/A, Sidco Industrial Estate  Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, PAN NO: AAGCT6465R~GSTIN NO: 33AAGCT6465R2ZJ`.split(
                   "~"
                 )
@@ -31,7 +31,7 @@ const InvoicePDF = ({ data,styles }) => (
               </Text>
               <Text style={styles.text}>
                 DATE :{" "}
-                <Text style={styles.textValue}>{data.date || "1/21/2025"}</Text>
+                <Text style={styles.textValue}>{data?.date || "1/21/2025"}</Text>
               </Text>
             </View>
             <View style={styles.row2right2}>
@@ -65,30 +65,30 @@ const InvoicePDF = ({ data,styles }) => (
               <View>
                 <Text style={styles.text}>CONSIGNEE:</Text>
                 <Text style={styles.textValue}>
-                  {data.consignee.name || ""}
+                  {data?.consignee?.name || ""}
                 </Text>
                 {data?.consignee?.address
-                  ? data.consignee.address.map((item, index) => (
+                  ? data?.consignee?.address.map((item, index) => (
                     <Text key={index} style={styles.textValue}>
                       {item.trim()}
                     </Text>
                   ))
                   : ''}
                <Text style={styles.textValue}>
-                  {data.consignee.city || ""}
+                  {data?.consignee.city || ""}
                 </Text>
                 <Text style={styles.textValue}>
-                  {data.consignee.state || ""}
+                  {data?.consignee.state || ""}
                 </Text>
                 <Text style={styles.textValue}>
-                  {data.consignee.country || ""}
+                  {data?.consignee.country || ""}
                 </Text>
               </View>
               <View>
                 <Text style={styles.text}>CUSTOMER AGENT</Text>
-                <Text style={styles.textValue}>{data.customerAgent.name || "M/S, ADVANCE TIRE"}</Text>
+                <Text style={styles.textValue}>{data?.customerAgent?.name || "M/S, ADVANCE TIRE"}</Text>
                 {data?.customerAgent?.address
-                  ? data.consignee.address.map((item, index) => (
+                  ? data?.consignee.address.map((item, index) => (
                     <Text key={index} style={styles.textValue}>
                       {item.trim()}
                     </Text>
@@ -137,7 +137,7 @@ const InvoicePDF = ({ data,styles }) => (
                   {data?.buyerIfOtherThanConsignee?.name},
                 </Text>
                 {Array.isArray(data?.buyerIfOtherThanConsignee?.address) &&
-                  data.buyerIfOtherThanConsignee.address.map((line, index) => (
+                  data?.buyerIfOtherThanConsignee.address.map((line, index) => (
                     <Text key={index} style={styles.textValue}>
                       {line.trim()}
                     </Text>

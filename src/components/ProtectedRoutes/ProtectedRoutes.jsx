@@ -19,7 +19,7 @@ const ProtectedRoutes = () => {
     return <Navigate to="/login" replace />;
   }
 
-  console.log(roles);
+  // console.log(roles);
   
 
   if ((roles === 'admin') || (roleID === 1)) {

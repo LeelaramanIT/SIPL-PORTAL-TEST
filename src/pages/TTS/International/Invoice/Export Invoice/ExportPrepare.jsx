@@ -10,46 +10,46 @@ import DialogBox from "../../../../../components/DialogBox.jsx";
 import { gsap } from "gsap";
 import { currencies, getCurrency } from "../../../../../utils/currencies.js";
 import { AnimatePresence, motion } from "framer-motion";
-import { setInvoiceType,setSplitResult } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
+import {
+  setFinalInvoiceData,
+  setInvoiceType,
+  setLocalItems,
+  setSplitItems,
+  setSplitResult,
+  SetupdatedInvoiceDetails,
+} from "../../../../../Redux/Slices/InvoiceSlice.jsx";
 
 const ExportInvoicePrepare = () => {
   const [showDetailsForm, setShowDetailsForm] = useState(false);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const loading = useSelector((state) => state.invoice.exportInvoices.loading);
   const error = useSelector((state) => state.invoice.exportInvoices.error);
   const [isOpen, setOpen] = useState(false);
-  const invoiceDetails = useSelector(
-    (state) => state?.invoice?.exportInvoices?.invoiceDetails
-  );
-  const invoiceType = useSelector(
-    (state) => state.invoice?.exportInvoices?.invoiceType
-  )
-  const splitResult = useSelector(
-    (state) => state.invoice?.exportInvoices?.splitResult
-  )
-  console.log(splitResult);
-  
+  //split states
   const [splitInputs, setSplitInputs] = useState([]);
-  const [splitItems, setSplitItems] = useState([]);
-  const [localItems, setLocalItems] = useState([]);
   const [useGlobalScheme, setUseGlobalScheme] = useState(false);
-  const [globalScheme, setGlobalScheme] = useState('');
-
+  const [globalScheme, setGlobalScheme] = useState("");
+  const {
+    invoiceDetails,
+    updatedInvoiceDetails,
+    invoiceType,
+    FinalSplitResult,
+    additionalForm,
+    localItems,
+    splitItems,
+  } = useSelector((state) => state?.invoice?.exportInvoices || {});
+  const formDAta = additionalForm;
+  console.log(updatedInvoiceDetails)
   useEffect(() => {
-    if (invoiceDetails?.items?.length) {
-      setSplitInputs(invoiceDetails.items.map(() => ({})));
+    if (!invoiceDetails?.items?.length) return;
+    if (localItems?.length === 0 && splitItems?.length === 0) {
+      dispatch(
+        setLocalItems(invoiceDetails.items.map((item) => ({ ...item })))
+      );
     }
-  }, [invoiceDetails?.items]);
-
-
-
-  useEffect(() => {
-    if (invoiceDetails?.items?.length) {
-      setLocalItems(invoiceDetails.items.map(item => ({ ...item })));
-      setSplitInputs(invoiceDetails.items.map(() => ({})));
-    }
-  }, [invoiceDetails?.items]);
+    setSplitInputs(invoiceDetails.items.map(() => ({})));
+  }, [invoiceDetails, dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -57,9 +57,16 @@ const ExportInvoicePrepare = () => {
     }
   }, [error]);
 
-  const formDAta = useSelector(
-    (state) => state?.invoice?.exportInvoices?.additionalForm
-  );
+  useEffect(()=>{
+    dispatch(SetupdatedInvoiceDetails(FinalSplitResult))
+  },[FinalSplitResult])
+
+  useEffect(() => {
+    const finalData = prepareFinalData();
+    if (JSON.stringify(finalData) !== JSON.stringify(FinalSplitResult)) {
+      dispatch(setSplitResult(finalData));
+    }
+  }, [invoiceType, localItems, splitItems, globalScheme, useGlobalScheme]);
 
   const userCurrency = getCurrency(invoiceDetails?.usercurrency);
 
@@ -82,11 +89,30 @@ const ExportInvoicePrepare = () => {
     );
   }, [invoiceDetails]);
 
+  const handleInvoiceTypeChange = (type) => {
+    dispatch(setInvoiceType(type));
+
+    if (type === "Direct_Invoice") {
+      setUseGlobalScheme(false);
+      setGlobalScheme("");
+
+      dispatch(
+        setLocalItems(
+          invoiceDetails?.items?.map((item) => ({
+            ...item,
+            scheme: "Direct",
+            isScheme: false,
+          })) || []
+        )
+      );
+      dispatch(setSplitItems([]));
+      setSplitInputs(invoiceDetails?.items?.map(() => ({})) || []);
+    }
+  };
   // combi orders
   const combiOrders = useMemo(() => {
     if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items)
       return [];
-
     const grouped = invoiceDetails?.items.reduce((acc, item) => {
       const plant = item.plant;
       if (!acc[plant]) acc[plant] = [];
@@ -105,100 +131,104 @@ const ExportInvoicePrepare = () => {
     console.log("Confirm Invoive");
   };
 
+  // global scheme change
+  const handleGlobalSchemeChange = (value) => {
+    if (value === "Individual_Scheme") {
+      setUseGlobalScheme(false);
+      setGlobalScheme("");
+      return;
+    }
+
+    setUseGlobalScheme(true);
+    setGlobalScheme(value);
+
+    const updatedLocalItems = localItems?.map((item) =>
+      item.isScheme ? item : { ...item, scheme: value }
+    );
+    dispatch(setLocalItems(updatedLocalItems));
+  };
+
+  // split logic
   const handleSplitItem = (index) => {
-    const { splitQty, scheme } = splitInputs[index] || {};
+    const { splitQty } = splitInputs[index] || {};
     const originalItem = localItems[index];
-  
+
     if (!splitQty || splitQty <= 0 || splitQty >= originalItem.itemQty) {
       toast.error("Invalid split quantity");
       return;
     }
-  
-    const appliedScheme = useGlobalScheme ? globalScheme : scheme;
-    if (!appliedScheme) {
-      toast.error("Please select a scheme");
+
+    const appliedScheme =
+      originalItem.scheme || (useGlobalScheme ? globalScheme : "");
+
+    if (!appliedScheme || appliedScheme === "Direct") {
+      toast.error("Please select a valid scheme before splitting");
       return;
     }
-  
-    // 1️⃣ Deduct qty from original row
-    const updatedItems = [...localItems];
-    updatedItems[index] = {
+
+    // Update local items
+    const updatedLocalItems = [...localItems];
+    updatedLocalItems[index] = {
       ...originalItem,
+      isSplit: true,
       itemQty: originalItem.itemQty - splitQty,
-      scheme: useGlobalScheme ? appliedScheme : originalItem.scheme || "", // keep scheme for consistency
     };
-    setLocalItems(updatedItems);
-  
-    // 2️⃣ Create or update split rows
-    let updatedSplits = [];
-    setSplitItems((prev) => {
-      const existingIndex = prev.findIndex(
-        (item) =>
-          item.originalIndex === index && item.scheme === appliedScheme
-      );
-      if (existingIndex > -1) {
-        updatedSplits = prev.map((item, i) =>
-          i === existingIndex
-            ? { ...item, splitQty: item.splitQty + splitQty }
-            : item
-        );
-        return updatedSplits;
-      } else {
-        updatedSplits = [
-          ...prev,
-          {
-            ...originalItem,
-            originalIndex: index,
-            itemQty: splitQty,
-            splitQty,
-            scheme: appliedScheme,
-            isSplit: true,
-          },
-        ];
-        return updatedSplits;
-      }
-    });
-  
-    // 3️⃣ Push combined result into Redux
-    setTimeout(() => {
-      dispatch(setSplitResult([...updatedItems, ...splitItems, ...updatedSplits]));
-    }, 0);
-  
-    // 4️⃣ Reset input
+    dispatch(setLocalItems(updatedLocalItems));
+
+    // Update split items
+    const newSplitItems = [...splitItems];
+    const existingIndex = newSplitItems.findIndex(
+      (s) => s.originalIndex === index && s.scheme === appliedScheme
+    );
+
+    if (existingIndex !== -1) {
+      newSplitItems[existingIndex] = {
+        ...newSplitItems[existingIndex],
+        itemQty: newSplitItems[existingIndex].itemQty + splitQty,
+        splitQty: newSplitItems[existingIndex].splitQty + splitQty,
+      };
+    } else {
+      newSplitItems.push({
+        ...originalItem,
+        originalIndex: index,
+        itemQty: splitQty,
+        splitQty,
+        scheme: appliedScheme,
+        isScheme: true,
+        isSplit: true,
+      });
+    }
+    dispatch(setSplitItems(newSplitItems));
+
     setSplitInputs((prev) => {
       const newInputs = [...prev];
       newInputs[index] = {};
       return newInputs;
     });
   };
-  
-
-
-
-
-
 
   const handleRemoveSplitItem = (splitItem, splitIndex) => {
-    // Restore original qty
-    const updatedItems = [...localItems];
-    updatedItems[splitItem.originalIndex] = {
-      ...updatedItems[splitItem.originalIndex],
-      itemQty: updatedItems[splitItem.originalIndex].itemQty + splitItem.splitQty,
-    };
-    setLocalItems(updatedItems);
-  
-    // Remove from splitItems
-    const newSplits = splitItems.filter((_, i) => i !== splitIndex);
-    setSplitItems(newSplits);
-  
-    // Update Redux
-    dispatch(setSplitResult([...updatedItems, ...newSplits]));
-  };
-  
+    const updatedLocalItems = [...localItems];
+    const originalItemIndex = splitItem.originalIndex;
 
+    if (
+      typeof originalItemIndex === "number" &&
+      updatedLocalItems[originalItemIndex]
+    ) {
+      updatedLocalItems[originalItemIndex] = {
+        ...updatedLocalItems[originalItemIndex],
+        itemQty:
+          updatedLocalItems[originalItemIndex].itemQty +
+          (splitItem.splitQty || 0),
+      };
+    }
+
+    const newSplits = splitItems?.filter((_, i) => i !== splitIndex);
+    dispatch(setLocalItems(updatedLocalItems));
+    dispatch(setSplitItems(newSplits));
+  };
 
   // const [invoiceType, setInvoiceType] = useState("Direct");
-
   const isSplitValid = (index, originalItem) => {
     const { splitQty, scheme } = splitInputs[index] || {};
     return (
@@ -207,6 +237,19 @@ const ExportInvoicePrepare = () => {
       splitQty < originalItem.itemQty &&
       (scheme || "").trim() !== ""
     );
+  };
+
+  const prepareFinalData = () => {
+    if (!invoiceDetails?.items) return [];
+
+    const merged = [...localItems, ...splitItems];
+
+    return merged.map((item) => {
+      if (invoiceType === "Direct_Invoice") {
+        return { ...item, scheme: "Direct", isScheme: false };
+      }
+      return { ...item };
+    });
   };
 
   return (
@@ -230,32 +273,30 @@ const ExportInvoicePrepare = () => {
             </label>
             <select
               className="border rounded px-2 py-1"
-              onChange={(e) => dispatch(setInvoiceType(e.target.value))}
+              onChange={(e) => handleInvoiceTypeChange(e.target.value)}
               value={invoiceType}
             >
               <option value="Direct_Invoice">Direct Invoice</option>
               <option value="Scheme_Invoice">Scheme Invoice</option>
             </select>
           </div>
-          {invoiceType === "Scheme_Invoice" &&
+          {/* Global Scheme */}
+          {invoiceType === "Scheme_Invoice" && (
             <div className="flex flex-col">
               <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
                 Select Scheme
               </label>
               <select
-                value={globalScheme}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setGlobalScheme(value);
-                  setUseGlobalScheme(value !== "Individual_Scheme"); 
-                }}
                 className="border rounded px-2 py-1"
+                value={useGlobalScheme ? globalScheme : "Individual_Scheme"}
+                onChange={(e) => handleGlobalSchemeChange(e.target.value)}
               >
                 <option value="Individual_Scheme">Individual scheme</option>
                 <option value="Advance">Advance</option>
                 <option value="Moowr">Moowr</option>
               </select>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -263,7 +304,10 @@ const ExportInvoicePrepare = () => {
         <TableSkeleton />
       ) : (
         <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
-          <table border={1} className="w-full text-sm text-left table-fixed shadow-lg">
+          <table
+            border={1}
+            className="w-full text-sm text-left table-fixed shadow-lg"
+          >
             <thead className="bg-[#ECECEC] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
               <tr>
                 {[
@@ -299,7 +343,10 @@ const ExportInvoicePrepare = () => {
             </thead>
             <tbody>
               {localItems.map((item, idx) => (
-                <tr key={idx} className={`text-[13px] text-center border-b border-[var(--color-primary-hover)]/30`}>
+                <tr
+                  key={idx}
+                  className={`text-[13px] text-center border-b border-[var(--color-primary-hover)]/30`}
+                >
                   {/* Existing Columns */}
                   <td>{item?.category}</td>
                   <td>{item?.platforms}</td>
@@ -322,8 +369,8 @@ const ExportInvoicePrepare = () => {
                         <input
                           type="number"
                           min="1"
-                          max={item?.itemQty}
-                          value={splitInputs[idx]?.splitQty ||  item?.itemQty || ''}
+                          max={item.itemQty}
+                          value={splitInputs[idx]?.splitQty || ""}
                           onChange={(e) =>
                             setSplitInputs((prev) => {
                               const newInputs = [...prev];
@@ -342,18 +389,17 @@ const ExportInvoicePrepare = () => {
                       {
                         <td colSpan={2}>
                           <select
-                            value={splitInputs[idx]?.scheme || ""}
-                            onChange={(e) =>
-                              setSplitInputs((prev) => {
-                                const newInputs = [...prev];
-                                newInputs[idx] = {
-                                  ...newInputs[idx],
-                                  scheme: e.target.value,
-                                };
-                                return newInputs;
-                              })
-                            }
-                            className="border rounded px-1"
+                            value={item.scheme === "Direct" ? "" : item.scheme}
+                            onChange={(e) => {
+                              const schemeValue = e.target.value;
+                              const updated = [...localItems];
+                              updated[idx] = {
+                                ...updated[idx],
+                                scheme: schemeValue ? schemeValue : "Direct",
+                                isScheme: !!schemeValue,
+                              };
+                              dispatch(setLocalItems(updated));
+                            }}
                           >
                             <option value="">Select Scheme</option>
                             <option value="Advance">Advance</option>
@@ -364,13 +410,12 @@ const ExportInvoicePrepare = () => {
 
                       <td>
                         <button
-                          className={`px-2 rounded ${isSplitValid(idx, item) || (useGlobalScheme && splitInputs[idx]?.splitQty)
+                          className={`px-2 rounded ${
+                            splitInputs[idx]?.splitQty
                               ? "bg-blue-500 text-white"
                               : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            }`}
-                          disabled={
-                            !(isSplitValid(idx, item) || (useGlobalScheme && splitInputs[idx]?.splitQty))
-                          }
+                          }`}
+                          disabled={!splitInputs[idx]?.splitQty}
                           onClick={() => handleSplitItem(idx)}
                         >
                           Split
@@ -378,7 +423,6 @@ const ExportInvoicePrepare = () => {
                       </td>
                     </>
                   )}
-
                 </tr>
               ))}
 
@@ -407,11 +451,10 @@ const ExportInvoicePrepare = () => {
                     {(splitItem.finishedWt * splitItem.splitQty).toFixed(3)}
                   </td>
 
-                  <td colSpan={2}>-</td>
+                  <td colSpan={2}>{splitItem.additionalInfo || '-'}</td>
                   <td>{splitItem.plant}</td>
                   <td className="break-all">{splitItem.itemCode}</td>
-
-                  <td>{"-"}</td>
+                  <td>-</td>
                   <td colSpan={2}>{splitItem.scheme}</td>
 
                   {/* Remove Button */}
@@ -447,7 +490,6 @@ const ExportInvoicePrepare = () => {
           </table>
         </div>
       )}
-
 
       {invoiceDetails?.shipmentType == "COMBI" && (
         <>
@@ -508,10 +550,11 @@ const ExportInvoicePrepare = () => {
                   return (
                     <tr
                       key={plant}
-                      className={`text-[13px] text-center ${idx % 2 === 0
-                        ? "bg-[#F4F3FE] dark:bg-gray-700"
-                        : "bg-white dark:bg-gray-800"
-                        } text-gray-700 dark:text-gray-300`}
+                      className={`text-[13px] text-center ${
+                        idx % 2 === 0
+                          ? "bg-[#F4F3FE] dark:bg-gray-700"
+                          : "bg-white dark:bg-gray-800"
+                      } text-gray-700 dark:text-gray-300`}
                     >
                       <td>{plant}</td>
                       <td>{tyreQty}</td>
@@ -561,12 +604,12 @@ const ExportInvoicePrepare = () => {
         {!formDAta ? (
           <Button
             onClick={() => setShowDetailsForm(true)}
-            text="+ Add Additional Details"
+            text="Mandatory Fields"
           />
         ) : (
           <Button
             onClick={() => setShowDetailsForm(true)}
-            text="Edit Additional Details"
+            text="Edit Mandatory Fields"
           />
         )}
         {formDAta && <Button onClick={() => setOpen(true)} text="Submit" />}
@@ -596,7 +639,7 @@ const ExportInvoicePrepare = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 40 }}
               transition={{ duration: 0.1, ease: "easeIn" }}
-              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[100rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
             >
               <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">
                 Additional Invoice Details
@@ -625,7 +668,6 @@ function ClientDetailsSection({ invoiceDetails }) {
   const containerRef = useRef(null);
   const orderRefs = useRef([]);
   const shipRefs = useRef([]);
-
   orderRefs.current = [];
   shipRefs.current = [];
 
@@ -795,31 +837,31 @@ function ClientDetailsSection({ invoiceDetails }) {
             {[
               invoiceDetails?.PreCarriageby === "air"
                 ? {
-                  label: "Delivery Method",
-                  value: "Air Freight",
-                  icon: "✈️",
-                  color: "blue",
-                }
+                    label: "Delivery Method",
+                    value: "Air Freight",
+                    icon: "✈️",
+                    color: "blue",
+                  }
                 : invoiceDetails?.PreCarriageby === "sea"
-                  ? {
+                ? {
                     label: "Delivery Method",
                     value: "Sea Freight",
                     icon: "🚢",
                     color: "green",
                   }
-                  : invoiceDetails?.PreCarriageby === "road"
-                    ? {
-                      label: "Delivery Method",
-                      value: "Road Freight",
-                      icon: "🚚",
-                      color: "orange",
-                    }
-                    : {
-                      label: "Delivery Method",
-                      value: "Please Add Delivery Method",
-                      icon: "❗",
-                      color: "red",
-                    },
+                : invoiceDetails?.PreCarriageby === "road"
+                ? {
+                    label: "Delivery Method",
+                    value: "Road Freight",
+                    icon: "🚚",
+                    color: "orange",
+                  }
+                : {
+                    label: "Delivery Method",
+                    value: "Please Add Delivery Method",
+                    icon: "❗",
+                    color: "red",
+                  },
               {
                 label: "Packing Method",
                 value: "Wooden Crates",

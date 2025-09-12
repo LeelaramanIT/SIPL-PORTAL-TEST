@@ -24,6 +24,7 @@ import RimOverView from "../pages/TTS/Rim/RimOverView";
 import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
 import RimStocks from "../pages/TTS/Rim/RimStocks";
 import AllUSers from "../pages/Masters/AllUsers";
+import SampleSplit from "../pages/TTS/International/Invoice/Export Invoice/SampleSplit";
 
 
 export const router = createBrowserRouter([
@@ -62,7 +63,8 @@ export const router = createBrowserRouter([
             { path: "Invoice/CustomerInvoice/Prepare", element: <ExportInvoicePrepare /> },
             { path: "Invoice/CustomInvoice/Prepare", element: <ExportInvoicePrepare /> },
             { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF/> },
-            { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind/> }
+            { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind/> },
+            { path: "Invoice/Export/Sample", element: <SampleSplit/> }
           ],
         },
         {
