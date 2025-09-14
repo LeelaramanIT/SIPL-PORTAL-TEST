@@ -2,6 +2,31 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 
 const InvoicePDF = ({ data,styles }) => (
       <Page size="A4" style={styles.page}>
+        {/* Watermark Element */}
+      <View
+        fixed
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: -2, // This is the key
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 60,
+            color: "rgba(0, 0, 0, 0.1)",
+            transform: 'rotate(-45deg)',
+            userSelect: 'none',
+          }}
+        >
+          CONFIDENTIAL
+        </Text>
+      </View>
         <View style={styles.row1}>
           <Text style={styles.heading}>INVOICE CUM PACKING LIST</Text>
         </View>
