@@ -484,10 +484,15 @@ const ExportInvoiceBillPDF = () => {
     const totalPrices = invoice.items.map(
       (item) => item.basicprice * item.itemQty
     );
-    const grandTotal = totalPrices.reduce((acc, price) => acc + price, 0);
+    
+    const grandTotal = totalPrices.reduce((acc, price) => acc + price, 0)
+    const formattedGrandTotal = grandTotal.toFixed(5);
+
+    const unitPrice = (grandTotal / grossWeight).toFixed(5)
 
     return {
       orderRefNo: invoice?.InvoiceNo,
+      unitPrice,
       date: new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
@@ -560,10 +565,11 @@ const ExportInvoiceBillPDF = () => {
       quantityKgs: grossWeight,
       unitPriceUsd: null, // This field is not directly available from the new data structure, consider how to calculate it
       totalPricesUsd: totalPrices,
-      grandTotalUsd: grandTotal,
+      grandTotalUsd: formattedGrandTotal,
       amountInWords: `USD ${numberToWords(grandTotal)}`,
       grossWeight: `${grossWeight.toFixed(3)} KGS`,
       netWeight: `${grossWeight.toFixed(3)} KGS`, // Assuming net and gross are same for simplicity
+      totalQty:totalQty,
       declaration:
         "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
       licenceDetails: {

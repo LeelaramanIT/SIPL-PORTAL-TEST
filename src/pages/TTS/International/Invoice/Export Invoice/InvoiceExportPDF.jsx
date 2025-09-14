@@ -235,15 +235,26 @@ const InvoicePDF = ({ data,styles }) => (
                 Automobile tyres reinforced with Nylon tyre Cord warp sheet /
                 Rayon Tyre cord warp sheet.
               </Text>
-              <Text style={styles.text}>
+              {/* <Text style={styles.text}>
                 SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%
-              </Text>
+              </Text> */}
             </View>
             <View style={styles.row4_1botm}>
               <View style={styles.row4_1botm1}></View>
               <View style={styles.row4_1botmtotal}>
-                <Text style={styles.heading}>TOTAL: </Text>
+                
               </View>
+            </View>
+          </View>
+          <View style={styles.row4_5}>
+            <View style={styles.row4_1heading}>
+              <Text>QUANITITY</Text>
+            </View>
+            <View style={styles.row4_1value}>
+              <Text style={styles.text}>{data?.totalQty}</Text>
+            </View>
+            <View>
+            <Text style={styles.heading}>TOTAL:</Text>
             </View>
           </View>
           <View style={styles.row4_4}>
@@ -251,10 +262,10 @@ const InvoicePDF = ({ data,styles }) => (
               <Text>QUANITITY KGS</Text>
             </View>
             <View style={styles.row4_1value}>
-              <Text style={styles.text}>15496.800</Text>
+              <Text style={styles.text}>{data?.grossWeight}</Text>
             </View>
             <View style={styles.row4_1botm}>
-              <Text style={styles.heading}>15496.800</Text>
+              <Text style={styles.heading}>{data?.grossWeight}</Text>
             </View>
           </View>
           <View style={styles.row4_5}>
@@ -262,7 +273,7 @@ const InvoicePDF = ({ data,styles }) => (
               <Text>UNIT PRICES DDP USD</Text>
             </View>
             <View style={styles.row4_1value}>
-              <Text style={styles.text}>2.64525</Text>
+              <Text style={styles.text}>{data?.unitPrice}</Text>
             </View>
             <View></View>
           </View>
@@ -271,11 +282,11 @@ const InvoicePDF = ({ data,styles }) => (
               <Text>TOTAL PRICES DDP USD</Text>
             </View>
             <View style={styles.row4_1value}>
-              <Text style={styles.text}>40992.84</Text>
-              <Text style={styles.text}>1229.79</Text>
+              <Text style={styles.text}>{data?.grandTotalUsd}</Text>
+              {/* <Text style={styles.text}>1229.79</Text> */}
             </View>
             <View style={styles.row4_1botm}>
-              <Text style={styles.heading}>39763.05</Text>
+              <Text style={styles.heading}>{data?.grandTotalUsd}</Text>
             </View>
           </View>
         </View>

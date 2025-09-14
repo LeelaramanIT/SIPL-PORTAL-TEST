@@ -294,6 +294,7 @@ const ExportInvoicePrepare = () => {
                 <option value="Individual_Scheme">Individual scheme</option>
                 <option value="Advance">Advance</option>
                 <option value="Moowr">Moowr</option>
+                <option value="DDB">DDB</option>
               </select>
             </div>
           )}
@@ -404,10 +405,10 @@ const ExportInvoicePrepare = () => {
                             <option value="">Select Scheme</option>
                             <option value="Advance">Advance</option>
                             <option value="Moowr">Moowr</option>
+                            <option value="DDB">DDB</option>
                           </select>
                         </td>
                       }
-
                       <td>
                         <button
                           className={`px-2 rounded ${
