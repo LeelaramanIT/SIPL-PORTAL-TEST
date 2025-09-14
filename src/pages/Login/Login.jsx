@@ -91,11 +91,11 @@ const Login = () => {
       <img
         ref={div1}
         src={assets.TVSLOGO}
-        className="absolute z-10 top-5 left-5 w-[15rem]"
+        className="absolute z-10 top-3 left-3 sm:top-5 sm:left-5 w-[8rem] sm:w-[12rem] lg:w-[15rem]"
       />
       
       {/* Theme Switcher for Login Page */}
-      <div className="absolute z-20 top-5 right-5">
+      <div className="absolute z-20 top-3 right-3 sm:top-5 sm:right-5">
         <ThemeSwitcher variant="navbar" />
       </div>
       
@@ -116,17 +116,17 @@ const Login = () => {
       {/* Login Form Container */}
       <div
         ref={div2}
-        className="relative z-10 w-full max-w-md p-6 sm:p-8 rounded-2xl shadow-2xl backdrop-blur-md bg-white/5 border border-white/30"
+        className="relative z-10 w-full max-w-sm sm:max-w-md mx-4 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl backdrop-blur-md bg-white/5 border border-white/30"
       >
         <h1
           ref={div3}
-          className={`text-2xl sm:text-[1.8rem] font-bold text-center font-heading ${
+          className={`text-lg sm:text-xl lg:text-2xl xl:text-[1.8rem] font-bold text-center font-heading ${
             randomIndex === 1 ? "text-slate-900" : randomIndex === 2 ? "text-white" : "text-slate-900"
-          } mb-10 select-none`}
+          } mb-6 sm:mb-8 lg:mb-10 select-none`}
         >
           Sundaram Industries Pvt Ltd
         </h1>
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           {/* Username Field */}
           <div ref={div4} className="relative">
             <input
@@ -183,12 +183,12 @@ const Login = () => {
               } text-slate-900/70`}
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
+              {showPassword ? <FiEye size={16} className="sm:w-[18px] sm:h-[18px]" /> : <FiEyeOff size={16} className="sm:w-[18px] sm:h-[18px]" />}
             </div>
           </div>
 
           {/* Forgot Password */}
-          <div ref={div6} className="text-sm flex justify-between ">
+          <div ref={div6} className="text-xs sm:text-sm flex justify-between ">
             <NavLink
               to={""}
               className={`${
@@ -212,7 +212,7 @@ const Login = () => {
             <button
               ref={div7}
               type="submit"
-              className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white"
+              className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white text-sm sm:text-base"
             >
               Login
             </button>

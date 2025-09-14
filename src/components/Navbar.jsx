@@ -1,5 +1,6 @@
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { TbLogout } from "react-icons/tb";
+import { HiMenuAlt3 } from "react-icons/hi";
 import assets from "../assets/assets.js";
 // import BreadCrumbs from "./BreadCrumbs";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import { logout, userLogout } from "../Redux/Slices/AuthSlice.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { persistor } from "../Redux/Store/app.jsx";
 import CustomBreadcrumbs from "./StyledBreadcrumb.jsx";
+import { toggleSidebar } from "../Redux/Slices/GlobalSlice";
 
 const Navbar = () => {
   const navigate = useNavigate([]);
@@ -19,24 +21,33 @@ const Navbar = () => {
     await persistor.purge();
   }
   return (
-    <div className="h-[63px] flex  justify-between items-center px-4 duration-400 dark:bg-[#001529] select-none">
+    <div className="h-[63px] flex justify-between items-center px-2 sm:px-4 duration-400 dark:bg-[#001529] select-none">
       {/* Left Side */}
-      <CustomBreadcrumbs/>
+      <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => dispatch(toggleSidebar())}
+          className="lg:hidden p-2 text-primary dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+        >
+          <HiMenuAlt3 size={20} />
+        </button>
+        <CustomBreadcrumbs/>
+      </div>
 
       {/* Right Side */}
-      <div className="flex items-center gap-3.5 ml-auto mr-3">
+      <div className="flex items-center gap-1 sm:gap-3.5 ml-2 sm:ml-auto mr-1 sm:mr-3">
         <DarkModeToggle />
         <img
-          className="w-10 h-10 rounded-full border-primary border cursor-pointer "
+          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-primary border cursor-pointer"
           src={assets.DefaultLogo}
           alt="UserLogo"
         />
-        <p className="cursor-pointer text-primary dark:text-white">
+        <p className="hidden sm:block cursor-pointer text-primary dark:text-white text-sm sm:text-base">
           {username ? username : "User"}
         </p>
-        <IoMdNotificationsOutline className="text-[1.5rem] cursor-pointer text-primary dark:text-white" />
+        <IoMdNotificationsOutline className="text-[1.2rem] sm:text-[1.5rem] cursor-pointer text-primary dark:text-white" />
         <TbLogout
-          className="text-[1.5rem] cursor-pointer text-primary dark:text-white"
+          className="text-[1.2rem] sm:text-[1.5rem] cursor-pointer text-primary dark:text-white"
           onClick={handleLogout}
         />
       </div>

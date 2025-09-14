@@ -5,7 +5,8 @@ import SKY from "./img/SKY.mp4";
 import Mountain from "./img/Mountain.mp4";
 import LoadingBTN from "./img/loading.gif";
 import LoadingAnimation from "./img/LoadingAnimation.svg";
-import SUN_TWS from "./img/SUN-TWS.jpg";
+import SUN_TWS from "./img/SUN-TWS.png";
+import TVS from "./img/TVSFavIcon.png";
 
 const assets = {
   TVSLOGO,
@@ -16,6 +17,7 @@ const assets = {
   LoadingAnimation,
   SUN_TWS,
   IceMountain,
+  TVS
 };
 
 export default assets;

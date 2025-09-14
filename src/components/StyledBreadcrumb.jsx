@@ -57,5 +57,28 @@ export const validRoutes = new Set(
       }),
     ];
   
-    return <Breadcrumbs aria-label="breadcrumb">{crumbs}</Breadcrumbs>;
+    return (
+    <Breadcrumbs 
+      aria-label="breadcrumb" 
+      sx={{
+        '& .MuiBreadcrumbs-separator': {
+          fontSize: '0.75rem',
+          '@media (max-width: 640px)': {
+            fontSize: '0.625rem',
+          }
+        },
+        '& .MuiChip-root': {
+          fontSize: '0.75rem',
+          height: '24px',
+          '@media (max-width: 640px)': {
+            fontSize: '0.625rem',
+            height: '20px',
+            padding: '0 4px',
+          }
+        }
+      }}
+    >
+      {crumbs}
+    </Breadcrumbs>
+  );
   }

@@ -11,6 +11,7 @@ export default defineConfig({
     // exclude: ['@react-pdf/renderer'],
   },
   server:{
-    port:"5174"
+    port:"5174",
+    host:'0.0.0.0'
   }
 })

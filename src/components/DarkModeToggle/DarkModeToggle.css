@@ -51,3 +51,27 @@ body.dark {
 .checkbox:checked + .checkbox-label .ball {
   transform: translateX(25px);
 }
+
+/* Mobile responsive styles */
+@media (max-width: 640px) {
+  .checkbox-label {
+    width: 40px;
+    height: 20px;
+    padding: 0 3px;
+  }
+  
+  .checkbox-label .fas {
+    font-size: 12px;
+  }
+  
+  .ball {
+    height: 16px;
+    width: 16px;
+    top: 2px;
+    left: 2px;
+  }
+  
+  .checkbox:checked + .checkbox-label .ball {
+    transform: translateX(20px);
+  }
+}

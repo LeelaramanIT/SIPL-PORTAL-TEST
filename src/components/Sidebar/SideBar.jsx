@@ -11,6 +11,7 @@ import assets from "../../assets/assets";
 import ThemeSwitcher from "../ThemeSwitcher";
 import { RiPagesLine } from "react-icons/ri";
 import { TbReportSearch } from "react-icons/tb";
+import { useState, useEffect } from "react";
 import './SideBar.css'
 
 const { Sider } = Layout;
@@ -21,6 +22,19 @@ const SideBar = () => {
   const collapsed = !useSelector((store) => store.global.open);
   const isDark = useSelector((state) => state.global.isDark);
   const roleID = useSelector((state) => state.auth.roleID);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const menus = useSelector((store) => store.auth.menus);
   
@@ -66,24 +80,43 @@ const SideBar = () => {
   };
 
   return (
-    <Sider
-      theme={isDark ? "dark" : "light"}
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && !collapsed && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => dispatch(toggleSidebar())}
+        />
+      )}
       
-      collapsible
-      collapsed={collapsed}
-      onCollapse={() => dispatch(toggleSidebar())}
-      width={240}
-      style={{
-        ...siderStyle,
-        height: '100vh',
-        overflow: 'auto',
-      }}
-      className="dark:bg-gray-900"
-      trigger={null}
-      
-    >
+      <Sider
+        theme={isDark ? "dark" : "light"}
+        
+        collapsible
+        collapsed={collapsed}
+        onCollapse={() => dispatch(toggleSidebar())}
+        width={240}
+        collapsedWidth={isMobile ? 0 : 80}
+        style={{
+          ...siderStyle,
+          height: '100vh',
+          overflow: 'auto',
+          ...(isMobile && !collapsed && {
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            zIndex: 50,
+          }),
+        }}
+        className={`dark:bg-gray-900 ${isMobile ? 'lg:relative' : ''}`}
+        trigger={null}
+        breakpoint="lg"
+        
+      >
       {/* Logo & Toggle */}
-      <div className="flex items-center justify-between h-16 p-4 dark:bg-gray-900">
+      <div className={`flex items-center h-16 p-4 dark:bg-gray-900 ${
+        collapsed ? "justify-center" : "justify-between"
+      }`}>
         {!collapsed && (
           <img
             src={assets.TVSLOGO}
@@ -91,10 +124,17 @@ const SideBar = () => {
             className="h-full object-contain dark:invert"
           />
         )}
+        {collapsed && (
+          <img
+            src={assets.TVS}
+            alt="Logo"
+            className="h-14 w-14 object-contain dark:invert"
+          />
+        )}
         <button
           onClick={() => dispatch(toggleSidebar())}
           className={`text-xl text-primary ${
-            collapsed ? "mx-auto" : "ml-auto"
+            collapsed ? "absolute right-0" : "ml-auto"
           }`}
         >
           {collapsed ? (
@@ -197,10 +237,13 @@ const SideBar = () => {
       </Menu>
 
       {/* Theme Toggle */}
-      <div className="p-2 mt-auto flex justify-center">
+      <div className={`p-2 mt-auto flex ${
+        collapsed ? "justify-center" : "justify-center"
+      }`}>
         <ThemeSwitcher />
       </div>
     </Sider>
+    </>
   );
 };
 

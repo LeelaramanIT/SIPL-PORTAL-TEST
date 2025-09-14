@@ -1,12 +1,12 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import globalReducer from "../Slices/GlobalSlice";
-import invoiceReducer from "../Slices/InvoiceSlice";
+import invoiceSlice from "../Slices/InvoiceSlice";
 import authReducer from "../Slices/AuthSlice";
 import rimApplication from '../Slices/RimApplicationSlice'
 import storage from "redux-persist/lib/storage";
 import { encryptTransform } from "redux-persist-transform-encrypt";
 import { persistReducer, persistStore } from "redux-persist";
-
+import storageSession from "redux-persist/lib/storage/session";
 // Encryption config
 const encryptor = encryptTransform({
   secretKey: import.meta.env.VITE_REDUX_SECRET_KEY,
@@ -25,7 +25,7 @@ const authPersistConfig = {
 const invoicePersistConfig = {
   key: "invoice",
   version: 1,
-  storage,
+  storage:storageSession,
   transforms: [encryptor],
 };
 
@@ -37,7 +37,7 @@ const globalPersistConfig = {
 }
 
 
-const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceReducer);
+const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedGlobalReducer = persistReducer(globalPersistConfig, globalReducer);
 
@@ -47,7 +47,6 @@ const rootReducer = combineReducers({
   invoice: persistedInvoiceReducer,
   auth: persistedAuthReducer,
   rimApplication: rimApplication,
-
 });
 
 // Store setup

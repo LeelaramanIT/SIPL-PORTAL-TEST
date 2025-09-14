@@ -41,73 +41,75 @@ const TableComponent = ({ headers, data, className, renderCell, highlightQuery =
   };
   
   return (
-    <div className={className}>
-      <table className="w-full table-fixed">
-        <thead className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white sticky top-0 z-10">
-          <tr>
-            {headers?.map((heading, index) => (
-              <th
-                key={index}
-                className={`py-2 px-4 text-left ${
-                  heading === "Status" || heading === "View" ? "w-28" : ""
+    <div className={`${className} overflow-x-auto`}>
+      <div className="min-w-full">
+        <table className="w-full table-fixed min-w-[600px]">
+          <thead className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white sticky top-0 z-10">
+            <tr>
+              {headers?.map((heading, index) => (
+                <th
+                  key={index}
+                  className={`py-2 px-2 sm:px-4 text-left text-xs sm:text-sm ${
+                    heading === "Status" || heading === "View" ? "w-20 sm:w-28" : ""
+                  }`}
+                >
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {paginatedData?.map((row, rowIndex) => (
+              <tr
+                ref={(el) => (rowsRef.current[rowIndex] = el)}
+                key={rowIndex}
+                className={`text-xs sm:text-sm ${
+                  rowIndex % 2 === 0
+                    ? "bg-white dark:bg-gray-700"
+                    : "bg-gray-100 dark:bg-gray-800"
                 }`}
               >
-                {heading}
-              </th>
+                {headers?.map((header, colIndex) => {
+                  const key = header.toLowerCase().replace(/\s/g, "");
+                  const isStatus = header === "Status";
+                  const isActive = row[key] === "Active";
+                  const value = String(row[key] ?? "-");
+                  return (
+                    <td
+                      key={colIndex}
+                      className={`py-2 px-2 sm:px-4 ${
+                        renderCell
+                          ? "dark:text-white"
+                          : isStatus
+                          ? isActive
+                            ? "text-green-500 dark:text-green-300"
+                            : "text-red-500 dark:text-red-300"
+                          : "dark:text-white"
+                      }`}
+                    >
+                      {renderCell
+                        ? renderCell({
+                            row,
+                            header,
+                            data,
+                            rowIndex,
+                            colIndex,
+                            defaultValue: value,
+                          })
+                        : highlightMatch(value, highlightQuery)}
+                    </td>
+                  );
+                })}
+              </tr>
             ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {paginatedData?.map((row, rowIndex) => (
-            <tr
-              ref={(el) => (rowsRef.current[rowIndex] = el)}
-              key={rowIndex}
-              className={`text-sm ${
-                rowIndex % 2 === 0
-                  ? "bg-white dark:bg-gray-700"
-                  : "bg-gray-100 dark:bg-gray-800"
-              }`}
-            >
-              {headers?.map((header, colIndex) => {
-                const key = header.toLowerCase().replace(/\s/g, "");
-                const isStatus = header === "Status";
-                const isActive = row[key] === "Active";
-                const value = String(row[key] ?? "-");
-                return (
-                  <td
-                    key={colIndex}
-                    className={`py-2 px-4 ${
-                      renderCell
-                        ? "dark:text-white"
-                        : isStatus
-                        ? isActive
-                          ? "text-green-500 dark:text-green-300"
-                          : "text-red-500 dark:text-red-300"
-                        : "dark:text-white"
-                    }`}
-                  >
-                    {renderCell
-                      ? renderCell({
-                          row,
-                          header,
-                          data,
-                          rowIndex,
-                          colIndex,
-                          defaultValue: value,
-                        })
-                      : highlightMatch(value, highlightQuery)}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination Footer */}
-      <div className="w-full flex flex-col md:flex-row justify-between items-center px-5 bg-gray-200 dark:bg-gray-800 text-black dark:text-white sticky bottom-0 py-2">
-        <span className="text-sm">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-center px-2 sm:px-5 bg-gray-200 dark:bg-gray-800 text-black dark:text-white sticky bottom-0 py-2 gap-2 sm:gap-0">
+        <span className="text-xs sm:text-sm text-center sm:text-left">
           Showing <span className="font-semibold">{startIndex + 1}</span> to{" "}
           <span className="font-semibold">
             {Math.min(endIndex, data.length)}
@@ -119,7 +121,7 @@ const TableComponent = ({ headers, data, className, renderCell, highlightQuery =
           <button
             onClick={handlePrev}
             disabled={currentPage === 1}
-            className={`flex items-center justify-center p-1 text-base font-medium text-white ${
+            className={`flex items-center justify-center p-1 text-xs sm:text-base font-medium text-white ${
               currentPage === 1
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-gray-800 hover:bg-gray-900"
@@ -130,7 +132,7 @@ const TableComponent = ({ headers, data, className, renderCell, highlightQuery =
           <button
             onClick={handleNext}
             disabled={endIndex >= data.length}
-            className={`flex items-center justify-center p-1 text-base font-medium text-white ${
+            className={`flex items-center justify-center p-1 text-xs sm:text-base font-medium text-white ${
               endIndex >= data.length
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-gray-800 hover:bg-gray-900"
