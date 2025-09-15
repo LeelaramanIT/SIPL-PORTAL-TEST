@@ -205,8 +205,7 @@ const InvoicePDF = ({ data,styles }) => (
                 </Text>
               </View>
               <Text style={styles.textValue}>
-                PAYMENT TERMS: 100% Payment in 90 days from the date of Bill of
-                Lading Remitted in SUNDARAM INDUSTRIES PVT LIMITED
+                {data?.PaymentTerms}
               </Text>
               <View>
                 <Text style={styles.textlight}>

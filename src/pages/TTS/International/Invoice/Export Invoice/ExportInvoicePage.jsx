@@ -38,7 +38,7 @@ const ExportInvoice = () => {
   }, []);
 
   useLayoutEffect(() => {
-    dispatch(getExportInvoiceAll(state));
+    // dispatch(getExportInvoiceAll(state));
   }, [state]);
 
   const headers = [
@@ -58,13 +58,13 @@ const ExportInvoice = () => {
     setSelectedColumn(item.key || "all");
   };
 
-  const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
+  // const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
 
   // console.log(tableData);
   
 
 
-  // const tableData = useMemo(() => generateTableData(5), []);
+  const tableData = useMemo(() => generateTableData(5), []);
 
   const filteredData = useMemo(() => {
     if (

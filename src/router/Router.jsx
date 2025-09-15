@@ -25,6 +25,8 @@ import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
 import RimStocks from "../pages/TTS/Rim/RimStocks";
 import AllUSers from "../pages/Masters/AllUsers";
 import SampleSplit from "../pages/TTS/International/Invoice/Export Invoice/SampleSplit";
+import TaskLayout from "../layout/TaskLayout";
+import TaskHomePage from "../pages/Task Managment/Home/TaskHomePage";
 
 
 export const router = createBrowserRouter([
@@ -93,6 +95,13 @@ export const router = createBrowserRouter([
           element: <ReportsLayout />,
           children: [
             { path:'TTSReports',element:<TTSReport/> },
+          ]
+        },
+        {
+          path:'Task-Management',
+          element:<TaskLayout />,
+          children:[
+            {path:'Home',element:<TaskHomePage/>}
           ]
         },
         { path: "Settings", element: <Settings /> },

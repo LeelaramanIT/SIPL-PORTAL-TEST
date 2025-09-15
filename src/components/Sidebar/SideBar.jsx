@@ -12,6 +12,17 @@ import ThemeSwitcher from "../ThemeSwitcher";
 import { RiPagesLine } from "react-icons/ri";
 import { TbReportSearch } from "react-icons/tb";
 import { useState, useEffect } from "react";
+import { FaTasks } from "react-icons/fa";
+import { FaFolderOpen } from "react-icons/fa";
+import { FaHome } from "react-icons/fa";
+import { RiTeamFill } from "react-icons/ri";
+import { TfiBarChartAlt } from "react-icons/tfi";
+import { VscCalendar } from "react-icons/vsc";
+import { GiIndiaGate } from "react-icons/gi";
+import { BsGlobeCentralSouthAsia } from "react-icons/bs";
+import { FaFileInvoiceDollar } from "react-icons/fa";
+import { SiGoogledocs } from "react-icons/si";
+import { GiCarWheel } from "react-icons/gi";
 import './SideBar.css'
 
 const { Sider } = Layout;
@@ -170,15 +181,15 @@ const SideBar = () => {
           <Menu.SubMenu key="TTS" icon={<SiAwsorganizations />} title="TTS">
             {/* Domestic Section */}
             {hasMenuUrlPrefix("TTS/Domestic") && (
-              <Menu.SubMenu key="TTS/Domestic" title="Domestic">
-                {hasMenuUrlPrefix('TTS/Domestic/Invoice')&&(<Menu.SubMenu key="DomesticInvoice" title="Invoice">
+              <Menu.SubMenu key="TTS/Domestic" title="Domestic" icon={<GiIndiaGate/>}>
+                {hasMenuUrlPrefix('TTS/Domestic/Invoice')&&(<Menu.SubMenu key="DomesticInvoice" title="Invoice" icon={<FaFileInvoiceDollar/>}>
                   {isMenuAllowed("CustomerInvoice") && (
-                    <Menu.Item key="/TTS/Domestic/Invoice/Customer">
+                    <Menu.Item key="/TTS/Domestic/Invoice/Customer" icon={<SiGoogledocs/>}>
                       Customer
                     </Menu.Item>
                   )}
                   {isMenuAllowed("CustomInvoice") && (
-                    <Menu.Item key="/TTS/Domestic/Invoice/Custom">
+                    <Menu.Item key="/TTS/Domestic/Invoice/Custom" icon={<img className="w-5 h-5" src={assets.CustomIcons}/>}>
                       Custom
                     </Menu.Item>
                   )}
@@ -188,22 +199,22 @@ const SideBar = () => {
 
             {/* International Section */}
             {hasMenuUrlPrefix("TTS/International") && (
-              <Menu.SubMenu key="International" title="International">
-                <Menu.SubMenu key="InternationalInvoice" title="Invoice">
+              <Menu.SubMenu key="International" title="International" icon={<BsGlobeCentralSouthAsia/>}>
+                <Menu.SubMenu key="InternationalInvoice" title="Invoice" icon={<FaFileInvoiceDollar/>}>
                   {isMenuAllowed("ExportInvoice") && (
                     <>
-                    <Menu.Item key="/TTS/International/Invoice/CustomInvoice">
-                      Custom Invoice
-                    </Menu.Item>
-                    <Menu.Item key="/TTS/International/Invoice/CustomerInvoice">
-                      Customer Invoice
+                    <Menu.Item key="/TTS/International/Invoice/CustomerInvoice" icon={<SiGoogledocs/>}>
+                      Customer
                       </Menu.Item>
+                      <Menu.Item key="/TTS/International/Invoice/CustomInvoice" icon={<img className="w-5 h-5" src={assets.CustomIcons}/>}>
+                      Custom
+                    </Menu.Item>
                     </>
                   )}
                 </Menu.SubMenu>
               </Menu.SubMenu>
             )}
-            {<Menu.Item key='/TTS/Rim/RimOverView'>RIM</Menu.Item>}
+            {<Menu.Item key='/TTS/Rim/RimOverView' icon={<GiCarWheel/>}>RIM Application</Menu.Item>}
           </Menu.SubMenu>
         )}
         {hasMenuUrlPrefix('/Masters') && (<Menu.SubMenu key="Masters" title="Masters" icon={<MdOutlineManageAccounts />}>
@@ -218,13 +229,27 @@ const SideBar = () => {
         </Menu.SubMenu>)}
 
         {hasMenuUrlPrefix('/Pages') && (<Menu.SubMenu key="Pages" title="Pages" icon={<RiPagesLine />}>
-          {isMenuAllowed('Calender') && (<Menu.Item key="/Pages/Calendar">
+          {isMenuAllowed('Calender') && (<Menu.Item key="/Pages/Calendar" icon={<VscCalendar/>}>
             Calender
           </Menu.Item>)}
         </Menu.SubMenu>)}
-        {hasMenuUrlPrefix('/Reports') && (<Menu.SubMenu key="Reports" title="Reports" icon={<TbReportSearch />}>
+        {hasMenuUrlPrefix('/Reports') && (<Menu.SubMenu key="Reports" title="Reports" icon={<TfiBarChartAlt />}>
           {isMenuAllowed('TTSReports') && (<Menu.Item key="/Reports/TTSReports">
             TTS Reports
+          </Menu.Item>)}
+        </Menu.SubMenu>)}
+        {hasMenuUrlPrefix('/Task-Management') && (<Menu.SubMenu key="Task-Management" title="Task Management" icon={<FaTasks />}>
+          {isMenuAllowed('Task-Home') && (<Menu.Item key="/Task-Management/Home" icon={<FaHome/>}>
+            Home
+          </Menu.Item>)}
+          {isMenuAllowed('Task-Projects') && (<Menu.Item key="/Task-Management/Projects" icon={<FaFolderOpen/>}>
+            Projects
+          </Menu.Item>)}
+          {isMenuAllowed('Task-Team') && (<Menu.Item key="/Task-Management/Team" icon={<RiTeamFill/>}>
+            Team
+          </Menu.Item>)}
+          {isMenuAllowed('Task-Reports') && (<Menu.Item key="/Task-Management/Reports" icon={<TfiBarChartAlt/>}>
+            Reports
           </Menu.Item>)}
         </Menu.SubMenu>)}
 

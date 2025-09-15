@@ -7,6 +7,7 @@ import LoadingBTN from "./img/loading.gif";
 import LoadingAnimation from "./img/LoadingAnimation.svg";
 import SUN_TWS from "./img/SUN-TWS.png";
 import TVS from "./img/TVSFavIcon.png";
+import CustomIcons from './img/CustomIcons.svg'
 
 const assets = {
   TVSLOGO,
@@ -17,7 +18,8 @@ const assets = {
   LoadingAnimation,
   SUN_TWS,
   IceMountain,
-  TVS
+  TVS,
+  CustomIcons
 };
 
 export default assets;
