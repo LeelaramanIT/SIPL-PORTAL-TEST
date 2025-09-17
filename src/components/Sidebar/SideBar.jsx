@@ -23,6 +23,7 @@ import { BsGlobeCentralSouthAsia } from "react-icons/bs";
 import { FaFileInvoiceDollar } from "react-icons/fa";
 import { SiGoogledocs } from "react-icons/si";
 import { GiCarWheel } from "react-icons/gi";
+import { VscGraphLine } from "react-icons/vsc";
 import './SideBar.css'
 
 const { Sider } = Layout;
@@ -119,13 +120,13 @@ const SideBar = () => {
             zIndex: 50,
           }),
         }}
-        className={`dark:bg-gray-900 ${isMobile ? 'lg:relative' : ''}`}
+        className={`dark:bg-gray-900 ${isMobile ? 'lg:relative' : ''} custom-scrollbar`}
         trigger={null}
         breakpoint="lg"
         
       >
       {/* Logo & Toggle */}
-      <div className={`flex items-center h-16 p-4 dark:bg-gray-900 ${
+      <div className={`flex items-center h-16 p-4 dark:bg-gray-900 custom-scrollbar ${
         collapsed ? "justify-center" : "justify-between"
       }`}>
         {!collapsed && (
@@ -161,7 +162,7 @@ const SideBar = () => {
         theme={isDark ? "dark" : "light"}
         mode="inline"
         onClick={handleClick}
-        className="flex-1 dark:bg-gray-900 dark:text-white overflow-y-auto"
+        className="flex-1 dark:bg-gray-900 dark:text-white overflow-y-auto custom-scrollbar"
         style={{
           ...(isDark === false && {
             backgroundColor: "var(--color-background)",
@@ -234,7 +235,7 @@ const SideBar = () => {
           </Menu.Item>)}
         </Menu.SubMenu>)}
         {hasMenuUrlPrefix('/Reports') && (<Menu.SubMenu key="Reports" title="Reports" icon={<TfiBarChartAlt />}>
-          {isMenuAllowed('TTSReports') && (<Menu.Item key="/Reports/TTSReports">
+          {isMenuAllowed('TTSReports') && (<Menu.Item key="/Reports/TTSReports" icon={<VscGraphLine/>}>
             TTS Reports
           </Menu.Item>)}
         </Menu.SubMenu>)}

@@ -13,6 +13,7 @@ const AdditionalDetailsForm = ({
   onClose,
   handleCloseForm,
   invoiceDetails,
+  setShowWarning
 }) => {
   // console.log(invoiceDetails);
   const origin =
@@ -92,6 +93,7 @@ const AdditionalDetailsForm = ({
   const onSubmit = async (data) => {
     toast.success("Form submitted:")
     dispatch(setExportAdditionalInvoice(data));
+    setShowWarning(true)
     reset();
     onClose();
   };

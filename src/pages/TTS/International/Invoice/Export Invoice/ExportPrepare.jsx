@@ -17,6 +17,8 @@ import {
   setSplitItems,
   setSplitResult,
   SetupdatedInvoiceDetails,
+  submitInvoice,
+  setShowSubmit
 } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
 
 const ExportInvoicePrepare = () => {
@@ -27,6 +29,8 @@ const navigate = useNavigate(); // React Router hook to navigate between pages.
 const loading = useSelector((state) => state.invoice.exportInvoices.loading); // Gets the loading state from Redux.
 const error = useSelector((state) => state.invoice.exportInvoices.error); // Gets any error messages from Redux.
 const [isOpen, setOpen] = useState(false); // Manages the visibility of the submit confirmation dialog.
+const [showWarning, setShowWarning] = useState(false);
+
 
 // Split-related local states
 const [splitInputs, setSplitInputs] = useState([]); // Stores the quantity input for splitting each item.
@@ -39,12 +43,14 @@ const {
   updatedInvoiceDetails,
   invoiceType,
   FinalSplitResult,
+  FinalInvoiceData,
   additionalForm,
   localItems,
   splitItems,
+  pdfBlob,
+  showSubmmit
 } = useSelector((state) => state?.invoice?.exportInvoices || {});
 const formDAta = additionalForm;
-console.log(updatedInvoiceDetails)
 
 // useEffect hook to initialize local state from Redux data on load
 useEffect(() => {
@@ -69,11 +75,26 @@ useEffect(() => {
     toast.error(error);
   }
 }, [error]);
+// This useEffect will run whenever 'showWarning' changes.
+    useEffect(() => {
+        if (showWarning) {
+            // Set a timer to hide the warning after 1 second
+            const timer = setTimeout(() => {
+                setShowWarning(false);
+            }, 3000); // 1000ms = 1 second
+
+            // Cleanup function to clear the timer if the component unmounts
+            return () => clearTimeout(timer);
+        }
+    }, [showWarning]);
 
 // useEffect to update the invoice details in Redux with the final split result.
 useEffect(() => {
   dispatch(SetupdatedInvoiceDetails(FinalSplitResult))
 }, [FinalSplitResult])
+console.log(updatedInvoiceDetails);
+console.log(FinalInvoiceData);
+
 
 // useEffect to prepare and dispatch the final data for the invoice.
 useEffect(() => {
@@ -111,7 +132,7 @@ const totalFWT = useMemo(() => {
 // Function to handle changing the invoice type (Direct or Scheme).
 const handleInvoiceTypeChange = (type) => {
   dispatch(setInvoiceType(type)); // Update the invoice type in Redux.
-
+  dispatch(setShowSubmit(false))
   // If the type is "Direct_Invoice," reset all split-related states.
   if (type === "Direct_Invoice") {
     setUseGlobalScheme(false);
@@ -149,11 +170,16 @@ const combiOrders = useMemo(() => {
 // Function to close the AdditionalDetailsForm modal.
 const handleCloseForm = () => {
   setShowDetailsForm(false);
+  
 };
 
 // Function to handle the final submission of the invoice.
-const handleSubmit = () => {
-  console.log("Confirm Invoive"); // Placeholder for the submission logic.
+const handleSubmit = async() => {
+  const formData = new FormData();
+  formData.append("file", pdfBlob, `invoice_${Date.now()}.pdf`);
+
+  
+ dispatch(submitInvoice(formData))
 };
 
 // Function to handle changes in the global scheme selection.
@@ -167,6 +193,7 @@ const handleGlobalSchemeChange = (value) => {
   // Otherwise, enable global scheme and set its value.
   setUseGlobalScheme(true);
   setGlobalScheme(value);
+  dispatch(setShowSubmit(false)) // for hide submit
 
   // Apply the global scheme to all local items that don't already have one.
   const updatedLocalItems = localItems?.map((item) => ({ 
@@ -177,8 +204,8 @@ const handleGlobalSchemeChange = (value) => {
   dispatch(setLocalItems(updatedLocalItems));
 };
 
-// Function to handle splitting a single line item.
 const handleSplitItem = (index) => {
+  dispatch(setShowSubmit(false))
   const { splitQty } = splitInputs[index] || {};
   const originalItem = localItems[index];
 
@@ -187,6 +214,13 @@ const handleSplitItem = (index) => {
     toast.error("Invalid split quantity");
     return;
   }
+
+  // --- Start of new validation to disallow decimals ---
+  if (!Number.isInteger(splitQty)) {
+    toast.error("Please enter a whole number for the split quantity.");
+    return;
+  }
+  // --- End of new validation ---
 
   // Determine the scheme to apply based on the item or global setting.
   const appliedScheme =
@@ -450,6 +484,7 @@ const prepareFinalData = () => {
                           <select
                             value={item.scheme === "Direct" ? "" : item.scheme}
                             onChange={(e) => {
+                              dispatch(setShowSubmit(false))
                               const schemeValue = e.target.value;
                               const updated = [...localItems];
                               updated[idx] = {
@@ -652,11 +687,18 @@ const prepareFinalData = () => {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4 mr-14">
+      {/* Conditionally render the warning with a fade-in animation */}
+            {showWarning && (
+                <p className="text-red-500 animate-fade-in-out">
+                    Please check the PDF before submitting the invoice.
+                </p>
+            )}
         {formDAta && (
           <Button
-            onClick={() =>
+            onClick={() =>{
               navigate("/TTS/International/Invoice/Export/BillPDF")
-            }
+              dispatch(setShowSubmit(true))
+            }}
             text="Preview PDF"
           />
         )}
@@ -671,7 +713,7 @@ const prepareFinalData = () => {
             text="Edit Mandatory Fields"
           />
         )}
-        {formDAta && <Button onClick={() => setOpen(true)} text="Submit" />}
+        {formDAta && showSubmmit && <Button onClick={() => setOpen(true)} text="Submit" />}
       </div>
       <DialogBox
         isOpen={isOpen}
@@ -712,6 +754,7 @@ const prepareFinalData = () => {
               <AdditionalDetailsForm
                 onClose={handleCloseForm}
                 invoiceDetails={invoiceDetails}
+                setShowWarning={setShowWarning}
               />
             </motion.div>
           </motion.div>
@@ -723,7 +766,8 @@ const prepareFinalData = () => {
 
 export default ExportInvoicePrepare;
 
-function ClientDetailsSection({ invoiceDetails }) {
+
+export function ClientDetailsSection({ invoiceDetails }) {
   const containerRef = useRef(null);
   const orderRefs = useRef([]);
   const shipRefs = useRef([]);
@@ -731,43 +775,71 @@ function ClientDetailsSection({ invoiceDetails }) {
   shipRefs.current = [];
 
   const addToOrderRefs = (el) => {
-    if (el && !orderRefs.current.includes(el)) {
-      orderRefs.current.push(el);
-    }
+    if (el) orderRefs.current.push(el);
   };
-
   const addToShipRefs = (el) => {
-    if (el && !shipRefs.current.includes(el)) {
-      shipRefs.current.push(el);
-    }
+    if (el) shipRefs.current.push(el);
   };
 
   useLayoutEffect(() => {
-    gsap.from(containerRef.current, {
-      opacity: 0,
-      y: 50,
-      duration: 0.6,
-      ease: "power3.out",
-    });
+    // Set the initial state of the elements to be animated
+    gsap.set(containerRef.current, { opacity: 0, y: 50 });
+    gsap.set(orderRefs.current, { opacity: 0, x: -40 });
+    gsap.set(shipRefs.current, { opacity: 0, x: 40 });
 
-    gsap.from(orderRefs.current, {
-      opacity: 0,
-      x: -40,
-      duration: 0.6,
-      stagger: 0.2,
-      delay: 0.3,
-      ease: "power3.out",
-    });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Element is visible, run the animations
+            const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-    gsap.from(shipRefs.current, {
-      opacity: 0,
-      x: 40,
-      duration: 0.6,
-      stagger: 0.2,
-      delay: 0.5,
-      ease: "power3.out",
-    });
-  }, []);
+            tl.to(containerRef.current, {
+              opacity: 1,
+              y: 0,
+              duration: 0.6,
+            })
+              .to(orderRefs.current, {
+                opacity: 1,
+                x: 0,
+                duration: 0.6,
+                stagger: 0.2,
+              }, ">-0.3") // Start this animation 0.3s before the previous one ends
+              .to(shipRefs.current, {
+                opacity: 1,
+                x: 0,
+                duration: 0.6,
+                stagger: 0.2,
+              }, ">-0.5"); // Start this animation 0.5s before the previous one ends
+
+            // Unobserve after the first animation to prevent it from re-triggering constantly.
+            // If you want it to animate every time it scrolls into view, comment out the line below.
+            // observer.unobserve(containerRef.current);
+          } else {
+            // Optional: Reset the state when it leaves the viewport
+            gsap.set(containerRef.current, { opacity: 0, y: 50 });
+            gsap.set(orderRefs.current, { opacity: 0, x: -40 });
+            gsap.set(shipRefs.current, { opacity: 0, x: 40 });
+          }
+        });
+      },
+      {
+        root: null, // Use the viewport as the root
+        threshold: 0.1, // Trigger when 10% of the element is visible
+      }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      // Cleanup the observer when the component unmounts
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []); // The empty dependency array ensures this effect runs once on mount.
 
   return (
     <div

@@ -370,7 +370,7 @@ const InvoicePDF = ({ data,styles }) => (
               }}
             >
               <Text style={styles.textValue}>
-                FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED
+                FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
               </Text>
               <Text style={styles.textValue}>Authorized Signatory</Text>
             </View>

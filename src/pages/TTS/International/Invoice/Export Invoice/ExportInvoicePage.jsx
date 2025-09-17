@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getExportInvoice,
   getExportInvoiceAll,
+  resetExportInvoiceDetails,
 } from "../../../../../Redux/Slices/InvoiceSlice";
 import Button from "../../../../../components/InputFields/Button";
 import TableSkeleton from "./TableSkeleton";
@@ -38,6 +39,7 @@ const ExportInvoice = () => {
   }, []);
 
   useLayoutEffect(() => {
+    dispatch(resetExportInvoiceDetails())
     // dispatch(getExportInvoiceAll(state));
   }, [state]);
 
