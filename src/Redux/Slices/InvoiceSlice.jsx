@@ -12,8 +12,9 @@ const initialState = {
     additionalForm: null, // extra form info
     invoicePDF: null, // PDF export
     FinalSplitResult: [], // processed items
-    FinalInvoiceData: [], // processed invoice data
+    FinalInvoicePDFData: [], // processed invoice data
     updatedInvoiceDetails: [],
+    FinalInvoiceDetails:[],
     loading: false,
     error: null,
     localItems: [],
@@ -57,7 +58,7 @@ const invoiceSlice = createSlice({
       state.exportInvoices.invoiceDetails = null;
       state.exportInvoices.invoiceType = "Direct_Invoice";
       state.exportInvoices.additionalForm = null;
-      state.exportInvoices.FinalInvoiceData = []; // Should be an array
+      state.exportInvoices.FinalInvoicePDFData = []; // Should be an array
       state.exportInvoices.FinalSplitResult = []; // Should be an array
       state.exportInvoices.updatedInvoiceDetails = []; // Should be an array
       state.exportInvoices.localItems = []; // Add this to reset it properly
@@ -87,11 +88,8 @@ const invoiceSlice = createSlice({
       state.exportInvoices.FinalInvoiceData = action.payload;
     },
     SetupdatedInvoiceDetails: (state, action) => {
-      state.exportInvoices.updatedInvoiceDetails = {
-        ...state.exportInvoices.invoiceDetails,
-        ...state.exportInvoices.additionalForm,
-        items: [...action.payload],
-      };
+      state.exportInvoices.updatedInvoiceDetails = action.payload
+      
       const splitInvoiceByScheme = (invoice) => {
         const itemByScheme = invoice.items.reduce((acc, item) => {
           if (!acc[item.scheme]) {
@@ -115,7 +113,7 @@ const invoiceSlice = createSlice({
       const invoices = splitInvoiceByScheme(
         state.exportInvoices.updatedInvoiceDetails
       );
-       const data = invoices.map((invoice) => {
+       const data = invoices.map((invoice,index) => {
           // Calculate total quantity, total weight, total price, and grand total for each invoice
           const totalQty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
           const grossWeight = invoice.items.reduce(
@@ -132,7 +130,8 @@ const invoiceSlice = createSlice({
           const unitPrice = (grandTotal / grossWeight).toFixed(5)
       
           return {
-            orderRefNo: invoice?.InvoiceNo,
+            InvoiceNo: Number(invoice?.InvoiceNo) + index,
+            orderRefNo: invoice?.orderRefNo,
             unitPrice,
             date: new Date().toLocaleDateString("en-GB", {
               day: "2-digit",
@@ -228,7 +227,7 @@ const invoiceSlice = createSlice({
             },
           };
         });
-      state.exportInvoices.FinalInvoiceData = data;
+      state.exportInvoices.FinalInvoicePDFData = data;
     },
     setPdfBlob: (state, action) => {
       state.exportInvoices.pdfBlob = action.payload;
@@ -349,108 +348,6 @@ export const getExportInvoice = (payload) => async (dispatch) => {
         itemCode: "TYR-MIC-29580R22-4",
         o_itemid: 4,
       },
-      // {
-      //     //   "category": "Tyre",
-      //     //   "platforms": "Bus",
-      //     //   "tyreSize": "315/80R22.5",
-      //     //   "tyreRim": "22.5",
-      //     //   "tyreType": "Radial",
-      //     //   "brand": "Bridgestone",
-      //     //   "sidewall": "White",
-      //     //   "basicprice": 175.50,
-      //     //   "itemQty": 15,
-      //     //   "finishedWt": 50.2,
-      //     //   "rimItemQty": 2,
-      //     //   "rimUnitPrice": 30,
-      //     //   "additionalInfo": "",
-      //     //   "plant": "Plant-B",
-      //     //   "itemCode": "TYR-BRD-31580R22-5"
-      //     // },
-      //     // {
-      //     //   "category": "Rim",
-      //     //   "platforms": "Truck",
-      //     //   "tyreSize": "22.5 Rim",
-      //     //   "tyreRim": "22.5",
-      //     //   "tyreType": "Steel",
-      //     //   "brand": "Tata Steel",
-      //     //   "sidewall": "N/A",
-      //     //   "basicprice": 90.25,
-      //     //   "itemQty": 10,
-      //     //   "finishedWt": 25.3,
-      //     //   "rimItemQty": 10,
-      //     //   "rimUnitPrice": 90.25,
-      //     //   "additionalInfo": "Heavy duty rims",
-      //     //   "plant": "Plant-A",
-      //     //   "itemCode": "RIM-TATA-22-6"
-      //     // },
-      //     // {
-      //     //   "category": "Tyre",
-      //     //   "platforms": "Truck",
-      //     //   "tyreSize": "295/80R22.5",
-      //     //   "tyreRim": "22.5",
-      //     //   "tyreType": "Radial",
-      //     //   "brand": "Michelin",
-      //     //   "sidewall": "Black",
-      //     //   "basicprice": 150.75,
-      //     //   "itemQty": 20,
-      //     //   "finishedWt": 45.6,
-      //     //   "rimItemQty": 0,
-      //     //   "rimUnitPrice": 0,
-      //     //   "additionalInfo": "High performance tyres",
-      //     //   "plant": "Plant-A",
-      //     //   "itemCode": "TYR-MIC-29580R22-7"
-      //     // },
-      //     // {
-      //     //   "category": "Tyre",
-      //     //   "platforms": "Bus",
-      //     //   "tyreSize": "315/80R22.5",
-      //     //   "tyreRim": "22.5",
-      //     //   "tyreType": "Radial",
-      //     //   "brand": "Bridgestone",
-      //     //   "sidewall": "White",
-      //     //   "basicprice": 175.50,
-      //     //   "itemQty": 15,
-      //     //   "finishedWt": 50.2,
-      //     //   "rimItemQty": 2,
-      //     //   "rimUnitPrice": 30,
-      //     //   "additionalInfo": "",
-      //     //   "plant": "Plant-B",
-      //     //   "itemCode": "TYR-BRD-31580R22-8"
-      //     // },
-      //     // {
-      //     //   "category": "Rim",
-      //     //   "platforms": "Truck",
-      //     //   "tyreSize": "22.5 Rim",
-      //     //   "tyreRim": "22.5",
-      //     //   "tyreType": "Steel",
-      //     //   "brand": "Tata Steel",
-      //     //   "sidewall": "N/A",
-      //     //   "basicprice": 90.25,
-      //     //   "itemQty": 10,
-      //     //   "finishedWt": 25.3,
-      //     //   "rimItemQty": 10,
-      //     //   "rimUnitPrice": 90.25,
-      //     //   "additionalInfo": "Heavy duty rims",
-      //     //   "plant": "Plant-A",
-      //     //   "itemCode": "RIM-TATA-22-9"
-      //     // },
-      //     // {
-      //     //   "category": "Tyre",
-      //     //   "platforms": "Truck",
-      //     //   "tyreSize": "295/80R22.5",
-      //     //   "tyreRim": "22.5",
-      //     //   "tyreType": "Radial",
-      //     //   "brand": "Michelin",
-      //     //   "sidewall": "Black",
-      //     //   "basicprice": 150.75,
-      //     //   "itemQty": 20,
-      //     //   "finishedWt": 45.6,
-      //     //   "rimItemQty": 0,
-      //     //   "rimUnitPrice": 0,
-      //     //   "additionalInfo": "High performance tyres",
-      //     //   "plant": "Plant-A",
-      //     //   "itemCode": "TYR-MIC-29580R22-10"
-      //     // }
     ],
   };
 

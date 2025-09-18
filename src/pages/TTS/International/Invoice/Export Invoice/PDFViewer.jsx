@@ -343,12 +343,12 @@ const ExportInvoiceBillPDF = () => {
   const navigate = useNavigate();
   const {
     additionalForm,
-    FinalInvoiceData,
+    FinalInvoicePDFData,
     updatedInvoiceDetails,
   } = useSelector((state) => state.invoice.exportInvoices);
 
   const dispatch = useDispatch();
-  console.log(FinalInvoiceData);
+  console.log(FinalInvoicePDFData);
   
   // const invoice = { ...updatedInvoiceDetails};
 
@@ -380,10 +380,10 @@ const ExportInvoiceBillPDF = () => {
   // console.log(invoices);
 
   useEffect(() => {
-    if (!FinalInvoiceData) {
+    if (!FinalInvoicePDFData) {
       navigate("/TTS/International/Invoice/ExportInvoice");
     }
-  }, [FinalInvoiceData]);
+  }, [FinalInvoicePDFData]);
 
   // const data = {
   //   orderRefNo: invoice?.invoiceNumber,
@@ -593,7 +593,7 @@ const ExportInvoiceBillPDF = () => {
     const generatePDF = async () => {
       const blob = await pdf(
         <Document>
-          {FinalInvoiceData?.map((invoice, idx) => (
+          {FinalInvoicePDFData?.map((invoice, idx) => (
           <InvoicePDF key={idx} data={invoice} styles={styles} />
         ))}
         </Document>
@@ -618,13 +618,13 @@ const ExportInvoiceBillPDF = () => {
       </div>
       <PDFViewer style={styles.pdf}>
         <Document
-          title={`Invoice_No_${FinalInvoiceData[0]?.orderRefNo || "Default"}`}
+          title={`Invoice_RefNo_${FinalInvoicePDFData[0]?.orderRefNo || "Default"}`}
           author="siplsuntws"
           subject="Customs Export Invoice PDF"
           creator="Your React App"
           producer="React PDF Generator"
         >
-          {FinalInvoiceData?.map((invoice, index) => (
+          {FinalInvoicePDFData?.map((invoice, index) => (
             // The single Document will now contain multiple pages.
             <InvoicePDF key={index} data={invoice} styles={styles} />
           ))}

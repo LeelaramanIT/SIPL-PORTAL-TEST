@@ -253,6 +253,7 @@ const AdditionalDetailsForm = ({
         />
         <InputField
           label="Invoice No"
+          type='number'
           name="InvoiceNo"
           register={register}
           errors={errors}
@@ -357,7 +358,7 @@ const AdditionalDetailsForm = ({
 };
 
 // Input wrapper
-const InputField = ({ label, name, register, errors, disabled = false }) => {
+const InputField = ({ label, name, register, errors, disabled = false ,type = 'text' }) => {
   const fileName = name.toUpperCase().replace(/\s+/g, "");
   return (
     <div>
@@ -365,6 +366,7 @@ const InputField = ({ label, name, register, errors, disabled = false }) => {
         label={label}
         name={fileName}
         disabled={disabled}
+        type={type}
         {...register(name, { required: `${label} is required` })}
       />
       {errors[name] && <ErrorText message={errors[name].message} />}

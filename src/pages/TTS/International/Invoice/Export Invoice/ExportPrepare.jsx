@@ -43,7 +43,7 @@ const {
   updatedInvoiceDetails,
   invoiceType,
   FinalSplitResult,
-  FinalInvoiceData,
+  FinalInvoicePDFData,
   additionalForm,
   localItems,
   splitItems,
@@ -90,10 +90,11 @@ useEffect(() => {
 
 // useEffect to update the invoice details in Redux with the final split result.
 useEffect(() => {
-  dispatch(SetupdatedInvoiceDetails(FinalSplitResult))
-}, [FinalSplitResult])
-console.log(updatedInvoiceDetails);
-console.log(FinalInvoiceData);
+  dispatch(SetupdatedInvoiceDetails({...invoiceDetails,...formDAta,items:FinalSplitResult}))
+}, [FinalSplitResult,formDAta,dispatch])
+
+console.log('updatedInvoiceDetails:',updatedInvoiceDetails);
+console.log('FinalInvoicePDFData',FinalInvoicePDFData);
 
 
 // useEffect to prepare and dispatch the final data for the invoice.

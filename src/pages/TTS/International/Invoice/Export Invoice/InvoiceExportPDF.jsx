@@ -51,7 +51,7 @@ const InvoicePDF = ({ data,styles }) => (
               <Text style={styles.text}>
                 INVOICE NO:{" "}
                 <Text style={styles.textValue}>
-                  {data?.orderRefNo || "192420378"}
+                  {data?.InvoiceNo || ""}
                 </Text>
               </Text>
               <Text style={styles.text}>
