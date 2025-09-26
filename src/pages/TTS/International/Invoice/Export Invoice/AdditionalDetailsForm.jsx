@@ -45,41 +45,35 @@ const AdditionalDetailsForm = ({
   // console.log(invoiceDetails);
 
   const defaultValues = {
-    ExporterAuthorizedAddress: invoiceData?.ExporterAuthorizedAddress || "",
-    VesselFlight: invoiceData?.VesselFlight || "",
-    InvoiceNo: invoiceData?.InvoiceNo || "",
-    BillOfLadingNo: invoiceData?.BillOfLadingNo || "",
-    ContainerNo: invoiceData?.ContainerNo || "",
-    CountryOfOriginOfGoods:
+    exporterAuthorizedAddress: invoiceData?.exporterAuthorizedAddress.toLowerCase() || "",
+    vesselFlightNo: invoiceData?.vesselFlightNo || "",
+    invoiceNo: invoiceData?.invoiceNo || "",
+    billOfLadingNo: invoiceData?.billOfLadingNo || "",
+    containerNo: invoiceData?.containerNo || "",
+    countryOfOriginOfGoods:
       invoiceDetails?.containerLoadFrom === "MMN" ||
       invoiceDetails?.containerLoadFrom === "PDK"
         ? "india"
         : "srilanka",
-    PortOfLoading:
-      invoiceDetails.PortOfLoading || invoiceData?.PortOfLoading || "",
-    PortOfDischarge: invoiceData?.PortOfDischarge || "",
-    ContainerType: invoiceData?.ContainerType || "",
-    PreCarriageby: invoiceData?.PreCarriageby || "",
-    Incoterm: invoiceData?.Incoterm || "",
-    ContainerSEALNO: invoiceData?.ContainerSEALNO || "",
-    PlaceOfReceiptByPreCarrier: invoiceData?.PlaceOfReceiptByPreCarrier || "",
-    FinalDestination: invoiceDetails?.shippingCity || "",
-    OtherCharges1: invoiceData?.OtherCharges1 || "",
-    OtherCharges2: invoiceData?.OtherCharges2 || "",
-    OtherCharges3: invoiceData?.OtherCharges3 || "",
-    OtherChargesValue1:invoiceData?.OtherChargesValue1 ||'',
-    OtherChargesValue2:invoiceData?.OtherChargesValue1 ||'',
-    OtherChargesValue3:invoiceData?.OtherChargesValue1 ||'',
-    ClaimAdjustment: invoiceData?.Value1 || "",
-    OtherDiscount: invoiceData?.Value2 || "",
-    PaymentTerms: invoiceData?.PaymentTerms || 
-    `01. UNIT PRICES FOB CHENNAI/COLOMBO, USD BY SEA.
-     02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS.
-     03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
-     04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
-     05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.
-  `,
-    OtsNo: invoiceData?.OtsNo || "",
+    portOfLoading:
+      invoiceDetails.portOfLoading || invoiceData?.portOfLoading || "",
+    portOfDischarge: invoiceData?.portOfDischarge || "",
+    containerType: invoiceData?.containerType || "",
+    preCarriageby: invoiceData?.preCarriageby || "",
+    incoterm: invoiceData?.incoterm || "",
+    containerSEALNO: invoiceData?.containerSEALNO || "",
+    placeOfReceiptByPreCarrier: invoiceData?.placeOfReceiptByPreCarrier || "",
+    finalDestination: invoiceDetails?.shippingCity || "",
+    otherCharges1: invoiceData?.otherCharges1 || "",
+    otherCharges2: invoiceData?.otherCharges2 || "",
+    otherCharges3: invoiceData?.otherCharges3 || "",
+    otherChargesValue1:invoiceData?.otherChargesValue1 ||'',
+    otherChargesValue2:invoiceData?.otherChargesValue1 ||'',
+    otherChargesValue3:invoiceData?.otherChargesValue1 ||'',
+    claimAdjustment: invoiceData?.Value1 || "",
+    otherDiscount: invoiceData?.Value2 || "",
+    paymentTerms: invoiceData?.paymentTerms || ``,
+    otsNo: invoiceData?.otsNo || "",
     itcHsNo: invoiceData?.itcHsNo || "",
   };
 
@@ -130,7 +124,7 @@ const AdditionalDetailsForm = ({
         {/* Main Fields */}
         <SelectField
           label="Exporter Authorized Address"
-          name="ExporterAuthorizedAddress"
+          name="exporterAuthorizedAddress"
           register={register}
           errors={errors}
           options={[
@@ -141,46 +135,46 @@ const AdditionalDetailsForm = ({
         />
         <InputField
           label="Vessel/Flight"
-          name="VesselFlight"
+          name="vesselFlightNo"
           register={register}
           errors={errors}
         />
         <InputField
           label="BILL OF LADING NO"
-          name="BillOfLadingNo"
+          name="billOfLadingNo"
           register={register}
           errors={errors}
         />
         <SelectField
           label="Container Type"
-          name="ContainerType"
+          name="containerType"
           register={register}
           errors={errors}
           options={["20'", "40'", "LCL"]}
         />
         <SelectField
           label="Pre-Carriage by"
-          name="PreCarriageby"
+          name="preCarriageby"
           register={register}
           errors={errors}
           options={["SEA", "AIR", "ROAD"]}
         />
         <SelectField
-          label="Incoterm"
-          name="Incoterm"
+          label="incoterm"
+          name="incoterm"
           register={register}
           errors={errors}
           options={["FOB", "CIF", "DDU", "DDP", "C&F"]}
         />
         <InputField
           label="CONTAINER NO"
-          name="ContainerNo"
+          name="containerNo"
           register={register}
           errors={errors}
         />
         <SelectField
           label="Country of origin of goods"
-          name="CountryOfOriginOfGoods"
+          name="countryOfOriginOfGoods"
           register={register}
           errors={errors}
           options={["INDIA", "SRILANKA", "INDIA & SRILANKA"]}
@@ -188,19 +182,19 @@ const AdditionalDetailsForm = ({
         />
         <InputField
           label="PORT OF DISCHARGE"
-          name="PortOfDischarge"
+          name="portOfDischarge"
           register={register}
           errors={errors}
         />
         <InputField
           label="Container SEAL NO"
-          name="ContainerSEALNO"
+          name="containerSEALNO"
           register={register}
           errors={errors}
         />
         <SelectField
           label="Port of loading"
-          name="PortOfLoading"
+          name="portOfLoading"
           register={register}
           errors={errors}
           options={[
@@ -213,7 +207,7 @@ const AdditionalDetailsForm = ({
         />
         <SelectField
           label="Place of receipt by pre-carrier"
-          name="PlaceOfReceiptByPreCarrier"
+          name="placeOfReceiptByPreCarrier"
           register={register}
           errors={errors}
           options={["CHENNAI", "LANKA"]}
@@ -234,14 +228,14 @@ const AdditionalDetailsForm = ({
         </div>
         <InputField
           label="FINAL Destination"
-          name="FinalDestination"
+          name="finalDestination"
           register={register}
           errors={errors}
         />
 
         <InputField
           label="OTS Number"
-          name="OtsNo"
+          name="otsNo"
           register={register}
           errors={errors}
         />
@@ -254,7 +248,7 @@ const AdditionalDetailsForm = ({
         <InputField
           label="Invoice No"
           type='number'
-          name="InvoiceNo"
+          name="invoiceNo"
           register={register}
           errors={errors}
           disabled={false}
@@ -280,19 +274,19 @@ const AdditionalDetailsForm = ({
           <span className="absolute text-lg top-27 -right-4">+</span>
           <InputField
             label=""
-            name="OtherCharges1"
+            name="otherCharges1"
             register={register}
             errors={errors}
           />
           <InputField
             label=""
-            name="OtherCharges2"
+            name="otherCharges2"
             register={register}
             errors={errors}
           />
           <InputField
             label=""
-            name="OtherCharges3"
+            name="otherCharges3"
             register={register}
             errors={errors}
           />
@@ -301,19 +295,19 @@ const AdditionalDetailsForm = ({
         <div className="flex flex-col gap-4">
           <InputField
             label="Value 1"
-            name="OtherChargesValue1"
+            name="otherChargesValue1"
             register={register}
             errors={errors}
           />
           <InputField
             label="Value 2"
-            name="OtherChargesValue2"
+            name="otherChargesValue2"
             register={register}
             errors={errors}
           />
           <InputField
             label="Value 3"
-            name="OtherChargesValue3"
+            name="otherChargesValue3"
             register={register}
             errors={errors}
           />
@@ -323,12 +317,12 @@ const AdditionalDetailsForm = ({
             label="PAYMENT TERMS"
             rows={6}
             placeholder="Enter description..."
-            {...register("PaymentTerms", {
-              required: "PaymentTerms is required",
+            {...register("paymentTerms", {
+              required: "paymentTerms is required",
             })}
           />
-          {errors.PaymentTerms && (
-            <ErrorText message={errors.PaymentTerms.message} />
+          {errors.paymentTerms && (
+            <ErrorText message={errors.paymentTerms.message} />
           )}
         </div>
 

@@ -18,333 +18,356 @@ import {
   setSplitResult,
   SetupdatedInvoiceDetails,
   submitInvoice,
-  setShowSubmit
+  setShowSubmit,
 } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
 
 const ExportInvoicePrepare = () => {
   // State management using React Hooks and Redux
-const [showDetailsForm, setShowDetailsForm] = useState(false); // Manages the visibility of the mandatory details form.
-const dispatch = useDispatch(); // Redux hook to dispatch actions.
-const navigate = useNavigate(); // React Router hook to navigate between pages.
-const loading = useSelector((state) => state.invoice.exportInvoices.loading); // Gets the loading state from Redux.
-const error = useSelector((state) => state.invoice.exportInvoices.error); // Gets any error messages from Redux.
-const [isOpen, setOpen] = useState(false); // Manages the visibility of the submit confirmation dialog.
-const [showWarning, setShowWarning] = useState(false);
+  const [showDetailsForm, setShowDetailsForm] = useState(false); // Manages the visibility of the mandatory details form.
+  const dispatch = useDispatch(); // Redux hook to dispatch actions.
+  const navigate = useNavigate(); // React Router hook to navigate between pages.
+  const loading = useSelector((state) => state.invoice.exportInvoices.loading); // Gets the loading state from Redux.
+  const error = useSelector((state) => state.invoice.exportInvoices.error); // Gets any error messages from Redux.
+  const [isOpen, setOpen] = useState(false); // Manages the visibility of the submit confirmation dialog.
+  const [showWarning, setShowWarning] = useState(false);
 
+  // Split-related local states
+  const [splitInputs, setSplitInputs] = useState([]); // Stores the quantity input for splitting each item.
+  const [useGlobalScheme, setUseGlobalScheme] = useState(false); // Determines if a single scheme applies to all items.
+  const [globalScheme, setGlobalScheme] = useState(""); // Stores the value of the globally selected scheme.
 
-// Split-related local states
-const [splitInputs, setSplitInputs] = useState([]); // Stores the quantity input for splitting each item.
-const [useGlobalScheme, setUseGlobalScheme] = useState(false); // Determines if a single scheme applies to all items.
-const [globalScheme, setGlobalScheme] = useState(""); // Stores the value of the globally selected scheme.
+  // Destructuring relevant data from the Redux store
+  const {
+    invoiceDetails,
+    updatedInvoiceDetails,
+    invoiceType,
+    FinalSplitResult,
+    FinalInvoicePDFData,
+    additionalForm,
+    localItems,
+    splitItems,
+    pdfBlob,
+    FinalInvoiceDetails,
+    showSubmmit,
+  } = useSelector((state) => state?.invoice?.exportInvoices || {});
+  const formDAta = additionalForm;
 
-// Destructuring relevant data from the Redux store
-const {
-  invoiceDetails,
-  updatedInvoiceDetails,
-  invoiceType,
-  FinalSplitResult,
-  FinalInvoicePDFData,
-  additionalForm,
-  localItems,
-  splitItems,
-  pdfBlob,
-  showSubmmit
-} = useSelector((state) => state?.invoice?.exportInvoices || {});
-const formDAta = additionalForm;
+  console.log("invoiceDetails------------", invoiceDetails);
 
-// useEffect hook to initialize local state from Redux data on load
-useEffect(() => {
-  // Guard clause: Exit if invoice details or items are not available.
-  if (!invoiceDetails?.items?.length) return;
+  // useEffect hook to initialize local state from Redux data on load
+  useEffect(() => {
+    // Guard clause: Exit if invoice details or items are not available.
+    if (!invoiceDetails?.items?.length) return;
 
-  // Initialize localItems and splitItems only on the initial load
-  // to avoid resetting state during subsequent re-renders.
-  if (localItems?.length === 0 && splitItems?.length === 0) {
+    // Initialize localItems and splitItems only on the initial load
+    // to avoid resetting state during subsequent re-renders.
+    if (localItems?.length === 0 && splitItems?.length === 0) {
+      dispatch(
+        // Copy invoice items into localItems and add scheme/split flags
+        setLocalItems(
+          invoiceDetails.items.map((item) => ({
+            ...item,
+            isScheme: false,
+            isSplit: false,
+            scheme: "Direct",
+          }))
+        )
+      );
+    }
+    // Initialize splitInputs array with an empty object for each item.
+    setSplitInputs(invoiceDetails.items.map(() => ({})));
+  }, [invoiceDetails, dispatch]); // Dependencies ensure this runs when invoiceDetails is fetched.
+
+  // useEffect to display an error toast if an error occurs in the Redux state.
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+  // This useEffect will run whenever 'showWarning' changes.
+  useEffect(() => {
+    if (showWarning) {
+      // Set a timer to hide the warning after 1 second
+      const timer = setTimeout(() => {
+        setShowWarning(false);
+      }, 3000); // 1000ms = 1 second
+
+      // Cleanup function to clear the timer if the component unmounts
+      return () => clearTimeout(timer);
+    }
+  }, [showWarning]);
+
+  // useEffect to update the invoice details in Redux with the final split result.
+  useEffect(() => {
     dispatch(
-      // Copy invoice items into localItems and add scheme/split flags
-      setLocalItems(invoiceDetails.items.map((item) => ({ ...item, isScheme: false, isSplit: false, scheme: "Direct", })))
+      SetupdatedInvoiceDetails({
+        ...invoiceDetails,
+        ...formDAta,
+        items: FinalSplitResult,
+      })
     );
-  }
-  // Initialize splitInputs array with an empty object for each item.
-  setSplitInputs(invoiceDetails.items.map(() => ({})));
-}, [invoiceDetails, dispatch]); // Dependencies ensure this runs when invoiceDetails is fetched.
-
-// useEffect to display an error toast if an error occurs in the Redux state.
-useEffect(() => {
-  if (error) {
-    toast.error(error);
-  }
-}, [error]);
-// This useEffect will run whenever 'showWarning' changes.
-    useEffect(() => {
-        if (showWarning) {
-            // Set a timer to hide the warning after 1 second
-            const timer = setTimeout(() => {
-                setShowWarning(false);
-            }, 3000); // 1000ms = 1 second
-
-            // Cleanup function to clear the timer if the component unmounts
-            return () => clearTimeout(timer);
-        }
-    }, [showWarning]);
-
-// useEffect to update the invoice details in Redux with the final split result.
-useEffect(() => {
-  dispatch(SetupdatedInvoiceDetails({...invoiceDetails,...formDAta,items:FinalSplitResult}))
-}, [FinalSplitResult,formDAta,dispatch])
-
-console.log('updatedInvoiceDetails:',updatedInvoiceDetails);
-console.log('FinalInvoicePDFData',FinalInvoicePDFData);
-
-
-// useEffect to prepare and dispatch the final data for the invoice.
-useEffect(() => {
-  const finalData = prepareFinalData();
-  // Dispatch the final data to the Redux store only if it has changed.
-  if (JSON.stringify(finalData) !== JSON.stringify(FinalSplitResult)) {
-    dispatch(setSplitResult(finalData));
-  }
-}, [invoiceType, localItems, splitItems, globalScheme, useGlobalScheme]); // Runs whenever relevant data changes.
-
-// UseMemo to get the user's currency symbol and code.
-const userCurrency = getCurrency(invoiceDetails?.usercurrency);
-
-// useMemo for efficient total price calculation.
-const grandTotal = useMemo(() => {
-  return invoiceDetails?.items.reduce(
-    (sum, item) => sum + item?.basicprice * item?.itemQty,
-    0
-  );
-}, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
-
-// useMemo for efficient total quantity calculation.
-const totalQTY = useMemo(() => {
-  return invoiceDetails?.items.reduce((sum, item) => sum + item?.itemQty, 0);
-}, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
-
-// useMemo for efficient total finished weight (FWT) calculation.
-const totalFWT = useMemo(() => {
-  return invoiceDetails?.items.reduce(
-    (sum, item) => sum + item?.finishedWt * item?.itemQty,
-    0
-  );
-}, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
-
-// Function to handle changing the invoice type (Direct or Scheme).
-const handleInvoiceTypeChange = (type) => {
-  dispatch(setInvoiceType(type)); // Update the invoice type in Redux.
-  dispatch(setShowSubmit(false))
-  // If the type is "Direct_Invoice," reset all split-related states.
-  if (type === "Direct_Invoice") {
-    setUseGlobalScheme(false);
-    setGlobalScheme("");
-
-    // Set all local items to "Direct" scheme.
     dispatch(
-      setLocalItems(
-        invoiceDetails?.items?.map((item) => ({
-          ...item,
-          scheme: "Direct",
-          isSplit: false,
-          isScheme: false,
-        })) || []
-      )
+      setFinalInvoiceData({
+        ...invoiceDetails,
+        ...formDAta,
+        items: FinalSplitResult,
+      })
     );
-    dispatch(setSplitItems([])); // Clear the split items array.
-    setSplitInputs(invoiceDetails?.items?.map(() => ({})) || []); // Reset split inputs.
-  }
-};
+  }, [FinalSplitResult, formDAta, dispatch]);
 
-// useMemo to group items by plant for "COMBI" shipments.
-const combiOrders = useMemo(() => {
-  if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items)
-    return [];
-  const grouped = invoiceDetails?.items.reduce((acc, item) => {
-    const plant = item.plant;
-    if (!acc[plant]) acc[plant] = [];
-    acc[plant].push(item);
-    return acc;
-  }, {});
-  return grouped;
-}, [invoiceDetails?.shipmentType, invoiceDetails?.items]); // Recalculates for COMBI orders or item changes.
+  console.log("updatedInvoiceDetails:", updatedInvoiceDetails);
+  console.log("FinalInvoicePDFData", FinalInvoicePDFData);
+  console.log("FinalInvoiceDetails", FinalInvoiceDetails);
 
-// Function to close the AdditionalDetailsForm modal.
-const handleCloseForm = () => {
-  setShowDetailsForm(false);
-  
-};
+  // useEffect to prepare and dispatch the final data for the invoice.
+  useEffect(() => {
+    const finalData = prepareFinalData();
+    // Dispatch the final data to the Redux store only if it has changed.
+    if (JSON.stringify(finalData) !== JSON.stringify(FinalSplitResult)) {
+      dispatch(setSplitResult(finalData));
+    }
+  }, [invoiceType, localItems, splitItems, globalScheme, useGlobalScheme]); // Runs whenever relevant data changes.
 
-// Function to handle the final submission of the invoice.
-const handleSubmit = async() => {
-  const formData = new FormData();
-  formData.append("file", pdfBlob, `invoice_${Date.now()}.pdf`);
+  // UseMemo to get the user's currency symbol and code.
+  const userCurrency = getCurrency(invoiceDetails?.usercurrency);
 
-  
- dispatch(submitInvoice(formData))
-};
+  // useMemo for efficient total price calculation.
+  const grandTotal = useMemo(() => {
+    return invoiceDetails?.items.reduce(
+      (sum, item) => sum + item?.basicprice * item?.itemQty,
+      0
+    );
+  }, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
 
-// Function to handle changes in the global scheme selection.
-const handleGlobalSchemeChange = (value) => {
-  if (value === "Individual_Scheme") {
-    // If "Individual Scheme" is selected, disable global scheme.
-    setUseGlobalScheme(false);
-    setGlobalScheme("");
-    return;
-  }
-  // Otherwise, enable global scheme and set its value.
-  setUseGlobalScheme(true);
-  setGlobalScheme(value);
-  dispatch(setShowSubmit(false)) // for hide submit
+  // useMemo for efficient total quantity calculation.
+  const totalQTY = useMemo(() => {
+    return invoiceDetails?.items.reduce((sum, item) => sum + item?.itemQty, 0);
+  }, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
 
-  // Apply the global scheme to all local items that don't already have one.
-  const updatedLocalItems = localItems?.map((item) => ({ 
-    ...item, 
-    scheme: value, // Set the global scheme value
-    isScheme: true // Explicitly set isScheme to true
-  }));
-  dispatch(setLocalItems(updatedLocalItems));
-};
+  // useMemo for efficient total finished weight (FWT) calculation.
+  const totalFWT = useMemo(() => {
+    return invoiceDetails?.items.reduce(
+      (sum, item) => sum + item?.finishedWt * item?.itemQty,
+      0
+    );
+  }, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
 
-const handleSplitItem = (index) => {
-  dispatch(setShowSubmit(false))
-  const { splitQty } = splitInputs[index] || {};
-  const originalItem = localItems[index];
+  // Function to handle changing the invoice type (Direct or Scheme).
+  const handleInvoiceTypeChange = (type) => {
+    dispatch(setInvoiceType(type)); // Update the invoice type in Redux.
+    dispatch(setShowSubmit(false));
+    // If the type is "Direct_Invoice," reset all split-related states.
+    if (type === "Direct_Invoice") {
+      setUseGlobalScheme(false);
+      setGlobalScheme("");
 
-  // Validation: Check for invalid split quantities.
-  if (!splitQty || splitQty <= 0 || splitQty >= originalItem.itemQty) {
-    toast.error("Invalid split quantity");
-    return;
-  }
-
-  // --- Start of new validation to disallow decimals ---
-  if (!Number.isInteger(splitQty)) {
-    toast.error("Please enter a whole number for the split quantity.");
-    return;
-  }
-  // --- End of new validation ---
-
-  // Determine the scheme to apply based on the item or global setting.
-  const appliedScheme =
-    originalItem.scheme || (useGlobalScheme ? globalScheme : "");
-
-  // Validation: Ensure a valid scheme is selected before splitting.
-  if (!appliedScheme || appliedScheme === "Direct") {
-    toast.error("Please select a valid scheme before splitting");
-    return;
-  }
-
-  // Create a new array of local items.
-  const updatedLocalItems = [...localItems];
-  // Decrease the original item's quantity.
-  updatedLocalItems[index] = {
-    ...originalItem,
-    isSplit: true, // Mark it as split.
-    itemQty: originalItem.itemQty - splitQty,
+      // Set all local items to "Direct" scheme.
+      dispatch(
+        setLocalItems(
+          invoiceDetails?.items?.map((item) => ({
+            ...item,
+            scheme: "Direct",
+            isSplit: false,
+            isScheme: false,
+          })) || []
+        )
+      );
+      dispatch(setSplitItems([])); // Clear the split items array.
+      setSplitInputs(invoiceDetails?.items?.map(() => ({})) || []); // Reset split inputs.
+    }
   };
-  dispatch(setLocalItems(updatedLocalItems)); // Update local items in Redux.
 
-  // Create a new array of split items.
-  const newSplitItems = [...splitItems];
-  // Check if a split item with the same scheme already exists for this original item.
-  const existingIndex = newSplitItems.findIndex(
-    (s) => s.originalIndex === index && s.scheme === appliedScheme
-  );
+  // useMemo to group items by plant for "COMBI" shipments.
+  const combiOrders = useMemo(() => {
+    if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items)
+      return [];
+    const grouped = invoiceDetails?.items.reduce((acc, item) => {
+      const plant = item.plant;
+      if (!acc[plant]) acc[plant] = [];
+      acc[plant].push(item);
+      return acc;
+    }, {});
+    return grouped;
+  }, [invoiceDetails?.shipmentType, invoiceDetails?.items]); // Recalculates for COMBI orders or item changes.
 
-  if (existingIndex !== -1) {
-    // If it exists, update the quantity of the existing split item.
-    newSplitItems[existingIndex] = {
-      ...newSplitItems[existingIndex],
-      itemQty: newSplitItems[existingIndex].itemQty + splitQty,
-      splitQty: newSplitItems[existingIndex].splitQty + splitQty,
-    };
-  } else {
-    // Otherwise, create a new split item.
-    newSplitItems.push({
+  // Function to close the AdditionalDetailsForm modal.
+  const handleCloseForm = () => {
+    setShowDetailsForm(false);
+  };
+
+  // Function to handle the final submission of the invoice.
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    formData.append("file", pdfBlob, `invoice_${Date.now()}.pdf`);
+
+    dispatch(submitInvoice(formData));
+  };
+
+  // Function to handle changes in the global scheme selection.
+  const handleGlobalSchemeChange = (value) => {
+    if (value === "Individual_Scheme") {
+      // If "Individual Scheme" is selected, disable global scheme.
+      setUseGlobalScheme(false);
+      setGlobalScheme("");
+      return;
+    }
+    // Otherwise, enable global scheme and set its value.
+    setUseGlobalScheme(true);
+    setGlobalScheme(value);
+    dispatch(setShowSubmit(false)); // for hide submit
+
+    // Apply the global scheme to all local items that don't already have one.
+    const updatedLocalItems = localItems?.map((item) => ({
+      ...item,
+      scheme: value, // Set the global scheme value
+      isScheme: true, // Explicitly set isScheme to true
+    }));
+    dispatch(setLocalItems(updatedLocalItems));
+  };
+
+  const handleSplitItem = (index) => {
+    dispatch(setShowSubmit(false));
+    const { splitQty } = splitInputs[index] || {};
+    const originalItem = localItems[index];
+
+    // Validation: Check for invalid split quantities.
+    if (!splitQty || splitQty <= 0 || splitQty >= originalItem.itemQty) {
+      toast.error("Invalid split quantity");
+      return;
+    }
+
+    // --- Start of new validation to disallow decimals ---
+    if (!Number.isInteger(splitQty)) {
+      toast.error("Please enter a whole number for the split quantity.");
+      return;
+    }
+    // --- End of new validation ---
+
+    // Determine the scheme to apply based on the item or global setting.
+    const appliedScheme =
+      originalItem.scheme || (useGlobalScheme ? globalScheme : "");
+
+    // Validation: Ensure a valid scheme is selected before splitting.
+    if (!appliedScheme || appliedScheme === "Direct") {
+      toast.error("Please select a valid scheme before splitting");
+      return;
+    }
+
+    // Create a new array of local items.
+    const updatedLocalItems = [...localItems];
+    // Decrease the original item's quantity.
+    updatedLocalItems[index] = {
       ...originalItem,
-      originalIndex: index,
-      itemQty: splitQty,
-      splitQty,
-      scheme: appliedScheme,
-      isScheme: true,
-      isSplit: true,
-    });
-  }
-  dispatch(setSplitItems(newSplitItems)); // Update split items in Redux.
-
-  // Clear the split quantity input for the item.
-  setSplitInputs((prev) => {
-    const newInputs = [...prev];
-    newInputs[index] = {};
-    return newInputs;
-  });
-};
-
-// Function to remove a split item and return its quantity to the original item.
-const handleRemoveSplitItem = (splitItem, splitIndex) => {
-  const updatedLocalItems = [...localItems];
-  const originalItemIndex = splitItem.originalIndex;
-
-  // Find the original item and add the quantity back.
-  if (
-    typeof originalItemIndex === "number" &&
-    updatedLocalItems[originalItemIndex]
-  ) {
-    updatedLocalItems[originalItemIndex] = {
-      ...updatedLocalItems[originalItemIndex],
-      itemQty: updatedLocalItems[originalItemIndex].itemQty + (splitItem.splitQty || 0),
+      isSplit: true, // Mark it as split.
+      itemQty: originalItem.itemQty - splitQty,
     };
+    dispatch(setLocalItems(updatedLocalItems)); // Update local items in Redux.
 
-    // --- Start of Fix ---
-    // Check if there are any other split items associated with the original item.
-    const remainingSplits = splitItems?.filter(
-      (item, i) => i !== splitIndex && item.originalIndex === originalItemIndex
+    // Create a new array of split items.
+    const newSplitItems = [...splitItems];
+    // Check if a split item with the same scheme already exists for this original item.
+    const existingIndex = newSplitItems.findIndex(
+      (s) => s.originalIndex === index && s.scheme === appliedScheme
     );
 
-    // If no other splits from this item exist, remove the isSplit flag from the original item.
-    if (remainingSplits?.length === 0) {
+    if (existingIndex !== -1) {
+      // If it exists, update the quantity of the existing split item.
+      newSplitItems[existingIndex] = {
+        ...newSplitItems[existingIndex],
+        itemQty: newSplitItems[existingIndex].itemQty + splitQty,
+        splitQty: newSplitItems[existingIndex].splitQty + splitQty,
+      };
+    } else {
+      // Otherwise, create a new split item.
+      newSplitItems.push({
+        ...originalItem,
+        originalIndex: index,
+        itemQty: splitQty,
+        splitQty,
+        scheme: appliedScheme,
+        isScheme: true,
+        isSplit: true,
+      });
+    }
+    dispatch(setSplitItems(newSplitItems)); // Update split items in Redux.
+
+    // Clear the split quantity input for the item.
+    setSplitInputs((prev) => {
+      const newInputs = [...prev];
+      newInputs[index] = {};
+      return newInputs;
+    });
+  };
+
+  // Function to remove a split item and return its quantity to the original item.
+  const handleRemoveSplitItem = (splitItem, splitIndex) => {
+    const updatedLocalItems = [...localItems];
+    const originalItemIndex = splitItem.originalIndex;
+
+    // Find the original item and add the quantity back.
+    if (
+      typeof originalItemIndex === "number" &&
+      updatedLocalItems[originalItemIndex]
+    ) {
       updatedLocalItems[originalItemIndex] = {
         ...updatedLocalItems[originalItemIndex],
-        isSplit: false,
+        itemQty:
+          updatedLocalItems[originalItemIndex].itemQty +
+          (splitItem.splitQty || 0),
       };
+
+      // --- Start of Fix ---
+      // Check if there are any other split items associated with the original item.
+      const remainingSplits = splitItems?.filter(
+        (item, i) =>
+          i !== splitIndex && item.originalIndex === originalItemIndex
+      );
+
+      // If no other splits from this item exist, remove the isSplit flag from the original item.
+      if (remainingSplits?.length === 0) {
+        updatedLocalItems[originalItemIndex] = {
+          ...updatedLocalItems[originalItemIndex],
+          isSplit: false,
+        };
+      }
+      // --- End of Fix ---
     }
-    // --- End of Fix ---
-  }
 
-  // Filter out the removed split item.
-  const newSplits = splitItems?.filter((_, i) => i !== splitIndex);
+    // Filter out the removed split item.
+    const newSplits = splitItems?.filter((_, i) => i !== splitIndex);
 
-  // Dispatch both updated states to Redux.
-  dispatch(setLocalItems(updatedLocalItems));
-  dispatch(setSplitItems(newSplits));
-};
+    // Dispatch both updated states to Redux.
+    dispatch(setLocalItems(updatedLocalItems));
+    dispatch(setSplitItems(newSplits));
+  };
 
-// Helper function to check if a split is valid (not used in the JSX, but defined).
-const isSplitValid = (index, originalItem) => {
-  const { splitQty, scheme } = splitInputs[index] || {};
-  return (
-    splitQty &&
-    splitQty > 0 &&
-    splitQty < originalItem.itemQty &&
-    (scheme || "").trim() !== ""
-  );
-};
+  // Helper function to check if a split is valid (not used in the JSX, but defined).
+  const isSplitValid = (index, originalItem) => {
+    const { splitQty, scheme } = splitInputs[index] || {};
+    return (
+      splitQty &&
+      splitQty > 0 &&
+      splitQty < originalItem.itemQty &&
+      (scheme || "").trim() !== ""
+    );
+  };
 
-// Function to merge local and split items into a final data array for submission.
-const prepareFinalData = () => {
-  if (!invoiceDetails?.items) return [];
+  // Function to merge local and split items into a final data array for submission.
+  const prepareFinalData = () => {
+    if (!invoiceDetails?.items) return [];
 
-  const merged = [...localItems, ...splitItems]; // Combine the two arrays.
+    const merged = [...localItems, ...splitItems]; // Combine the two arrays.
 
-  // Map over the merged array to finalize the scheme property.
-  return merged.map((item) => {
-    if (invoiceType === "Direct_Invoice") {
-      // If direct invoice, ensure scheme is "Direct" and flags are false.
-      return { ...item, scheme: "Direct", isScheme: false, isSplit: false };
-    }
-    // Otherwise, return the item as-is.
-    return { ...item };
-  });
-};
+    // Map over the merged array to finalize the scheme property.
+    return merged.map((item) => {
+      if (invoiceType === "Direct_Invoice") {
+        // If direct invoice, ensure scheme is "Direct" and flags are false.
+        return { ...item, scheme: "Direct", isScheme: false, isSplit: false };
+      }
+      // Otherwise, return the item as-is.
+      return { ...item };
+    });
+  };
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
@@ -485,7 +508,7 @@ const prepareFinalData = () => {
                           <select
                             value={item.scheme === "Direct" ? "" : item.scheme}
                             onChange={(e) => {
-                              dispatch(setShowSubmit(false))
+                              dispatch(setShowSubmit(false));
                               const schemeValue = e.target.value;
                               const updated = [...localItems];
                               updated[idx] = {
@@ -546,7 +569,7 @@ const prepareFinalData = () => {
                     {(splitItem.finishedWt * splitItem.splitQty).toFixed(3)}
                   </td>
 
-                  <td colSpan={2}>{splitItem.additionalInfo || '-'}</td>
+                  <td colSpan={2}>{splitItem.additionalInfo || "-"}</td>
                   <td>{splitItem.plant}</td>
                   <td className="break-all">{splitItem.itemCode}</td>
                   <td>-</td>
@@ -571,14 +594,15 @@ const prepareFinalData = () => {
                   Grand Total :
                 </td>
                 <td className="px-4 py-2 text-center">{totalQTY}</td>
-                <td className="px-1 py-1 text-center">
-                  {userCurrency.symbol} {grandTotal?.toFixed(2)}
+                <td className="px-1 py-1 text-center whitespace-nowrap">
+                  {`${userCurrency.symbol} ${grandTotal?.toFixed(2)}`}
                 </td>
-                <td className="px-4 py-2 text-center">
-                  {totalFWT?.toFixed(3)}
+
+                <td className="px-4 py-2 text-center whitespace-nowrap">
+                  {totalFWT?.toFixed(3)} Kgs
                 </td>
                 <td></td>
-                <td colSpan={3}>Currency : {userCurrency.code}</td>
+                <td colSpan={3}>Currency : {userCurrency?.code} - {userCurrency?.name}</td>
                 {invoiceType === "Scheme_Invoice" && <td colSpan={4}></td>}
               </tr>
             </tfoot>
@@ -672,8 +696,8 @@ const prepareFinalData = () => {
                     Total:
                   </td>
                   <td className="px-4 py-2 text-center">{totalQTY}</td>
-                  <td className="px-4 py-2 text-center">
-                    {grandTotal?.toFixed(2)}
+                  <td className="px-4 py-2 text-center whitespace-nowrap">
+                    {`${userCurrency.symbol} ${grandTotal?.toFixed(2)}`}
                   </td>
                   <td className="px-4 py-2 text-center">
                     {totalFWT?.toFixed(3)}
@@ -688,17 +712,17 @@ const prepareFinalData = () => {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-center mt-4 mr-14">
-      {/* Conditionally render the warning with a fade-in animation */}
-            {showWarning && (
-                <p className="text-red-500 animate-fade-in-out">
-                    Please check the PDF before submitting the invoice.
-                </p>
-            )}
+        {/* Conditionally render the warning with a fade-in animation */}
+        {showWarning && (
+          <p className="text-red-500 animate-fade-in-out">
+            Please check the PDF before submitting the invoice.
+          </p>
+        )}
         {formDAta && (
           <Button
-            onClick={() =>{
-              navigate("/TTS/International/Invoice/Export/BillPDF")
-              dispatch(setShowSubmit(true))
+            onClick={() => {
+              navigate("/TTS/International/Invoice/Export/BillPDF");
+              dispatch(setShowSubmit(true));
             }}
             text="Preview PDF"
           />
@@ -714,7 +738,9 @@ const prepareFinalData = () => {
             text="Edit Mandatory Fields"
           />
         )}
-        {formDAta && showSubmmit && <Button onClick={() => setOpen(true)} text="Submit" />}
+        {formDAta && showSubmmit && (
+          <Button onClick={() => setOpen(true)} text="Submit" />
+        )}
       </div>
       <DialogBox
         isOpen={isOpen}
@@ -767,7 +793,6 @@ const prepareFinalData = () => {
 
 export default ExportInvoicePrepare;
 
-
 export function ClientDetailsSection({ invoiceDetails }) {
   const containerRef = useRef(null);
   const orderRefs = useRef([]);
@@ -800,18 +825,26 @@ export function ClientDetailsSection({ invoiceDetails }) {
               y: 0,
               duration: 0.6,
             })
-              .to(orderRefs.current, {
-                opacity: 1,
-                x: 0,
-                duration: 0.6,
-                stagger: 0.2,
-              }, ">-0.3") // Start this animation 0.3s before the previous one ends
-              .to(shipRefs.current, {
-                opacity: 1,
-                x: 0,
-                duration: 0.6,
-                stagger: 0.2,
-              }, ">-0.5"); // Start this animation 0.5s before the previous one ends
+              .to(
+                orderRefs.current,
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: 0.6,
+                  stagger: 0.2,
+                },
+                ">-0.3"
+              ) // Start this animation 0.3s before the previous one ends
+              .to(
+                shipRefs.current,
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: 0.6,
+                  stagger: 0.2,
+                },
+                ">-0.5"
+              ); // Start this animation 0.5s before the previous one ends
 
             // Unobserve after the first animation to prevent it from re-triggering constantly.
             // If you want it to animate every time it scrolls into view, comment out the line below.
@@ -967,21 +1000,21 @@ export function ClientDetailsSection({ invoiceDetails }) {
               Shipping Information
             </h3>
             {[
-              invoiceDetails?.PreCarriageby === "air"
+              invoiceDetails?.preCarriageby === "air"
                 ? {
                     label: "Delivery Method",
                     value: "Air Freight",
                     icon: "✈️",
                     color: "blue",
                   }
-                : invoiceDetails?.PreCarriageby === "sea"
+                : invoiceDetails?.preCarriageby === "sea"
                 ? {
                     label: "Delivery Method",
                     value: "Sea Freight",
                     icon: "🚢",
                     color: "green",
                   }
-                : invoiceDetails?.PreCarriageby === "road"
+                : invoiceDetails?.preCarriageby === "road"
                 ? {
                     label: "Delivery Method",
                     value: "Road Freight",

@@ -8,12 +8,24 @@ import InvoicePDF from "./InvoiceExportPDF";
 import { useEffect, useState } from "react";
 import { setPdfBlob, SetupdatedInvoiceDetails } from "../../../../../Redux/Slices/InvoiceSlice";
 import { numberToWords } from "../../../../../utils/NumberToWords";
+import { Font } from "@react-pdf/renderer";
+Font.register({
+  family: "Arial",
+  src: "/fonts/Arial.ttf", // path to your font
+});
 
 const BORDER_THIN = "0.5px solid black";
 const BORDER_BOLD = "1.5px solid black";
 
 // Styles
 export const styles = StyleSheet.create({
+  textValue: {
+    fontFamily: "Arial", // force Arial instead of default
+    fontSize: 6,
+    paddingHorizontal: "3px",
+    paddingVertical: "1px",
+    fontWeight: "bold",
+  },
   // pdf
   pdf: {
     width: "100%",
@@ -34,7 +46,8 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 8,
     padding: 0.5,
-  },
+    textAlign: "center", // ✅ center text
+  },  
 
   // row1
   row1: {
@@ -141,6 +154,7 @@ export const styles = StyleSheet.create({
   row3left2row1: {
     width: "50%",
     height: "100%",
+    justifyContent:'space-evenly'
   },
 
   // row3 left side 2 row 2
@@ -148,7 +162,7 @@ export const styles = StyleSheet.create({
     width: "50%",
     height: "100%",
     borderLeft: BORDER_THIN,
-    justifyContent: "center",
+    justifyContent: "space-evenly",
   },
   // row3 left side 3 row 1
   row3left3: {
@@ -167,7 +181,7 @@ export const styles = StyleSheet.create({
     width: "50%",
     height: "100%",
     borderLeft: BORDER_THIN,
-    justifyContent: "center",
+    justifyContent: "space-evenly",
   },
   // row3 left side 4th
   row3left4: {
@@ -273,6 +287,7 @@ export const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     textAlign: "center",
     borderBottom: BORDER_THIN,
+    whiteSpace:'nowrap'
   },
   row4_1botm: {
     width: "100%",
@@ -320,12 +335,14 @@ export const styles = StyleSheet.create({
     fontSize: 7,
     paddingLeft: "3px",
     paddingVertical: "2px",
+    flexWrap:'nowrap'
   },
   textValue: {
     fontSize: 6,
     paddingHorizontal: "3px",
     paddingVertical: "1px",
     fontWeight: "bold",
+    
   },
   textlight: {
     fontSize: "6px",

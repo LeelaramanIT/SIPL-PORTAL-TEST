@@ -3,6 +3,8 @@ import { api } from "../../utils/axios";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { numberToWords } from "../../utils/NumberToWords";
+import { data } from "../../utils/DummyJSON";
+import { getCurrency, getCurrencySymble } from "../../utils/currencies";
 
 const initialState = {
   exportInvoices: {
@@ -65,6 +67,7 @@ const invoiceSlice = createSlice({
       state.exportInvoices.splitItems = []; // Add this to reset it properly
       state.exportInvoices.pdfBlob = [];
       state.exportInvoices.showSubmmit = false;
+      state.exportInvoices.FinalInvoiceDetails = [];
     },
     setExportAdditionalInvoice: (state, action) => {
       state.exportInvoices.additionalForm = action.payload;
@@ -84,38 +87,60 @@ const invoiceSlice = createSlice({
     setSplitResult: (state, action) => {
       state.exportInvoices.FinalSplitResult = action.payload; // final Items
     },
-    setFinalInvoiceData: (state, action) => {
-      state.exportInvoices.FinalInvoiceData = action.payload;
-    },
+    // ...inside the invoiceSlice reducers
+
+setFinalInvoiceData: (state, action) => {
+  // 1. Group the invoice items by scheme from the payload.
+  const groupedInvoices = splitInvoiceByScheme(action.payload);
+
+  // 2. Map over the grouped invoices to create a new array.
+  // This new array will contain the calculated totals and other formatted data.
+  const processedInvoices = groupedInvoices.map((invoice, index) => {
+    // Perform all calculations here for each grouped invoice
+    const totalqty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
+    const totalwt = invoice.items.reduce(
+      (acc, item) => acc + item.finishedWt * item.itemQty,
+      0
+    );
+    const grandTotal = invoice.items.reduce(
+      (acc, item) => acc + item.basicprice * item.itemQty,
+      0
+    );
+    const formattedGrandTotal = grandTotal.toFixed(5);
+    const unitPrice =
+    totalwt > 0 && (grandTotal / totalwt).toFixed(5);
+
+    const userCurrency = invoice?.usercurrency
+
+    // Return a new object that includes the original invoice data
+    // and the new calculated fields.
+    return {
+      ...invoice,
+      invoiceNo: Number(invoice.invoiceNo) + index,
+      totalqty,
+      totalwt: `${totalwt.toFixed(3)}`,
+      grandTotal: formattedGrandTotal,
+      amountInWords: `${userCurrency}${numberToWords(grandTotal,userCurrency)}`,
+      unitPrice,
+    };
+  });
+
+  // 3. Store the processed invoices (with calculations) in FinalInvoiceDetails.
+  state.exportInvoices.FinalInvoiceDetails = processedInvoices;
+  
+},
+
+// You can now remove the SetupdatedInvoiceDetails reducer, as its logic is
+// now part of setFinalInvoiceData.
     SetupdatedInvoiceDetails: (state, action) => {
       state.exportInvoices.updatedInvoiceDetails = action.payload
       
-      const splitInvoiceByScheme = (invoice) => {
-        const itemByScheme = invoice.items.reduce((acc, item) => {
-          if (!acc[item.scheme]) {
-            acc[item.scheme] = [];
-          }
-          acc[item.scheme].push(item);
-          return acc;
-        }, {});
-
-        const invoices = Object.entries(itemByScheme).map(([scheme, items]) => {
-          return {
-            ...invoice,
-            items, // only items of this scheme
-            scheme, // optional: attach scheme at invoice level
-          };
-        });
-
-        return invoices;
-      };
-
       const invoices = splitInvoiceByScheme(
-        state.exportInvoices.updatedInvoiceDetails
+        action.payload
       );
        const data = invoices.map((invoice,index) => {
           // Calculate total quantity, total weight, total price, and grand total for each invoice
-          const totalQty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
+          const totalqty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
           const grossWeight = invoice.items.reduce(
             (acc, item) => acc + item.finishedWt * item.itemQty,
             0
@@ -128,9 +153,11 @@ const invoiceSlice = createSlice({
           const formattedGrandTotal = grandTotal.toFixed(5);
       
           const unitPrice = (grandTotal / grossWeight).toFixed(5)
+
+          const userCurrency = invoice?.usercurrency
       
           return {
-            InvoiceNo: Number(invoice?.InvoiceNo) + index,
+            invoiceNo: Number(invoice?.invoiceNo) + index,
             orderRefNo: invoice?.orderRefNo,
             unitPrice,
             date: new Date().toLocaleDateString("en-GB", {
@@ -148,7 +175,7 @@ const invoiceSlice = createSlice({
               }
             )}`,
             otherReferences: "SDF Form",
-            exporter: invoice?.ExporterAuthorizedAddress || "",
+            exporter: invoice?.exporterAuthorizedAddress || "",
             consignee: {
               name: invoice?.billingCompanyName || "",
               address: invoice?.billingAddress?.split("~") || [],
@@ -156,16 +183,13 @@ const invoiceSlice = createSlice({
               state: invoice?.billingState?.toUpperCase() || "",
               country: invoice?.billingCountry?.toUpperCase() || "",
             },
-            customerAgent: {
-              name: "M/S, ADVANCE TIRES",
-              address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
-            },
+            customerAgent: invoice?.customerAgent || "",
             preCarriageBy: invoice?.PreCarriageby?.toUpperCase() || "",
-            placeOfReceipt: invoice?.PlaceOfReceiptByPreCarrier?.toUpperCase() || "",
-            vesselFlightNo: invoice?.VesselFlight || "",
-            portOfLoading: invoice?.PortOfLoading?.toUpperCase() || "",
-            portOfDischarge: invoice?.PortOfDischarge?.toUpperCase() || "",
-            finalDestination: invoice?.FinalDestination?.toUpperCase() || "",
+            placeOfReceipt: invoice?.placeOfReceiptByPreCarrier?.toUpperCase() || "",
+            vesselFlightNo: invoice?.vesselFlightNo || "",
+            portOfLoading: invoice?.portOfLoading?.toUpperCase() || "",
+            portOfDischarge: invoice?.portOfDischarge?.toUpperCase() || "",
+            finalDestination: invoice?.finalDestination?.toUpperCase() || "",
             buyerIfOtherThanConsignee: {
               name: invoice?.shippingCompanyName || "",
               address: invoice?.shippingAddress?.split("~") || [],
@@ -173,10 +197,10 @@ const invoiceSlice = createSlice({
               state: invoice?.shippingState?.toUpperCase() || "",
               country: invoice?.shippingCountry?.toUpperCase() || "",
             },
-            countryOfOrigin: invoice?.CountryOfOriginOfGoods?.toUpperCase() || "",
+            countryOfOrigin: invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
             countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
             deliveryTerms: invoice?.Incoterm,
-            PaymentTerms: invoice?.PaymentTerms || "",
+            paymentTerms: invoice?.paymentTerms || "",
             bankDetails: {
               accountHolder:
                 "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
@@ -187,10 +211,10 @@ const invoiceSlice = createSlice({
               swiftCode: "SBININBB174",
             },
             containerDetails: {
-              size: invoice?.ContainerType,
-              containerNo: invoice?.ContainerNo,
-              linerSealNo: invoice?.ContainerSEALNO,
-              otsNo: invoice?.OtsNo || "",
+              size: invoice?.containerType || "",
+              containerNo: invoice?.containerNo || "",
+              linerSealNo: invoice?.containerSEALNO || "",
+              otsNo: invoice?.otsNo || "",
             },
             packingDetails: {
               itcHsNo: invoice?.itcHsNo,
@@ -202,14 +226,16 @@ const invoiceSlice = createSlice({
                 .join(", "),
             },
             items: invoice.items,
+            usercurrency:invoice?.usercurrency,
+            currencySymble:getCurrencySymble(invoice?.usercurrency),
             quantityKgs: grossWeight,
             unitPriceUsd: null, // This field is not directly available from the new data structure, consider how to calculate it
-            totalPricesUsd: totalPrices,
-            grandTotalUsd: formattedGrandTotal,
-            amountInWords: `USD ${numberToWords(grandTotal)}`,
-            grossWeight: `${grossWeight.toFixed(3)} KGS`,
-            netWeight: `${grossWeight.toFixed(3)} KGS`, // Assuming net and gross are same for simplicity
-            totalQty:totalQty,
+            totalPrices: totalPrices,
+            grandTotal: formattedGrandTotal,
+            amountInWords: `${userCurrency} ${numberToWords(grandTotal,userCurrency)}`,
+            grossWeight: `${grossWeight.toFixed(3)} Kgs`,
+            netWeight: `${grossWeight.toFixed(3)} Kgs`, // Assuming net and gross are same for simplicity
+            totalqty:totalqty,
             declaration:
               "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
             licenceDetails: {
@@ -240,117 +266,7 @@ const invoiceSlice = createSlice({
 
 // Thunk for async API call
 export const getExportInvoice = (payload) => async (dispatch) => {
-  const data = {
-    type: "Export",
-    custfullname: "Global Tech Ltd",
-    orderRefNo: "ORD-2025-001",
-    workorderno: "WO-789",
-    completedDate: "2025-09-01",
-    dispatchedDate: "2025-09-03",
-    rfD_Date: "2025-09-05",
-    shipmentType: "COMBI",
-    usercurrency: "USD",
-
-    billingCompanyName: "Global Tech Ltd",
-    billingAddress: "123 Tech Park~Building 5~Floor 3",
-    billingCity: "New York",
-    billingState: "NY",
-    billingCountry: "USA",
-    billingZipcode: "10001",
-    billingContactName: "John Doe",
-    billingEmailId: "john.doe@globaltech.com",
-    billingMobile: "+1-212-555-7890",
-
-    shippingCompanyName: "Skyline Logistics",
-    shippingAddress: "Warehouse 12~Dock B~Industrial Area",
-    shippingCity: "Los Angeles",
-    shippingState: "CA",
-    shippingCountry: "USA",
-    shippingZipcode: "90021",
-    shippingContactName: "Jane Smith",
-    shippingEmailId: "jane.smith@skyline.com",
-    shippingMobile: "+1-310-555-1234",
-    PreCarriageby: "sea",
-
-    splIns: "Handle with care - Fragile items",
-    specialRequset: "Deliver before end of September",
-
-    items: [
-      {
-        category: "Tyre",
-        platforms: "Truck",
-        tyreSize: "295/80R22.5",
-        tyreRim: "22.5",
-        tyreType: "Radial",
-        brand: "Michelin",
-        sidewall: "Black",
-        basicprice: 150.75,
-        itemQty: 20,
-        finishedWt: 45.6,
-        rimItemQty: 0,
-        rimUnitPrice: 0,
-        additionalInfo: "High performance tyres",
-        plant: "Plant-A",
-        itemCode: "TYR-MIC-29580R22-1",
-        o_itemid: 1,
-      },
-      {
-        category: "Tyre",
-        platforms: "Bus",
-        tyreSize: "315/80R22.5",
-        tyreRim: "22.5",
-        tyreType: "Radial",
-        brand: "Bridgestone",
-        sidewall: "White",
-        basicprice: 175.5,
-        itemQty: 15,
-        finishedWt: 50.2,
-        rimItemQty: 2,
-        rimUnitPrice: 30,
-        additionalInfo: "",
-        plant: "Plant-B",
-        itemCode: "TYR-BRD-31580R22-2",
-        o_itemid: 2,
-      },
-      {
-        category: "Rim",
-        platforms: "Truck",
-        tyreSize: "22.5 Rim",
-        tyreRim: "22.5",
-        tyreType: "Steel",
-        brand: "Tata Steel",
-        sidewall: "N/A",
-        basicprice: 90.25,
-        itemQty: 10,
-        finishedWt: 25.3,
-        rimItemQty: 10,
-        rimUnitPrice: 90.25,
-        additionalInfo: "Heavy duty rims",
-        plant: "Plant-A",
-        itemCode: "RIM-TATA-22-3",
-        o_itemid: 3,
-      },
-      {
-        category: "Tyre",
-        platforms: "Truck",
-        tyreSize: "295/80R22.5",
-        tyreRim: "22.5",
-        tyreType: "Radial",
-        brand: "Michelin",
-        sidewall: "Black",
-        basicprice: 150.75,
-        itemQty: 20,
-        finishedWt: 45.6,
-        rimItemQty: 0,
-        rimUnitPrice: 0,
-        additionalInfo: "High performance tyres",
-        plant: "Plant-A",
-        itemCode: "TYR-MIC-29580R22-4",
-        o_itemid: 4,
-      },
-    ],
-  };
-
+  
   try {
     dispatch(setExportInvoiceLoading());
     if (payload.type === "Customer") {
@@ -411,6 +327,26 @@ export const submitInvoice = (payload) => async (dispatch) => {
   } catch (error) {
     console.error("Error uploading PDF:", error);
   }
+};
+
+export const splitInvoiceByScheme = (invoice) => {
+  const itemByScheme = invoice.items.reduce((acc, item) => {
+    if (!acc[item.scheme]) {
+      acc[item.scheme] = [];
+    }
+    acc[item.scheme].push(item);
+    return acc;
+  }, {});
+
+  const invoices = Object.entries(itemByScheme).map(([scheme, items]) => {
+    return {
+      ...invoice,
+      items, // only items of this scheme
+      scheme, // optional: attach scheme at invoice level
+    };
+  });
+
+  return invoices;
 };
 
 // Exports

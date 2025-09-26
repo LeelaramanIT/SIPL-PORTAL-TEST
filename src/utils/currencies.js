@@ -33,6 +33,11 @@ export const currencies = [
   ];
   
   export const getCurrency = (code)=>{
-    const currency = currencies.find(c=>c.code === code);
+    const currency = currencies?.find(c=>c.code === code);
     return currency ? currency : ''
+  }
+
+  export const getCurrencySymble = (code) =>{
+    const currency = currencies?.find(c=>c.code === code);
+    return currency ? currency.symbol : ''
   }
