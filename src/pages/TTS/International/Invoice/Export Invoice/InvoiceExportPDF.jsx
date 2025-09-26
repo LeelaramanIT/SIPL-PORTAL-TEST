@@ -111,7 +111,7 @@ const InvoicePDF = ({ data,styles }) => (
               </View>
               <View>
                 <Text style={styles.text}>CUSTOMER AGENT</Text>
-                <Text style={styles.textValue}>{data?.customerAgent?.name || "M/S, ADVANCE TIRE"}</Text>
+                <Text style={styles.textValue}>{data?.customerAgent?.name || ""}</Text>
                 {data?.customerAgent?.address
                   ? data?.consignee.address.map((item, index) => (
                     <Text key={index} style={styles.textValue}>

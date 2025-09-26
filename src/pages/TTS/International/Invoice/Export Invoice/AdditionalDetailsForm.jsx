@@ -29,20 +29,25 @@ const AdditionalDetailsForm = ({
     (state) => state?.invoice?.exportInvoices?.additionalForm
   );
 
-  const decodedText = invoiceDetails?.paymentTerms?.replace(/&amp;/g, "") || "";
+  const decodedText = invoiceDetails?.paymentTerms || "";
 
-  let formattedDescription = "";
-  const numberedSections = decodedText.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
+// Decode HTML entities
+const parser = new DOMParser();
+const decoded = parser.parseFromString(decodedText, "text/html").body.textContent || "";
 
-  if (numberedSections?.length) {
-    formattedDescription = numberedSections
-      .map((section) => section.replace(/~+/g, "\n").trim()) // line breaks inside each section
-      .join("\n\n"); // double line break between sections
-  } else {
-    // fallback if no numbered sections found
-    formattedDescription = decodedText.replace(/~+/g, "\n");
-  }
-  // console.log(invoiceDetails);
+// Split into sections if numbered
+const numberedSections = decoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
+
+let formattedDescription = "";
+if (numberedSections?.length) {
+  formattedDescription = numberedSections
+    .map((section) => section.replace(/~+/g, "\n").trim())
+    .join("\n");
+} else {
+  formattedDescription = decoded.replace(/~+/g, "\n").trim();
+}
+
+  console.log(invoiceDetails);
 
   const defaultValues = {
     ExporterAuthorizedAddress: invoiceData?.ExporterAuthorizedAddress || "",
@@ -50,13 +55,8 @@ const AdditionalDetailsForm = ({
     InvoiceNo: invoiceData?.InvoiceNo || "",
     BillOfLadingNo: invoiceData?.BillOfLadingNo || "",
     ContainerNo: invoiceData?.ContainerNo || "",
-    CountryOfOriginOfGoods:
-      invoiceDetails?.containerLoadFrom === "MMN" ||
-      invoiceDetails?.containerLoadFrom === "PDK"
-        ? "india"
-        : "srilanka",
-    PortOfLoading:
-      invoiceDetails.PortOfLoading || invoiceData?.PortOfLoading || "",
+    CountryOfOriginOfGoods: invoiceDetails?.CountryOfOriginOfGoods === "INDIA" || '',
+    PortOfLoading: invoiceDetails.PortOfLoading || invoiceData?.PortOfLoading || "",
     PortOfDischarge: invoiceData?.PortOfDischarge || "",
     ContainerType: invoiceData?.ContainerType || "",
     PreCarriageby: invoiceData?.PreCarriageby || "",
@@ -67,21 +67,19 @@ const AdditionalDetailsForm = ({
     OtherCharges1: invoiceData?.OtherCharges1 || "",
     OtherCharges2: invoiceData?.OtherCharges2 || "",
     OtherCharges3: invoiceData?.OtherCharges3 || "",
-    OtherChargesValue1:invoiceData?.OtherChargesValue1 ||'',
-    OtherChargesValue2:invoiceData?.OtherChargesValue1 ||'',
-    OtherChargesValue3:invoiceData?.OtherChargesValue1 ||'',
+    OtherChargesValue1: invoiceData?.OtherChargesValue1 || '',
+    OtherChargesValue2: invoiceData?.OtherChargesValue1 || '',
+    OtherChargesValue3: invoiceData?.OtherChargesValue1 || '',
     ClaimAdjustment: invoiceData?.Value1 || "",
     OtherDiscount: invoiceData?.Value2 || "",
-    PaymentTerms: invoiceData?.PaymentTerms || 
-    `01. UNIT PRICES FOB CHENNAI/COLOMBO, USD BY SEA.
-     02. DELIVERY: REFER "TRACK MY ORDER" IN S-COTS.
-     03. PAYMENT: 100% PAYMENTS AFTER FAX DOCUMENTS.
-     04. PROFORMA VALID 30 DAYS FROM ORDER DATE.
-     05. SHIPMENT WILL BE MADE IN FULL 20' CONTAINER LOAD.
-  `,
+  
+    // ✅ use formattedDescription here instead of raw DB value
+    PaymentTerms: formattedDescription || "",  
+  
     OtsNo: invoiceData?.OtsNo || "",
     itcHsNo: invoiceData?.itcHsNo || "",
   };
+  
 
   const {
     register,

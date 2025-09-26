@@ -50,7 +50,6 @@ const {
   pdfBlob,
   showSubmmit
 } = useSelector((state) => state?.invoice?.exportInvoices || {});
-const formDAta = additionalForm;
 
 // useEffect hook to initialize local state from Redux data on load
 useEffect(() => {
@@ -90,8 +89,8 @@ useEffect(() => {
 
 // useEffect to update the invoice details in Redux with the final split result.
 useEffect(() => {
-  dispatch(SetupdatedInvoiceDetails({...invoiceDetails,...formDAta,items:FinalSplitResult}))
-}, [FinalSplitResult,formDAta,dispatch])
+  dispatch(SetupdatedInvoiceDetails({...invoiceDetails,...additionalForm,items:FinalSplitResult}))
+}, [FinalSplitResult,additionalForm,dispatch])
 
 console.log('updatedInvoiceDetails:',updatedInvoiceDetails);
 console.log('FinalInvoicePDFData',FinalInvoicePDFData);
@@ -351,7 +350,7 @@ const prepareFinalData = () => {
         {invoiceDetails?.type} Invoice Details
       </h1>
       <ClientDetailsSection
-        invoiceDetails={{ ...invoiceDetails, ...formDAta }}
+        invoiceDetails={{ ...invoiceDetails, ...additionalForm }}
       />
 
       <div className="flex justify-between items-start">
@@ -694,7 +693,7 @@ const prepareFinalData = () => {
                     Please check the PDF before submitting the invoice.
                 </p>
             )}
-        {formDAta && (
+        {additionalForm && (
           <Button
             onClick={() =>{
               navigate("/TTS/International/Invoice/Export/BillPDF")
@@ -703,7 +702,7 @@ const prepareFinalData = () => {
             text="Preview PDF"
           />
         )}
-        {!formDAta ? (
+        {!additionalForm ? (
           <Button
             onClick={() => setShowDetailsForm(true)}
             text="Mandatory Fields"
@@ -714,7 +713,7 @@ const prepareFinalData = () => {
             text="Edit Mandatory Fields"
           />
         )}
-        {formDAta && showSubmmit && <Button onClick={() => setOpen(true)} text="Submit" />}
+        {additionalForm && showSubmmit && <Button onClick={() => setOpen(true)} text="Submit" />}
       </div>
       <DialogBox
         isOpen={isOpen}

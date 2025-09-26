@@ -38,9 +38,9 @@ const invoiceSlice = createSlice({
       state.exportInvoices.loading = false;
       state.exportInvoices.error = null;
     },
-    setExportInvoiceAddressDetails: (state, action) => {
-      state.exportInvoices.additionalForm = action.payload;
-    },
+    // setExportInvoiceAddressDetails: (state, action) => {
+    //   state.exportInvoices.additionalForm = action.payload;
+    // },
     setExportInvoiceLoading: (state) => {
       state.exportInvoices.loading = true;
       state.exportInvoices.error = null;
@@ -65,6 +65,7 @@ const invoiceSlice = createSlice({
       state.exportInvoices.splitItems = []; // Add this to reset it properly
       state.exportInvoices.pdfBlob = [];
       state.exportInvoices.showSubmmit = false;
+      state.exportInvoices.FinalInvoiceDetails = []
     },
     setExportAdditionalInvoice: (state, action) => {
       state.exportInvoices.additionalForm = action.payload;
@@ -157,8 +158,8 @@ const invoiceSlice = createSlice({
               country: invoice?.billingCountry?.toUpperCase() || "",
             },
             customerAgent: {
-              name: "M/S, ADVANCE TIRES",
-              address: ["1000 Rike Dr.", "Millstone Twp. NJ 08535"],
+              name: "",
+              address: ["", ""],
             },
             preCarriageBy: invoice?.PreCarriageby?.toUpperCase() || "",
             placeOfReceipt: invoice?.PlaceOfReceiptByPreCarrier?.toUpperCase() || "",
@@ -251,118 +252,118 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   //   shipmentType: "COMBI",
   //   usercurrency: "USD",
 
-    billingCompanyName: "Global Tech Ltd",
-    billingAddress: "123 Tech Park~Building 5~Floor 3",
-    billingCity: "New York",
-    billingState: "NY",
-    billingCountry: "USA",
-    billingZipcode: "10001",
-    billingContactName: "John Doe",
-    billingEmailId: "john.doe@globaltech.com",
-    billingMobile: "+1-212-555-7890",
+  //   billingCompanyName: "Global Tech Ltd",
+  //   billingAddress: "123 Tech Park~Building 5~Floor 3",
+  //   billingCity: "New York",
+  //   billingState: "NY",
+  //   billingCountry: "USA",
+  //   billingZipcode: "10001",
+  //   billingContactName: "John Doe",
+  //   billingEmailId: "john.doe@globaltech.com",
+  //   billingMobile: "+1-212-555-7890",
 
-    shippingCompanyName: "Skyline Logistics",
-    shippingAddress: "Warehouse 12~Dock B~Industrial Area",
-    shippingCity: "Los Angeles",
-    shippingState: "CA",
-    shippingCountry: "USA",
-    shippingZipcode: "90021",
-    shippingContactName: "Jane Smith",
-    shippingEmailId: "jane.smith@skyline.com",
-    shippingMobile: "+1-310-555-1234",
-    PreCarriageby: "sea",
+  //   shippingCompanyName: "Skyline Logistics",
+  //   shippingAddress: "Warehouse 12~Dock B~Industrial Area",
+  //   shippingCity: "Los Angeles",
+  //   shippingState: "CA",
+  //   shippingCountry: "USA",
+  //   shippingZipcode: "90021",
+  //   shippingContactName: "Jane Smith",
+  //   shippingEmailId: "jane.smith@skyline.com",
+  //   shippingMobile: "+1-310-555-1234",
+  //   PreCarriageby: "sea",
 
-    splIns: "Handle with care - Fragile items",
-    specialRequset: "Deliver before end of September",
+  //   splIns: "Handle with care - Fragile items",
+  //   specialRequset: "Deliver before end of September",
 
-    items: [
-      {
-        category: "Tyre",
-        platforms: "Truck",
-        tyreSize: "295/80R22.5",
-        tyreRim: "22.5",
-        tyreType: "Radial",
-        brand: "Michelin",
-        sidewall: "Black",
-        basicprice: 150.75,
-        itemQty: 20,
-        finishedWt: 45.6,
-        rimItemQty: 0,
-        rimUnitPrice: 0,
-        additionalInfo: "High performance tyres",
-        plant: "Plant-A",
-        itemCode: "TYR-MIC-29580R22-1",
-        o_itemid: 1,
-      },
-      {
-        category: "Tyre",
-        platforms: "Bus",
-        tyreSize: "315/80R22.5",
-        tyreRim: "22.5",
-        tyreType: "Radial",
-        brand: "Bridgestone",
-        sidewall: "White",
-        basicprice: 175.5,
-        itemQty: 15,
-        finishedWt: 50.2,
-        rimItemQty: 2,
-        rimUnitPrice: 30,
-        additionalInfo: "",
-        plant: "Plant-B",
-        itemCode: "TYR-BRD-31580R22-2",
-        o_itemid: 2,
-      },
-      {
-        category: "Rim",
-        platforms: "Truck",
-        tyreSize: "22.5 Rim",
-        tyreRim: "22.5",
-        tyreType: "Steel",
-        brand: "Tata Steel",
-        sidewall: "N/A",
-        basicprice: 90.25,
-        itemQty: 10,
-        finishedWt: 25.3,
-        rimItemQty: 10,
-        rimUnitPrice: 90.25,
-        additionalInfo: "Heavy duty rims",
-        plant: "Plant-A",
-        itemCode: "RIM-TATA-22-3",
-        o_itemid: 3,
-      },
-      {
-        category: "Tyre",
-        platforms: "Truck",
-        tyreSize: "295/80R22.5",
-        tyreRim: "22.5",
-        tyreType: "Radial",
-        brand: "Michelin",
-        sidewall: "Black",
-        basicprice: 150.75,
-        itemQty: 20,
-        finishedWt: 45.6,
-        rimItemQty: 0,
-        rimUnitPrice: 0,
-        additionalInfo: "High performance tyres",
-        plant: "Plant-A",
-        itemCode: "TYR-MIC-29580R22-4",
-        o_itemid: 4,
-      },
-    ],
-  };
+  //   items: [
+  //     {
+  //       category: "Tyre",
+  //       platforms: "Truck",
+  //       tyreSize: "295/80R22.5",
+  //       tyreRim: "22.5",
+  //       tyreType: "Radial",
+  //       brand: "Michelin",
+  //       sidewall: "Black",
+  //       basicprice: 150.75,
+  //       itemQty: 20,
+  //       finishedWt: 45.6,
+  //       rimItemQty: 0,
+  //       rimUnitPrice: 0,
+  //       additionalInfo: "High performance tyres",
+  //       plant: "Plant-A",
+  //       itemCode: "TYR-MIC-29580R22-1",
+  //       o_itemid: 1,
+  //     },
+  //     {
+  //       category: "Tyre",
+  //       platforms: "Bus",
+  //       tyreSize: "315/80R22.5",
+  //       tyreRim: "22.5",
+  //       tyreType: "Radial",
+  //       brand: "Bridgestone",
+  //       sidewall: "White",
+  //       basicprice: 175.5,
+  //       itemQty: 15,
+  //       finishedWt: 50.2,
+  //       rimItemQty: 2,
+  //       rimUnitPrice: 30,
+  //       additionalInfo: "",
+  //       plant: "Plant-B",
+  //       itemCode: "TYR-BRD-31580R22-2",
+  //       o_itemid: 2,
+  //     },
+  //     {
+  //       category: "Rim",
+  //       platforms: "Truck",
+  //       tyreSize: "22.5 Rim",
+  //       tyreRim: "22.5",
+  //       tyreType: "Steel",
+  //       brand: "Tata Steel",
+  //       sidewall: "N/A",
+  //       basicprice: 90.25,
+  //       itemQty: 10,
+  //       finishedWt: 25.3,
+  //       rimItemQty: 10,
+  //       rimUnitPrice: 90.25,
+  //       additionalInfo: "Heavy duty rims",
+  //       plant: "Plant-A",
+  //       itemCode: "RIM-TATA-22-3",
+  //       o_itemid: 3,
+  //     },
+  //     {
+  //       category: "Tyre",
+  //       platforms: "Truck",
+  //       tyreSize: "295/80R22.5",
+  //       tyreRim: "22.5",
+  //       tyreType: "Radial",
+  //       brand: "Michelin",
+  //       sidewall: "Black",
+  //       basicprice: 150.75,
+  //       itemQty: 20,
+  //       finishedWt: 45.6,
+  //       rimItemQty: 0,
+  //       rimUnitPrice: 0,
+  //       additionalInfo: "High performance tyres",
+  //       plant: "Plant-A",
+  //       itemCode: "TYR-MIC-29580R22-4",
+  //       o_itemid: 4,
+  //     },
+  //   ],
+  // };
 
   try {
     dispatch(setExportInvoiceLoading());
     if (payload.type === "Customer") {
-      //   const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
-      // const data = res.data
+        const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+      const data = res.data
 
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
     }
 
     if (payload.type === "Custom") {
-      //   const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
-      // const data = res.data
+        const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+      const data = res.data
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
     }
   } catch (error) {
@@ -416,7 +417,7 @@ export const submitInvoice = (payload) => async (dispatch) => {
 // Exports
 export const {
   setExportInvoiceSalesDetails,
-  setExportInvoiceAddressDetails,
+  // setExportInvoiceAddressDetails,
   setExportInvoiceLoading,
   setExportInvoiceError,
   setExportInvoiceList,

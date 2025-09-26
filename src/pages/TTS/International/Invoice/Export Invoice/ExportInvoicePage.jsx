@@ -40,7 +40,7 @@ const ExportInvoice = () => {
 
   useLayoutEffect(() => {
     dispatch(resetExportInvoiceDetails())
-    // dispatch(getExportInvoiceAll(state));
+    dispatch(getExportInvoiceAll(state));
   }, [state]);
 
   const headers = [
