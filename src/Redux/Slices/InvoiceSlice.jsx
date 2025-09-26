@@ -40,9 +40,9 @@ const invoiceSlice = createSlice({
       state.exportInvoices.loading = false;
       state.exportInvoices.error = null;
     },
-    setExportInvoiceAddressDetails: (state, action) => {
-      state.exportInvoices.additionalForm = action.payload;
-    },
+    // setExportInvoiceAddressDetails: (state, action) => {
+    //   state.exportInvoices.additionalForm = action.payload;
+    // },
     setExportInvoiceLoading: (state) => {
       state.exportInvoices.loading = true;
       state.exportInvoices.error = null;
@@ -270,15 +270,15 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   try {
     dispatch(setExportInvoiceLoading());
     if (payload.type === "Customer") {
-      //   const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
-      // const data = res.data
+        const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+      const data = res.data
 
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
     }
 
     if (payload.type === "Custom") {
-      //   const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
-      // const data = res.data
+        const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+      const data = res.data
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
     }
   } catch (error) {
@@ -352,7 +352,7 @@ export const splitInvoiceByScheme = (invoice) => {
 // Exports
 export const {
   setExportInvoiceSalesDetails,
-  setExportInvoiceAddressDetails,
+  // setExportInvoiceAddressDetails,
   setExportInvoiceLoading,
   setExportInvoiceError,
   setExportInvoiceList,

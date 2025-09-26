@@ -374,7 +374,7 @@ const ExportInvoicePrepare = () => {
         {invoiceDetails?.type} Invoice Details
       </h1>
       <ClientDetailsSection
-        invoiceDetails={{ ...invoiceDetails, ...formDAta }}
+        invoiceDetails={{ ...invoiceDetails, ...additionalForm }}
       />
 
       <div className="flex justify-between items-start">
@@ -727,7 +727,7 @@ const ExportInvoicePrepare = () => {
             text="Preview PDF"
           />
         )}
-        {!formDAta ? (
+        {!additionalForm ? (
           <Button
             onClick={() => setShowDetailsForm(true)}
             text="Mandatory Fields"
