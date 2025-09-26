@@ -240,16 +240,16 @@ const invoiceSlice = createSlice({
 
 // Thunk for async API call
 export const getExportInvoice = (payload) => async (dispatch) => {
-  const data = {
-    type: "Export",
-    custfullname: "Global Tech Ltd",
-    orderRefNo: "ORD-2025-001",
-    workorderno: "WO-789",
-    completedDate: "2025-09-01",
-    dispatchedDate: "2025-09-03",
-    rfD_Date: "2025-09-05",
-    shipmentType: "COMBI",
-    usercurrency: "USD",
+  // const data = {
+  //   type: "Export",
+  //   custfullname: "Global Tech Ltd",
+  //   orderRefNo: "ORD-2025-001",
+  //   workorderno: "WO-789",
+  //   completedDate: "2025-09-01",
+  //   dispatchedDate: "2025-09-03",
+  //   rfD_Date: "2025-09-05",
+  //   shipmentType: "COMBI",
+  //   usercurrency: "USD",
 
     billingCompanyName: "Global Tech Ltd",
     billingAddress: "123 Tech Park~Building 5~Floor 3",
