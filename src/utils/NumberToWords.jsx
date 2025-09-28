@@ -20,6 +20,10 @@ export function numberToWords(num, currencyCode) {
         name: { singular: 'euro', plural: 'euros' },
         subUnit: { singular: 'cent', plural: 'cents' }
     },
+    'EURO': {
+        name: { singular: 'euro', plural: 'euros' },
+        subUnit: { singular: 'cent', plural: 'cents' }
+    },
     'GBP': {
         name: { singular: 'pound', plural: 'pounds' },
         subUnit: { singular: 'pence', plural: 'pence' }

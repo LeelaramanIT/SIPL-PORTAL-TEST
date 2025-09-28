@@ -116,7 +116,7 @@ setFinalInvoiceData: (state, action) => {
     // and the new calculated fields.
     return {
       ...invoice,
-      invoiceNo: Number(invoice.invoiceNo) + index,
+      invoiceNumber: Number(invoice.invoiceNumber) + index,
       totalqty,
       totalwt: `${totalwt.toFixed(3)}`,
       grandTotal: formattedGrandTotal,
@@ -157,7 +157,7 @@ setFinalInvoiceData: (state, action) => {
           const userCurrency = invoice?.usercurrency
       
           return {
-            invoiceNo: Number(invoice?.invoiceNo) + index,
+            invoiceNumber: Number(invoice?.invoiceNumber) + index,
             orderRefNo: invoice?.orderRefNo,
             unitPrice,
             date: new Date().toLocaleDateString("en-GB", {
@@ -184,7 +184,7 @@ setFinalInvoiceData: (state, action) => {
               country: invoice?.billingCountry?.toUpperCase() || "",
             },
             customerAgent: invoice?.customerAgent || "",
-            preCarriageBy: invoice?.PreCarriageby?.toUpperCase() || "",
+            preCarriageBy: invoice?.preCarriageBy?.toUpperCase() || "",
             placeOfReceipt: invoice?.placeOfReceiptByPreCarrier?.toUpperCase() || "",
             vesselFlightNo: invoice?.vesselFlightNo || "",
             portOfLoading: invoice?.portOfLoading?.toUpperCase() || "",
@@ -199,7 +199,7 @@ setFinalInvoiceData: (state, action) => {
             },
             countryOfOrigin: invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
             countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
-            deliveryTerms: invoice?.Incoterm,
+            incoterm: invoice?.incoterm,
             paymentTerms: invoice?.paymentTerms || "",
             bankDetails: {
               accountHolder:

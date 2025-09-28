@@ -18,7 +18,7 @@ const AdditionalDetailsForm = ({
   // console.log(invoiceDetails);
   const origin =
     invoiceDetails?.containerLoadFrom === "MMN" ||
-    invoiceDetails?.containerLoadFrom === "PDK"
+      invoiceDetails?.containerLoadFrom === "PDK"
       ? "india"
       : "srilanka";
 
@@ -29,57 +29,103 @@ const AdditionalDetailsForm = ({
     (state) => state?.invoice?.exportInvoices?.additionalForm
   );
 
-  const decodedText = invoiceDetails?.paymentTerms || "";
+  const decodedText = invoiceData?.paymentTerms || invoiceDetails?.paymentTerms || "";
 
-// Decode HTML entities
-const parser = new DOMParser();
-const decoded = parser.parseFromString(decodedText, "text/html").body.textContent || "";
+  // Decode HTML entities
+  const parser = new DOMParser();
+  const decoded = parser.parseFromString(decodedText, "text/html").body.textContent || "";
 
-// Split into sections if numbered
-const numberedSections = decoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
+  // Split into sections if numbered
+  const numberedSections = decoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
 
-let formattedDescription = "";
-if (numberedSections?.length) {
-  formattedDescription = numberedSections
-    .map((section) => section.replace(/~+/g, "\n").trim())
-    .join("\n");
-} else {
-  formattedDescription = decoded.replace(/~+/g, "\n").trim();
-}
+  let formattedDescription = "";
+  if (numberedSections?.length) {
+    formattedDescription = numberedSections
+      .map((section) => section.replace(/~+/g, "\n").trim())
+      .join("\n");
+  } else {
+    formattedDescription = decoded.replace(/~+/g, "\n").trim();
+  }
 
   console.log(invoiceDetails);
 
   const defaultValues = {
-    ExporterAuthorizedAddress: invoiceData?.ExporterAuthorizedAddress || "",
-    VesselFlight: invoiceData?.VesselFlight || "",
-    InvoiceNo: invoiceData?.InvoiceNo || "",
-    BillOfLadingNo: invoiceData?.BillOfLadingNo || "",
-    ContainerNo: invoiceData?.ContainerNo || "",
-    CountryOfOriginOfGoods: invoiceDetails?.CountryOfOriginOfGoods === "INDIA" || '',
-    PortOfLoading: invoiceDetails.PortOfLoading || invoiceData?.PortOfLoading || "",
-    PortOfDischarge: invoiceData?.PortOfDischarge || "",
-    ContainerType: invoiceData?.ContainerType || "",
-    PreCarriageby: invoiceData?.PreCarriageby || "",
-    Incoterm: invoiceData?.Incoterm || "",
-    ContainerSEALNO: invoiceData?.ContainerSEALNO || "",
-    PlaceOfReceiptByPreCarrier: invoiceData?.PlaceOfReceiptByPreCarrier || "",
-    FinalDestination: invoiceDetails?.shippingCity || "",
-    OtherCharges1: invoiceData?.OtherCharges1 || "",
-    OtherCharges2: invoiceData?.OtherCharges2 || "",
-    OtherCharges3: invoiceData?.OtherCharges3 || "",
-    OtherChargesValue1: invoiceData?.OtherChargesValue1 || '',
-    OtherChargesValue2: invoiceData?.OtherChargesValue1 || '',
-    OtherChargesValue3: invoiceData?.OtherChargesValue1 || '',
-    ClaimAdjustment: invoiceData?.Value1 || "",
-    OtherDiscount: invoiceData?.Value2 || "",
-  
+    exporterAuthorizedAddress: invoiceData?.exporterAuthorizedAddress || "",
+    vesselFlightNo: invoiceData?.vesselFlightNo || "",
+    invoiceNumber: invoiceData?.invoiceNumber || invoiceDetails?.invoiceNumber || "",
+    billOfLadingNo: invoiceData?.billOfLadingNo || "",
+    containerNo: invoiceData?.containerNo || "",
+    countryOfOriginOfGoods: invoiceData?.countryOfOriginOfGoods || invoiceDetails?.countryOfOriginOfGoods || '',
+    portOfLoading: invoiceData?.portOfLoading || invoiceDetails?.portOfLoading || "",
+    portOfDischarge: invoiceData?.portOfDischarge || "",
+    containerType: invoiceData?.containerType || "",
+    preCarriageBy: invoiceData?.preCarriageBy || "",
+    incoterm: invoiceData?.incoterm.toUpperCase() || "",
+    containerSEALNO: invoiceData?.containerSEALNO || "",
+    placeOfReceiptByPreCarrier: invoiceData?.placeOfReceiptByPreCarrier || "",
+    finalDestination: invoiceData?.shippingCity || invoiceDetails?.shippingCity || "",
+    otherCharges1: invoiceData?.otherCharges1 || "",
+    otherCharges2: invoiceData?.otherCharges2 || "",
+    otherCharges3: invoiceData?.otherCharges3 || "",
+    otherChargesValue1: invoiceData?.otherChargesValue1 || '',
+    otherChargesValue2: invoiceData?.otherChargesValue2 || '',
+    otherChargesValue3: invoiceData?.otherChargesValue3 || '',
+    claimAdjustment: invoiceData?.claimAdjustment || "",
+    otherDiscount: invoiceData?.otherDiscount || "",
+
     // ✅ use formattedDescription here instead of raw DB value
-    PaymentTerms: formattedDescription || "",  
-  
-    OtsNo: invoiceData?.OtsNo || "",
+    paymentTerms: formattedDescription || "",
+
+    otsNo: invoiceData?.otsNo || "",
     itcHsNo: invoiceData?.itcHsNo || "",
   };
-  
+
+  // Decode & format strictly from invoiceDetails (DB)
+  const rawDbPaymentTerms = invoiceDetails?.paymentTerms || "";
+  const dbDecoded = parser.parseFromString(rawDbPaymentTerms, "text/html").body
+    .textContent || "";
+
+  const dbSections = dbDecoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
+
+  let dbFormattedDescription = "";
+  if (dbSections?.length) {
+    dbFormattedDescription = dbSections
+      .map((section) => section.replace(/~+/g, "\n").trim())
+      .join("\n");
+  } else {
+    dbFormattedDescription = dbDecoded.replace(/~+/g, "\n").trim();
+  }
+
+  // Values strictly from DB (ignore invoiceData)
+  const dbValues = {
+    exporterAuthorizedAddress: invoiceDetails?.exporterAuthorizedAddress || "",
+    vesselFlightNo: invoiceDetails?.vesselFlightNo || "",
+    invoiceNumber: invoiceDetails?.invoiceNumber || "",
+    billOfLadingNo: invoiceDetails?.billOfLadingNo || "",
+    containerNo: invoiceDetails?.containerNo || "",
+    countryOfOriginOfGoods: invoiceDetails?.countryOfOriginOfGoods || '',
+    portOfLoading: invoiceDetails?.portOfLoading || "",
+    portOfDischarge: invoiceDetails?.portOfDischarge || "",
+    containerType: invoiceDetails?.containerType || "",
+    preCarriageBy: invoiceDetails?.preCarriageBy || "",
+    incoterm: invoiceDetails?.incoterm?.toUpperCase() || "",
+    containerSEALNO: invoiceDetails?.containerSEALNO || "",
+    placeOfReceiptByPreCarrier: invoiceDetails?.placeOfReceiptByPreCarrier || "",
+    finalDestination: invoiceDetails?.shippingCity || "",
+    otherCharges1: "",
+    otherCharges2: "",
+    otherCharges3: "",
+    otherChargesValue1: "",
+    otherChargesValue2: "",
+    otherChargesValue3: "",
+    claimAdjustment: "",
+    otherDiscount: "",
+    paymentTerms: dbFormattedDescription,   // ✅ fixed here
+    otsNo: invoiceDetails?.otsNo || "",
+    itcHsNo: invoiceDetails?.itcHsNo || "",
+  };
+
+
 
   const {
     register,
@@ -90,9 +136,13 @@ if (numberedSections?.length) {
 
   const onSubmit = async (data) => {
     toast.success("Form submitted:")
-    dispatch(setExportAdditionalInvoice(data));
+
+    const updatedInvoice = {
+      ...invoiceDetails, ...data
+    }
+    dispatch(setExportAdditionalInvoice(updatedInvoice));
     setShowWarning(true)
-    reset();
+    reset(updatedInvoice);
     onClose();
   };
 
@@ -158,7 +208,7 @@ if (numberedSections?.length) {
         />
         <SelectField
           label="Pre-Carriage by"
-          name="preCarriageby"
+          name="preCarriageBy"
           register={register}
           errors={errors}
           options={["SEA", "AIR", "ROAD"]}
@@ -252,7 +302,7 @@ if (numberedSections?.length) {
         <InputField
           label="Invoice No"
           type='number'
-          name="invoiceNo"
+          name="invoiceNumber"
           register={register}
           errors={errors}
           disabled={false}
@@ -341,6 +391,12 @@ if (numberedSections?.length) {
             }}
             disabled={isSubmitting}
           />
+          <Button
+            type="button"
+            text="Reset"
+            onClick={() => reset(dbValues)}
+            disabled={isSubmitting}
+          />
           {isSubmitting ? (
             <LoadingButton
               className="p-1 bg-[var(--color-primary)]"
@@ -350,13 +406,14 @@ if (numberedSections?.length) {
             <Button type="submit" text="Submit" disabled={isSubmitting} />
           )}
         </div>
+
       </form>
     </div>
   );
 };
 
 // Input wrapper
-const InputField = ({ label, name, register, errors, disabled = false ,type = 'text' }) => {
+const InputField = ({ label, name, register, errors, disabled = false, type = 'text' }) => {
   const fileName = name.toUpperCase().replace(/\s+/g, "");
   return (
     <div>
@@ -386,31 +443,27 @@ const SelectField = ({
   return (
     <div>
       <Select
-        label={label}
-        name={fileName}
-        disabled={disabled}
-        {...register(name, {
-          required: `Please select a ${label.toLowerCase()}`,
-        })}
-      >
-        <option
-          className="dark:bg-gray-900 dark:text-white"
-          value=""
-          disabled
-          hidden
-        >
-          Select {label}
-        </option>
-        {options.map((option) => (
-          <option
-            key={option}
-            className="dark:bg-gray-900 dark:text-white"
-            value={option.toLowerCase()}
-          >
-            {option}
-          </option>
-        ))}
-      </Select>
+  label={label}
+  name={fileName}
+  disabled={disabled}
+  className="w-full rounded-md border border-gray-300 dark:border-gray-700 
+             bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
+  {...register(name, {
+    required: `Please select a ${label.toLowerCase()}`,
+  })}
+>
+  <option value="" disabled hidden>
+    Select {label}
+  </option>
+  {options.map((option) => (
+    <option key={option} value={option.toLowerCase()}>
+      {option}
+    </option>
+  ))}
+</Select>
+
+
+
       {errors[name] && <ErrorText message={errors[name].message} />}
     </div>
   );

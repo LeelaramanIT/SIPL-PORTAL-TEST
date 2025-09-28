@@ -1,6 +1,7 @@
 export const currencies = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
     { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'EURO', symbol: '€', name: 'Euro' },
     { code: 'GBP', symbol: '£', name: 'British Pound Sterling' },
     { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
     { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },

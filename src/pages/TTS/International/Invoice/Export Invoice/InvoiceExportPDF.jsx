@@ -48,7 +48,7 @@ const InvoicePDF = ({ data, styles }) => (
         <View style={styles.row2right1}>
           <Text style={styles.text}>
             INVOICE NO:{" "}
-            <Text style={styles.textValue}>{data?.invoiceNo || ""}</Text>
+            <Text style={styles.textValue}>{data?.invoiceNumber || ""}</Text>
           </Text>
           <Text style={styles.text}>
             DATE : <Text style={styles.textValue}>{data?.date || ""}</Text>
@@ -200,7 +200,7 @@ const InvoicePDF = ({ data, styles }) => (
           <View>
             <Text style={styles.text}> TERMS OF DELIVERY AND PAYMENT: </Text>
             <Text style={styles.textValue}>
-              THE ABOVE PRICES ARE DDP NEW JERSEY, USD BY SEA.
+              {`THE ABOVE PRICES ARE ${data?.incoterm?.toUpperCase()} ${data?.finalDestination}, USD BY ${data?.preCarriageBy}.`}
             </Text>
           </View>
           <Text style={styles.textValue}>{data?.paymentTerms}</Text>
