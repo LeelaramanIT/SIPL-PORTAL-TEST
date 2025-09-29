@@ -270,15 +270,15 @@ export const getExportInvoice = (payload) => async (dispatch) => {
   try {
     dispatch(setExportInvoiceLoading());
     if (payload.type === "Customer") {
-        const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
-      const data = res.data
+      //   const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+      // const data = res.data
 
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
     }
 
     if (payload.type === "Custom") {
-        const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
-      const data = res.data
+      //   const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`,{withCredentials:true});
+      // const data = res.data
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
     }
   } catch (error) {

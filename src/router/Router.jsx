@@ -29,6 +29,7 @@ import TaskLayout from "../layout/TaskLayout";
 import TaskHomePage from "../pages/Task Managment/Home/TaskHomePage";
 
 
+
 export const router = createBrowserRouter([
   {
   path: "/",
@@ -36,7 +37,9 @@ export const router = createBrowserRouter([
   children: [
     {
       path: "/",
-      element: <MainLayout />, // This renders layout
+      element: <>
+      <MainLayout />
+      </>, // This renders layout
       children: [
         { index: true, element: <Home /> },
         { path: "Dashboard", element: <Dashboard /> },

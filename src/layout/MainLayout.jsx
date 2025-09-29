@@ -3,11 +3,13 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../../src/components/Navbar";
 import SideBar from "../components/Sidebar/SideBar";
 import ScrollToTop from "../components/ScrollToTop";
+import SupportChat from "../components/ChatBox/ChatBoxSupport";
 
 const MainLayout = () => {
   const scrollRef = useRef(null);
   return (
     <div className="w-full h-screen flex flex-col lg:flex-row bg-[var(--color-background)] dark:bg-gray-900">
+    <SupportChat />
       
       {/* <SideBar /> */}
       <SideBar />

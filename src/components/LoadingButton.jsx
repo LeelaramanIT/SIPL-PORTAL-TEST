@@ -6,9 +6,9 @@ const LoadingButton = ({className, text}) => {
       <button
         disabled
         type="button"
-        className={`${className} flex justify-center items-center select-none rounded-md text-white`}
+        className={`${className} flex justify-center items-center select-none rounded-md`}
       >
-        <img src={assets.LoadingAnimation} className="w-[2rem] h-[1.5rem] text-white"/>
+        <img src={assets.LoadingAnimation} className="w-[2rem] h-[1.5rem]"/>
         {text}
       </button>
   );
