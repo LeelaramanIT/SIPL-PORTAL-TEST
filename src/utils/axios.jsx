@@ -20,6 +20,7 @@ export function useAxiosInterceptors() {
       error => {
         if (error.response && error.response.status === 401) {
           window.localStorage.clear();
+          window.sessionStorage.clear();
           dispatch(logout())
           navigate('/login');
         }

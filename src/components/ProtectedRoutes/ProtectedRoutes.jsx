@@ -19,15 +19,17 @@ const ProtectedRoutes = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // console.log(roles);
+  console.log(roles);
   
 
-  if ((roles === 'admin') || (roleID === 1)) {
+  if ((roles === 'Admin') && (roleID === 1)) {
     return <Outlet />;
   }
 
   
   const currentPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+
+  console.log(currentPath);
   
   const matchPermissionKey = Object.entries(routePermissions).find(([route]) =>{
     return currentPath.startsWith(route)}

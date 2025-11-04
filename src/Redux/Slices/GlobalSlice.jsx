@@ -7,7 +7,7 @@ const initialState = {
   open: false,
   theme: 'light',
   isDark: localStorage.getItem('darkMode') === 'true',
-
+  isChatOpen :false
 };
 
 const globalSlice = createSlice({
@@ -24,9 +24,12 @@ const globalSlice = createSlice({
     setIsDark: (state, action) => {
       state.isDark = action.payload;
       localStorage.setItem('darkMode', action.payload); // action.payload will be a boolean
-    }  
+    },
+    setChatVisible: (state) =>{
+      state.isChatOpen = !state.isChatOpen;
+    },
   },
 });
 
-export const { toggleSidebar,setTheme,setIsDark } = globalSlice.actions;
+export const { toggleSidebar,setTheme,setIsDark,setChatVisible } = globalSlice.actions;
 export default globalSlice.reducer;

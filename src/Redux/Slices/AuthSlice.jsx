@@ -5,9 +5,9 @@ import { toast } from "react-hot-toast";
 const initialState = {
   token: null,
   username: null,
-  roles: '',
+  roles: 'Admin',
   menus: [],
-  loggedIn: false,
+  loggedIn: true,
   loading: false,
   error: null,
   roleID: 1,

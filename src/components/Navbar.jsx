@@ -27,7 +27,7 @@ const Navbar = () => {
         {/* Mobile Menu Toggle */}
         <button
           onClick={() => dispatch(toggleSidebar())}
-          className="lg:hidden p-2 text-primary dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+          className="lg:hidden p-2 text-[var(--text)] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
         >
           <HiMenuAlt3 size={20} />
         </button>
@@ -38,11 +38,11 @@ const Navbar = () => {
       <div className="flex items-center gap-1 sm:gap-3.5 ml-2 sm:ml-auto mr-1 sm:mr-3">
         <DarkModeToggle />
         <img
-          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-primary border cursor-pointer"
+          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-[var(--border)] border cursor-pointer"
           src={assets.DefaultLogo}
           alt="UserLogo"
         />
-        <p className="hidden sm:block cursor-pointer text-primary dark:text-white text-sm sm:text-base">
+        <p className="hidden sm:block cursor-pointer text-[var(--primary)] hover:text-[var(--primary-hover)] dark:text-white text-sm sm:text-base">
           {username ? username : "User"}
         </p>
         <IoMdNotificationsOutline className="text-[1.2rem] sm:text-[1.5rem] cursor-pointer text-primary dark:text-white" />

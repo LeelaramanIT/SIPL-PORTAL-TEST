@@ -98,7 +98,7 @@ const Features = () => {
               key={index}
               ref={(el) => (featureRefs.current[index] = el)}
               data-index={index}
-              className={`bg-white dark:bg-gray-800 group rounded-xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-700 border border-gray-100 dark:border-gray-700 hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] transform ${
+              className={`bg-white dark:bg-gray-800 group rounded-xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-700 border border-gray-100 dark:border-gray-700 hover:border-[var(--border)] dark:hover:border-[var(--border)] transform ${
                 visibleFeatures.includes(index)
                   ? 'opacity-100 translate-y-0'
                   : 'opacity-0 translate-y-8'
@@ -110,7 +110,7 @@ const Features = () => {
               <div className={`inline-flex p-2 sm:p-3 rounded-lg ${feature.color} text-white mb-4 sm:mb-6 transform transition-transform duration-300 group-hover:scale-110`}>
                 <feature.icon size={20} className="sm:w-6 sm:h-6" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white group-hover:text-[var(--color-primary)] mb-2 sm:mb-3 transition-colors duration-300">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white group-hover:text-[var(--accent)] mb-2 sm:mb-3 transition-colors duration-300">
                 {feature.title}
               </h3>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">

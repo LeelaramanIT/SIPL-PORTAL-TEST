@@ -370,7 +370,7 @@ const ExportInvoicePrepare = () => {
   };
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+      <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
         {invoiceDetails?.type} Invoice Details
       </h1>
       <ClientDetailsSection
@@ -378,7 +378,7 @@ const ExportInvoicePrepare = () => {
       />
 
       <div className="flex justify-between items-start">
-        <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+        <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
           Item Details
         </h1>
 
@@ -462,7 +462,7 @@ const ExportInvoicePrepare = () => {
               {localItems.map((item, idx) => (
                 <tr
                   key={idx}
-                  className={`text-[13px] text-center border-b border-[var(--color-primary-hover)]/30`}
+                  className={`text-[13px] text-center border-b border-[var(--primary-hover)]/30`}
                 >
                   {/* Existing Columns */}
                   <td>{item?.category}</td>
@@ -548,7 +548,7 @@ const ExportInvoicePrepare = () => {
               {splitItems.map((splitItem, i) => (
                 <tr
                   key={`split-${i}`}
-                  className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--color-primary-hover)]/30"
+                  className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--primary-hover)]/30"
                 >
                   <td>{splitItem.category}</td>
                   <td>{splitItem.platforms}</td>
@@ -612,7 +612,7 @@ const ExportInvoicePrepare = () => {
 
       {invoiceDetails?.shipmentType == "COMBI" && (
         <>
-          <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-gray-200">
+          <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
             Combi Orders
           </h1>
           <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
@@ -769,7 +769,7 @@ const ExportInvoicePrepare = () => {
               transition={{ duration: 0.1, ease: "easeIn" }}
               className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
             >
-              <h2 className="text-xl font-bold mb-4 text-[var(--color-primary)]">
+              <h2 className="text-xl font-bold mb-4 text-[var(--primary)]">
                 Additional Invoice Details
               </h2>
               <button
@@ -896,7 +896,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] dark:bg-[#1E2939] rounded-lg border border-[var(--color-primary)] dark:border-green-700">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[var(--secondary)] dark:bg-[#1E2939] rounded-lg border border-[var(--primary)] dark:border-green-700">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-sm font-semibold text-green-700 dark:text-green-300">
               Order Ref #:{" "}
@@ -974,7 +974,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
               <div
                 key={i}
                 ref={addToOrderRefs}
-                className="relative p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-[var(--color-primary)]"
+                className="relative p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-[var(--primary)]"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg bg-gray-200 dark:bg-gray-700">
@@ -1078,7 +1078,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
               <div
                 key={i}
                 ref={addToShipRefs}
-                className="relative p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:border-[var(--color-primary)]"
+                className="relative p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:border-[var(--primary)]"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg bg-gray-200 dark:bg-gray-700">

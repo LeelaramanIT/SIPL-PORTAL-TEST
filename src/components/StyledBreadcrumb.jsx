@@ -14,16 +14,16 @@ export const validRoutes = new Set(
   
 
   const StyledBreadcrumb = styled(Chip)(({ theme }) => ({
-    backgroundColor: 'var(--color-secondary)',  // ✅ your custom variable
+    backgroundColor: 'var(--primary)',  // ✅ your custom variable
     height: theme.spacing(3),
-    color: 'var(--color-on-secondary)',         // ✅ optionally use another CSS variable for text
+    color: 'var(--border)',         // ✅ optionally use another CSS variable for text
     fontWeight: theme.typography.fontWeightMedium,
     '&:hover, &:focus': {
-      backgroundColor: 'var(--color-secondary-hover)', // optional hover variable
+      backgroundColor: 'var(--primary-hover)', // optional hover variable
     },
     '&:active': {
       boxShadow: theme.shadows[1],
-      backgroundColor: 'var(--color-secondary-active)', // optional active variable
+      backgroundColor: 'var(--input)', // optional active variable
     },
   }));
   

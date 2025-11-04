@@ -64,7 +64,7 @@ const ExportTable = ({
   return (
     <div
       ref={tableRef}
-      className="w-full h-[38rem] flex flex-col justify-between rounded-xs bg-[#eaeaef] shadow-md  overflow-y-auto custom-scrollbar text-primary dark:bg-gray-900 dark:text-gray-100 "
+      className="w-full h-[38rem] flex flex-col justify-between rounded-xs bg-[var(--background)] shadow-md  overflow-y-auto custom-scrollbar text-[var(--text)] dark:bg-gray-900 dark:text-gray-100 "
     >
       <table className="w-full table-fixed text-center">
         <thead>
@@ -72,13 +72,13 @@ const ExportTable = ({
             {headers.map((heading, index) => (
               <th
                 key={index}
-                className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--color-primary)] dark:bg-gray-500 "
+                className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 "
               >
                 {heading.label}
               </th>
             ))}
             {renderAction && (
-              <th className="py-1 px-3 text-center sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--color-primary)] dark:bg-gray-500 ">
+              <th className="py-1 px-3 text-center sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 ">
                 Actions
               </th>
             )}
@@ -89,8 +89,8 @@ const ExportTable = ({
           {paginatedData.map((row, rowIndex) => {
             const isEven = rowIndex % 2 === 0;
             const baseBg = isEven
-              ? "bg-white dark:bg-gray-800 hover:bg-[#F4F4FE] hover:text-[var(--color-primary)] text-black"
-              : "bg-[#EAEAEF] dark:bg-gray-700 hover:bg-[#F4F4FE] hover:text-[var(--color-primary)] text-black";
+              ? "bg-white dark:bg-gray-800 hover:bg-[#F4F4FE] hover:text-[var(--primary)] text-black"
+              : "bg-[#EAEAEF] dark:bg-gray-700 hover:bg-[#F4F4FE] hover:text-[var(--primary)] text-black";
 
             return (
               <tr
@@ -119,7 +119,7 @@ const ExportTable = ({
       {/* Pagination Controls */}
       <div
         ref={paginationRef}
-        className="w-full flex flex-col md:flex-row justify-between items-center px-5 bg-[var(--color-background)] dark:bg-gray-800 sticky bottom-0"
+        className="w-full flex flex-col md:flex-row justify-between items-center px-5 bg-[var(--background)] dark:bg-gray-800 sticky bottom-0"
       >
         <span className="text-sm text-gray-700 dark:text-gray-300">
           Showing <span className="font-semibold">{startIndex + 1}</span> to{" "}
@@ -134,7 +134,7 @@ const ExportTable = ({
             disabled={currentPage === 1}
             className={`h-8 px-4 text-base font-medium text-white ${currentPage === 1
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] dark:bg-gray-500"
+                : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] dark:bg-gray-500"
               } rounded-s`}
           >
             Prev
@@ -144,7 +144,7 @@ const ExportTable = ({
             disabled={endIndex >= data.length}
             className={`h-8 px-4 text-base font-medium text-gray-300 ${endIndex >= data.length
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] dark:bg-gray-700"
+                : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] dark:bg-gray-700"
               } rounded-e`}
           >
             Next

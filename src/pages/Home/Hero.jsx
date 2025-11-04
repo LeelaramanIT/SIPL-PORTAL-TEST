@@ -18,7 +18,7 @@ const Hero = () => {
           <div className="space-y-6 sm:space-y-8">
             <div className="space-y-3 sm:space-y-4">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
-                Welcome to <span className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--color-primary-hover)]"}`}>SIPL</span>
+                Welcome to <span className={`${theme==="navi-blue"?'text-blue-400':"text-[var(--accent)]"}`}>SIPL</span>
                 <br />
                 <span className="text-gray-300">Employee Portal</span>
               </h1>
@@ -33,7 +33,7 @@ const Hero = () => {
                 Access Your Dashboard
                 <ArrowRight size={16} className="sm:w-5 sm:h-5" />
               </button>
-              <button className={`border-1 ${theme==="navi-blue"?'border-white/30 hover:border-white':"border-[var(--color-primary)] hover:border-[var(--color-primary-hover)]"} text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-all duration-200 hover:bg-white/10 text-sm sm:text-base`}>
+              <button className={`border-1 ${theme==="navi-blue"?'border-white/30 hover:border-white':"border-[var(--border)] hover:border-[var(--ring)]"} text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-all duration-200 hover:bg-white/10 text-sm sm:text-base`}>
                 My Projects
               </button>
             </div>

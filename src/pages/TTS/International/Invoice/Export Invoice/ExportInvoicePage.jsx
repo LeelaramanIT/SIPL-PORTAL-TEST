@@ -127,14 +127,14 @@ const ExportInvoice = () => {
 
   return (
     <div className="px-6 pt-4 max-w-full mx-auto">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-2">
+      <h1 className="text-2xl font-bold text-[var(--accent)] hover:text-[var(--accent-foreground)] mb-2">
         Export {state.type} Invoice
       </h1>
 
-      <div className="bg-[#F4F4FE] shadow-md px-2 py-4 rounded-lg border border-[var(--color-secondary)] dark:border-gray-700 dark:bg-gray-900" >
+      <div className="bg-white shadow-md px-2 py-4 rounded-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900" >
         <div
           ref={animateRef}
-          className="w-full py-1 px-2.5 rounded-2xl text-[var(--color-text)]"
+          className="w-full py-1 px-2.5 rounded-2xl text-[var(--text)]"
         >
           <div className="flex flex-col md:flex-row w-full py-1 px-1 items-center gap-4 justify-between mb-4">
             <div className="w-[80%] flex justify-start items-center">
@@ -163,12 +163,12 @@ const ExportInvoice = () => {
               onClick={() => navigate("/Masters/UserMaster/UserCreate")}
               text={"+ Add Invoice"}
               className={
-                "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text)]"
+                "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)]"
               }
             />
           </div>
 
-          <div className="w-full h-[31.5rem] rounded-sm bg-[var(--color-background)] overflow-auto gap-5 flex flex-col">
+          <div className="w-full h-[31.5rem] rounded-sm bg-[var(--background)] overflow-auto gap-5 flex flex-col">
             {loading ? (
               <TableSkeleton />
             ) : (
@@ -204,7 +204,7 @@ const ExportInvoice = () => {
                         dispatch(getExportInvoice({...row, ...state}));
                       }
                     }}
-                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text)] px-4 py-1 rounded text-center"
+                    className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)] px-4 py-1 rounded text-center"
                   >
                     Action
                   </button>

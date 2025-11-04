@@ -13,12 +13,12 @@ const AdditionalDetailsForm = ({
   onClose,
   handleCloseForm,
   invoiceDetails,
-  setShowWarning
+  setShowWarning,
 }) => {
   // console.log(invoiceDetails);
   const origin =
     invoiceDetails?.containerLoadFrom === "MMN" ||
-      invoiceDetails?.containerLoadFrom === "PDK"
+    invoiceDetails?.containerLoadFrom === "PDK"
       ? "india"
       : "srilanka";
 
@@ -29,11 +29,13 @@ const AdditionalDetailsForm = ({
     (state) => state?.invoice?.exportInvoices?.additionalForm
   );
 
-  const decodedText = invoiceData?.paymentTerms || invoiceDetails?.paymentTerms || "";
+  const decodedText =
+    invoiceData?.paymentTerms || invoiceDetails?.paymentTerms || "";
 
   // Decode HTML entities
   const parser = new DOMParser();
-  const decoded = parser.parseFromString(decodedText, "text/html").body.textContent || "";
+  const decoded =
+    parser.parseFromString(decodedText, "text/html").body.textContent || "";
 
   // Split into sections if numbered
   const numberedSections = decoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
@@ -48,28 +50,39 @@ const AdditionalDetailsForm = ({
   }
 
   console.log(invoiceDetails);
+  console.log(invoiceData);
 
   const defaultValues = {
     exporterAuthorizedAddress: invoiceData?.exporterAuthorizedAddress || "",
     vesselFlightNo: invoiceData?.vesselFlightNo || "",
-    invoiceNumber: invoiceData?.invoiceNumber || invoiceDetails?.invoiceNumber || "",
+    invoiceNumber:
+      invoiceData?.invoiceNumber || invoiceDetails?.invoiceNumber || "",
     billOfLadingNo: invoiceData?.billOfLadingNo || "",
     containerNo: invoiceData?.containerNo || "",
-    countryOfOriginOfGoods: invoiceData?.countryOfOriginOfGoods || invoiceDetails?.countryOfOriginOfGoods || '',
-    portOfLoading: invoiceData?.portOfLoading || invoiceDetails?.portOfLoading || "",
+    countryOfOriginOfGoods:
+      invoiceData?.countryOfOriginOfGoods ||
+      invoiceDetails?.countryOfOriginOfGoods ||
+      "",
+    portOfLoading:
+      invoiceData?.portOfLoading || invoiceDetails?.portOfLoading || "",
     portOfDischarge: invoiceData?.portOfDischarge || "",
     containerType: invoiceData?.containerType || "",
     preCarriageBy: invoiceData?.preCarriageBy || "",
-    incoterm: invoiceData?.incoterm.toUpperCase() || "",
+    // ✅ Apply consistent casing from fix
+    incoterm:
+      invoiceData?.incoterm?.toLowerCase() ||
+      invoiceDetails?.incoterm?.toLowerCase() ||
+      "",
     containerSEALNO: invoiceData?.containerSEALNO || "",
     placeOfReceiptByPreCarrier: invoiceData?.placeOfReceiptByPreCarrier || "",
-    finalDestination: invoiceData?.shippingCity || invoiceDetails?.shippingCity || "",
+    finalDestination:
+      invoiceData?.shippingCity || invoiceDetails?.shippingCity || "",
     otherCharges1: invoiceData?.otherCharges1 || "",
     otherCharges2: invoiceData?.otherCharges2 || "",
     otherCharges3: invoiceData?.otherCharges3 || "",
-    otherChargesValue1: invoiceData?.otherChargesValue1 || '',
-    otherChargesValue2: invoiceData?.otherChargesValue2 || '',
-    otherChargesValue3: invoiceData?.otherChargesValue3 || '',
+    otherChargesValue1: invoiceData?.otherChargesValue1 || "",
+    otherChargesValue2: invoiceData?.otherChargesValue2 || "",
+    otherChargesValue3: invoiceData?.otherChargesValue3 || "",
     claimAdjustment: invoiceData?.claimAdjustment || "",
     otherDiscount: invoiceData?.otherDiscount || "",
 
@@ -78,12 +91,14 @@ const AdditionalDetailsForm = ({
 
     otsNo: invoiceData?.otsNo || "",
     itcHsNo: invoiceData?.itcHsNo || "",
+    ExchangeCurrency: invoiceData?.ExchangeCurrency || '',
   };
 
   // Decode & format strictly from invoiceDetails (DB)
   const rawDbPaymentTerms = invoiceDetails?.paymentTerms || "";
-  const dbDecoded = parser.parseFromString(rawDbPaymentTerms, "text/html").body
-    .textContent || "";
+  const dbDecoded =
+    parser.parseFromString(rawDbPaymentTerms, "text/html").body.textContent ||
+    "";
 
   const dbSections = dbDecoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
 
@@ -103,14 +118,16 @@ const AdditionalDetailsForm = ({
     invoiceNumber: invoiceDetails?.invoiceNumber || "",
     billOfLadingNo: invoiceDetails?.billOfLadingNo || "",
     containerNo: invoiceDetails?.containerNo || "",
-    countryOfOriginOfGoods: invoiceDetails?.countryOfOriginOfGoods || '',
+    countryOfOriginOfGoods: invoiceDetails?.countryOfOriginOfGoods || "",
     portOfLoading: invoiceDetails?.portOfLoading || "",
     portOfDischarge: invoiceDetails?.portOfDischarge || "",
     containerType: invoiceDetails?.containerType || "",
     preCarriageBy: invoiceDetails?.preCarriageBy || "",
-    incoterm: invoiceDetails?.incoterm?.toUpperCase() || "",
+    // ✅ Apply consistent casing from fix
+    incoterm: invoiceDetails?.incoterm?.toLowerCase() || "",
     containerSEALNO: invoiceDetails?.containerSEALNO || "",
-    placeOfReceiptByPreCarrier: invoiceDetails?.placeOfReceiptByPreCarrier || "",
+    placeOfReceiptByPreCarrier:
+      invoiceDetails?.placeOfReceiptByPreCarrier || "",
     finalDestination: invoiceDetails?.shippingCity || "",
     otherCharges1: "",
     otherCharges2: "",
@@ -120,12 +137,10 @@ const AdditionalDetailsForm = ({
     otherChargesValue3: "",
     claimAdjustment: "",
     otherDiscount: "",
-    paymentTerms: dbFormattedDescription,   // ✅ fixed here
+    paymentTerms: dbFormattedDescription, // ✅ fixed here
     otsNo: invoiceDetails?.otsNo || "",
     itcHsNo: invoiceDetails?.itcHsNo || "",
   };
-
-
 
   const {
     register,
@@ -135,20 +150,22 @@ const AdditionalDetailsForm = ({
   } = useForm({ defaultValues });
 
   const onSubmit = async (data) => {
-    toast.success("Form submitted:")
+    toast.success("Form submitted:");
 
     const updatedInvoice = {
-      ...invoiceDetails, ...data
-    }
+      ...invoiceDetails,
+      ...data,
+    };
     dispatch(setExportAdditionalInvoice(updatedInvoice));
-    setShowWarning(true)
+    setShowWarning(true);
     reset(updatedInvoice);
     onClose();
   };
 
   return (
-    <div className="px-4 md:px-2 overflow-y-auto">
-      {/* Header Section */}
+    // ✅ Added dark:bg-gray-800 for the container background
+    <div className="px-4 md:px-2 overflow-y-auto dark:bg-gray-800">
+      {/* Header Section (Already has dark mode) */}
       <div className="flex flex-col md:flex-row justify-between gap-2 md:gap-4 items-start md:items-center text-sm text-gray-800 dark:text-white">
         <h1>
           SHIPMENT TYPE:{" "}
@@ -170,7 +187,7 @@ const AdditionalDetailsForm = ({
         </h1>
       </div>
 
-      {/* Form */}
+      {/* Form (Already has dark mode text) */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="text-sm mt-6 text-gray-800 dark:text-gray-200 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 ease-out"
@@ -270,13 +287,15 @@ const AdditionalDetailsForm = ({
         {/* Other Charges Headers */}
         <div className="md:col-span-1 hidden lg:block mt-3">
           <h1 className="text-sm text-gray-500 font-light text-center"></h1>
-          <h1 className="text-sm text-gray-500 font-light text-center">
+          {/* ✅ Added dark:text-gray-400 */}
+          <h1 className="text-sm text-gray-500 dark:text-gray-400 font-light text-center">
             DESCRIPTION OF OTHER CHARGES
           </h1>
         </div>
         <div className="md:col-span-1 hidden lg:block mt-3">
           <h1 className="text-sm text-gray-500 font-light text-center"></h1>
-          <h1 className="text-sm text-gray-500 font-light text-center">
+          {/* ✅ Added dark:text-gray-400 */}
+          <h1 className="text-sm text-gray-500 dark:text-gray-400 font-light text-center">
             PLEASE ENTER VALUE IN {userCurrency?.code}
           </h1>
         </div>
@@ -301,7 +320,7 @@ const AdditionalDetailsForm = ({
         />
         <InputField
           label="Invoice No"
-          type='number'
+          type="number"
           name="invoiceNumber"
           register={register}
           errors={errors}
@@ -311,13 +330,15 @@ const AdditionalDetailsForm = ({
         {/* Other Charges Headers */}
         <div className="md:col-span-1 lg:hidden">
           <h1 className="text-sm text-gray-500 font-light text-center"></h1>
-          <h1 className="text-sm text-gray-500 font-light text-center">
+          {/* ✅ Added dark:text-gray-400 */}
+          <h1 className="text-sm text-gray-500 dark:text-gray-400 font-light text-center">
             DESCRIPTION OF OTHER CHARGES
           </h1>
         </div>
         <div className="md:col-span-1 lg:hidden">
           <h1 className="text-sm text-gray-500 font-light text-center"></h1>
-          <h1 className="text-sm text-gray-500 font-light text-center">
+          {/* ✅ Added dark:text-gray-400 */}
+          <h1 className="text-sm text-gray-500 dark:text-gray-400 font-light text-center">
             PLEASE ENTER VALUE IN USD
           </h1>
         </div>
@@ -365,12 +386,16 @@ const AdditionalDetailsForm = ({
             register={register}
             errors={errors}
           />
+          
         </div>
         <div className="col-span-full lg:col-span-2">
           <TextArea
             label="PAYMENT TERMS"
             rows={6}
             placeholder="Enter description..."
+            // ✅ Added className to match SelectField styling
+            className="w-full rounded-md border border-gray-300 dark:border-gray-700 
+                     bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
             {...register("paymentTerms", {
               required: "paymentTerms is required",
             })}
@@ -379,8 +404,19 @@ const AdditionalDetailsForm = ({
             <ErrorText message={errors.paymentTerms.message} />
           )}
         </div>
+        <div className="col-span-full lg:col-span-2">
+          <InputField
+            label="Exchange Currency Value"
+            type="number"
+            name="otherChargesValue3"
+            register={register}
+            errors={errors}
+          />
+        </div>
 
-        {/* Form Actions */}
+
+
+        {/* Form Actions (Assuming Button components handle their own dark mode) */}
         <div className="col-span-full flex flex-col sm:flex-row justify-end gap-2 pt-4">
           <Button
             type="button"
@@ -399,21 +435,27 @@ const AdditionalDetailsForm = ({
           />
           {isSubmitting ? (
             <LoadingButton
-              className="p-1 bg-[var(--color-primary)]"
+              className="p-1 bg-[var(--primary)]"
               text="Submitting..."
             />
           ) : (
             <Button type="submit" text="Submit" disabled={isSubmitting} />
           )}
         </div>
-
       </form>
     </div>
   );
 };
 
 // Input wrapper
-const InputField = ({ label, name, register, errors, disabled = false, type = 'text' }) => {
+const InputField = ({
+  label,
+  name,
+  register,
+  errors,
+  disabled = false,
+  type = "text",
+}) => {
   const fileName = name.toUpperCase().replace(/\s+/g, "");
   return (
     <div>
@@ -422,6 +464,9 @@ const InputField = ({ label, name, register, errors, disabled = false, type = 't
         name={fileName}
         disabled={disabled}
         type={type}
+        // ✅ Added className to match SelectField styling
+        className="w-full rounded-md border border-gray-300 dark:border-gray-700 
+                 bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
         {...register(name, { required: `${label} is required` })}
       />
       {errors[name] && <ErrorText message={errors[name].message} />}
@@ -443,27 +488,26 @@ const SelectField = ({
   return (
     <div>
       <Select
-  label={label}
-  name={fileName}
-  disabled={disabled}
-  className="w-full rounded-md border border-gray-300 dark:border-gray-700 
-             bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
-  {...register(name, {
-    required: `Please select a ${label.toLowerCase()}`,
-  })}
->
-  <option value="" disabled hidden>
-    Select {label}
-  </option>
-  {options.map((option) => (
-    <option key={option} value={option.toLowerCase()}>
-      {option}
-    </option>
-  ))}
-</Select>
-
-
-
+        label={label}
+        name={fileName}
+        disabled={disabled}
+        
+        className="w-full rounded-md border border-gray-300 dark:border-gray-700 
+                 bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
+        {...register(name, {
+          required: `Please select a ${label.toLowerCase()}`,
+        })}
+      >
+        <option value="" disabled hidden>
+          Select {label}
+        </option>
+        {options.map((option) => (
+          // ✅ Changed value to toLowerCase() to match the fix
+          <option key={option} value={option.toLowerCase()}>
+            {option}
+          </option>
+        ))}
+      </Select>
       {errors[name] && <ErrorText message={errors[name].message} />}
     </div>
   );
@@ -471,7 +515,8 @@ const SelectField = ({
 
 // Error display
 const ErrorText = ({ message }) => (
-  <p className="text-red-500 text-xs mt-1">{message}</p>
+  // ✅ Added dark:text-red-400 for better visibility in dark mode
+  <p className="text-red-500 dark:text-red-400 text-xs mt-1">{message}</p>
 );
 
 export default AdditionalDetailsForm;

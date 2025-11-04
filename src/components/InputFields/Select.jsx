@@ -8,7 +8,7 @@ const Select = ({
   icon = null,
   className = "",
   children,
-  placeholder = " ",
+  placeholder = " ", // Keeps consistency with Input.jsx
   ...rest
 }) => {
   return (
@@ -38,6 +38,7 @@ const Select = ({
           {...rest}
         >
           <option className="" value="" disabled hidden>
+            {/* Using placeholder for the hidden option is correct */}
             {placeholder}
           </option>
           {children}
@@ -56,13 +57,18 @@ const Select = ({
             left-2 sm:left-2.5 top-2.5
             text-gray-600 dark:text-gray-300
             text-xs sm:text-sm transition-all transform origin-left
-            peer-placeholder-shown:top-2.5
-            peer-placeholder-shown:text-xs sm:peer-placeholder-shown:text-sm
-            peer-placeholder-shown:text-gray-400 dark:peer-placeholder-shown:text-gray-500
+            
+            /* --- FIX: Use peer-[value=''] for select's default state --- */
+            peer-[value='']:top-2.5
+            peer-[value='']:text-xs sm:peer-[value='']:text-sm
+            peer-[value='']:text-gray-400 dark:peer-[value='']:text-gray-500
+            
             peer-focus:-top-2 peer-focus:text-xs peer-focus:font-medium peer-focus:scale-90
             peer-focus:text-blue-500 dark:peer-focus:text-blue-400
-            peer-[:not([value=''])]:-top-3 
-            peer-[:not([value=''])]:text-xs sm:peer-[:not([value=''])]:text-sm
+            
+            /* --- FIX: Changed -top-3 to -top-2 and cleaned up text-size --- */
+            peer-[:not([value=''])]:-top-2
+            peer-[:not([value=''])]:text-xs
             peer-[:not([value=''])]:text-gray-700 dark:peer-[:not([value=''])]:text-gray-200
             peer-[:not([value=''])]:scale-90"
         >

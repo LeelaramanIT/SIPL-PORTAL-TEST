@@ -27,6 +27,8 @@ import AllUSers from "../pages/Masters/AllUsers";
 import SampleSplit from "../pages/TTS/International/Invoice/Export Invoice/SampleSplit";
 import TaskLayout from "../layout/TaskLayout";
 import TaskHomePage from "../pages/Task Managment/Home/TaskHomePage";
+import MenuAccessManager from "../pages/MenuAccess/MenuAccessManager";
+import SettingsLayout from "../layout/SettingsLayout";
 
 
 
@@ -97,6 +99,8 @@ export const router = createBrowserRouter([
           path:'Reports',
           element: <ReportsLayout />,
           children: [
+            { path:'TTSReports/Production',element:<TTSReport/> },
+            { path:'TTSReports/Sale',element:<TTSReport/> },
             { path:'TTSReports',element:<TTSReport/> },
           ]
         },
@@ -107,7 +111,13 @@ export const router = createBrowserRouter([
             {path:'Home',element:<TaskHomePage/>}
           ]
         },
-        { path: "Settings", element: <Settings /> },
+        { path: "Settings",
+          element: <SettingsLayout />,
+          children:[
+            {index:true , element:<Settings/>},
+            { path:'menuaccess', element:<MenuAccessManager/>}
+          ]
+         },
       ],
     },
   ],

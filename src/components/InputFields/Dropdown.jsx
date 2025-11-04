@@ -26,11 +26,11 @@ setIsOpen(false);
 };
 
 return (
-<div className="flex relative min-w-[10%] bg-[var(--color-primary)] dark:bg-gray-600 rounded-md text-white" ref={dropdownRef} >
+<div className="flex relative min-w-[10%] bg-[var(--primary)] dark:bg-gray-600 rounded-md text-[var(--text)]" ref={dropdownRef} >
 <button onClick={toggleDropdown} className="w-full bg-transparent text-white dark:text-gray-300 text-xs sm:text-sm border border-slate-200 dark:border-gray-500 rounded-md pl-2 sm:pl-3 pr-1 sm:pr-2 py-1.5 sm:py-2 transition duration-300 ease-in-out focus:outline-none focus:border-slate-400 dark:focus:border-gray-400 hover:border-slate-300 dark:hover:border-gray-400 shadow-sm focus:shadow flex justify-between items-center" >
 {selected}
 <ChevronDown
-className={`w-3 h-3 sm:w-4 sm:h-4 text-white transition-transform ${ isOpen ? "rotate-180" : "rotate-0" } text-slate-500 dark:text-gray-300`}
+className={`w-3 h-3 sm:w-4 sm:h-4 text-[var(--text)] transition-transform ${ isOpen ? "rotate-180" : "rotate-0" } text-slate-500 dark:text-gray-300`}
 />
 </button>
   <AnimatePresence>

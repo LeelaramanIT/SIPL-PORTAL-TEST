@@ -14,7 +14,7 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => 
         onChange={onChange}
       />
       <button
-        className="absolute top-1 right-1 flex items-center rounded bg-[var(--color-primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--color-primary-hover)] dark:hover:bg-gray-600"
+        className="absolute top-1 right-1 flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
         type="button"
         onClick={onSearch}
       >

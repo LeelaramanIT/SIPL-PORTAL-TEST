@@ -36,7 +36,11 @@ export function generateTableData(count) {
 }
 
 export const data = {
+  O_ID:'0001',
   type: "Export",
+  billID:'1002',
+  shipID:'1001',
+  custcode:'6001',
   custfullname: "Global Tech Ltd",
   orderRefNo: "ORD-2025-001",
   workorderno: "WO-789",

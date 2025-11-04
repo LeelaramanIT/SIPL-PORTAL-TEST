@@ -9,7 +9,6 @@ const Input = ({
   className = "",
   ...rest // <-- Accept all other props, including from register(...)
 }) => {
-  
   return (
     <div className={`w-full max-w-full sm:max-w-sm min-w-[200px] ${className}`}>
       <div className="relative">
@@ -32,7 +31,7 @@ const Input = ({
         <label
           htmlFor={id || name}
           className="absolute cursor-text 
-            bg-white dark:bg-gray-900 px-1 
+            bg-white dark:bg-gray-800 px-1 /* <-- Updated this from dark:bg-gray-900 to match form */
             left-2.5 top-2.5 
             text-slate-400 dark:text-slate-500 
             text-xs sm:text-sm transition-all transform origin-left 
