@@ -20,12 +20,13 @@ const ProtectedRoutes = () => {
   }
 
   console.log(roles);
+  console.log(roleID)
+  console.log(menus);
   
 
-  if ((roles === 'Admin') && (roleID === 1)) {
+  if ((roles === 'Admin') || (roles === 'admin') && (roleID === 1)) {
     return <Outlet />;
   }
-
   
   const currentPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
 

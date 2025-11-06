@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Chat Box</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for the fixed floating chat box and drag handle */
+        #chat-float-container {
+            /* Initially hidden, position will be set dynamically by JS when opened */
+            position: fixed;
+            z-index: 1000;
+            user-select: none;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Styling for the support icon/toggle button */
+        #chat-toggle-button {
+            /* Set initial position using fixed and z-index for floating */
+            position: fixed;
+            bottom: 40px;
+            right: 40px; /* CHANGED: Positioned from the right edge */
+            z-index: 1001;
+            cursor: move; /* Indicates the button itself is draggable */
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            transform: scale(1);
+        }
+        #chat-toggle-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Hide the default file input */
+        #screenshot-file-input {
+            display: none;
+        }
+
+        /* Custom scrollbar for a better look */
+        #chat-form-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-form-content::-webkit-scrollbar-thumb {
+            background: #d1d5db; /* gray-300 */
+            border-radius: 4px;
+        }
+        #chat-form-content::-webkit-scrollbar-track {
+            background: #f3f4f6; /* gray-100 */
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- 1. The Floating, Draggable Toggle Button -->
+    <button
+        id="chat-toggle-button"
+        class="p-4 bg-indigo-600 text-white rounded-full shadow-2xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+        aria-expanded="false"
+        aria-controls="chat-box-panel"
+    >
+        <!-- Icon: Chat bubble/Support -->
+        <svg id="open-icon" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+        <svg id="close-icon" class="w-7 h-7 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+
+    <!-- 2. The Contextually Positioned Chat Box Container -->
+    <div id="chat-float-container" class="hidden">
+        <div id="chat-box-panel" class="bg-white rounded-xl shadow-2xl w-80 md:w-96 overflow-hidden flex flex-col max-h-[80vh]">
+
+            <!-- Header (No longer a drag handle) -->
+            <div class="p-4 bg-indigo-600 text-white rounded-t-xl flex justify-between items-center select-none">
+                <h3 class="text-lg font-bold">Product Support & Feedback</h3>
+                <!-- Removed "Drag Me" text since the button is now draggable -->
+            </div>
+
+            <!-- Form Content -->
+            <div id="chat-form-content" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                <form id="support-form" onsubmit="handleFormSubmit(event)">
+
+                    <!-- Status Message Box (Success, Error, Loading) -->
+                    <div id="status-message-box" class="p-3 mb-4 rounded-lg text-sm transition-all duration-300 opacity-0 h-0 overflow-hidden"></div>
+
+                    <!-- From (User Email) - Read Only -->
+                    <div>
+                        <label for="from-email" class="block text-sm font-medium text-gray-700">From (Your Email)</label>
+                        <input type="email" id="from-email" name="fromEmail" value="user@example.com" readonly required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 p-3 text-gray-500 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-gray-500">This is automatically pre-filled from your session.</p>
+                    </div>
+
+                    <!-- To (Support Team Email) - Hidden/Read Only -->
+                    <div>
+                        <label for="to-email" class="block text-sm font-medium text-gray-700">To (Support Team)</label>
+                        <input type="email" id="to-email" name="toEmail" value="support@yourcompany.com" readonly required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 p-3 text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <!-- Page Name / URL - Read Only (Set by JS) -->
+                    <div>
+                        <label for="page-name" class="block text-sm font-medium text-gray-700">Page Name / URL</label>
+                        <input type="text" id="page-name" name="pageName" readonly required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 p-3 text-xs text-gray-500 cursor-not-allowed truncate">
+                    </div>
+
+                    <!-- Text Area (Main Description) -->
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description of Issue / Feedback</label>
+                        <textarea id="description" name="description" rows="4" required placeholder="Describe the problem, bug, or feature request..."
+                                  class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    </div>
+
+                    <!-- Screenshot Upload (MODIFIED) -->
+                    <div>
+                        <label for="screenshot-file-input" class="block text-sm font-medium text-gray-700">Upload Screenshot (PNG/JPG)</label>
+                        <!-- ADDED 'multiple' attribute here -->
+                        <input type="file" id="screenshot-file-input" name="screenshot" accept="image/png, image/jpeg" onchange="displayFileName(this)" multiple>
+                        
+                        <!-- File chooser button -->
+                        <label for="screenshot-file-input" class="mt-1 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition duration-150">
+                            <!-- Icon: Upload -->
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Choose File
+                        </label>
+
+                        <!-- File Name Display and Remove Button Container -->
+                        <div class="flex items-center mt-2">
+                            <span id="file-name-display" class="text-sm text-gray-600 truncate max-w-[calc(100%-40px)]">No file chosen</span>
+                            <button type="button" id="remove-file-button" onclick="removeFileSelection()" class="ml-2 p-1 text-red-500 hover:text-red-700 hidden transition duration-150 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Remove selected file">
+                                <!-- Icon: X / Close -->
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <p id="file-error" class="mt-1 text-xs text-red-500 hidden"></p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submit-button"
+                            class="w-full mt-4 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Send Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-float-container');
+        const form = document.getElementById('support-form');
+        const submitButton = document.getElementById('submit-button');
+        const statusBox = document.getElementById('status-message-box');
+        const toggleButton = document.getElementById('chat-toggle-button');
+        const openIcon = document.getElementById('open-icon');
+        const closeIcon = document.getElementById('close-icon');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const fileInput = document.getElementById('screenshot-file-input');
+        const fileError = document.getElementById('file-error');
+        const removeFileButton = document.getElementById('remove-file-button');
+
+        // Drag state for the button
+        let isButtonDragging = false;
+        let isDragDetected = false; 
+        let buttonInitialX, buttonInitialY, buttonOffsetX, buttonOffsetY;
+        const DRAG_THRESHOLD = 5; 
+
+        // --- 1. Initialization and Page Info Setup ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set the current page URL into the read-only field
+            const pageNameInput = document.getElementById('page-name');
+            if (pageNameInput) {
+                pageNameInput.value = window.location.href;
+            }
+        });
+
+        // --- 2. Toggle Visibility and Dynamic Positioning ---
+
+        /**
+         * Dynamically calculates and sets the chat box position relative to the button.
+         */
+        function positionChatBox() {
+            const buttonRect = toggleButton.getBoundingClientRect();
+            const chatWidth = chatContainer.offsetWidth;
+            const chatHeight = chatContainer.offsetHeight;
+            const padding = 15; // Space between button and chat box
+
+            let newX, newY;
+
+            // Determine horizontal position (Left or Right of button)
+            // If the button is on the right side, the box should generally open to the left.
+            if (buttonRect.left + buttonRect.width + padding + chatWidth < window.innerWidth) {
+                // Open to the right of the button (less common now that the button starts on the right)
+                newX = buttonRect.left + buttonRect.width + padding;
+            } else {
+                // Open to the left of the button
+                newX = buttonRect.left - chatWidth - padding;
+            }
+
+            // Determine vertical position (Centered relative to the button)
+            // Try to align the vertical center of the chat box with the vertical center of the button
+            newY = buttonRect.top - (chatHeight / 2) + (buttonRect.height / 2);
+            
+            // Adjust if it goes off the top edge
+            if (newY < 10) {
+                newY = 10;
+            }
+            // Adjust if it goes off the bottom edge
+            if (newY + chatHeight > window.innerHeight - 10) {
+                newY = window.innerHeight - chatHeight - 10;
+            }
+
+            // Fallback for container being off-screen left (if button is too far left)
+            if (newX < 10) {
+                newX = 10;
+            }
+            // Fallback for container being off-screen right
+            if (newX + chatWidth > window.innerWidth - 10) {
+                newX = window.innerWidth - chatWidth - 10;
+            }
+
+
+            // Apply final computed position
+            chatContainer.style.left = `${newX}px`;
+            chatContainer.style.top = `${newY}px`;
+        }
+
+        function toggleChatBox() {
+            const isOpen = chatContainer.classList.toggle('hidden');
+            toggleButton.setAttribute('aria-expanded', !isOpen);
+            openIcon.classList.toggle('hidden', !isOpen);
+            closeIcon.classList.toggle('hidden', isOpen);
+
+            if (!isOpen) { // If opening the chat box
+                // Position the box relative to the button's current position
+                positionChatBox();
+            }
+        }
+
+
+        // --- 3. Button Drag-and-Drop Functionality ---
+
+        // Attach click handler in JS to check for drag before toggling
+        toggleButton.addEventListener('click', (e) => {
+            // Check if movement occurred (i.e., if it was a drag)
+            if (isDragDetected) {
+                // If it was a drag, prevent the toggle and reset the flag.
+                e.stopPropagation();
+                isDragDetected = false;
+                return;
+            }
+            // If no drag was detected, proceed with the toggle (it was a clean click).
+            toggleChatBox();
+        });
+
+        toggleButton.addEventListener('mousedown', (e) => {
+            // Only allow drag initiation if the chat box is closed
+            if (!chatContainer.classList.contains('hidden')) return; 
+
+            isButtonDragging = true;
+            isDragDetected = false; // Reset flag on every mousedown
+            e.preventDefault(); // Prevent default browser action (like starting text selection)
+            
+            buttonInitialX = e.clientX;
+            buttonInitialY = e.clientY;
+
+            // Use getBoundingClientRect for accurate initial position (left/top) regardless of whether CSS used left or right/bottom
+            const rect = toggleButton.getBoundingClientRect();
+            buttonOffsetX = rect.left;
+            buttonOffsetY = rect.top;
+
+            toggleButton.style.position = 'fixed';
+            toggleButton.style.right = 'unset'; 
+            toggleButton.style.bottom = 'unset';
+            
+            // Explicitly set left/top based on current visual position to smoothly transition to mouse control
+            toggleButton.style.left = `${buttonOffsetX}px`;
+            toggleButton.style.top = `${buttonOffsetY}px`;
+
+            document.body.style.userSelect = 'none'; // Prevent document content from being selected
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isButtonDragging) return;
+            // Only allow dragging if the chat panel is hidden
+            if (!chatContainer.classList.contains('hidden')) return;
+
+            // Calculate movement delta
+            const deltaX = e.clientX - buttonInitialX;
+            const deltaY = e.clientY - buttonInitialY;
+            
+            // Check for drag threshold: if movement exceeds 5px, register it as a drag
+            if (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD) {
+                isDragDetected = true; 
+            }
+
+            // Calculate new position relative to the initial drag start point
+            let newX = buttonOffsetX + deltaX;
+            let newY = buttonOffsetY + deltaY;
+
+            // Keep within viewport bounds
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const buttonSize = toggleButton.offsetWidth; 
+            const margin = 10; // Keep the button 10px from the edge
+
+            // Apply boundaries
+            newX = Math.min(Math.max(margin, newX), viewportWidth - buttonSize - margin);
+            newY = Math.min(Math.max(margin, newY), viewportHeight - buttonSize - margin);
+
+            // Apply new position
+            toggleButton.style.left = `${newX}px`;
+            toggleButton.style.top = `${newY}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isButtonDragging = false;
+            document.body.style.userSelect = 'auto';
+            // isDragDetected remains true/false until checked and reset by the 'click' handler
+        });
+
+        // --- 4. File Handling (Image to Base64) ---
+
+        /**
+         * Clears the file input, display text, and hides the remove button.
+         */
+        function removeFileSelection() {
+            fileInput.value = ''; // Clear the actual input field
+            fileNameDisplay.textContent = 'No file chosen';
+            fileError.classList.add('hidden');
+            removeFileButton.classList.add('hidden');
+        }
+
+        /**
+         * Updates file name display and validates file selection. (UPDATED FOR MULTIPLE FILES)
+         */
+        function displayFileName(input) {
+            if (input.files.length > 0) {
+                const files = input.files;
+                const maxFiles = 3; // Limit the number of files the user can select
+                const maxSizeMB = 5;
+                let filesAreValid = true;
+                fileError.classList.add('hidden');
+
+                if (files.length > maxFiles) {
+                    fileError.textContent = `You can select a maximum of ${maxFiles} files. Please try again.`;
+                    fileError.classList.remove('hidden');
+                    filesAreValid = false;
+                } else {
+                    // Check file sizes for all selected files
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].size > maxSizeMB * 1024 * 1024) {
+                            fileError.textContent = `File "${files[i].name}" is too large. All files must be under ${maxSizeMB}MB.`;
+                            fileError.classList.remove('hidden');
+                            filesAreValid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!filesAreValid) {
+                    input.value = ''; // Clear the input
+                    fileNameDisplay.textContent = 'No file chosen';
+                    removeFileButton.classList.add('hidden'); // Hide on error
+                } else {
+                    const fileCount = files.length;
+                    fileNameDisplay.textContent = `${fileCount} file${fileCount > 1 ? 's' : ''} selected.`;
+                    removeFileButton.classList.remove('hidden'); // Show remove button
+                }
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+                removeFileButton.classList.add('hidden'); // Hide if no file
+            }
+        }
+
+        /**
+         * Converts a File object to a Base64 string.
+         * @param {File} file The file to convert.
+         * @returns {Promise<string>} A promise resolving to the Base64 string (including data URL prefix).
+         */
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- 5. Submission and Backend Simulation ---
+
+        /**
+         * Displays a status message to the user.
+         * @param {string} message The message text.
+         * @param {'success'|'error'|'loading'} type The type of message.
+         */
+        function showStatus(message, type) {
+            statusBox.textContent = message;
+            statusBox.classList.remove('opacity-0', 'h-0', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800');
+            statusBox.classList.add('opacity-100', 'h-auto', 'py-3');
+            
+            if (type === 'error') {
+                statusBox.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === 'success') {
+                statusBox.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'loading') {
+                statusBox.classList.add('bg-blue-100', 'text-blue-800');
+            }
+        }
+
+        function hideStatus() {
+            setTimeout(() => {
+                statusBox.classList.remove('opacity-100', 'h-auto', 'py-3');
+                statusBox.classList.add('opacity-0', 'h-0');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+            showStatus('Preparing and sending report...', 'loading');
+
+            try {
+                const formData = new FormData(form);
+                const payload = {};
+                
+                // Collect basic text data
+                for (const [key, value] of formData.entries()) {
+                    payload[key] = value;
+                }
+
+                // If multiple files are selected, we only process the first one for the simplified backend structure.
+                const file = fileInput.files[0]; 
+                let base64Image = null;
+
+                // Convert image to Base64 if a file is present
+                if (file) {
+                    console.log('Processing only the first file for submission.');
+                    base64Image = await fileToBase64(file);
+                    payload.screenshot = base64Image;
+                } else {
+                    payload.screenshot = null;
+                }
+                
+                // --- ASP.NET API INTEGRATION POINT ---
+                // Replace '/api/send-support-email' with your actual ASP.NET Core Web API endpoint URL.
+                
+                const endpointUrl = '/api/send-support-email';
+                const response = await fetch(endpointUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    // Success response from backend
+                    showStatus('Report sent successfully! We will be in touch soon.', 'success');
+                    form.reset(); // Clear the form
+                    removeFileSelection(); // Clear file selection state
+                    toggleChatBox(); // Close the box on success
+                } else {
+                    // Handle server errors (e.g., status 400, 500)
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    showStatus(`Submission failed: ${response.status} ${response.statusText}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('Network or parsing error:', error);
+                showStatus('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                // Reset button state regardless of success or failure
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Report';
+                hideStatus();
+            }
+        }
+
+    </script>
+</body>
+</html>

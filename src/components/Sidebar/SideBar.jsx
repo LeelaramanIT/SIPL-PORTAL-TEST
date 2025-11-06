@@ -229,7 +229,7 @@ const SideBar = () => {
   }, []);
 
   // --- Logic & Handlers ---
-  const isAdmin = roles?.[0]?.RoleName === "Admin" || roleID === 1;
+  const isAdmin = roles === "admin" || roles === 'Admin' || roleID === 1;
 
   const isMenuAllowed = (menuName) => {
     if (isAdmin) return true;

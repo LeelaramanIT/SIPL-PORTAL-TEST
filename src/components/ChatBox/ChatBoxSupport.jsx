@@ -161,8 +161,8 @@ const SupportChat = () => {
   const location = useLocation();
 
   const [position, setPosition] = useState({
-    x: window.innerWidth - 70,
-    y: window.innerHeight - 100,
+    x: window.innerWidth - 1511,
+    y: window.innerHeight - 130,
   });
   const dragOffset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);

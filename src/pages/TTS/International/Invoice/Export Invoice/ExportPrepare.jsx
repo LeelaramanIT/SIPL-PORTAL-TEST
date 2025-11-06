@@ -52,7 +52,7 @@ const ExportInvoicePrepare = () => {
   } = useSelector((state) => state?.invoice?.exportInvoices || {});
   const formDAta = additionalForm;
 
-  console.log("invoiceDetails------------", invoiceDetails);
+  // console.log("invoiceDetails------------", invoiceDetails);
 
   // useEffect hook to initialize local state from Redux data on load
   useEffect(() => {
@@ -115,8 +115,8 @@ const ExportInvoicePrepare = () => {
     );
   }, [FinalSplitResult, formDAta, dispatch]);
 
-  console.log("updatedInvoiceDetails:", updatedInvoiceDetails);
-  console.log("FinalInvoicePDFData", FinalInvoicePDFData);
+  // console.log("updatedInvoiceDetails:", updatedInvoiceDetails);
+  // console.log("FinalInvoicePDFData", FinalInvoicePDFData);
   console.log("FinalInvoiceDetails", FinalInvoiceDetails);
 
   // useEffect to prepare and dispatch the final data for the invoice.
@@ -1000,21 +1000,21 @@ export function ClientDetailsSection({ invoiceDetails }) {
               Shipping Information
             </h3>
             {[
-              invoiceDetails?.preCarriageby === "air"
+              invoiceDetails?.preCarriageBy === "air"
                 ? {
                     label: "Delivery Method",
                     value: "Air Freight",
                     icon: "✈️",
                     color: "blue",
                   }
-                : invoiceDetails?.preCarriageby === "sea"
+                : invoiceDetails?.preCarriageBy === "sea"
                 ? {
                     label: "Delivery Method",
                     value: "Sea Freight",
                     icon: "🚢",
                     color: "green",
                   }
-                : invoiceDetails?.preCarriageby === "road"
+                : invoiceDetails?.preCarriageBy === "road"
                 ? {
                     label: "Delivery Method",
                     value: "Road Freight",

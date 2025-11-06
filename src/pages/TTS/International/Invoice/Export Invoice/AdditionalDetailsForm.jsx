@@ -5,9 +5,10 @@ import Select from "../../../../../components/InputFields/Select";
 import TextArea from "../../../../../components/InputFields/TextArea";
 import LoadingButton from "../../../../../components/LoadingButton";
 import { useDispatch, useSelector } from "react-redux";
-import { setExportAdditionalInvoice } from "../../../../../Redux/Slices/InvoiceSlice";
+import { setExportAdditionalInvoice, setIsPallate } from "../../../../../Redux/Slices/InvoiceSlice";
 import { getCurrency } from "../../../../../utils/currencies";
 import toast from "react-hot-toast";
+import { useMemo, useState } from "react";
 
 const AdditionalDetailsForm = ({
   onClose,
@@ -15,12 +16,7 @@ const AdditionalDetailsForm = ({
   invoiceDetails,
   setShowWarning,
 }) => {
-  // console.log(invoiceDetails);
-  const origin =
-    invoiceDetails?.containerLoadFrom === "MMN" ||
-    invoiceDetails?.containerLoadFrom === "PDK"
-      ? "india"
-      : "srilanka";
+
 
   const userCurrency = getCurrency(invoiceDetails?.usercurrency);
 
@@ -28,6 +24,10 @@ const AdditionalDetailsForm = ({
   const invoiceData = useSelector(
     (state) => state?.invoice?.exportInvoices?.additionalForm
   );
+  const invoiceFinalData = useSelector(
+    (state) => state?.invoice?.exportInvoices.FinalInvoiceDetails
+  );
+
 
   const decodedText =
     invoiceData?.paymentTerms || invoiceDetails?.paymentTerms || "";
@@ -49,8 +49,39 @@ const AdditionalDetailsForm = ({
     formattedDescription = decoded.replace(/~+/g, "\n").trim();
   }
 
-  console.log(invoiceDetails);
-  console.log(invoiceData);
+  // console.log(invoiceDetails);
+  // console.log(invoiceData);
+  console.log(invoiceFinalData);
+
+// 1. Get all scheme names that will be rendered as fields
+const schemeNames = useMemo(() => 
+  invoiceFinalData
+    ?.filter((d) => d.scheme !== "Direct")
+    .map((d) => d.scheme), 
+  [invoiceFinalData]
+);
+
+
+// 2. Convert existing schemeLicences array into a flat object
+// FIX 1: Read from invoiceData.schemeLicences, not invoiceFinalData.schemeLicences
+const existingSchemeValues = (invoiceData?.schemeLicences || []).reduce(
+(acc, schemeObj) => {
+  // FIX 2: Get entries from schemeObj directly, not schemeObj[0]
+  const [key, value] = Object.entries(schemeObj)[0] || [];
+  if (key) {
+    acc[key] = value;
+  }
+  return acc;
+},
+{}
+);
+
+// 3. Create the default values object for the dynamic scheme fields
+const schemeDefaults = {};
+for (const schemeName of schemeNames) {
+schemeDefaults[schemeName] = existingSchemeValues[schemeName] || "";
+}
+  
 
   const defaultValues = {
     exporterAuthorizedAddress: invoiceData?.exporterAuthorizedAddress || "",
@@ -92,6 +123,8 @@ const AdditionalDetailsForm = ({
     otsNo: invoiceData?.otsNo || "",
     itcHsNo: invoiceData?.itcHsNo || "",
     ExchangeCurrency: invoiceData?.ExchangeCurrency || '',
+    pallateWeight: invoiceData?.pallateWeight,
+    ...schemeDefaults,
   };
 
   // Decode & format strictly from invoiceDetails (DB)
@@ -150,17 +183,35 @@ const AdditionalDetailsForm = ({
   } = useForm({ defaultValues });
 
   const onSubmit = async (data) => {
-    toast.success("Form submitted:");
-
-    const updatedInvoice = {
-      ...invoiceDetails,
-      ...data,
-    };
-    dispatch(setExportAdditionalInvoice(updatedInvoice));
-    setShowWarning(true);
-    reset(updatedInvoice);
-    onClose();
-  };
+        toast.success("Form submitted:");
+    
+        // 1. Get the list of scheme names again
+        const schemeNames = invoiceFinalData
+        .filter((d) => d.scheme !== 'Direct')
+        .map((d) => d.scheme);
+    
+        // 2. Build the schemeLicences array
+        const schemeLicences = [];
+        const otherData = { ...data }; // Good
+    
+        for (const schemeName of schemeNames) {
+          if (Object.prototype.hasOwnProperty.call(data, schemeName)) {
+            schemeLicences.push({ [schemeName]: data[schemeName] });
+            delete otherData[schemeName]; // Good
+          }
+        }
+    
+        const updatedInvoice = {
+          ...invoiceDetails,
+          ...otherData, // ✅ FIX 1: Use otherData, not data
+          schemeLicences: schemeLicences,
+        };
+    
+        dispatch(setExportAdditionalInvoice(updatedInvoice));
+        setShowWarning(true);
+        reset(data); // ✅ FIX 2: Reset with the original flat 'data'
+        onClose();
+      };
 
   return (
     // ✅ Added dark:bg-gray-800 for the container background
@@ -386,7 +437,7 @@ const AdditionalDetailsForm = ({
             register={register}
             errors={errors}
           />
-          
+
         </div>
         <div className="col-span-full lg:col-span-2">
           <TextArea
@@ -404,7 +455,7 @@ const AdditionalDetailsForm = ({
             <ErrorText message={errors.paymentTerms.message} />
           )}
         </div>
-        <div className="col-span-full lg:col-span-2">
+        <div className="col-span-full lg:col-span-1">
           <InputField
             label="Exchange Currency Value"
             type="number"
@@ -412,9 +463,22 @@ const AdditionalDetailsForm = ({
             register={register}
             errors={errors}
           />
+          <IsPalateToggleInput register={register} errors={errors} />
         </div>
-
-
+        <div className="col-span-full lg:col-span-1 flex flex-col gap-2">
+          {invoiceFinalData
+            .filter((data) => data.scheme !== 'Direct') // ✅ filters out "Direct"
+            .map((data) => (
+              <InputField
+                key={data.scheme} 
+                label={`${data.scheme} Scheme`}
+                type="text"
+                name={data.scheme}
+                register={register}
+                errors={errors}
+              />
+            ))}
+        </div>
 
         {/* Form Actions (Assuming Button components handle their own dark mode) */}
         <div className="col-span-full flex flex-col sm:flex-row justify-end gap-2 pt-4">
@@ -491,7 +555,7 @@ const SelectField = ({
         label={label}
         name={fileName}
         disabled={disabled}
-        
+
         className="w-full rounded-md border border-gray-300 dark:border-gray-700 
                  bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
         {...register(name, {
@@ -518,5 +582,76 @@ const ErrorText = ({ message }) => (
   // ✅ Added dark:text-red-400 for better visibility in dark mode
   <p className="text-red-500 dark:text-red-400 text-xs mt-1">{message}</p>
 );
+
+function IsPalateToggleInput({ register, errors }) {
+  const isChecked = useSelector(
+    (state) => state?.invoice?.exportInvoices?.isPallateChecked
+  );
+  const dispatch = useDispatch();
+
+  const handleCheckboxChange = (event) => {
+    dispatch(setIsPallate(event.target.checked));
+    console.log(event.target.checked);
+
+  };
+
+  return (
+    <div className="py-2 w-40">
+      {/* Checkbox to toggle the input field */}
+      <label
+        htmlFor="isPalateToggle"
+        className="flex items-center space-x-3 p-3 rounded-lg border border-gray-300 dark:border-gray-700 
+                 bg-white dark:bg-gray-900 text-gray-800 dark:text-white cursor-pointer transition-colors"
+      >
+        <input
+          type="checkbox"
+          id="isPalateToggle"
+          {...register("isPalate")}
+          checked={isChecked}
+          onChange={handleCheckboxChange}
+          className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
+        />
+        <span className="text-gray-700 dark:text-gray-200 font-medium">
+          Palletized?
+        </span>
+      </label>
+
+      {/* Conditionally render the input field with a smooth transition */}
+      <div
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${isChecked ? "max-h-40 opacity-100 mt-2" : "max-h-0 opacity-0"
+          }`}
+      >
+        {isChecked && (
+          <>
+            <label
+              htmlFor="pallateWeight"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              Pallate Weight
+            </label>
+            <input
+              type="number"
+              id="pallateWeight"
+              placeholder="Enter pallate weight..."
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                         bg-white dark:bg-gray-900 text-gray-800 dark:text-white 
+                         rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isChecked}
+              {...register("pallateWeight", {
+                required: isChecked ? "Pallate weight is required" : false,
+              })}
+            />
+            {errors.pallateWeight && (
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">
+                {errors.pallateWeight.message}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 export default AdditionalDetailsForm;

@@ -5,12 +5,13 @@ import { toast } from "react-hot-toast";
 const initialState = {
   token: null,
   username: null,
-  roles: 'Admin',
+  roles: '',
   menus: [],
   loggedIn: true,
   loading: false,
   error: null,
-  roleID: 1,
+  Department:'',
+  RoleID: '',
 };
 
 
@@ -23,18 +24,17 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess: (state, action) => {
-      const { Token, username, roles, Menus,RoleID , Department } = action.payload;
-
+      const { Token, username, roles, Menus, RoleID , Department } = action.payload;
       state.token = Token;
       state.username = username;
       state.roles = roles;
       state.menus = Menus;
+      state.Department = Department;
+      state.RoleID = RoleID;
       state.loggedIn = true;
       state.loading = false;
-
-
-      // toast.success("Login Successfull");
     },
+
     logout: (state) => {
       (state.token = null),
         (state.username = null),
