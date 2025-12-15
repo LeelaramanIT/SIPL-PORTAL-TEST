@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { PersistGate } from "redux-persist/integration/react";
 import ThemeSwitcher from "./components/ThemeSwitcher";
+import { useAxiosInterceptors } from "./utils/axios";
 
 // 🟢 Moved this to a child so useSelector is safe
 function ThemedApp() {
@@ -40,19 +41,22 @@ function ThemedApp() {
 }
 
 function App() {
-  
+  //  useAxiosInterceptors()
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Toaster
+        
           position="bottom-right"
           reverseOrder={true}
+          
           toastOptions={{
             success: {
               style: {
                 background: "#314158",
                 color: "white",
               },
+            
             },
             error: {
               style: {

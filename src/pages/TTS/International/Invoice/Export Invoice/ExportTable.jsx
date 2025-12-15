@@ -64,62 +64,65 @@ const ExportTable = ({
   return (
     <div
       ref={tableRef}
-      className="w-full h-[38rem] flex flex-col justify-between rounded-xs bg-[var(--background)] shadow-md  overflow-y-auto custom-scrollbar text-[var(--text)] dark:bg-gray-900 dark:text-gray-100 "
+      className="w-full h-full flex flex-col justify-between rounded-xs bg-[var(--background)] shadow-md text-[var(--text)] dark:bg-gray-900 dark:text-gray-100"
     >
-      <table className="w-full table-fixed text-center">
-        <thead>
-          <tr>
-            {headers.map((heading, index) => (
-              <th
-                key={index}
-                className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 "
-              >
-                {heading.label}
-              </th>
-            ))}
-            {renderAction && (
-              <th className="py-1 px-3 text-center sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 ">
-                Actions
-              </th>
-            )}
-          </tr>
-        </thead>
+      {/* This new div will contain the table and will be the scrollable area */}
+      <div className="flex-grow h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
+        <table className="w-full table-fixed text-center">
+          <thead>
+            <tr>
+              {headers.map((heading, index) => (
+                <th
+                  key={index}
+                  className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 "
+                >
+                  {heading.label}
+                </th>
+              ))}
+              {renderAction && (
+                <th className="py-1 px-3 text-center sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 ">
+                  Actions
+                </th>
+              )}
+            </tr>
+          </thead>
 
-        <tbody>
-          {paginatedData.map((row, rowIndex) => {
-            const isEven = rowIndex % 2 === 0;
-            const baseBg = isEven
-              ? "bg-white dark:bg-gray-800 hover:bg-[#F4F4FE] hover:text-[var(--primary)] text-black"
-              : "bg-[#EAEAEF] dark:bg-gray-700 hover:bg-[#F4F4FE] hover:text-[var(--primary)] text-black";
+          <tbody>
+            {paginatedData.map((row, rowIndex) => {
+              const isEven = rowIndex % 2 === 0;
+              const baseBg = isEven
+                ? "bg-white dark:bg-gray-800 hover:bg-[#F4F4FE] hover:text-[var(--primary)] text-black"
+                : "bg-[#EAEAEF] dark:bg-gray-700 hover:bg-[#F4F4FE] hover:text-[var(--primary)] text-black";
 
-            return (
-              <tr
-                key={rowIndex}
-                ref={(el) => (rowsRef.current[rowIndex] = el)}
-                className={`text-xs ${baseBg} ${rowClassName(row, rowIndex)}`}
-              >
-                {headers.map((heading, colIndex) => {
-                  const cellValue = row[heading.key] ?? "-";
-                  return (
-                    <td key={colIndex} className="py-2 px-3">
-                      {highlightMatch ? highlightMatch(cellValue, searchQuery) : cellValue}
-                    </td>
-                  );
-                })}
+              return (
+                <tr
+                  key={rowIndex}
+                  ref={(el) => (rowsRef.current[rowIndex] = el)}
+                  className={`text-xs ${baseBg} ${rowClassName(row, rowIndex)}`}
+                >
+                  {headers.map((heading, colIndex) => {
+                    const cellValue = row[heading.key] ?? "-";
+                    return (
+                      <td key={colIndex} className="py-2 px-3">
+                        {highlightMatch ? highlightMatch(cellValue, searchQuery) : cellValue}
+                      </td>
+                    );
+                  })}
 
-                {renderAction && (
-                  <td className="py-2 px-3">{renderAction(row, rowIndex)}</td>
-                )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  {renderAction && (
+                    <td className="py-2 px-3">{renderAction(row, rowIndex)}</td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination Controls */}
       <div
         ref={paginationRef}
-        className="w-full flex flex-col md:flex-row justify-between items-center px-5 bg-[var(--background)] dark:bg-gray-800 sticky bottom-0"
+        className="w-full flex flex-col md:flex-row justify-between items-center px-5 bg-[var(--background)] dark:bg-gray-800"
       >
         <span className="text-sm text-gray-700 dark:text-gray-300">
           Showing <span className="font-semibold">{startIndex + 1}</span> to{" "}

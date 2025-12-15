@@ -9,7 +9,7 @@ const Settings = () => {
   const dispatch = useDispatch();
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 transition-colors">
+    <div className="p-6 max-w-full mx-auto bg-white dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100 transition-colors">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] dark:text-indigo-400 mb-6">
         Settings
       </h1>

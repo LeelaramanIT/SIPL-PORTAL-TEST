@@ -8,7 +8,6 @@ import InvoicePDF from "./InvoiceExportPDF";
 import { useEffect, useState } from "react";
 import { setPdfBlob, SetupdatedInvoiceDetails } from "../../../../../Redux/Slices/InvoiceSlice";
 import { numberToWords } from "../../../../../utils/NumberToWords";
-import { Font } from "@react-pdf/renderer";
 Font.register({
   family: "Arial",
   src: "/fonts/Arial.ttf", // path to your font
@@ -16,6 +15,12 @@ Font.register({
 
 const BORDER_THIN = "0.5px solid black";
 const BORDER_BOLD = "1.5px solid black";
+import { Font } from "@react-pdf/renderer";
+
+Font.register({
+  family: "Roboto",
+  src: "/fonts/Roboto-Regular.ttf"
+});
 
 // Styles
 export const styles = StyleSheet.create({
@@ -26,6 +31,19 @@ export const styles = StyleSheet.create({
     paddingVertical: "1px",
     fontWeight: "bold",
   },
+  row4_1heading: {
+  width: "35%",
+  borderRightWidth: 0.7,
+  borderRightColor: "#000",
+  paddingRight: 4,
+  justifyContent: "center",
+},
+
+row4_1value: {
+  width: "65%",
+  paddingLeft: 6,
+},
+
   // pdf
   pdf: {
     width: "100%",
@@ -346,6 +364,7 @@ export const styles = StyleSheet.create({
     padding: 5,
     textAlign: "center",
   },
+  
 });
 
 // Viewer component

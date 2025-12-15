@@ -1,0 +1,139 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "kaja",
+      "password": "12345",
+      "roles": "Admin",
+      "RoleID": 1,
+      "Department": "IT",
+      "Token": "abc123token",
+      "Menus": [
+        {
+          "MenuName": "Home",
+          "MenuUrl": "/"
+        },
+        {
+          "MenuName": "Dashboard",
+          "MenuUrl": "/Dashboard"
+        },
+        {
+          "MenuName": "TTS",
+          "MenuUrl": "TTS"
+        },
+        {
+          "MenuName": "DomesticInvoice",
+          "MenuUrl": "TTS/Domestic/Invoice"
+        },
+        {
+          "MenuName": "CustomerInvoice",
+          "MenuUrl": "/TTS/Domestic/Invoice/Customer"
+        },
+        {
+          "MenuName": "CustomInvoice",
+          "MenuUrl": "/TTS/Domestic/Invoice/Custom"
+        },
+        {
+          "MenuName": "InternationalInvoice",
+          "MenuUrl": "TTS/International/Invoice"
+        },
+        {
+          "MenuName": "ExportInvoice",
+          "MenuUrl": "/TTS/International/Invoice/CustomInvoice"
+        },
+        {
+          "MenuName": "Masters",
+          "MenuUrl": "/Masters"
+        },
+        {
+          "MenuName": "UserMaster",
+          "MenuUrl": "/Masters/UserMaster/AllUsers"
+        },
+        {
+          "MenuName": "Pages",
+          "MenuUrl": "/Pages"
+        },
+        {
+          "MenuName": "Calender",
+          "MenuUrl": "/Pages/Calendar"
+        },
+        {
+          "MenuName": "Reports",
+          "MenuUrl": "/Reports"
+        },
+        {
+          "MenuName": "Production",
+          "MenuUrl": "/Reports/TTSReports/Production"
+        },
+        {
+          "MenuName": "Sale",
+          "MenuUrl": "/Reports/TTSReports/Sale"
+        },
+        {
+          "MenuName": "Task Management",
+          "MenuUrl": "/Task-Management"
+        },
+        {
+          "MenuName": "Task-Home",
+          "MenuUrl": "/Task-Management/Home"
+        },
+        {
+          "MenuName": "Task-Projects",
+          "MenuUrl": "/Task-Management/Projects"
+        },
+        {
+          "MenuName": "Task-Team",
+          "MenuUrl": "/Task-Management/Team"
+        },
+        {
+          "MenuName": "Task-Reports",
+          "MenuUrl": "/Task-Management/Reports"
+        },
+        {
+          "MenuName": "Settings",
+          "MenuUrl": "/Settings"
+        },
+        {
+          "MenuName": "Settings/Menuaccess",
+          "MenuUrl": "/Settings/Menuaccess"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "username": "moideen",
+      "password": "12345",
+      "roles": "User",
+      "RoleID": 2,
+      "Department": "IT",
+      "Token": "xyz456token",
+      "Menus": [
+        {
+          "MenuName": "Home",
+          "MenuUrl": "/"
+
+        },
+        {
+          "MenuName": "Dashboard",
+          "MenuUrl": "/Dashboard"
+        },
+        {
+          "MenuName": "CustomerInvoice",
+          "MenuUrl": "/TTS/Domestic/Invoice/Customer"
+        },
+        {
+          "MenuName": "Sale",
+          "MenuUrl": "/Reports/TTSReports/Sale"
+        },
+        {
+          "MenuName": "Task-Home",
+          "MenuUrl": "/Task-Management/Home"
+        },
+        {
+          "MenuName": "Settings",
+          "MenuUrl": "/Settings"
+        }
+      ]
+    }
+  ]
+}

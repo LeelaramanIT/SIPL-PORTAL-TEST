@@ -11,460 +11,463 @@
 ========================================= */
 @layer base {
   :root {
-  /* Core */
-  --background: #f8f9fa;
-  --foreground: #111827;
+    /* Core */
+    --background: #f8f9fa;
+    --foreground: #111827;
 
-  /* Primary */
-  --primary: #1F2937;
-  --primary-hover: #374151;
+    /* Primary */
+    --primary: #1F2937;
+    --primary-hover: #374151;
 
-  /* Secondary */
-  --secondary: #E5E7EB;
+    /* Secondary */
+    --secondary: #E5E7EB;
 
-  /* Text */
-  --text: #111827;
-  --text-hover: #ffffff;
+    /* Text */
+    --text: #111827;
+    --text-hover: #ffffff;
 
-  /* Accent / States */
-  --accent: #2563eb;
-  --accent-foreground: #ffffff;
+    /* Accent / States */
+    --accent: #2563eb;
+    --accent-foreground: #ffffff;
 
-  --destructive: #EF4444;
-  --destructive-foreground: #ffffff;
+    --destructive: #EF4444;
+    --destructive-foreground: #ffffff;
 
-  /* Borders & Inputs */
-  --border: #d1d5db;
-  --input: #e5e7eb;
-  --ring: #2563eb;
+    /* Borders & Inputs */
+    --border: #d1d5db;
+    --input: #e5e7eb;
+    --ring: #2563eb;
 
-  /* Shadows */
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    /* Shadows */
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  /* Animations & Radius */
-  --transition-smooth: all 0.3s cubic-bezier(0.4,0,0.2,1);
-  --transition-spring: all 0.5s cubic-bezier(0.34,1.56,0.64,1);
-  --radius: 0.5rem;
+    /* Animations & Radius */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --radius: 0.5rem;
 
-  /* Fonts */
-  --font-primary: "Nunito", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    /* Fonts */
+    --font-primary: "Nunito", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  /* Gradient */
-  --gradient: linear-gradient(to bottom right, #f8f9fa, #E5E7EB, #1F2937);
-}
+    /* Gradient */
+    --gradient: linear-gradient(to bottom right, #f8f9fa, #E5E7EB, #1F2937);
+  }
 
-/* =========================================
+  /* =========================================
    Dark Theme
 ========================================= */
-.theme-dark {
-  --background: #111827;
-  --foreground: #f3f4f6;
+  .theme-dark {
+    --background: #111827;
+    --foreground: #f3f4f6;
 
-  --primary: #1f2937;
-  --primary-hover: #374151;
-  --secondary: #1e293b;
+    --primary: #1f2937;
+    --primary-hover: #374151;
+    --secondary: #1e293b;
 
-  --text: #f3f4f6;
-  --text-hover: #d1d5db;
+    --text: #f3f4f6;
+    --text-hover: #d1d5db;
 
-  --accent: #3b82f6;
-  --accent-foreground: #111827;
+    --accent: #3b82f6;
+    --accent-foreground: #111827;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
 
-  --border: #1f2937;
-  --input: #374151;
-  --ring: #3b82f6;
+    --border: #1f2937;
+    --input: #374151;
+    --ring: #3b82f6;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.3);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.4);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.4);
 
-  --gradient: linear-gradient(to bottom right, #111827, #1f2937, #374151);
-}
+    --gradient: linear-gradient(to bottom right, #111827, #1f2937, #374151);
+  }
 
-/* =========================================
+  /* =========================================
    Light Theme
 ========================================= */
-.theme-light {
-  --background: #F8FAFC;
-  --foreground: #1E293B;
+  .theme-light {
+    --background: #F8FAFC;
+    --foreground: #1E293B;
 
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --secondary: #E2E8F0;
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --secondary: #E2E8F0;
 
-  --text: #1E293B;
-  --text-hover: #FFFFFF;
+    --text: #1E293B;
+    --text-hover: #FFFFFF;
 
-  --accent: #38bdf8;
-  --accent-foreground: #1e293b;
+    --accent: #38bdf8;
+    --accent-foreground: #1e293b;
 
-  --destructive: #EF4444;
-  --destructive-foreground: #ffffff;
+    --destructive: #EF4444;
+    --destructive-foreground: #ffffff;
 
-  --border: #cbd5e1;
-  --input: #e2e8f0;
-  --ring: #2563eb;
+    --border: #cbd5e1;
+    --input: #e2e8f0;
+    --ring: #2563eb;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Nunito", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Nunito", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #1D4ED8, #5180e6, #1D4ED8);
-}
+    --gradient: linear-gradient(to bottom right, #1D4ED8, #5180e6, #1D4ED8);
+  }
 
-/* =========================================
+  /* =========================================
    Light Sky Blue
 ========================================= */
-.theme-light-sky-blue {
-  --background: #e0f2fe;
-  --foreground: #0f172a;
+  .theme-light-sky-blue {
+    --background: #e0f2fe;
+    --foreground: #0f172a;
 
-  --primary: #38bff8;
-  --primary-hover: #0EA5E9;
-  --secondary: #F0F9FF;
+    --primary: #38bff8;
+    --primary-hover: #0EA5E9;
+    --secondary: #F0F9FF;
 
-  --text: #0f172a;
-  --text-hover: #0284C7;
+    --text: #0f172a;
+    --text-hover: #0284C7;
 
-  --accent: #0284c7;
-  --accent-foreground: #ffffff;
+    --accent: #0284c7;
+    --accent-foreground: #ffffff;
 
-  --destructive: #f87171;
-  --destructive-foreground: #ffffff;
+    --destructive: #f87171;
+    --destructive-foreground: #ffffff;
 
-  --border: #bae6fd;
-  --input: #e0f2fe;
-  --ring: #0ea5e9;
+    --border: #bae6fd;
+    --input: #e0f2fe;
+    --ring: #0ea5e9;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Poppins", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Poppins", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #0EA5E9, #38bff8, #0EA5E9);
-}
+    --gradient: linear-gradient(to bottom right, #0EA5E9, #38bff8, #0EA5E9);
+  }
 
-/* =========================================
+  /* =========================================
    Green Theme
 ========================================= */
-.theme-green {
-  --background: #F0FFF4;
-  --foreground: #065f46;
+  .theme-green {
+    --background: #F0FFF4;
+    --foreground: #065f46;
 
-  --primary: #10B981;
-  --primary-hover: #207157;
-  --secondary: #D1FAE5;
+    --primary: #10B981;
+    --primary-hover: #207157;
+    --secondary: #D1FAE5;
 
-  --text: #ffffff;
-  --text-hover: #A7F3D0;
+    --text: #ffffff;
+    --text-hover: #A7F3D0;
 
-  --accent: #34d399;
-  --accent-foreground: #064e3b;
+    --accent: #34d399;
+    --accent-foreground: #064e3b;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #bbf7d0;
-  --input: #d1fae5;
-  --ring: #10b981;
+    --border: #bbf7d0;
+    --input: #d1fae5;
+    --ring: #10b981;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Inter", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Inter", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #1c634d, #10B981, #1c634d);
-}
+    --gradient: linear-gradient(to bottom right, #1c634d, #10B981, #1c634d);
+  }
 
-/* =========================================
+  /* =========================================
    Orange Theme
 ========================================= */
-.theme-orange {
-  --background: #FFF7ED;
-  --foreground: #7c2d12;
+  .theme-orange {
+    --background: #FFF7ED;
+    --foreground: #7c2d12;
 
-  --primary: #F97316;
-  --primary-hover: #C2410C;
-  --secondary: #FED7AA;
+    --primary: #F97316;
+    --primary-hover: #C2410C;
+    --secondary: #FED7AA;
 
-  --text: #ffffff;
-  --text-hover: #FDBA74;
+    --text: #ffffff;
+    --text-hover: #FDBA74;
 
-  --accent: #fb923c;
-  --accent-foreground: #7c2d12;
+    --accent: #fb923c;
+    --accent-foreground: #7c2d12;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #fed7aa;
-  --input: #fff7ed;
-  --ring: #f97316;
+    --border: #fed7aa;
+    --input: #fff7ed;
+    --ring: #f97316;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Montserrat", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Montserrat", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #a43a10, #F97316, #a43a10);
-}
+    --gradient: linear-gradient(to bottom right, #a43a10, #F97316, #a43a10);
+  }
 
-/* =========================================
+  /* =========================================
    Purple Theme
 ========================================= */
-.theme-purple {
-  --background: #F3E8FF;
-  --foreground: #3b0764;
+  .theme-purple {
+    --background: #F3E8FF;
+    --foreground: #3b0764;
 
-  --primary: #8B5CF6;
-  --primary-hover: #6D28D9;
-  --secondary: #DDD6FE;
+    --primary: #8B5CF6;
+    --primary-hover: #6D28D9;
+    --secondary: #DDD6FE;
 
-  --text: #fcfcfc;
-  --text-hover: #C4B5FD;
+    --text: #fcfcfc;
+    --text-hover: #C4B5FD;
 
-  --accent: #a78bfa;
-  --accent-foreground: #3b0764;
+    --accent: #a78bfa;
+    --accent-foreground: #3b0764;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #ddd6fe;
-  --input: #f3e8ff;
-  --ring: #8b5cf6;
+    --border: #ddd6fe;
+    --input: #f3e8ff;
+    --ring: #8b5cf6;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Raleway", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Raleway", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #411686, #774fd6, #411686);
-}
+    --gradient: linear-gradient(to bottom right, #411686, #774fd6, #411686);
+  }
 
-/* =========================================
+  /* =========================================
    Red Theme
 ========================================= */
-.theme-red {
-  --background: #FFEDEF;
-  --foreground: #7f1d1d;
+  .theme-red {
+    --background: #FFEDEF;
+    --foreground: #7f1d1d;
 
-  --primary: #EF4444;
-  --primary-hover: #B91C1C;
-  --secondary: #FCA5A5;
+    --primary: #EF4444;
+    --primary-hover: #B91C1C;
+    --secondary: #FCA5A5;
 
-  --text: #ffffff;
-  --text-hover: #F87171;
+    --text: #ffffff;
+    --text-hover: #F87171;
 
-  --accent: #f87171;
-  --accent-foreground: #7f1d1d;
+    --accent: #f87171;
+    --accent-foreground: #7f1d1d;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #fecaca;
-  --input: #ffedef;
-  --ring: #ef4444;
+    --border: #fecaca;
+    --input: #ffedef;
+    --ring: #ef4444;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Open Sans", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Open Sans", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #8a0606, #EF4444, #8a0606);
-}
+    --gradient: linear-gradient(to bottom right, #8a0606, #EF4444, #8a0606);
+  }
 
-/* =========================================
+  /* =========================================
    Blue Theme
 ========================================= */
-.theme-blue {
-  --background: #eff6ff;
-  --foreground: #1e3a8a;
+  .theme-blue {
+    --background: #eff6ff;
+    --foreground: #1e3a8a;
 
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --secondary: #bfdbfe;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --secondary: #bfdbfe;
 
-  --text: #ffffff;
-  --text-hover: #ffffff;
+    --text: #ffffff;
+    --text-hover: #ffffff;
 
-  --accent: #60a5fa;
-  --accent-foreground: #1e3a8a;
+    --accent: #60a5fa;
+    --accent-foreground: #1e3a8a;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #bfdbfe;
-  --input: #eff6ff;
-  --ring: #3b82f6;
+    --border: #bfdbfe;
+    --input: #eff6ff;
+    --ring: #3b82f6;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --gradient: linear-gradient(to bottom right, #022675, #3B82F6, #022675);
-}
+    --gradient: linear-gradient(to bottom right, #022675, #3B82F6, #022675);
+  }
 
-/* =========================================
+  /* =========================================
    Yellow Theme
 ========================================= */
-.theme-yellow {
-  --background: #FFFBEA;
-  --foreground: #78350f;
+  .theme-yellow {
+    --background: #FFFBEA;
+    --foreground: #78350f;
 
-  --primary: #F59E0B;
-  --primary-hover: #B45309;
-  --secondary: #FEF3C7;
+    --primary: #F59E0B;
+    --primary-hover: #B45309;
+    --secondary: #FEF3C7;
 
-  --text: #FFFBEA;
-  --text-hover: #FCD34D;
+    --text: #FFFBEA;
+    --text-hover: #FCD34D;
 
-  --accent: #fbbf24;
-  --accent-foreground: #78350f;
+    --accent: #fbbf24;
+    --accent-foreground: #78350f;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #fef3c7;
-  --input: #fffbea;
-  --ring: #f59e0b;
+    --border: #fef3c7;
+    --input: #fffbea;
+    --ring: #f59e0b;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Ubuntu", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Ubuntu", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #9d4909, #F59E0B, #9d4909);
-}
+    --gradient: linear-gradient(to bottom right, #9d4909, #F59E0B, #9d4909);
+  }
 
-/* =========================================
+  /* =========================================
    Cyan Theme
 ========================================= */
-.theme-cyan {
-  --background: #ECFEFF;
-  --foreground: #083344;
+  .theme-cyan {
+    --background: #ECFEFF;
+    --foreground: #083344;
 
-  --primary: #06B6D4;
-  --primary-hover: #0E7490;
-  --secondary: #CFFAFE;
+    --primary: #06B6D4;
+    --primary-hover: #0E7490;
+    --secondary: #CFFAFE;
 
-  --text: #000203;
-  --text-hover: #22D3EE;
+    --text: #000203;
+    --text-hover: #22D3EE;
 
-  --accent: #22d3ee;
-  --accent-foreground: #083344;
+    --accent: #22d3ee;
+    --accent-foreground: #083344;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #cffafe;
-  --input: #ecfeff;
-  --ring: #06b6d4;
+    --border: #cffafe;
+    --input: #ecfeff;
+    --ring: #06b6d4;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Work Sans", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Work Sans", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #0d5366, #1c99af, #0d5366);
-}
+    --gradient: linear-gradient(to bottom right, #0d5366, #1c99af, #0d5366);
+  }
 
-/* =========================================
+  /* =========================================
    Pink Theme
 ========================================= */
-.theme-pink {
-  --background: #FFF1F2;
-  --foreground: #831843;
+  .theme-pink {
+    --background: #FFF1F2;
+    --foreground: #831843;
 
-  --primary: #EC4899;
-  --primary-hover: #9D174D;
-  --secondary: #FBCFE8;
+    --primary: #EC4899;
+    --primary-hover: #9D174D;
+    --secondary: #FBCFE8;
 
-  --text: #ffffff;
-  --text-hover: #F472B6;
+    --text: #ffffff;
+    --text-hover: #F472B6;
 
-  --accent: #f472b6;
-  --accent-foreground: #831843;
+    --accent: #f472b6;
+    --accent-foreground: #831843;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
 
-  --border: #fbcfe8;
-  --input: #fff1f2;
-  --ring: #ec4899;
+    --border: #fbcfe8;
+    --input: #fff1f2;
+    --ring: #ec4899;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Nunito", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Nunito", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #680f33, #EC4899, #680f33);
-}
+    --gradient: linear-gradient(to bottom right, #680f33, #EC4899, #680f33);
+  }
 
-/* =========================================
+  /* =========================================
    Navi Blue Theme
-========================================= */ 
-.theme-navi-blue {
-  --background: #f8f9fa;
-  --foreground: #111827;
+========================================= */
+  .theme-navi-blue {
+    --background: #f8f9fa;
+    --foreground: #111827;
 
-  --primary: #1F2937;
-  --primary-hover: #374151;
-  --secondary: #E5E7EB;
+    --primary: #1F2937;
+    --primary-hover: #374151;
+    --secondary: #E5E7EB;
 
-  --text: #ffffff;
-  --text-hover: #111827;
+    --text: #ffffff;
+    --text-hover: #111827;
 
-  --accent: #2563eb;
-  --accent-foreground: #ffffff;
+    --accent: #2563eb;
+    --accent-foreground: #ffffff;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
 
-  --border: #e5e7eb;
-  --input: #f8f9fa;
-  --ring: #2563eb;
+    --border: #e5e7eb;
+    --input: #f8f9fa;
+    --ring: #2563eb;
 
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 8px 30px rgba(0,0,0,0.15);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.15);
 
-  --font-primary: "Nunito", sans-serif;
-  --font-secondary: "Roboto Flex", sans-serif;
+    --font-primary: "Nunito", sans-serif;
+    --font-secondary: "Roboto Flex", sans-serif;
 
-  --gradient: linear-gradient(to bottom right, #0F172A, #1E3A8A, #0F172A); 
+    --gradient: linear-gradient(to bottom right, #0F172A, #1E3A8A, #0F172A);
+  }
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  /* Width of the scrollbar */
 }
 
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;  
-    /* Width of the scrollbar */
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #343434; /* Thumb color */
-    border-radius: 5px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background-color: #c6c8cb; /* Track color */
-  }
-  
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #343434;
+  /* Thumb color */
+  border-radius: 5px;
+}
 
-  input:-webkit-autofill,
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #c6c8cb;
+  /* Track color */
+}
+
+
+input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #d1d5db00 inset !important; /* gray-300 */
+  -webkit-box-shadow: 0 0 0px 1000px #d1d5db00 inset !important;
+  /* gray-300 */
   -webkit-text-fill-color: #000 !important;
 }
 
@@ -483,7 +486,8 @@ body.modal-open .layout-scroll {
 
 /* Custom option styling (limited support) */
 select option {
-  background-color: #f3f4f6; /* Tailwind's gray-100 */
+  background-color: #f3f4f6;
+  /* Tailwind's gray-100 */
   padding: 0.75rem;
   min-height: 2rem;
 }
@@ -493,19 +497,19 @@ select option {
   .mobile-hidden {
     display: none !important;
   }
-  
+
   .mobile-full-width {
     width: 100% !important;
   }
-  
+
   .mobile-text-center {
     text-align: center !important;
   }
-  
+
   .mobile-p-2 {
     padding: 0.5rem !important;
   }
-  
+
   .mobile-text-sm {
     font-size: 0.875rem !important;
   }
@@ -527,12 +531,17 @@ select option {
 
 /* Touch-friendly button sizing for mobile */
 @media (max-width: 768px) {
-  button, .btn, [role="button"] {
+
+  button,
+  .btn,
+  [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }
-  
-  input, select, textarea {
+
+  input,
+  select,
+  textarea {
     min-height: 44px;
   }
 }
@@ -543,4 +552,3 @@ select option {
     -webkit-overflow-scrolling: touch;
   }
 }
-

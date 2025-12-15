@@ -3,6 +3,7 @@ import { getCurrency } from "../../../../../utils/currencies";
 
 const InvoicePDF = ({ data, styles }) => (
   <Page size="A4" style={styles.page}>
+    {console.log(data)}
     {/* Watermark Element */}
     <View
       fixed
@@ -33,7 +34,7 @@ const InvoicePDF = ({ data, styles }) => (
     </View>
     <View style={styles.row2}>
       <View style={styles.row2left}>
-        <Text style={styles.text}>EXPORTER:</Text>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>EXPORTER:</Text>
         <View>
           {(data?.exporter ? data?.exporter.toUpperCase().split("~") : []).map(
             (line, index) => (
@@ -46,22 +47,22 @@ const InvoicePDF = ({ data, styles }) => (
       </View>
       <View style={styles.row2right}>
         <View style={styles.row2right1}>
-          <Text style={styles.text}>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>
             INVOICE NO:{" "}
             <Text style={styles.textValue}>{data?.invoiceNumber || ""}</Text>
           </Text>
-          <Text style={styles.text}>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>
             DATE : <Text style={styles.textValue}>{data?.date || ""}</Text>
           </Text>
         </View>
         <View style={styles.row2right2}>
-          <Text style={styles.text}>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>
             Buyers Order No:
-            <Text style={styles.textValue}>{data?.buyersOrderNo || ""}</Text>
+            <Text style={styles.textValue}>{data?.BuyersOrderNumber || data?.buyersOrderNo || ""}</Text>
           </Text>
         </View>
         <View style={styles.row2right3}>
-          <Text style={styles.text}>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>
             REF DATE:
             <Text style={styles.textValue}>
               {data?.refDate || "E MAIL DATE 29th AUG-24"}
@@ -69,7 +70,7 @@ const InvoicePDF = ({ data, styles }) => (
           </Text>
         </View>
         <View style={styles.row2right4}>
-          <Text style={styles.text}>Other Reference(s)</Text>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>Other Reference(s)</Text>
           <Text style={styles.textValue}>
             {data?.otherReferences || "SDF Form"}
           </Text>
@@ -80,14 +81,14 @@ const InvoicePDF = ({ data, styles }) => (
       <View style={styles.row3left}>
         <View style={styles.row3left1}>
           <View>
-            <Text style={styles.text}>CONSIGNEE:</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>CONSIGNEE:</Text>
             <Text style={styles.textValue}>Name: {data?.consignee?.name || ""}</Text>
             {data?.consignee?.address
               ? data?.consignee?.address.map((item, index) => (
-                  <Text key={index} style={styles.textValue}>
-                    {item.trim().toUpperCase()}
-                  </Text>
-                ))
+                <Text key={index} style={styles.textValue}>
+                  {item.trim().toUpperCase()}
+                </Text>
+              ))
               : ""}
             <Text style={styles.textValue}>
               City: {data?.consignee.city.toUpperCase() || ""}
@@ -99,39 +100,69 @@ const InvoicePDF = ({ data, styles }) => (
               Cuntory: {data?.consignee.country.toUpperCase() || ""}
             </Text>
           </View>
-          {data?.customerAgent && (
-            <View>
-              <Text style={styles.text}>CUSTOMER AGENT</Text>
-              <Text style={styles.textValue}>
-                {data?.customerAgent?.name?.toUpperCase() || ""}
-              </Text>
-              {data?.customerAgent?.address
-                ? data?.customerAgent?.address.map((item, index) => (
-                    <Text key={index} style={styles.textValue}>
-                      {item.trim().toUpperCase()}
-                    </Text>
-                  ))
-                : null}
-            </View>
-          )}
+          {data?.notifyParty &&
+            Object.values(data.notifyParty).some(value => value && value !== "") && (
+              <View>
+                <Text style={[styles.text, { fontWeight: "bold" }]}>NOTIFY PARTY:</Text>
+
+                {data?.notifyParty?.name && (
+                  <Text style={styles.textValue}>
+                    Name: {data.notifyParty.name.toUpperCase()}
+                  </Text>
+                )}
+
+                {data?.notifyParty?.email && (
+                  <Text style={styles.textValue}>
+                    Email: {data.notifyParty.email.toUpperCase()}
+                  </Text>
+                )}
+
+                {data?.notifyParty?.phone && (
+                  <Text style={styles.textValue}>
+                    Phone: {data.notifyParty.phone.toUpperCase()}
+                  </Text>
+                )}
+
+                {data?.notifyParty?.address && (
+                  <Text style={styles.textValue}>
+                    Address: {data.notifyParty.address.toUpperCase()}
+                  </Text>
+                )}
+
+                {data?.notifyParty?.city && (
+                  <Text style={styles.textValue}>
+                    City: {data.notifyParty.city.toUpperCase()}
+                  </Text>
+                )}
+
+                {(data?.notifyParty?.state || data?.notifyParty?.country) && (
+                  <Text style={styles.textValue}>
+                    {data.notifyParty.state && `State: ${data.notifyParty.state.toUpperCase()}`}
+                    {data.notifyParty.state && data.notifyParty.country && ", "}
+                    {data.notifyParty.country && `Country: ${data.notifyParty.country.toUpperCase()}`}
+                  </Text>
+                )}
+              </View>
+            )}
+
         </View>
         <View style={styles.row3left2}>
           <View style={styles.row3left2row1}>
-            <Text style={styles.text}>Pre Carriage by</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Pre Carriage by</Text>
             <Text style={styles.textValue}>BY {data?.preCarriageBy || ""}</Text>
           </View>
           <View style={styles.row3left2row2}>
-            <Text style={styles.text}>Place of Receipt by Pre-carrier</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Place of Receipt by Pre-carrier</Text>
             <Text style={styles.textValue}>{data?.placeOfReceipt || ""}</Text>
           </View>
         </View>
         <View style={styles.row3left3}>
           <View style={styles.row3left3row1}>
-            <Text style={styles.text}>Vessel/Flight No</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Vessel/Flight No</Text>
             <Text style={styles.textValue}>{data?.vesselFlightNo || ""}</Text>
           </View>
           <View style={styles.row3left3row2}>
-            <Text style={styles.text}>Port of Loading</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Port of Loading</Text>
             <Text style={styles.textValue}>
               {data?.portOfLoading || ""}
             </Text>
@@ -139,13 +170,13 @@ const InvoicePDF = ({ data, styles }) => (
         </View>
         <View style={styles.row3left4}>
           <View style={styles.row3left2row1}>
-            <Text style={styles.text}>Port of Discharge</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Port of Discharge</Text>
             <Text style={styles.textValue}>
               {data?.portOfDischarge || ""}
             </Text>
           </View>
           <View style={styles.row3left2row2}>
-            <Text style={styles.text}>Final Destination</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Final Destination</Text>
             <Text style={styles.textValue}>
               {data?.finalDestination || ""}
             </Text>
@@ -154,7 +185,7 @@ const InvoicePDF = ({ data, styles }) => (
       </View>
       <View style={styles.row3right}>
         <View style={styles.row3right1}>
-          <Text style={styles.text}>Buyer if otherthan Consignee</Text>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>Buyer if otherthan Consignee</Text>
           <View>
             <Text style={styles.textValue}>
               {data?.buyerIfOtherThanConsignee?.name},
@@ -180,10 +211,10 @@ const InvoicePDF = ({ data, styles }) => (
         </View>
         <View style={styles.row3right3}>
           <View style={styles.row3right2row1}>
-            <Text style={styles.text}>Country of Origin of goods</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Country of Origin of goods</Text>
           </View>
           <View style={styles.row3right2row2}>
-            <Text style={styles.text}>Country of Final Destination</Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}>Country of Final Destination</Text>
           </View>
         </View>
         <View style={styles.row3right3}>
@@ -198,9 +229,9 @@ const InvoicePDF = ({ data, styles }) => (
         </View>
         <View style={styles.row3right4}>
           <View>
-            <Text style={styles.text}> TERMS OF DELIVERY AND PAYMENT: </Text>
+            <Text style={[styles.text, { fontWeight: "bold" }]}> TERMS OF DELIVERY AND PAYMENT: </Text>
             <Text style={styles.textValue}>
-              {`THE ABOVE PRICES ARE ${data?.incoterm?.toUpperCase()} ${data?.finalDestination}, USD BY ${data?.preCarriageBy}.`}
+              {`THE ABOVE PRICES ARE ${data?.incoterm?.toUpperCase()} ${data?.placeOfIncoterm}, USD BY ${data?.preCarriageBy}.`}
             </Text>
           </View>
           <Text style={styles.textValue}>{data?.paymentTerms}</Text>
@@ -223,109 +254,245 @@ const InvoicePDF = ({ data, styles }) => (
     </View>
     {/* row 4 */}
     <View style={styles.row4}>
-      <View style={styles.row4_1}>
-        <View style={styles.row4_1heading}>
-          <Text>Marks & Nos/</Text>
-          <Text>Container No</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>
-            Container Size 1 x {data?.containerDetails?.size}
-          </Text>
-          <Text style={styles.text}>
-            Container No: {data?.containerDetails?.containerNo}
-          </Text>
-          <Text style={styles.text}>
-            Liner Seal No: {data?.containerDetails?.linerSealNo}
-          </Text>
-          <Text style={styles.text}>
-            OTS NO: {data?.containerDetails?.otsNo}
-          </Text>
-        </View>
-        <View></View>
+      
+  {/* ---------------------- ROW 1 : CONTAINER DETAILS ---------------------- */}
+  <View style={styles.row4_1}>
+    <View style={styles.row4_1heading}>
+      <Text>Marks & Nos/</Text>
+      <Text>Container No</Text>
+    </View>
+
+    <View style={styles.row4_1value}>
+      <View>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>Container Size:</Text>
+        <Text style={styles.text}>1 x {data?.containerDetails?.size}</Text>
       </View>
-      <View style={styles.row4_2}>
-        <View style={styles.row4_1heading}>
-          <Text>No & Kind of Packing</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>I.T.C.(H.S) NO.</Text>
-          <Text style={styles.text}>{data?.itcHsNo}</Text>
-          <Text style={styles.text}>128 LOOSE TYRES</Text>
-        </View>
-        <View></View>
+
+      <View>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>Container No:</Text>
+        <Text style={styles.text}>{data?.containerDetails?.containerNo}</Text>
       </View>
-      <View style={styles.row4_3}>
-        <View style={styles.row4_1heading}>
-          <Text>Description of goods</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>
-            Automobile tyres reinforced with Nylon tyre Cord warp sheet / Rayon
-            Tyre cord warp sheet.
-          </Text>
-          {/* <Text style={styles.text}>
-                SOLID INDUSTRIAL TYRES LESS DISCOUNT 3%
-              </Text> */}
-        </View>
-        <View style={styles.row4_1botm}>
-          <View style={styles.row4_1botm1}></View>
-          {/* <View style={styles.row4_1botmtotal}></View> */}
-        </View>
+
+      <View>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>Liner Seal No:</Text>
+        <Text style={styles.text}>{data?.containerDetails?.linerSealNo}</Text>
       </View>
-      <View style={styles.row4_5}>
-        <View style={styles.row4_1heading}>
-          <Text>QUANITITY</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>{data?.totalqty}</Text>
-          {/* <Text style={styles.text}>1229.79</Text> */}
-        </View>
-        <View style={styles.row4_1botm}>
-          <Text style={styles.heading}>TOTAL:</Text>
-        </View>
-      </View>
-      <View style={styles.row4_4}>
-        <View style={styles.row4_1heading}>
-          <Text>QUANITITY KGS</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>{data?.grossWeight}</Text>
-        </View>
-        <View style={styles.row4_1botm}>
-          <Text style={styles.heading}>{data?.grossWeight}</Text>
-        </View>
-      </View>
-      <View style={styles.row4_5}>
-        <View style={styles.row4_1heading}>
-          <Text>UNIT PRICES DDP USD</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>{data?.unitPrice}</Text>
-        </View>
-        <View></View>
-      </View>
-      <View style={styles.row4_6}>
-        <View style={styles.row4_1heading}>
-          <Text>TOTAL PRICES DDP USD</Text>
-        </View>
-        <View style={styles.row4_1value}>
-          <Text style={styles.text}>{data?.grandTotal}</Text>
-          {/* <Text style={styles.text}>1229.79</Text> */}
-        </View>
-        <View style={styles.row4_1botm}>
-          <Text style={styles.heading}>{`${data.currencySymble} ${data?.grandTotal}`}</Text>
-        </View>
+
+      <View>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>OTS NO:</Text>
+        <Text style={styles.text}>{data?.containerDetails?.otsNo}</Text>
       </View>
     </View>
+  </View>
+
+  {/* ---------------------- ROW 2 : PACKING ---------------------- */}
+  <View style={styles.row4_2}>
+    <View style={styles.row4_1heading}>
+      <Text>No & Kind of Packing</Text>
+    </View>
+
+    <View style={styles.row4_1value}>
+      <View>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>I.T.C.(H.S) NO:</Text>
+        {data?.packingDetails?.itcHsNo?.split(",").map((code, i) => (
+          <Text key={i} style={styles.text}>{code.trim()}</Text>
+        ))}
+      </View>
+
+      <View>
+        {data?.tyreCount &&
+          Object.values(data?.tyreCount).map((text, i) => (
+            <Text key={i} style={styles.text}>{text}</Text>
+        ))}
+      </View>
+    </View>
+  </View>
+
+  {/* ---------------------- ROW 3 : DESCRIPTION + OTHER CHARGES ---------------------- */}
+  <View style={styles.row4_3}>
+    <View style={styles.row4_1heading}>
+      <Text>Description of goods</Text>
+    </View>
+
+    <View style={[styles.row4_1value, { flexDirection: "column" }]}>
+      
+      {/* Description Centered */}
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        {data?.packingDetails?.description
+          ?.split(",")
+          .map((desc, i) => (
+            <Text key={i} style={styles.text}>{desc.trim()}</Text>
+          ))}
+      </View>
+
+      {/* Other Charges at Bottom */}
+      {data?.otherCharges?.length > 0 && (
+        <View style={{ marginTop: "auto" }}>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>Other Charges:</Text>
+          {data?.otherCharges?.map((charge, index) => (
+            <View
+              key={index}
+              style={{
+                flexDirection: "row",
+                width: "100%",
+                paddingVertical: 2,
+                // borderBottom: "0.5px solid #ccc",
+              }}
+            >
+              <Text style={{ ...styles.text, width: "100%" }}>{charge.name}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+
+    <View style={styles.row4_1botm}>
+      <View style={styles.row4_1botm1}></View>
+    </View>
+  </View>
+
+  {/* ---------------------- ROW 4 : QUANTITY ---------------------- */}
+  <View style={styles.row4_5}>
+    <View style={styles.row4_1heading}>
+      <Text>QUANTITY</Text>
+    </View>
+    <View style={styles.row4_1value}>
+      <Text style={styles.text}>{data?.totalqty}</Text>
+      {/* Other Charges */}
+    {data?.otherCharges?.length > 0 && (
+      <View style={{ marginTop: 6 }}>
+        {data?.otherCharges?.map((charge, index) => (
+          <View
+            key={index}
+          >
+            <Text style={{ ...styles.text, width: "30%", textAlign: "center" }}>
+              {/* {charge.value} */}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )}
+    </View>
+    <View style={styles.row4_1botm}>
+      <Text style={styles.heading}>TOTAL:</Text>
+    </View>
+  </View>
+
+  {/* ---------------------- ROW 5 : QUANTITY KGS ---------------------- */}
+  <View style={styles.row4_4}>
+    <View style={styles.row4_1heading}>
+      <Text>QUANTITY KGS</Text>
+    </View>
+    <View style={styles.row4_1value}>
+      <Text style={styles.text}>{data?.netWeight}</Text>
+      {/* Other Charges */}
+    {data?.otherCharges?.length > 0 && (
+      <View style={{ marginTop: 6 }}>
+        {data?.otherCharges?.map((charge, index) => (
+          <View
+            key={index}
+          >
+            <Text style={{ ...styles.text, width: "30%", textAlign: "center" }}>
+              {/* {charge.value} */}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )}
+    </View>
+    <View style={styles.row4_1botm}>
+      <Text style={styles.heading}>{data?.netWeight}</Text>
+    </View>
+  </View>
+
+  {/* ---------------------- ROW 6 : UNIT PRICE ---------------------- */}
+  <View style={styles.row4_5}>
+    <View style={styles.row4_1heading}>
+      <Text>UNIT PRICES</Text>
+    </View>
+    <View style={styles.row4_1value}>
+      <Text style={styles.text}>{data?.unitPrice}</Text>
+       {/* Other Charges */}
+    {data?.otherCharges?.length > 0 && (
+      <View style={{ marginTop: 6 }}>
+        {data?.otherCharges?.map((charge, index) => (
+          <View
+            key={index}
+          >
+            <Text style={{ ...styles.text, width: "30%", textAlign: "center" }}>
+              {/* {charge.value} */}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )}
+    </View>
+  </View>
+
+  {/* ---------------------- ROW 7 : TOTAL PRICES + OTHER CHARGES + FINAL ---------------------- */}
+  <View style={styles.row4_6}>
+
+  {/* LEFT HEADING */}
+  <View style={styles.row4_1heading}>
+    <Text style={{fontSize:6}}>
+      TOTAL PRICES {data?.incoterm?.toUpperCase()} {data?.placeOfIncoterm} {data?.usercurrency}
+    </Text>
+  </View>
+
+  {/* RIGHT COLUMN */}
+  <View style={[styles.row4_1value, { flexDirection: "column", justifyContent: "flex-start" }]}>
+
+    {/* Center Base Price */}
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text style={{ ...styles.text }}>
+        {Number(data?.totalPrices).toFixed(2)}
+      </Text>
+    </View>
+
+    {/* Other Charges */}
+    {data?.otherCharges?.length > 0 && (
+      <View style={{ marginTop: 17 }}>
+        {data?.otherCharges?.map((charge, index) => (
+          <View
+            key={index}
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              paddingVertical: 2,
+              borderBottomWidth: 0.5,
+              borderColor: "#ccc"
+            }}
+          >
+            <Text style={{ ...styles.text, width: "30%", textAlign: "center" }}>
+              {charge.value}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )}
+  </View>
+
+  {/* FINAL TOTAL */}
+  <View style={styles.row4_1botm}>
+    
+    <Text style={styles.heading}>
+      <Text>{data?.currencySymble}</Text>{Number(data?.grandTotal).toFixed(2)}
+    </Text>
+  </View>
+
+</View>
+
+
+</View>
+
     {/* row5 */}
     <View style={styles.row5}>
-      <Text style={styles.textValue}>
+      <Text style={[styles.text, { fontWeight: "bold" }]}>
         {data?.amountInWords}
       </Text>
       <View>
-        <Text style={styles.textValue}>GROSS WT: 15496.800 KGS</Text>
-        <Text style={styles.textValue}>NETT WT : 15496.800 KGS</Text>
+        <Text style={[styles.text, { fontWeight: "bold" }]}>GROSS WT: {data?.grossWeight} KGS</Text>
+         <Text style={[styles.text, { fontWeight: "bold" }]}>NET WT : {data?.netWeight} KGS</Text>
       </View>
       <View></View>
       <Text style={{ textAlign: "center", fontWeight: "bold" }}>
@@ -352,11 +519,8 @@ const InvoicePDF = ({ data, styles }) => (
             justifyContent: "space-between",
           }}
         >
-          <Text style={styles.textValue}>
-            {data?.licenceDetails?.description ||
-              `The above shipment is under Advance Licence & EPCG Scheme. S.No-I
-                Advance Licence No. 0411007094 dt. 14.03.2024 S.No-II (MOOWR
-                Licence No. 0411007094 date. 14.03.2024)`}
+           <Text style={[styles.text, { fontWeight: "bold" }]}>
+            {data?.licenceDetails?.description }
           </Text>
           <View style={{ display: "flex", flexDirection: "row" }}>
             <Text style={{ fontSize: "7", padding: "5", color: "red" }}>

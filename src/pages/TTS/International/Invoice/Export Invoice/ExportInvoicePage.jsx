@@ -16,10 +16,12 @@ import Button from "../../../../../components/InputFields/Button";
 import TableSkeleton from "./TableSkeleton";
 import { generateTableData } from "../../../../../utils/DummyJSON";
 import { highlightMatch } from "../../../../../utils/highlightMatch";
+import ToggleSwitchWord from "../../../../../components/WordToggleButton";
+import toast from "react-hot-toast";
 
 const ExportInvoice = () => {
   const navigate = useNavigate();
-  const {state} = useLocation()
+  const { state } = useLocation()
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumn, setSelectedColumn] = useState("all");
   const [startDate, setStartDate] = useState(new Date());
@@ -38,9 +40,11 @@ const ExportInvoice = () => {
     );
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (state) {
     dispatch(resetExportInvoiceDetails())
     dispatch(getExportInvoiceAll(state));
+    }
   }, [state]);
 
   const headers = [
@@ -61,10 +65,7 @@ const ExportInvoice = () => {
   };
 
   const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
-
-  // console.log(tableData);
-  
-
+  const {menus} = useSelector((state)=> state.auth)
 
   // const tableData = useMemo(() => generateTableData(5), []);
 
@@ -96,22 +97,22 @@ const ExportInvoice = () => {
     });
   }, [searchQuery, tableData, selectedColumn, startDate]);
 
-  
+
 
   const handleDateChange = (date) => {
     setStartDate(date);
   };
 
   // const highlightMatch = (text, query) => {
-    
+
   //   if (!query || typeof text !== "string" && typeof text !== "number") return text;
-  
+
   //   // Escape special regex characters in the query string
   //   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
+
   //   const regex = new RegExp(`(${escapedQuery})`, "gi");
   //   const parts = String(text).split(regex);
-  
+
   //   return parts.map((part, i) =>
   //     part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
   //       <span key={i} className="bg-[var(--color-primary-hover)]/10 text-[var(--color-text)] font-semibold rounded px-1">
@@ -122,19 +123,45 @@ const ExportInvoice = () => {
   //     )
   //   );
   // };
-  
-  
+
+const handleToggle = (value) => {
+  console.log("Selected:", value);
+
+  // Example user menu permissions (replace with actual data)
+  const userMenus = [
+    // { MenuName: "ExportCustomerInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
+    { MenuName: "ExportCustomInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
+  ];
+
+  // Map toggle options to the required MenuName
+  const menuMap = {
+    Customer: "ExportCustomerInvoicePrepare",
+    Custom: "ExportCustomInvoicePrepare",
+  };
+
+  const requiredMenu = menuMap[value];
+  const hasAccess = userMenus.some((menu) => menu.MenuName === requiredMenu);
+
+  if (!hasAccess) {
+    toast.error(`You don’t have access to ${value} invoices.`);
+    return; // ⛔ stop navigation
+  }
+
+  // ✅ If access is allowed → navigate
+  const type = value === "Custom" ? "Custom" : "Customer";
+  navigate("/TTS/International/Invoice/CustomInvoice", { state: { type } });
+};
 
   return (
-    <div className="px-6 pt-4 max-w-full mx-auto">
-      <h1 className="text-2xl font-bold text-[var(--accent)] hover:text-[var(--accent-foreground)] mb-2">
-        Export {state.type} Invoice
+    <div className="px-6 pt-4 max-w-full h-[calc(100vh-63px)] mx-auto flex flex-col ">
+      <h1 className="text-2xl font-bold text-[var(--primary)] hover:text-[var(--accent-foreground)] mb-2">
+        Export {state?.type} Invoice
       </h1>
 
-      <div className="bg-white shadow-md px-2 py-4 rounded-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900" >
+      <div className="bg-white shadow-md px-2 py-4 rounded-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900 flex flex-col flex-grow" >
         <div
           ref={animateRef}
-          className="w-full py-1 px-2.5 rounded-2xl text-[var(--text)]"
+          className="w-full py-1 px-2.5 rounded-2xl text-[var(--text)] flex flex-col h-full"
         >
           <div className="flex flex-col md:flex-row w-full py-1 px-1 items-center gap-4 justify-between mb-4">
             <div className="w-[80%] flex justify-start items-center">
@@ -159,16 +186,14 @@ const ExportInvoice = () => {
               )}
             </div>
 
-            <Button
-              onClick={() => navigate("/Masters/UserMaster/UserCreate")}
-              text={"+ Add Invoice"}
-              className={
-                "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)]"
-              }
+            <ToggleSwitchWord options={["Custom","Customer"]}
+              defaultValue={state?.type}
+              color="bg-[var(--primary)]"
+              onChange={handleToggle}
             />
           </div>
 
-          <div className="w-full h-[31.5rem] rounded-sm bg-[var(--background)] overflow-auto gap-5 flex flex-col">
+          <div className="w-full rounded-sm bg-[var(--background)] gap-5 flex flex-col flex-grow overflow-hidden">
             {loading ? (
               <TableSkeleton />
             ) : (
@@ -184,24 +209,24 @@ const ExportInvoice = () => {
                 }}
                 renderAction={(row, index) => (
                   <button
-                  
+
                     // onClick={() => handleAction(row)}
                     onClick={() => {
-                      if(state.type === 'Customer'){
+                      if (state.type === 'Customer') {
                         navigate(
-                          "/TTS/International/Invoice/CustomerInvoice/Prepare",{
-                            state:state
-                          }
+                          "/TTS/International/Invoice/CustomerInvoice/Prepare", {
+                          state: state
+                        }
                         );
-                        dispatch(getExportInvoice({...row, ...state}));
+                        dispatch(getExportInvoice({ ...row, ...state }));
                       }
-                      if(state.type === 'Custom'){
+                      if (state.type === 'Custom') {
                         navigate(
-                          "/TTS/International/Invoice/CustomInvoice/Prepare",{
-                            state:state
-                          }
+                          "/TTS/International/Invoice/CustomInvoice/Prepare", {
+                          state: state
+                        }
                         );
-                        dispatch(getExportInvoice({...row, ...state}));
+                        dispatch(getExportInvoice({ ...row, ...state }));
                       }
                     }}
                     className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)] px-4 py-1 rounded text-center"

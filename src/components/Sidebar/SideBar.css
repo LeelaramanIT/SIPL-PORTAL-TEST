@@ -1,49 +1,71 @@
+/* ----------------------------
+   🔹 BASE MENU ITEM STYLING
+----------------------------- */
+
 /* Standard menu item sizing and vertical centering */
 .ant-menu-item,
 .ant-menu-submenu-title {
-  height: 30px !important;
-  padding: 0 16px !important;
-  font-size: 12px;
+  height: 32px !important;
+  padding: 0 14px !important;
+  font-size: 13px;
   display: flex !important;
   align-items: center !important;
-  justify-content: flex-start; /* Keep text aligned to left */
-  transition: all 0.2s ease-out;
+  justify-content: flex-start !important;
+  transition: all 0.25s ease-in-out;
+  border-radius: 6px !important; /* smoother shape */
 }
 
-/* Icon sizing */
+/* Icon sizing + vertical alignment */
 .ant-menu-item-icon,
 .ant-menu-submenu-title .anticon {
   font-size: 16px !important;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
 }
 
-/* Collapsed sidebar: center icons horizontally and vertically */
+/* Slight space between icon and text (only when expanded) */
+.ant-menu-item .anticon,
+.ant-menu-submenu-title .anticon {
+  margin-right: 8px !important;
+}
+
+/* ----------------------------
+   🔹 COLLAPSED STATE
+----------------------------- */
 .ant-layout-sider-collapsed .ant-menu-item,
 .ant-layout-sider-collapsed .ant-menu-submenu-title {
   padding: 0 !important;
   justify-content: center !important;
 }
 
-/* Remove margin between icon and (now hidden) text */
+/* Center icons when collapsed */
 .ant-layout-sider-collapsed .ant-menu-item .anticon,
 .ant-layout-sider-collapsed .ant-menu-submenu-title .anticon {
   margin-right: 0 !important;
 }
 
-/* Hide text when collapsed */
+/* Hide text smoothly when collapsed */
 .ant-layout-sider-collapsed .ant-menu-item span,
 .ant-layout-sider-collapsed .ant-menu-submenu-title span {
   display: none !important;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
+/* ----------------------------
+   🔹 THEME COLORS
+----------------------------- */
 
 /* Selected item - Dark */
 .ant-menu-dark .ant-menu-item-selected,
 .ant-menu-dark .ant-menu-item-selected > a,
 .ant-menu-dark .ant-menu-submenu-title-selected {
   background-color: #1f2937 !important;
-  color: white !important;
+  color: #ffffff !important;
+  font-weight: 500;
 }
 
 /* Hover - Dark */
@@ -54,24 +76,78 @@
   color: #e5e7eb !important;
 }
 
-/* Force icon color on hover/selected */
+/* Force icon color on hover/selected (dark) */
 .ant-menu-dark .ant-menu-item:hover .anticon,
 .ant-menu-dark .ant-menu-item-selected .anticon {
   color: inherit !important;
 }
 
-/* Same logic for light theme (optional) */
+/* Selected item - Light */
 .ant-menu-light .ant-menu-item-selected,
 .ant-menu-light .ant-menu-item-selected > a,
 .ant-menu-light .ant-menu-submenu-title-selected {
-  background-color: var(--color-primary) !important;
-  color: var(--color-text) !important;
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
 }
 
+/* Hover - Light */
 .ant-menu-light .ant-menu-item:hover,
 .ant-menu-light .ant-menu-item:hover > a,
 .ant-menu-light .ant-menu-submenu-title:hover {
-  background-color: var(--color-primary-hover) !important;
-  color: var(--color-text-hover) !important;
+  background-color: var(--primary-hover) !important;
+  color: var(--text-hover) !important;
 }
-    
+
+/* ----------------------------
+   🔹 SIDEBAR TRANSITIONS
+----------------------------- */
+
+/* Smooth width & fade animation */
+.sidebar-transition {
+  transition: width 0.25s ease-in-out, background-color 0.3s ease-in-out !important;
+}
+
+/* Prevent text snap during collapse */
+.ant-menu-inline-collapsed .ant-menu-title-content {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.ant-menu-inline .ant-menu-title-content {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* -----------------------------------
+   🧱 Sidebar Layer Fix (Always on Top)
+------------------------------------ */
+
+.ant-layout-sider {
+  position: relative !important;
+  z-index: 1050 !important; /* Higher than most Ant Design elements */
+  box-shadow: 1px 0 1px rgba(0, 0, 0, 0.25);
+   /* Soft shadow for elevation */
+  background-clip: padding-box;
+}
+
+/* When mobile, ensure full overlay effect */
+@media (max-width: 1024px) {
+  /* 🔹 Sidebar stays on top of page content */
+.ant-layout-sider {
+  position: relative !important;
+  z-index: 10 !important; /* Enough to appear above main content but below modals */
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.15); /* Optional subtle elevation */
+  background-clip: padding-box;
+}
+
+
+  /* Dim background overlay (optional if you already use backdrop div) */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1100;
+  }
+}

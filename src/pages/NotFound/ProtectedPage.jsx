@@ -8,8 +8,6 @@ const ProtectedPage = () => {
   const handleGoBack = () => {
     const fallbackPath = '/'; // Default fallback path
     const backPath = location.state?.from?.pathname || fallbackPath;
-
-    console.log('Going back to:', backPath);
     navigate(backPath, { replace: true });
   };
 

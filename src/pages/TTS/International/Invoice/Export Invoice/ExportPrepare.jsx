@@ -25,7 +25,7 @@ const ExportInvoicePrepare = () => {
   // State management using React Hooks and Redux
   const [showDetailsForm, setShowDetailsForm] = useState(false); // Manages the visibility of the mandatory details form.
   const dispatch = useDispatch(); // Redux hook to dispatch actions.
-  const navigate = useNavigate(); // React Router hook to navigate between pages.
+  const navigate = useNavigate(null); // React Router hook to navigate between pages.
   const loading = useSelector((state) => state.invoice.exportInvoices.loading); // Gets the loading state from Redux.
   const error = useSelector((state) => state.invoice.exportInvoices.error); // Gets any error messages from Redux.
   const [isOpen, setOpen] = useState(false); // Manages the visibility of the submit confirmation dialog.
@@ -51,8 +51,7 @@ const ExportInvoicePrepare = () => {
     showSubmmit,
   } = useSelector((state) => state?.invoice?.exportInvoices || {});
   const formDAta = additionalForm;
-
-  // console.log("invoiceDetails------------", invoiceDetails);
+console.log("FinalInvoiceDetails",FinalInvoiceDetails);
 
   // useEffect hook to initialize local state from Redux data on load
   useEffect(() => {
@@ -61,7 +60,7 @@ const ExportInvoicePrepare = () => {
 
     // Initialize localItems and splitItems only on the initial load
     // to avoid resetting state during subsequent re-renders.
-    if (localItems?.length === 0 && splitItems?.length === 0) {
+    if ((!localItems || localItems.length === 0) && (!splitItems || splitItems.length === 0)) {
       dispatch(
         // Copy invoice items into localItems and add scheme/split flags
         setLocalItems(
@@ -87,10 +86,10 @@ const ExportInvoicePrepare = () => {
   // This useEffect will run whenever 'showWarning' changes.
   useEffect(() => {
     if (showWarning) {
-      // Set a timer to hide the warning after 1 second
+      // Set a timer to hide the warning after 3 seconds
       const timer = setTimeout(() => {
         setShowWarning(false);
-      }, 3000); // 1000ms = 1 second
+      }, 5000);
 
       // Cleanup function to clear the timer if the component unmounts
       return () => clearTimeout(timer);
@@ -113,11 +112,7 @@ const ExportInvoicePrepare = () => {
         items: FinalSplitResult,
       })
     );
-  }, [FinalSplitResult, formDAta, dispatch]);
-
-  // console.log("updatedInvoiceDetails:", updatedInvoiceDetails);
-  // console.log("FinalInvoicePDFData", FinalInvoicePDFData);
-  console.log("FinalInvoiceDetails", FinalInvoiceDetails);
+  }, [FinalSplitResult, formDAta, dispatch, invoiceDetails]);
 
   // useEffect to prepare and dispatch the final data for the invoice.
   useEffect(() => {
@@ -126,31 +121,37 @@ const ExportInvoicePrepare = () => {
     if (JSON.stringify(finalData) !== JSON.stringify(FinalSplitResult)) {
       dispatch(setSplitResult(finalData));
     }
-  }, [invoiceType, localItems, splitItems, globalScheme, useGlobalScheme]); // Runs whenever relevant data changes.
+  }, [invoiceType, localItems, splitItems, globalScheme, useGlobalScheme, dispatch, FinalSplitResult]); // Runs whenever relevant data changes.
 
   // UseMemo to get the user's currency symbol and code.
   const userCurrency = getCurrency(invoiceDetails?.usercurrency);
 
   // useMemo for efficient total price calculation.
   const grandTotal = useMemo(() => {
-    return invoiceDetails?.items.reduce(
-      (sum, item) => sum + item?.basicprice * item?.itemQty,
-      0
-    );
-  }, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
+  const items = invoiceDetails?.items || [];
+  return items.reduce(
+    (sum, item) =>
+      sum + (parseFloat(item?.basicprice) || 0) * (parseFloat(item?.itemQty) || 0),
+    0
+  );
+}, [invoiceDetails]);
+
 
   // useMemo for efficient total quantity calculation.
   const totalQTY = useMemo(() => {
-    return invoiceDetails?.items.reduce((sum, item) => sum + item?.itemQty, 0);
-  }, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
+  const items = invoiceDetails?.items || [];
+  return items.reduce((sum, item) => sum + (parseFloat(item?.itemQty) || 0), 0);
+}, [invoiceDetails?.item]);
+
 
   // useMemo for efficient total finished weight (FWT) calculation.
   const totalFWT = useMemo(() => {
-    return invoiceDetails?.items.reduce(
-      (sum, item) => sum + item?.finishedWt * item?.itemQty,
+    const items = invoiceDetails?.items ?? [];
+    return items.reduce(
+      (sum, item) => sum + (Number(item?.finishedWt) || 0) * (Number(item?.itemQty) || 0),
       0
     );
-  }, [invoiceDetails]); // Recalculates only when invoiceDetails changes.
+  }, [invoiceDetails?.items]);
 
   // Function to handle changing the invoice type (Direct or Scheme).
   const handleInvoiceTypeChange = (type) => {
@@ -164,24 +165,23 @@ const ExportInvoicePrepare = () => {
       // Set all local items to "Direct" scheme.
       dispatch(
         setLocalItems(
-          invoiceDetails?.items?.map((item) => ({
+          (invoiceDetails?.items || []).map((item) => ({
             ...item,
             scheme: "Direct",
             isSplit: false,
             isScheme: false,
-          })) || []
+          }))
         )
       );
       dispatch(setSplitItems([])); // Clear the split items array.
-      setSplitInputs(invoiceDetails?.items?.map(() => ({})) || []); // Reset split inputs.
+      setSplitInputs((invoiceDetails?.items || []).map(() => ({}))); // Reset split inputs.
     }
   };
 
   // useMemo to group items by plant for "COMBI" shipments.
   const combiOrders = useMemo(() => {
-    if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items)
-      return [];
-    const grouped = invoiceDetails?.items.reduce((acc, item) => {
+    if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items) return {};
+    const grouped = invoiceDetails.items.reduce((acc, item) => {
       const plant = item.plant;
       if (!acc[plant]) acc[plant] = [];
       acc[plant].push(item);
@@ -197,10 +197,9 @@ const ExportInvoicePrepare = () => {
 
   // Function to handle the final submission of the invoice.
   const handleSubmit = async () => {
-    const formData = new FormData();
-    formData.append("file", pdfBlob, `invoice_${Date.now()}.pdf`);
-
-    dispatch(submitInvoice(formData));
+    // If you want to send pdfBlob as FormData, you can re-enable later.
+    // console.clear('submit',FinalInvoiceDetails)
+    dispatch(submitInvoice(FinalInvoiceDetails,navigate));
   };
 
   // Function to handle changes in the global scheme selection.
@@ -217,7 +216,7 @@ const ExportInvoicePrepare = () => {
     dispatch(setShowSubmit(false)); // for hide submit
 
     // Apply the global scheme to all local items that don't already have one.
-    const updatedLocalItems = localItems?.map((item) => ({
+    const updatedLocalItems = (localItems || []).map((item) => ({
       ...item,
       scheme: value, // Set the global scheme value
       isScheme: true, // Explicitly set isScheme to true
@@ -228,7 +227,12 @@ const ExportInvoicePrepare = () => {
   const handleSplitItem = (index) => {
     dispatch(setShowSubmit(false));
     const { splitQty } = splitInputs[index] || {};
-    const originalItem = localItems[index];
+    const originalItem = (localItems || [])[index];
+
+    if (!originalItem) {
+      toast.error("Original item not found");
+      return;
+    }
 
     // Validation: Check for invalid split quantities.
     if (!splitQty || splitQty <= 0 || splitQty >= originalItem.itemQty) {
@@ -254,17 +258,18 @@ const ExportInvoicePrepare = () => {
     }
 
     // Create a new array of local items.
-    const updatedLocalItems = [...localItems];
+    const updatedLocalItems = [...(localItems || [])];
     // Decrease the original item's quantity.
     updatedLocalItems[index] = {
       ...originalItem,
       isSplit: true, // Mark it as split.
       itemQty: originalItem.itemQty - splitQty,
+      actualQty:originalItem.itemQty,
     };
     dispatch(setLocalItems(updatedLocalItems)); // Update local items in Redux.
 
     // Create a new array of split items.
-    const newSplitItems = [...splitItems];
+    const newSplitItems = [...(splitItems || [])];
     // Check if a split item with the same scheme already exists for this original item.
     const existingIndex = newSplitItems.findIndex(
       (s) => s.originalIndex === index && s.scheme === appliedScheme
@@ -275,7 +280,8 @@ const ExportInvoicePrepare = () => {
       newSplitItems[existingIndex] = {
         ...newSplitItems[existingIndex],
         itemQty: newSplitItems[existingIndex].itemQty + splitQty,
-        splitQty: newSplitItems[existingIndex].splitQty + splitQty,
+        splitQty: (newSplitItems[existingIndex].splitQty || 0) + splitQty,
+        actualQty:originalItem.itemQty,
       };
     } else {
       // Otherwise, create a new split item.
@@ -301,7 +307,7 @@ const ExportInvoicePrepare = () => {
 
   // Function to remove a split item and return its quantity to the original item.
   const handleRemoveSplitItem = (splitItem, splitIndex) => {
-    const updatedLocalItems = [...localItems];
+    const updatedLocalItems = [...(localItems || [])];
     const originalItemIndex = splitItem.originalIndex;
 
     // Find the original item and add the quantity back.
@@ -318,7 +324,7 @@ const ExportInvoicePrepare = () => {
 
       // --- Start of Fix ---
       // Check if there are any other split items associated with the original item.
-      const remainingSplits = splitItems?.filter(
+      const remainingSplits = (splitItems || []).filter(
         (item, i) =>
           i !== splitIndex && item.originalIndex === originalItemIndex
       );
@@ -334,7 +340,7 @@ const ExportInvoicePrepare = () => {
     }
 
     // Filter out the removed split item.
-    const newSplits = splitItems?.filter((_, i) => i !== splitIndex);
+    const newSplits = (splitItems || []).filter((_, i) => i !== splitIndex);
 
     // Dispatch both updated states to Redux.
     dispatch(setLocalItems(updatedLocalItems));
@@ -356,7 +362,7 @@ const ExportInvoicePrepare = () => {
   const prepareFinalData = () => {
     if (!invoiceDetails?.items) return [];
 
-    const merged = [...localItems, ...splitItems]; // Combine the two arrays.
+    const merged = [...(localItems || []), ...(splitItems || [])]; // Combine the two arrays.
 
     // Map over the merged array to finalize the scheme property.
     return merged.map((item) => {
@@ -368,14 +374,15 @@ const ExportInvoicePrepare = () => {
       return { ...item };
     });
   };
+
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
         {invoiceDetails?.type} Invoice Details
       </h1>
-      <ClientDetailsSection
+      {loading ? (<ClientDetailsSkeleton/>):(<ClientDetailsSection
         invoiceDetails={{ ...invoiceDetails, ...additionalForm }}
-      />
+      />)}
 
       <div className="flex justify-between items-start">
         <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
@@ -459,7 +466,7 @@ const ExportInvoicePrepare = () => {
               </tr>
             </thead>
             <tbody>
-              {localItems.map((item, idx) => (
+              {(localItems || []).map((item, idx) => (
                 <tr
                   key={idx}
                   className={`text-[13px] text-center border-b border-[var(--primary-hover)]/30`}
@@ -474,8 +481,8 @@ const ExportInvoicePrepare = () => {
                   <td>{item?.sidewall || "-"}</td>
                   <td>{item?.basicprice}</td>
                   <td>{item?.itemQty}</td>
-                  <td>{(item?.basicprice * item?.itemQty).toFixed(2)}</td>
-                  <td>{(item?.finishedWt * item?.itemQty).toFixed(3)}</td>
+                  <td>{((Number(item?.basicprice) || 0) * (Number(item?.itemQty) || 0)).toFixed(2)}</td>
+                  <td>{((Number(item?.finishedWt) || 0) * (Number(item?.itemQty) || 0)).toFixed(3)}</td>
                   <td colSpan={2}>{item?.additionalInfo || "-"}</td>
                   <td>{item?.plant}</td>
                   <td className="break-all">{item?.itemCode}</td>
@@ -502,30 +509,27 @@ const ExportInvoicePrepare = () => {
                         />
                       </td>
 
-                      {/* ✅ Only show dropdown if global scheme is NOT used */}
-                      {
-                        <td colSpan={2}>
-                          <select
-                            value={item.scheme === "Direct" ? "" : item.scheme}
-                            onChange={(e) => {
-                              dispatch(setShowSubmit(false));
-                              const schemeValue = e.target.value;
-                              const updated = [...localItems];
-                              updated[idx] = {
-                                ...updated[idx],
-                                scheme: schemeValue ? schemeValue : "Direct",
-                                isScheme: !!schemeValue,
-                              };
-                              dispatch(setLocalItems(updated));
-                            }}
-                          >
-                            <option value="">Select Scheme</option>
-                            <option value="Advance">Advance</option>
-                            <option value="Moowr">Moowr</option>
-                            <option value="DDB">DDB</option>
-                          </select>
-                        </td>
-                      }
+                      <td colSpan={2}>
+                        <select
+                          value={item.scheme === "Direct" ? "" : item.scheme}
+                          onChange={(e) => {
+                            dispatch(setShowSubmit(false));
+                            const schemeValue = e.target.value;
+                            const updated = [...(localItems || [])];
+                            updated[idx] = {
+                              ...updated[idx],
+                              scheme: schemeValue ? schemeValue : "Direct",
+                              isScheme: !!schemeValue,
+                            };
+                            dispatch(setLocalItems(updated));
+                          }}
+                        >
+                          <option value="">Select Scheme</option>
+                          <option value="Advance">Advance</option>
+                          <option value="Moowr">Moowr</option>
+                          <option value="DDB">DDB</option>
+                        </select>
+                      </td>
                       <td>
                         <button
                           className={`px-2 rounded ${
@@ -545,7 +549,7 @@ const ExportInvoicePrepare = () => {
               ))}
 
               {/* Display Split Items */}
-              {splitItems.map((splitItem, i) => (
+              {(splitItems || []).map((splitItem, i) => (
                 <tr
                   key={`split-${i}`}
                   className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--primary-hover)]/30"
@@ -562,11 +566,11 @@ const ExportInvoicePrepare = () => {
                   <td>{splitItem.splitQty}</td>
 
                   <td>
-                    {(splitItem.basicprice * splitItem.splitQty).toFixed(2)}
+                    {(Number(splitItem.basicprice || 0) * Number(splitItem.splitQty || 0)).toFixed(2)}
                   </td>
 
                   <td>
-                    {(splitItem.finishedWt * splitItem.splitQty).toFixed(3)}
+                    {(Number(splitItem.finishedWt || 0) * Number(splitItem.splitQty || 0)).toFixed(3)}
                   </td>
 
                   <td colSpan={2}>{splitItem.additionalInfo || "-"}</td>
@@ -595,7 +599,7 @@ const ExportInvoicePrepare = () => {
                 </td>
                 <td className="px-4 py-2 text-center">{totalQTY}</td>
                 <td className="px-1 py-1 text-center whitespace-nowrap">
-                  {`${userCurrency.symbol} ${grandTotal?.toFixed(2)}`}
+                  {`${userCurrency?.symbol || ""} ${grandTotal?.toFixed(2)}`}
                 </td>
 
                 <td className="px-4 py-2 text-center whitespace-nowrap">
@@ -610,7 +614,7 @@ const ExportInvoicePrepare = () => {
         </div>
       )}
 
-      {invoiceDetails?.shipmentType == "COMBI" && (
+      {invoiceDetails?.shipmentType === "COMBI" && (
         <>
           <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
             Combi Orders
@@ -639,26 +643,26 @@ const ExportInvoicePrepare = () => {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(combiOrders)?.map(([plant, items], idx) => {
+                {Object.entries(combiOrders || {})?.map(([plant, items], idx) => {
                   // Calculate totals per plant
                   const tyreQty = items.reduce(
-                    (sum, item) => sum + item.itemQty,
+                    (sum, item) => sum + (Number(item.itemQty) || 0),
                     0
                   );
                   const tyrePrice = items.reduce(
-                    (sum, item) => sum + item.basicprice * item.itemQty,
+                    (sum, item) => sum + (Number(item.basicprice) || 0) * (Number(item.itemQty) || 0),
                     0
                   );
                   const tyreWt = items.reduce(
-                    (sum, item) => sum + item.finishedWt * item.itemQty,
+                    (sum, item) => sum + (Number(item.finishedWt) || 0) * (Number(item.itemQty) || 0),
                     0
                   );
                   const rimQty = items.reduce(
-                    (sum, item) => sum + item.rimItemQty,
+                    (sum, item) => sum + (Number(item.rimItemQty) || 0),
                     0
                   );
                   const rimPrice = items.reduce(
-                    (sum, item) => sum + item.rimUnitPrice * item.rimItemQty,
+                    (sum, item) => sum + (Number(item.rimUnitPrice) || 0) * (Number(item.rimItemQty) || 0),
                     0
                   );
                   const rimWt = 0;
@@ -697,7 +701,7 @@ const ExportInvoicePrepare = () => {
                   </td>
                   <td className="px-4 py-2 text-center">{totalQTY}</td>
                   <td className="px-4 py-2 text-center whitespace-nowrap">
-                    {`${userCurrency.symbol} ${grandTotal?.toFixed(2)}`}
+                    {`${userCurrency?.symbol || ""} ${grandTotal?.toFixed(2)}`}
                   </td>
                   <td className="px-4 py-2 text-center">
                     {totalFWT?.toFixed(3)}
@@ -718,15 +722,55 @@ const ExportInvoicePrepare = () => {
             Please check the PDF before submitting the invoice.
           </p>
         )}
-        {formDAta && (
-          <Button
-            onClick={() => {
-              navigate("/TTS/International/Invoice/Export/BillPDF");
-              dispatch(setShowSubmit(true));
-            }}
-            text="Preview PDF"
-          />
-        )}
+
+        {/* Preview PDF: fixed invalid JSX and made condition clear */}
+        {/* {!formDAta && (() => {
+  let allowButton = true;
+
+  if (Array.isArray(FinalInvoiceDetails) && FinalInvoiceDetails.length > 0) {
+    const allDirect = FinalInvoiceDetails.every(
+      (inv) => inv?.scheme?.trim()?.toLowerCase() === "direct"
+    );
+
+    const hasAdvancedType = FinalInvoiceDetails.some((inv) =>
+      ["advance", "Moover", "DDB"].includes(inv?.scheme?.trim()?.toLowerCase())
+    );
+
+    const allAdvancedHaveLicence = FinalInvoiceDetails
+      .filter((inv) =>
+        ["advance", "Moover", "DDB"].includes(inv?.scheme?.trim()?.toLowerCase())
+      )
+      .every(
+        (inv) =>
+          inv?.schemeLicences &&
+          Object.keys(inv.schemeLicences).length > 0
+      );
+
+    // ✅ Logic Decision
+    allowButton = allDirect || (hasAdvancedType && allAdvancedHaveLicence);
+  }
+
+  return (
+    allowButton && (
+      <Button
+        onClick={() => {
+          navigate("/TTS/International/Invoice/Export/BillPDF");
+          dispatch(setShowSubmit(true));
+        }}
+        text="Preview PDF"
+      />
+    )
+  );
+})()} */}
+<Button
+        onClick={() => {
+          navigate("/TTS/International/Invoice/Export/BillPDF");
+          dispatch(setShowSubmit(true));
+        }}
+        text="Preview PDF"
+      />
+
+
         {!additionalForm ? (
           <Button
             onClick={() => setShowDetailsForm(true)}
@@ -759,7 +803,7 @@ const ExportInvoicePrepare = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
+            className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
           >
             <motion.div
               key="modal-content"
@@ -767,7 +811,7 @@ const ExportInvoicePrepare = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 40 }}
               transition={{ duration: 0.1, ease: "easeIn" }}
-              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[40rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[50rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
             >
               <h2 className="text-xl font-bold mb-4 text-[var(--primary)]">
                 Additional Invoice Details
@@ -793,6 +837,8 @@ const ExportInvoicePrepare = () => {
 
 export default ExportInvoicePrepare;
 
+/* ------------------ ClientDetailsSection (unchanged except safe usage) ------------------ */
+
 export function ClientDetailsSection({ invoiceDetails }) {
   const containerRef = useRef(null);
   const orderRefs = useRef([]);
@@ -809,6 +855,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
 
   useLayoutEffect(() => {
     // Set the initial state of the elements to be animated
+    if (!containerRef.current) return;
     gsap.set(containerRef.current, { opacity: 0, y: 50 });
     gsap.set(orderRefs.current, { opacity: 0, x: -40 });
     gsap.set(shipRefs.current, { opacity: 0, x: 40 });
@@ -845,10 +892,6 @@ export function ClientDetailsSection({ invoiceDetails }) {
                 },
                 ">-0.5"
               ); // Start this animation 0.5s before the previous one ends
-
-            // Unobserve after the first animation to prevent it from re-triggering constantly.
-            // If you want it to animate every time it scrolls into view, comment out the line below.
-            // observer.unobserve(containerRef.current);
           } else {
             // Optional: Reset the state when it leaves the viewport
             gsap.set(containerRef.current, { opacity: 0, y: 50 });
@@ -935,7 +978,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
                 value: (
                   <>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      {invoiceDetails.billingCompanyName}
+                      {invoiceDetails?.billingCompanyName}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {invoiceDetails?.billingAddress?.split("~").join(", ")}
@@ -943,7 +986,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {invoiceDetails?.billingCity}
                     </div>
-                    {invoiceDetails.billingState && (
+                    {invoiceDetails?.billingState && (
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         {invoiceDetails?.billingState}
                       </div>
@@ -1000,21 +1043,21 @@ export function ClientDetailsSection({ invoiceDetails }) {
               Shipping Information
             </h3>
             {[
-              invoiceDetails?.preCarriageBy === "air"
+              invoiceDetails?.preCarriageBy === "AIR"
                 ? {
                     label: "Delivery Method",
                     value: "Air Freight",
                     icon: "✈️",
                     color: "blue",
                   }
-                : invoiceDetails?.preCarriageBy === "sea"
+                : invoiceDetails?.preCarriageBy === "SEA"
                 ? {
                     label: "Delivery Method",
                     value: "Sea Freight",
                     icon: "🚢",
                     color: "green",
                   }
-                : invoiceDetails?.preCarriageBy === "road"
+                : invoiceDetails?.preCarriageBy === "ROAD"
                 ? {
                     label: "Delivery Method",
                     value: "Road Freight",
@@ -1038,7 +1081,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
                 value: (
                   <>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      {invoiceDetails.shippingCompanyName}
+                      {invoiceDetails?.shippingCompanyName}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {invoiceDetails?.shippingAddress?.split("~").join(", ")}
@@ -1046,7 +1089,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {invoiceDetails?.shippingCity}
                     </div>
-                    {invoiceDetails.shippingState && (
+                    {invoiceDetails?.shippingState && (
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         {invoiceDetails?.shippingState}
                       </div>
@@ -1070,7 +1113,7 @@ export function ClientDetailsSection({ invoiceDetails }) {
               {
                 label: "Special Notes",
                 value:
-                  invoiceDetails.specialRequset || "Urgent delivery required",
+                  invoiceDetails?.specialRequset || "Urgent delivery required",
                 icon: "⚡",
                 color: "yellow",
               },
@@ -1096,6 +1139,90 @@ export function ClientDetailsSection({ invoiceDetails }) {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ClientDetailsSkeleton() {
+  return (
+    <div className="relative overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-md">
+      
+      {/* Header Skeleton */}
+      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-600">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Avatar Circle */}
+            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse flex-shrink-0"></div>
+            
+            {/* Name and Title Lines */}
+            <div className="space-y-2 w-full sm:w-48">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Right Badge Skeleton */}
+          <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* Content Skeleton */}
+      <div className="p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Left Column Skeleton */}
+          <div className="space-y-6">
+            {/* Column Title */}
+            <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+            
+            {/* Generate 4 skeleton cards to match the 4 items in your original list */}
+            {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={`left-${i}`} />
+            ))}
+          </div>
+
+          {/* Right Column Skeleton */}
+          <div className="space-y-6">
+             {/* Column Title */}
+             <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+
+             {/* Generate 4 skeleton cards */}
+             {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={`right-${i}`} isAddress={i === 2} />
+            ))}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper Sub-component for the individual cards
+function SkeletonCard({ isAddress = false }) {
+  return (
+    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+      <div className="flex items-start gap-3">
+        {/* Icon Box */}
+        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0 animate-pulse"></div>
+        
+        {/* Text Area */}
+        <div className="flex-1 space-y-2 py-1">
+          {/* Label */}
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+          
+          {/* Value */}
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse"></div>
+          
+          {/* If it's the address card (index 2 usually), add extra lines */}
+          {isAddress && (
+            <>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+            </>
+          )}
         </div>
       </div>
     </div>

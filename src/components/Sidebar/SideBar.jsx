@@ -1,20 +1,21 @@
+import React, { useEffect, useState } from "react";
 import { Layout, Menu } from "antd";
-import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
-import { MdOutlineManageAccounts } from "react-icons/md";
-import { IoHome, IoSettingsOutline, IoPieChartSharp } from "react-icons/io5";
+import {
+  IoHome,
+  IoSettingsOutline,
+  IoPieChartSharp,
+} from "react-icons/io5";
+import {
+  GoSidebarCollapse,
+  GoSidebarExpand,
+} from "react-icons/go";
 import { RxDashboard } from "react-icons/rx";
+import { MdOutlineManageAccounts } from "react-icons/md";
 import { SiAwsorganizations, SiGoogledocs } from "react-icons/si";
-import { useDispatch, useSelector } from "react-redux";
-import { toggleSidebar } from "../../Redux/Slices/GlobalSlice";
-import { useNavigate } from "react-router-dom";
-import assets from "../../assets/assets";
-import ThemeSwitcher from "../ThemeSwitcher";
-import { RiPagesLine, RiTeamFill } from "react-icons/ri";
 import {
   BsFillClipboard2DataFill,
   BsGlobeCentralSouthAsia,
 } from "react-icons/bs";
-import { useState, useEffect } from "react";
 import {
   FaTasks,
   FaFolderOpen,
@@ -24,60 +25,78 @@ import {
 import { TfiBarChartAlt } from "react-icons/tfi";
 import { VscCalendar, VscGraphLine } from "react-icons/vsc";
 import { GiIndiaGate, GiCarWheel } from "react-icons/gi";
+import { RiPagesLine, RiTeamFill } from "react-icons/ri";
+import { LogoutOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleSidebar } from "../../Redux/Slices/GlobalSlice";
+import { useNavigate, useLocation } from "react-router-dom";
+import ThemeSwitcher from "../ThemeSwitcher";
+import assets from "../../assets/assets";
 import "./SideBar.css";
+import { logout, userLogout } from "../../Redux/Slices/AuthSlice";
+import { MdOutlineContactEmergency } from "react-icons/md";
 
 const { Sider } = Layout;
 
-// Helper function to generate Ant Design Menu structure
-const getMenuItems = (isMenuAllowed, hasMenuUrlPrefix, assets) => {
+const SideBar = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { open: isSidebarOpen, isDark } = useSelector((s) => s.global);
+  const auth = useSelector((s) => s.auth);
+
+  // ✅ Create permissions array dynamically from menus
+  const user = {
+    ...auth,
+    permissions: auth?.menus?.map((m) => m.MenuUrl) || [],
+  };
+
+  const collapsed = !isSidebarOpen;
+  const [isMobile, setIsMobile] = useState(false);
+
+  // --- Responsive ---
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const customIcon = (
     <img className="w-5 h-5" src={assets.CustomIcons} alt="Custom" />
   );
+
+  // ✅ Define all possible menu items
   const menuItems = [
+    { key: "/", icon: <IoHome />, label: "Home" },
+    { key: "/Dashboard", icon: <RxDashboard />, label: "Dashboard" },
     {
-      key: "/",
-      icon: <IoHome />,
-      label: "Home",
-    },
-    isMenuAllowed("Dashboard") && {
-      key: "/Dashboard",
-      icon: <RxDashboard />,
-      label: "Dashboard",
-    },
-    // TTS Section
-    hasMenuUrlPrefix("TTS") && {
       key: "TTS",
       icon: <SiAwsorganizations />,
       label: "TTS",
       children: [
-        // Domestic Section
-        hasMenuUrlPrefix("TTS/Domestic") && {
+        {
           key: "TTS/Domestic",
           icon: <GiIndiaGate />,
           label: "Domestic",
           children: [
-            hasMenuUrlPrefix("TTS/Domestic/Invoice") && {
+            {
               key: "DomesticInvoice",
               icon: <FaFileInvoiceDollar />,
               label: "Invoice",
               children: [
-                isMenuAllowed("CustomerInvoice") && {
+                {
                   key: "/TTS/Domestic/Invoice/Customer",
                   icon: <SiGoogledocs />,
                   label: "Customer",
-                },
-                isMenuAllowed("CustomInvoice") && {
-                  key: "/TTS/Domestic/Invoice/Custom",
-                  icon: customIcon,
-                  label: "Custom",
-                },
-              ].filter(Boolean),
+                }
+              ],
             },
-          ].filter(Boolean),
+          ],
         },
-        // International Section
-        hasMenuUrlPrefix("TTS/International") && {
-          key: "International",
+        {
+          key: "TTS/International",
           icon: <BsGlobeCentralSouthAsia />,
           label: "International",
           children: [
@@ -85,20 +104,18 @@ const getMenuItems = (isMenuAllowed, hasMenuUrlPrefix, assets) => {
               key: "InternationalInvoice",
               icon: <FaFileInvoiceDollar />,
               label: "Invoice",
-              children: isMenuAllowed("ExportInvoice")
-                ? [
-                    {
-                      key: "/TTS/International/Invoice/CustomerInvoice",
-                      icon: <SiGoogledocs />,
-                      label: "Customer",
-                    },
-                    {
-                      key: "/TTS/International/Invoice/CustomInvoice",
-                      icon: customIcon,
-                      label: "Custom",
-                    },
-                  ]
-                : undefined, // Undefined if no children are allowed
+              children: [
+                {
+                  key: "/TTS/International/Invoice/CustomerInvoice",
+                  icon: <SiGoogledocs />,
+                  label: "Customer",
+                },
+                {
+                  key: "/TTS/International/Invoice/CustomInvoice",
+                  icon: customIcon,
+                  label: "Custom",
+                },
+              ],
             },
           ],
         },
@@ -107,10 +124,9 @@ const getMenuItems = (isMenuAllowed, hasMenuUrlPrefix, assets) => {
           icon: <GiCarWheel />,
           label: "RIM Application",
         },
-      ].filter(Boolean),
+      ],
     },
-    // Masters Section
-    hasMenuUrlPrefix("/Masters") && {
+    {
       key: "Masters",
       icon: <MdOutlineManageAccounts />,
       label: "Masters",
@@ -120,26 +136,20 @@ const getMenuItems = (isMenuAllowed, hasMenuUrlPrefix, assets) => {
           label: "User Master",
           children: [
             { key: "/Masters/UserMaster/AllUsers", label: "All Users" },
-            { key: "/Master/UserMaster/AllUsers", label: "Create User" },
+            { key: "/Masters/UserMaster/CreateUser", label: "Create User" },
           ],
         },
       ],
     },
-    // Pages Section
-    hasMenuUrlPrefix("/Pages") && {
+    {
       key: "Pages",
       icon: <RiPagesLine />,
       label: "Pages",
       children: [
-        isMenuAllowed("Calender") && {
-          key: "/Pages/Calendar",
-          icon: <VscCalendar />,
-          label: "Calender",
-        },
-      ].filter(Boolean),
+        { key: "/Pages/Calendar", icon: <VscCalendar />, label: "Calendar" },
+      ],
     },
-    // Reports Section
-    hasMenuUrlPrefix("/Reports") && {
+    {
       key: "Reports",
       icon: <TfiBarChartAlt />,
       label: "Reports",
@@ -147,141 +157,123 @@ const getMenuItems = (isMenuAllowed, hasMenuUrlPrefix, assets) => {
         {
           key: "TTSReports",
           icon: <BsFillClipboard2DataFill />,
-          label: "TTSReports",
+          label: "TTS Reports",
           children: [
-            isMenuAllowed("Production") && {
+            {
               key: "/Reports/TTSReports/Production",
               icon: <IoPieChartSharp />,
               label: "Production Reports",
             },
-            isMenuAllowed("Sale") && {
+            {
               key: "/Reports/TTSReports/Sale",
               icon: <VscGraphLine />,
               label: "Sale Reports",
             },
-          ].filter(Boolean),
+          ],
         },
       ],
     },
-    // Task Management Section
-    hasMenuUrlPrefix("/Task-Management") && {
+    {
       key: "Task-Management",
       icon: <FaTasks />,
       label: "Task Management",
       children: [
-        isMenuAllowed("Task-Home") && {
-          key: "/Task-Management/Home",
-          icon: <FaHome />,
-          label: "Home",
-        },
-        isMenuAllowed("Task-Projects") && {
-          key: "/Task-Management/Projects",
-          icon: <FaFolderOpen />,
-          label: "Projects",
-        },
-        isMenuAllowed("Task-Team") && {
-          key: "/Task-Management/Team",
-          icon: <RiTeamFill />,
-          label: "Team",
-        },
-        isMenuAllowed("Task-Reports") && {
-          key: "/Task-Management/Reports",
-          icon: <TfiBarChartAlt />,
-          label: "Reports",
-        },
-      ].filter(Boolean),
+        { key: "/Task-Management/Home", icon: <FaHome />, label: "Home" },
+        { key: "/Task-Management/Projects", icon: <FaFolderOpen />, label: "Projects" },
+        { key: "/Task-Management/Team", icon: <RiTeamFill />, label: "Team" },
+        { key: "/Task-Management/Reports", icon: <TfiBarChartAlt />, label: "Reports" },
+      ],
     },
-    // Settings
-    isMenuAllowed("Settings") && {
-      key: "/Settings",
-      icon: <IoSettingsOutline />,
-      label: "Settings",
-    },
-    isMenuAllowed("Settings/Menuaccess") && {
-      key: "/Settings/Menuaccess",
-      icon: <IoSettingsOutline />,
-      label: "Menu Access",
-    },
-  ].filter(Boolean); // Filter out any false/null values
+    { key: "/Settings", icon: <IoSettingsOutline />, label: "Settings" },
+    { key: "/Settings/Menuaccess", icon: <MdOutlineContactEmergency />, label: "Menu Access" },
+  ];
 
-  return menuItems;
-};
+  function extractMenuData(items) {
+  const result = [];
 
-const SideBar = () => {
-  // --- Hooks and State ---
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { open: isSidebarOpen, isDark } = useSelector((store) => store.global);
-  const { roleID, roles, menus } = useSelector((store) => store.auth);
-  const collapsed = !isSidebarOpen;
-  const [isMobile, setIsMobile] = useState(false);
+  const traverse = (menuList) => {
+    menuList.forEach((item) => {
+      // Only push if key starts with "/" (means it's a real route)
+      if (typeof item.key === "string" && item.key.startsWith("/")) {
+        result.push({
+          menuName: item.label,
+          menuUrl: item.key,
+        });
+      }
 
-  // --- Effects ---
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // --- Logic & Handlers ---
-  const isAdmin = roles === "admin" || roles === 'Admin' || roleID === 1;
-
-  const isMenuAllowed = (menuName) => {
-    if (isAdmin) return true;
-    return menus?.some((menu) => menu.MenuName === menuName);
+      // If this item has children → continue recursion
+      if (item.children && Array.isArray(item.children)) {
+        traverse(item.children);
+      }
+    });
   };
 
-  const hasMenuUrlPrefix = (prefix) => {
-    if (isAdmin) return true;
-    return menus?.some((menu) => menu.MenuUrl?.startsWith(prefix));
+  traverse(items);
+  return result;
+}
+const menuData = extractMenuData(menuItems);
+// console.log(menuData);
+
+
+  // ✅ Filter based on user.permissions
+  const filterMenu = (items) => {
+    // 🟩 Admin with RoleID 1 — full access
+    if (user?.roles?.toLowerCase() === "admin" && Number(user?.RoleID) === 1) {
+      return items;
+    }
+
+    // 🟨 Normal users — filter based on permissions
+    const allowed = [];
+    for (const item of items) {
+      if (item.children) {
+        const allowedChildren = filterMenu(item.children);
+        if (allowedChildren.length > 0) {
+          allowed.push({ ...item, children: allowedChildren });
+        }
+      } else if (user?.permissions?.includes(item.key)) {
+        allowed.push(item);
+      }
+    }
+    return allowed;
   };
 
+  const filteredMenu = user ? filterMenu(menuItems) : [];
+
+  // ✅ Navigation handler
   const handleClick = ({ key }) => {
-    let route = key;
-    let state = {};
+    let state = null;
 
-    // Special handling for dynamic routes (like International Invoice)
-    if (key.includes("/TTS/International/Invoice/")) {
-      state = { type: key.endsWith("CustomerInvoice") ? "Customer" : "Custom" };
+    // 🟩 If navigating to International Invoice routes
+    if (key === "/TTS/International/Invoice/CustomInvoice") {
+      state = { type: "Custom" };
+
+    } else if (key === "/TTS/International/Invoice/CustomerInvoice") {
+      state = { type: "Customer" };
     }
 
-    // Special handling for domestic routes (optional, but consistent with the original logic)
-    if (key.includes("/TTS/Domestic/Invoice/")) {
-      state = { type: key.endsWith("/Customer") ? "Customer" : "Custom" };
+    // 🟨 If navigating to Domestic Invoice routes
+    else if (key === "/TTS/Domestic/Invoice/Custom") {
+      state = { type: "Custom" };
+    } else if (key === "/TTS/Domestic/Invoice/Customer") {
+      state = { type: "Customer" };
     }
 
-    navigate(route, state.type ? { state } : undefined);
-
-    // Close sidebar on mobile after clicking a link
-    if (isMobile) {
-      dispatch(toggleSidebar());
-    }
+    if (state) navigate(key, { state })
+    else navigate(key);
+    if (isMobile) dispatch(toggleSidebar());
   };
 
-  // Generate Menu Items using the external helper function
-  const menuItems = getMenuItems(isMenuAllowed, hasMenuUrlPrefix, assets);
-
-  // --- Styles ---
-  const siderStyle = {
-    display: "flex",
-    flexDirection: "column",
-    ...(isDark === false && { backgroundColor: "var(--color-background)" }),
+  const handleLogout = async () => {
+    localStorage.clear();
+    navigate("/login");
+    dispatch(userLogout(navigate));
+    dispatch(logout())
+    await persistor.purge();
   };
 
-  const menuStyle = {
-    ...(isDark === false && {
-      backgroundColor: "var(--color-background)",
-    }),
-  };
-
+  // --- Sidebar UI (Unchanged) ---
   return (
     <>
-      {/* Mobile Overlay (Only visible when mobile and sidebar is open) */}
       {isMobile && isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -290,82 +282,107 @@ const SideBar = () => {
       )}
 
       <Sider
-        theme={isDark ? "dark" : "light"}
-        collapsible
-        collapsed={collapsed}
-        onCollapse={() => dispatch(toggleSidebar())}
-        width={240}
-        collapsedWidth={isMobile ? 0 : 80}
-        style={{
-          ...siderStyle,
-          height: "100vh",
-          overflow: "auto",
-          ...(isMobile &&
-            isSidebarOpen && {
-              position: "fixed",
-              left: 0,
-              top: 0,
-              zIndex: 50,
-            }),
-        }}
-        className={`dark:bg-gray-900 ${
-          isMobile ? "lg:relative" : ""
-        } custom-scrollbar`}
-        trigger={null}
-        breakpoint="lg"
-      >
+  theme={isDark ? "dark" : "light"}
+  collapsed={collapsed}
+  width={240}
+  collapsedWidth={isMobile ? 0 : 80}
+  style={{
+    height: "100vh",
+    overflow: "auto",
+    position: "relative",
+    zIndex: 10, // ✅ ensures sidebar appears above nearby content
+    display: "flex",
+    flexDirection: "column",
+    transition: "width 0.3s ease-in-out",
+  }}
+  className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
+  trigger={null}
+  onMouseEnter={() => {
+    if (!isMobile && collapsed) dispatch(toggleSidebar());
+  }}
+  onMouseLeave={() => {
+    if (!isMobile && !collapsed) dispatch(toggleSidebar());
+  }}
+>
+
+
         {/* Logo & Toggle */}
         <div
-          className={`flex items-center h-16 p-4 dark:bg-gray-900 custom-scrollbar ${
-            collapsed ? "justify-center" : "justify-between"
-          }`}
+          className={`flex items-center h-16 p-4 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"
+            }`}
+          style={{
+            transition: "all 0.3s ease",
+          }}
         >
-          {/* Main Logo */}
-          {!collapsed && (
+          {/* Full Logo */}
+          <div
+            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+              } overflow-hidden`}
+          >
             <img
               src={assets.TVSLOGO}
               alt="Full Logo"
-              className="h-full object-contain dark:invert"
+              className="h-10 object-contain dark:invert"
             />
-          )}
+          </div>
+
           {/* Collapsed Logo */}
-          {collapsed && (
+          <div
+            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"
+              }`}
+          >
             <img
               src={assets.TVS}
               alt="Small Logo"
-              className="h-14 w-14 object-contain dark:invert"
+              className="h-10 w-10 object-contain dark:invert"
             />
-          )}
-          {/* Collapse Button */}
-          <button
+          </div>
+
+          {/* <button
             onClick={() => dispatch(toggleSidebar())}
-            className={`text-xl text-primary ${
-              collapsed ? "absolute right-0" : "ml-auto"
-            }`}
+            className="text-xl text-primary transition-all duration-300 ease-in-out"
           >
             {collapsed ? (
               <GoSidebarExpand className="dark:text-white" />
             ) : (
               <GoSidebarCollapse className="dark:text-white" />
             )}
-          </button>
+          </button> */}
         </div>
 
         {/* Menu */}
-        <Menu
-          theme={isDark ? "dark" : "light"}
-          mode="inline"
-          onClick={handleClick}
-          items={menuItems} // Using the Ant Design 'items' prop now
-          className="flex-1 dark:bg-gray-900 dark:text-white overflow-y-auto custom-scrollbar"
-          style={menuStyle}
-        />
+        <div
+          className="flex-1 overflow-y-auto dark:bg-gray-900 dark:text-white custom-scrollbar"
+          style={{
+            transition: "all 0.3s ease-in-out",
+          }}
+        >
+          <Menu
+            theme={isDark ? "dark" : "light"}
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={filteredMenu}
+            onClick={handleClick}
+            inlineCollapsed={collapsed}
+          />
+        </div>
+
+        {/* Logout */}
+        <div
+          className={`text-center cursor-pointer mb-2 transition-all duration-300 ${collapsed ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            }`}
+          onClick={handleLogout}
+          style={{ color: isDark ? "#fff" : "#000" }}
+        >
+          <LogoutOutlined /> {!collapsed && "Logout"}
+        </div>
 
         {/* Theme Toggle */}
-        <div className={`p-2 mt-auto flex justify-center`}>
+        <div className="p-2 mt-auto flex justify-center">
           <ThemeSwitcher />
         </div>
       </Sider>
+
     </>
   );
 };
