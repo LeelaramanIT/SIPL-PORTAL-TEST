@@ -51,7 +51,7 @@ const ExportInvoicePrepare = () => {
     showSubmmit,
   } = useSelector((state) => state?.invoice?.exportInvoices || {});
   const formDAta = additionalForm;
-console.log("FinalInvoiceDetails",FinalInvoiceDetails);
+  console.log("FinalInvoiceDetails", FinalInvoiceDetails);
 
   // useEffect hook to initialize local state from Redux data on load
   useEffect(() => {
@@ -128,20 +128,20 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
 
   // useMemo for efficient total price calculation.
   const grandTotal = useMemo(() => {
-  const items = invoiceDetails?.items || [];
-  return items.reduce(
-    (sum, item) =>
-      sum + (parseFloat(item?.basicprice) || 0) * (parseFloat(item?.itemQty) || 0),
-    0
-  );
-}, [invoiceDetails]);
+    const items = invoiceDetails?.items || [];
+    return items.reduce(
+      (sum, item) =>
+        sum + (parseFloat(item?.basicprice) || 0) * (parseFloat(item?.itemQty) || 0),
+      0
+    );
+  }, [invoiceDetails]);
 
 
   // useMemo for efficient total quantity calculation.
   const totalQTY = useMemo(() => {
-  const items = invoiceDetails?.items || [];
-  return items.reduce((sum, item) => sum + (parseFloat(item?.itemQty) || 0), 0);
-}, [invoiceDetails?.item]);
+    const items = invoiceDetails?.items || [];
+    return items.reduce((sum, item) => sum + (parseFloat(item?.itemQty) || 0), 0);
+  }, [invoiceDetails?.item]);
 
 
   // useMemo for efficient total finished weight (FWT) calculation.
@@ -199,7 +199,7 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
   const handleSubmit = async () => {
     // If you want to send pdfBlob as FormData, you can re-enable later.
     // console.clear('submit',FinalInvoiceDetails)
-    dispatch(submitInvoice(FinalInvoiceDetails,navigate));
+    dispatch(submitInvoice(FinalInvoiceDetails, navigate));
   };
 
   // Function to handle changes in the global scheme selection.
@@ -264,7 +264,7 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
       ...originalItem,
       isSplit: true, // Mark it as split.
       itemQty: originalItem.itemQty - splitQty,
-      actualQty:originalItem.itemQty,
+      actualQty: originalItem.itemQty,
     };
     dispatch(setLocalItems(updatedLocalItems)); // Update local items in Redux.
 
@@ -281,7 +281,7 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
         ...newSplitItems[existingIndex],
         itemQty: newSplitItems[existingIndex].itemQty + splitQty,
         splitQty: (newSplitItems[existingIndex].splitQty || 0) + splitQty,
-        actualQty:originalItem.itemQty,
+        actualQty: originalItem.itemQty,
       };
     } else {
       // Otherwise, create a new split item.
@@ -377,17 +377,30 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
 
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
-      <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
-        {invoiceDetails?.type} Invoice Details
-      </h1>
-      {loading ? (<ClientDetailsSkeleton/>):(<ClientDetailsSection
+      <div className="flex flex-wrap items-center justify-between">
+        <div className="ml-1">
+          <h1 className="text-2xl font-bold  tracking-tight">
+            {invoiceDetails?.type} Invoice Details
+          </h1>
+          <p className="text-md text-slate-500 mt-1">
+            Fill in the details below to generate and finalize this invoice
+          </p>
+        </div>
+      </div>
+      {/*  */}
+      {loading ? (<ClientDetailsSkeleton />) : (<ClientDetailsSection
         invoiceDetails={{ ...invoiceDetails, ...additionalForm }}
       />)}
 
       <div className="flex justify-between items-start">
-        <h1 className="text-2xl font-bold text-[var(--primary)] dark:text-gray-200">
-          Item Details
-        </h1>
+        <div className="ml-1">
+          <h1 className="text-2xl font-bold  tracking-tight">
+            Item Details
+          </h1>
+          <p className="text-md text-slate-500 mt-1">
+            List of all billable items and their applicable rates.
+          </p>
+        </div>
 
         <div className="flex justify-center gap-4 mb-4">
           <div className="flex flex-col">
@@ -417,6 +430,7 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
                 <option value="Individual_Scheme">Individual scheme</option>
                 <option value="Advance">Advance</option>
                 <option value="Moowr">Moowr</option>
+                <option value="Import_Invoice">Import Invoice</option>
                 <option value="DDB">DDB</option>
               </select>
             </div>
@@ -527,16 +541,16 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
                           <option value="">Select Scheme</option>
                           <option value="Advance">Advance</option>
                           <option value="Moowr">Moowr</option>
+                          <option value="Import_Invoice">Import Invoice</option>
                           <option value="DDB">DDB</option>
                         </select>
                       </td>
                       <td>
                         <button
-                          className={`px-2 rounded ${
-                            splitInputs[idx]?.splitQty
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          }`}
+                          className={`px-2 rounded ${splitInputs[idx]?.splitQty
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
                           disabled={!splitInputs[idx]?.splitQty}
                           onClick={() => handleSplitItem(idx)}
                         >
@@ -673,11 +687,10 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
                   return (
                     <tr
                       key={plant}
-                      className={`text-[13px] text-center ${
-                        idx % 2 === 0
-                          ? "bg-[#F4F3FE] dark:bg-gray-700"
-                          : "bg-white dark:bg-gray-800"
-                      } text-gray-700 dark:text-gray-300`}
+                      className={`text-[13px] text-center ${idx % 2 === 0
+                        ? "bg-[#F4F3FE] dark:bg-gray-700"
+                        : "bg-white dark:bg-gray-800"
+                        } text-gray-700 dark:text-gray-300`}
                     >
                       <td>{plant}</td>
                       <td>{tyreQty}</td>
@@ -762,13 +775,13 @@ console.log("FinalInvoiceDetails",FinalInvoiceDetails);
     )
   );
 })()} */}
-<Button
-        onClick={() => {
-          navigate("/TTS/International/Invoice/Export/BillPDF");
-          dispatch(setShowSubmit(true));
-        }}
-        text="Preview PDF"
-      />
+        <Button
+          onClick={() => {
+            navigate("/TTS/International/Invoice/Export/BillPDF");
+            dispatch(setShowSubmit(true));
+          }}
+          text="Preview PDF"
+        />
 
 
         {!additionalForm ? (
@@ -917,6 +930,21 @@ export function ClientDetailsSection({ invoiceDetails }) {
       }
     };
   }, []); // The empty dependency array ensures this effect runs once on mount.
+  const getAvatarLabel = (name) => {
+  if (!name) return "";
+  
+  const parts = name.trim().split(" ");
+  const firstWord = parts[0];
+
+  // RULE: If the first word is short (3 letters or less), use it as is (e.g., "ATC", "IBM", "MRF")
+  if (firstWord.length <= 3) {
+    return firstWord.toUpperCase();
+  }
+
+  // OTHERWISE: Take the first letter of the first 2 words (e.g., "Moiddeen Kaja" -> "MK")
+  if (parts.length === 1) return firstWord.charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+};
 
   return (
     <div
@@ -928,7 +956,16 @@ export function ClientDetailsSection({ invoiceDetails }) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">MK</span>
+              <span className="text-white font-bold text-lg">
+                {invoiceDetails?.custfullname
+                  ? invoiceDetails.custfullname
+                    .split(" ")              // Split into words ["MOIDDEEN", "KAJA"]
+                    .map((word) => word[0])  // Get first letter ["M", "K"]
+                    .slice(0, 2)             // Take only first 2 initials (optional)
+                    .join("")                // Join them "MK"
+                    .toUpperCase()           // Ensure it's Uppercase
+                  : "?"}
+              </span>
             </div>
             <div>
               <h2 className="md:text-2xl font-bold text-gray-900 dark:text-white">
@@ -1045,31 +1082,31 @@ export function ClientDetailsSection({ invoiceDetails }) {
             {[
               invoiceDetails?.preCarriageBy === "AIR"
                 ? {
-                    label: "Delivery Method",
-                    value: "Air Freight",
-                    icon: "✈️",
-                    color: "blue",
-                  }
+                  label: "Delivery Method",
+                  value: "Air Freight",
+                  icon: "✈️",
+                  color: "blue",
+                }
                 : invoiceDetails?.preCarriageBy === "SEA"
-                ? {
+                  ? {
                     label: "Delivery Method",
                     value: "Sea Freight",
                     icon: "🚢",
                     color: "green",
                   }
-                : invoiceDetails?.preCarriageBy === "ROAD"
-                ? {
-                    label: "Delivery Method",
-                    value: "Road Freight",
-                    icon: "🚚",
-                    color: "orange",
-                  }
-                : {
-                    label: "Delivery Method",
-                    value: "Please Add Delivery Method",
-                    icon: "❗",
-                    color: "red",
-                  },
+                  : invoiceDetails?.preCarriageBy === "ROAD"
+                    ? {
+                      label: "Delivery Method",
+                      value: "Road Freight",
+                      icon: "🚚",
+                      color: "orange",
+                    }
+                    : {
+                      label: "Delivery Method",
+                      value: "Please Add Delivery Method",
+                      icon: "❗",
+                      color: "red",
+                    },
               {
                 label: "Packing Method",
                 value: "Wooden Crates",
@@ -1148,14 +1185,14 @@ export function ClientDetailsSection({ invoiceDetails }) {
 export function ClientDetailsSkeleton() {
   return (
     <div className="relative overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-md">
-      
+
       {/* Header Skeleton */}
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-600">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* Avatar Circle */}
             <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse flex-shrink-0"></div>
-            
+
             {/* Name and Title Lines */}
             <div className="space-y-2 w-full sm:w-48">
               <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
@@ -1171,12 +1208,12 @@ export function ClientDetailsSkeleton() {
       {/* Content Skeleton */}
       <div className="p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
+
           {/* Left Column Skeleton */}
           <div className="space-y-6">
             {/* Column Title */}
             <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
-            
+
             {/* Generate 4 skeleton cards to match the 4 items in your original list */}
             {[...Array(4)].map((_, i) => (
               <SkeletonCard key={`left-${i}`} />
@@ -1185,11 +1222,11 @@ export function ClientDetailsSkeleton() {
 
           {/* Right Column Skeleton */}
           <div className="space-y-6">
-             {/* Column Title */}
-             <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
+            {/* Column Title */}
+            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
 
-             {/* Generate 4 skeleton cards */}
-             {[...Array(4)].map((_, i) => (
+            {/* Generate 4 skeleton cards */}
+            {[...Array(4)].map((_, i) => (
               <SkeletonCard key={`right-${i}`} isAddress={i === 2} />
             ))}
           </div>
@@ -1207,15 +1244,15 @@ function SkeletonCard({ isAddress = false }) {
       <div className="flex items-start gap-3">
         {/* Icon Box */}
         <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0 animate-pulse"></div>
-        
+
         {/* Text Area */}
         <div className="flex-1 space-y-2 py-1">
           {/* Label */}
           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-          
+
           {/* Value */}
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse"></div>
-          
+
           {/* If it's the address card (index 2 usually), add extra lines */}
           {isAddress && (
             <>

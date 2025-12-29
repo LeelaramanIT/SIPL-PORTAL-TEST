@@ -1,5 +1,6 @@
+import React from "react";
 import { Modal } from "antd";
-import Button from "./InputFields/Button"; // Assuming you're using a custom button for Confirm
+import Button from "./InputFields/Button"; 
 
 const DialogBox = ({
   isOpen,
@@ -10,7 +11,7 @@ const DialogBox = ({
   onConfirm,
   onCancel,
   showCancel = true,
-  confirmText, // No default value anymore
+  confirmText,
 }) => {
   const hasConfirm = !!confirmText;
 
@@ -18,7 +19,7 @@ const DialogBox = ({
     if (!showCancel && !hasConfirm) return null;
 
     return (
-      <div key="footer-buttons" className="flex gap-4 justify-end">
+      <div key="footer-buttons" className="flex gap-4 justify-end mt-4">
         {showCancel && (
           <button
             key="cancel"
@@ -26,7 +27,9 @@ const DialogBox = ({
               onCancel?.();
               onClose();
             }}
-            className="px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white"
+            className="px-4 py-2 text-sm rounded-md transition-colors
+              bg-gray-100 text-gray-700 hover:bg-gray-200 
+              dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
           >
             {cancelText}
           </button>
@@ -39,7 +42,7 @@ const DialogBox = ({
               onClose();
             }}
             text={confirmText}
-            className="dark:bg-green-700 dark:hover:bg-green-600"
+            className="dark:bg-green-700 dark:hover:bg-green-600 dark:text-white"
           />
         )}
       </div>
@@ -55,8 +58,19 @@ const DialogBox = ({
         onClose();
       }}
       footer={renderFooter()}
+      // FIX: This class string overrides Ant Design's internal white styles
+      className="
+        [&_.ant-modal-content]:dark:bg-slate-900 
+        [&_.ant-modal-header]:dark:bg-slate-900 
+        [&_.ant-modal-header]:dark:border-slate-700
+        [&_.ant-modal-title]:dark:text-slate-100 
+        [&_.ant-modal-close]:dark:text-slate-400 
+        [&_.ant-modal-close:hover]:dark:text-slate-100
+      "
     >
-      <p className="text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-200">{message}</p>
+      <p className="text-sm text-gray-600 dark:text-slate-300">
+        {message}
+      </p>
     </Modal>
   );
 };

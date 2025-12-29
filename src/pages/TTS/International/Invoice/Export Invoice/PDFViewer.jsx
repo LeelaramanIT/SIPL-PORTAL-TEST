@@ -31,19 +31,18 @@ export const styles = StyleSheet.create({
     paddingVertical: "1px",
     fontWeight: "bold",
   },
-  row4_1heading: {
-  width: "35%",
-  borderRightWidth: 0.7,
-  borderRightColor: "#000",
-  paddingRight: 4,
-  justifyContent: "center",
-},
+//   row4_1heading: {
+//   width: "35%",
+//   borderRightWidth: 0.7,
+//   borderRightColor: "#000",
+//   paddingRight: 4,
+//   justifyContent: "center",
+// },
 
-row4_1value: {
-  width: "65%",
-  paddingLeft: 6,
-},
-
+// row4_1value: {
+//   width: "65%",
+//   paddingLeft: 6,
+// },
   // pdf
   pdf: {
     width: "100%",

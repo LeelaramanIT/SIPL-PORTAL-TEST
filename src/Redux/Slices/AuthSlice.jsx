@@ -51,7 +51,6 @@ const authSlice = createSlice({
       // Clear session storage and localStorage on logout
       window.localStorage.clear();
       window.sessionStorage.clear();
-     
       console.log('logout');
     },
 
@@ -95,7 +94,7 @@ export const userLogin = (credentials) => async (dispatch) => {
     console.log(error);
     dispatch(loginStart(false));
     const errorMessage =
-      error.response.message || 'Login Filed';
+      error?.response?.message || 'Login Filed';
     dispatch(loginFailure(errorMessage));
   }
 };
@@ -113,7 +112,7 @@ export const userLogout = (navigate) => async (dispatch) => {
     console.log(error);
 
     const errorMessage =
-      error.response?.data || error.message || "Logout faild";
+      error?.response?.data || error?.message || "Logout faild";
     dispatch(loginFailure(errorMessage));
   }
 };

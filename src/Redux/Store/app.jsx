@@ -3,6 +3,7 @@ import globalReducer from "../Slices/GlobalSlice";
 import invoiceSlice from "../Slices/InvoiceSlice";
 import authReducer from "../Slices/AuthSlice";
 import rimApplication from '../Slices/RimApplicationSlice'
+import priceMasterSliceReducer from "../Slices/PriceMasterSlice";
 import storage from "redux-persist/lib/storage";
 import { encryptTransform } from "redux-persist-transform-encrypt";
 import { persistReducer, persistStore } from "redux-persist";
@@ -36,10 +37,17 @@ const globalPersistConfig = {
   transforms: [encryptor],
 }
 
+const priceMasterPersistConfig = {
+  key: "priceMaster",
+  version: 1,
+  storage:storageSession,
+  transforms: [encryptor],
+}
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedGlobalReducer = persistReducer(globalPersistConfig, globalReducer);
+const persistedPriceMasterReducer = persistReducer(priceMasterPersistConfig, priceMasterSliceReducer);
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -47,6 +55,7 @@ const rootReducer = combineReducers({
   invoice: persistedInvoiceReducer,
   auth: persistedAuthReducer,
   rimApplication: rimApplication,
+  priceMaster: persistedPriceMasterReducer,
 });
 
 // Store setup

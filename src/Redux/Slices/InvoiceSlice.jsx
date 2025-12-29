@@ -87,6 +87,8 @@ const invoiceSlice = createSlice({
     // ...inside the invoiceSlice reducers
 
     setFinalInvoiceData: (state, action) => {
+
+
       // 1️⃣ Split invoices by scheme
       const groupedInvoices = splitInvoiceByScheme(action.payload);
       const totalInvoices = groupedInvoices.length;
@@ -104,7 +106,7 @@ const invoiceSlice = createSlice({
           0
         );
 
-        const formattedGrandTotal = grandTotal.toFixed(5);
+
         const unitPrice = totalwt > 0 ? (grandTotal / totalwt).toFixed(5) : "0";
         const userCurrency = invoice?.usercurrency;
 
@@ -119,10 +121,6 @@ const invoiceSlice = createSlice({
         let woodenBoxCount = 0;
         let woodenBoxTyres = 0;
         let woodenBoxWeight = 0;
-
-        const sharedCharge1 = (Number(invoice.otherChargesValue1) || 0) / totalInvoices;
-        const sharedCharge2 = (Number(invoice.otherChargesValue2) || 0) / totalInvoices;
-        const sharedCharge3 = (Number(invoice.otherChargesValue3) || 0) / totalInvoices;
 
         // Note: Use 'schemeDetails' if you used the updated code from the previous step, 
         // otherwise use 'schemeLicences'
@@ -156,42 +154,81 @@ const invoiceSlice = createSlice({
           (isPallat ? (Number(pallatWeight) || 0) : 0) +
           (isWoodenBox ? (Number(woodenBoxWeight) || 0) : 0);
 
+        // 🔥 READ ADDITIONAL CHARGES (same as submit)
+        const addCharges = invoice.additionalCharges?.find(
+          (x) => x.invoiceIndex === index + 1
+        );
+
+        const rows = addCharges?.rows || [];
+
+        const row1 = rows[0] || { desc: "", value: 0 };
+        const row2 = rows[1] || { desc: "", value: 0 };
+        const row3 = rows[2] || { desc: "", value: 0 };
+
+        const otherCharges1 = row1.desc || "";
+        const otherCharges2 = row2.desc || "";
+        const otherCharges3 = row3.desc || "";
+
+        const otherChargesValue1 = Number(row1.value) || 0;
+        const otherChargesValue2 = Number(row2.value) || 0;
+        const otherChargesValue3 = Number(row3.value) || 0;
+
+        const finalGrandTotal =
+          grandTotal +
+          otherChargesValue1 +
+          otherChargesValue2 +
+          otherChargesValue3;
+
+        const formattedGrandTotal = finalGrandTotal.toFixed(5);
+
+
+
         // 4️⃣ Return final invoice with single schemeLicence value
         return {
           ...invoice,
+
           invoiceNumber: Number(invoice.invoiceNumber) + index,
           totalqty,
           totalwt: `${totalwt.toFixed(3)}`,
           grossWeight: `${totalGrossWeight.toFixed(3)}`,
+
+          // ✅ UPDATED GRAND TOTAL
           grandTotal: formattedGrandTotal,
-          amountInWords: `${userCurrency}${numberToWords(grandTotal, userCurrency)}`,
+          totalPrices: grandTotal.toFixed(5),
+
+          // ✅ STORE OTHER CHARGES (EXACT FIELDS YOU WANT)
+          otherCharges1,
+          otherCharges2,
+          otherCharges3,
+          otherChargesValue1,
+          otherChargesValue2,
+          otherChargesValue3,
+
+          amountInWords: `${userCurrency}${numberToWords(
+            finalGrandTotal,
+            userCurrency
+          )}`,
+
           unitPrice,
-          // ✅ Store only the matched scheme value instead of array
           schemeLicences: schemeLicenceValue,
           schemeDate,
+
           isPallat,
           pallatCount: isPallat ? pallatCount : 0,
           pallatWeight: isPallat ? pallatWeight : 0,
           pallatTyres: isPallat ? pallatTyres : 0,
+
           isWoodenBox,
           woodenBoxCount: isWoodenBox ? woodenBoxCount : 0,
           woodenBoxTyres: isWoodenBox ? woodenBoxTyres : 0,
           woodenBoxWeight: isWoodenBox ? woodenBoxWeight : 0,
-          // 🟢 Store Divided Other Charges
-          sharedOtherCharge1: sharedCharge1,
-          sharedOtherCharge2: sharedCharge2,
-          sharedOtherCharge3: sharedCharge3
         };
+
       });
-
-
       // 5️⃣ Save result in Redux state
       state.exportInvoices.FinalInvoiceDetails = processedInvoices;
     },
 
-
-
-    // You can now remove the SetupdatedInvoiceDetails reducer, as its logic is
     // now part of setFinalInvoiceData.
     SetupdatedInvoiceDetails: (state, action) => {
       state.exportInvoices.updatedInvoiceDetails = action.payload;
@@ -205,7 +242,7 @@ const invoiceSlice = createSlice({
 
         invoice.items?.forEach(item => {
           if (!item.scheme) return;
-          const scheme = item.scheme.toUpperCase(); // Convert to UPPER
+          const scheme = item?.scheme.toUpperCase(); // Convert to UPPER
           if (!grouped[scheme]) grouped[scheme] = new Set();
           if (item.hsnCode) grouped[scheme].add(item.hsnCode);
         });
@@ -217,8 +254,6 @@ const invoiceSlice = createSlice({
       }).flat();
 
       const totalInvoices = invoices.length
-
-
 
       const data = invoices.map((invoice, index) => {
         // 1. Safe Math Calculations
@@ -241,7 +276,6 @@ const invoiceSlice = createSlice({
         const unitPrice = goodsWeight > 0 ? (grandTotal / goodsWeight).toFixed(5) : "0.00000";
 
         const userCurrency = invoice?.usercurrency || ""; // Default to USD if missing
-        console.log(userCurrency);
 
         // 2. Scheme & Pallet Logic
         let schemeLicenceValue = "";
@@ -282,11 +316,19 @@ const invoiceSlice = createSlice({
         }
 
         // Calculate Total Gross Weight
+      // console.log(invoice.scheme);
         const totalInvoiceQty = totalqty; // (calculated from invoice.items previously)
-        const palletizedQty = Number(pallatTyres) || 0; // The entered 'numberOfTyres'
-        const woodenBoxQty = Number(woodenBoxTyres) || 0;
-        const totalPacked = palletizedQty + woodenBoxQty;
-        const looseQty = totalInvoiceQty - totalPacked;
+        const palletizedQty = Number(pallatCount) || 0; // The entered 'numberOfTyres'
+        // console.log("pallet QTY",palletizedQty);
+        // console.log("pallet Tyres",pallatTyres);
+        const woodenBoxQty = Number(woodenBoxCount) || 0;
+        // console.log("woodenBox Qty",woodenBoxQty);
+        // console.log("woodenBox Tyres",woodenBoxTyres);
+        const totalPacked = Number(palletizedQty) + Number(woodenBoxQty);
+        // console.log("Total Packed:", totalPacked);
+        const looseQty = Number(totalInvoiceQty) - Number(woodenBoxTyres) - Number(pallatTyres);
+        // console.log("Loose Qty:", looseQty);
+        const totalCount = looseQty + totalPacked;
 
         const totalGrossWeight =
           (Number(goodsWeight) || 0) +
@@ -300,11 +342,12 @@ const invoiceSlice = createSlice({
             looseTyre: `${looseQty} LOOSE TYRES`
           }),
           ...(palletizedQty > 0 && {
-            palletizedTyres: `${palletizedQty} PALLETIZED TYRES`
+            palletizedTyres: `${palletizedQty} PALLET`
           }),
           ...(woodenBoxQty > 0 && {
-            woodenBoxTyres: `${woodenBoxQty} WOODEN BOX TYRES`
-          })
+            woodenBoxTyres: `${woodenBoxQty} WOODEN BOX `
+          }),
+          totalTyres: `TOTAL: ${totalCount}`
         };
         // 🔥 NEW — Read dynamic additional charges from user form
         // ⭐ 1. Get additional charges for this invoice
@@ -319,13 +362,13 @@ const invoiceSlice = createSlice({
 
         // ⭐ 3. Create your old fields (legacy support)
         const otherCharges1 = row1.desc || "";
-        const otherChargesValue1 = Number(row1.value) || 0;
+        const otherChargesValue1 = Number(row1.value).toFixed(2) || 0;
 
         const otherCharges2 = row2.desc || "";
-        const otherChargesValue2 = Number(row2.value) || 0;
+        const otherChargesValue2 = Number(row2.value).toFixed(2) || 0;
 
         const otherCharges3 = row3.desc || "";
-        const otherChargesValue3 = Number(row3.value) || 0;
+        const otherChargesValue3 = Number(row3.value).toFixed(2) || 0;
 
         // ⭐ 4. Build modern array (PDF table)
         const otherCharges = [
@@ -394,8 +437,9 @@ const invoiceSlice = createSlice({
           },
           countryOfOrigin: invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
           countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
+          containerLoadFrom: invoice?.containerLoadFrom?.toUpperCase() || "",
           incoterm: invoice?.incoterm || "",
-          placeOfIncoterm:(invoice?.placeOfIncoterm).toUpperCase()||"",
+          placeOfIncoterm: (invoice?.placeOfIncoterm)?.toUpperCase() || "",
           paymentTerms: invoice?.paymentTerms || "",
           bankDetails: {
             accountHolder: "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
@@ -447,9 +491,17 @@ const invoiceSlice = createSlice({
           woodenBoxTyres,
           declaration: "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
           licenceDetails: {
-            description: `This Shipment is Under ${invoice?.scheme || ""} Scheme. ${invoice?.scheme === "Direct" ? "" : `Licence No. ${schemeLicenceValue} dt. ${schemeDate}`}`,
+            description: invoice?.scheme === "Import_Invoice"
+              ? invoice?.SchemeDetailsImportMoowr
+              : `This Shipment is Under ${invoice?.scheme || ""} Scheme.${invoice?.scheme === "Direct"
+                ? ""
+                : ` Licence No. ${schemeLicenceValue} dt. ${schemeDate}`
+              }`,
             igstLUT: "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
+            scheme: invoice?.scheme || "",
           },
+
+          SchemeDetailsImportMoowr: invoice?.SchemeDetailsImportMoowr || "",
           authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
           footer: {
             line1: "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
@@ -530,19 +582,54 @@ const parseDMY = (dateStr) => {
 };
 
 export const submitInvoice = (payload, navigate) => async (dispatch) => {
-  const safeISODate = (value) => {
-    if (!value || typeof value !== "string") return null;
+  const safeDateDMY = (value) => {
+    if (!value) return "";
 
-    const cleaned = value.trim();
-    if (!cleaned) return null;
+    let d;
 
-    const separator = cleaned.includes("/") ? "/" : "-";
-    const [day, month, year] = cleaned.split(separator);
-    if (!day || !month || !year) return null;
+    // Date object
+    if (value instanceof Date) {
+      d = value;
+    }
+    // String
+    else if (typeof value === "string") {
+      const cleaned = value.trim();
+      if (!cleaned) return "";
 
-    const d = new Date(`${year}-${month}-${day}`);
-    return isNaN(d.getTime()) ? null : d.toISOString();
+      const dateOnly = cleaned.split("T")[0];
+
+      let day, month, year;
+
+      // DD-MM-YYYY or DD/MM/YYYY
+      if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dateOnly)) {
+        const sep = dateOnly.includes("/") ? "/" : "-";
+        [day, month, year] = dateOnly.split(sep);
+        d = new Date(Number(year), Number(month) - 1, Number(day));
+      }
+      // YYYY-MM-DD
+      else if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+        [year, month, day] = dateOnly.split("-");
+        d = new Date(Number(year), Number(month) - 1, Number(day));
+      }
+      // Fallback (browser parse)
+      else {
+        d = new Date(cleaned);
+      }
+    } else {
+      return "";
+    }
+
+    if (!d || isNaN(d.getTime())) return "";
+
+    // ✅ FORMAT OUTPUT AS DD-MM-YYYY
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+
+    return `${dd}-${mm}-${yyyy}`;
   };
+
+
 
   try {
     dispatch(setExportInvoiceLoading(true));
@@ -584,6 +671,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           o_ID: Number(data.o_id) || 0,
           exchangeRate: data.ExchangeCurrency || 0,
           type: (data.type)?.toUpperCase() || "",
+          SpecialRequest: data.specialRequest || "",
           billID: Number(data.billid) || 0,
           shipID: Number(data.shipid) || 0,
           custCode: Number(data.custCode) || 0,
@@ -592,7 +680,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           buyersOrderRefNo: data.BuyersOrderNumber || "",
           exportAuthorisedAddress: data.exporterAuthorizedAddress || "",
           isSchemeSplit: Boolean(data.items.some((i) => i.isSplit)),
-          dispatchedDate: safeISODate(data.dispatchedDate),
+          dispatchedDate: safeDateDMY(data.dispatchedDate),
           shipmentType: data.shipmentType || "",
           userCurrency: data.usercurrency || "",
           billingCompanyName: data.billingCompanyName || "",
@@ -604,17 +692,17 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           billingContactName: data.billingContactName || "",
           billingEmailId: data.billingEmailId || "",
           billingMobile: data.billingMobile || "",
-          completedDate: safeISODate(data.completedDate),
-          rfD_Date: safeISODate(data.rfD_Date),
+          completedDate: safeDateDMY(data.completedDate),
+          rfD_Date: safeDateDMY(data.rfD_Date),
           totalQty: data.totalqty || "",
           plant: data.containerLoadFrom || "",
           isScheme: Boolean(data.items.some((i) => i.isScheme)),
           itcHsNo: data.itcHsNo || "",
-          licenceDate: safeISODate(data.licenceDate ?? data.schemeDate),
+          licenceDate: safeDateDMY(data.licenceDate ?? data.schemeDate),
           paymentTerms: data.paymentTerms || "",
           schemeId: 0,
           schemeLicences: data.schemeLicences || "",
-          schemeDate: safeISODate(data.schemeDate),
+          schemeDate: safeDateDMY(data.schemeDate),
 
           shippingCompanyName: data.shippingCompanyName || "",
           shippingAddress: data.shippingAddress || "",
@@ -628,7 +716,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
 
           preCarriageBy: data.preCarriageBy || "",
           invoiceNumber: String(data.invoiceNumber || ""),
-          invoiceDate: safeISODate(data.invoiceDate) || new Date().toISOString(),
+          invoiceDate: safeDateDMY(data.invoiceDate) || new Date().toISOString(),
           containerLoadFrom: data.containerLoadFrom || "",
           containerNo: data.containerNo || "",
           countryOfOriginOfGoods: data.countryOfOriginOfGoods || "",
@@ -640,7 +728,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           finalDestination: data.finalDestination || "",
           countryoffinaldestination: data.shippingCountry || "",
           inCoterm: (data.incoterm)?.toUpperCase() || "",
-          placeOfIncoterm:data.placeOfIncoterm||"",
+          placeOfIncoterm: data.placeOfIncoterm || "",
           scheme: data.scheme || "",
 
           // ---------------------------------------------------
@@ -662,7 +750,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           // GRAND TOTAL WITH NEW VALUES
           grandTotal: finalGrandTotal,
 
-          totalPrice: data.totalPrice || 0,
+          totalPrice: data.totalPrices || 0,
           totalWeight: parseFloat(data.grossWeight) || 0,
           netweight: parseFloat(data.totalwt) || 0,
 
@@ -724,7 +812,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
     };
 
     console.log("✅ FINAL PAYLOAD:", formattedPayload);
-
+    dispatch(setExportInvoiceLoading(false));
     const res = await api.post("/Invoice/CreatingInvoices", formattedPayload, {
       withCredentials: true,
     });

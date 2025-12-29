@@ -29,6 +29,7 @@ import TaskLayout from "../layout/TaskLayout";
 import TaskHomePage from "../pages/Task Managment/Home/TaskHomePage";
 import MenuAccessManager from "../pages/MenuAccess/MenuAccessManager";
 import SettingsLayout from "../layout/SettingsLayout";
+import PriceMaster from "../pages/Masters/PriceMaster/PriceMaster";
 
 
 
@@ -50,7 +51,8 @@ export const router = createBrowserRouter([
           element: <MasterLayout />,
           children: [
             { path: "UserMaster/UserCreate", element: <UserCreate /> },
-            { path: "/Masters/UserMaster/AllUsers", element: <AllUSers /> }
+            { path: "/Masters/UserMaster/AllUsers", element: <AllUSers /> },
+            { path: "/Masters/PriceMaster", element: <PriceMaster /> }
           ]
         },
         {

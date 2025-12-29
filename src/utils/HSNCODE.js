@@ -12,7 +12,7 @@ export const HSN_CODE = [
   {
     name: "POB (Press-On Band Tyres)",
     hsn: "40129020",
-    description: "Solid or cushion tyres, interchangeable tyre treads"
+    description: "SOLID INDUSTRIAL TYRES"
   },
   {
     name: "POB Wheel Assemblies",
@@ -23,7 +23,7 @@ export const HSN_CODE = [
     name: "Tyre Moulds",
     hsn: "84807900",
     description: "Moulds for rubber or plastics – tyre moulds"
-  },
+  },  
   {
     name: "Fitment Tools / Gauges",
     hsn: "82055990",

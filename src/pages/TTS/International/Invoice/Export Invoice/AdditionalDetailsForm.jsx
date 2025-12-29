@@ -120,7 +120,7 @@ const AdditionalDetailsForm = ({
       containerType: invoiceData?.containerType || "",
       preCarriageBy: invoiceData?.preCarriageBy || "",
       incoterm: invoiceData?.incoterm || invoiceDetails?.incoterm || "",
-      placeOfIncoterm:invoiceData?.placeOfIncoterm || invoiceDetails?.placeOfIncoterm||"",
+      placeOfIncoterm: invoiceData?.placeOfIncoterm || invoiceDetails?.placeOfIncoterm || "",
       containerSEALNO: invoiceData?.containerSEALNO || "",
       placeOfReceiptByPreCarrier: invoiceData?.placeOfReceiptByPreCarrier || "",
       finalDestination: invoiceData?.shippingCity || invoiceDetails?.shippingCity || "",
@@ -131,6 +131,7 @@ const AdditionalDetailsForm = ({
       otherChargesValue2: invoiceData?.otherChargesValue2 || "",
       otherChargesValue3: invoiceData?.otherChargesValue3 || "",
       paymentTerms: formattedDescription || "",
+      SchemeDetailsImportMoowr: invoiceData?.SchemeDetailsImportMoowr || "",
       // --- ADD THIS BLOCK HERE 🔥 ---
       // inside your defaultValues useMemo -> return { ... }
       additionalCharges: (() => {
@@ -292,7 +293,7 @@ const AdditionalDetailsForm = ({
     onClose();
   };
 
-  const ChargesRow = ({ invoiceIndex, register, errors, control, setValue }) => {
+  const ChargesRow = ({ invoiceIndex, register, errors, control, setValue, maxRows }) => {
 
     const rows = useWatch({
       control,
@@ -321,6 +322,7 @@ const AdditionalDetailsForm = ({
 
     // Add row
     const addRow = () => {
+      if (rows.length >= maxRows) return; // 🚫 stop adding
       const updated = [...rows, { desc: "", value: "" }];
       setValue(`additionalCharges.${invoiceIndex}.rows`, updated);
     };
@@ -386,7 +388,11 @@ const AdditionalDetailsForm = ({
         <button
           type="button"
           onClick={addRow}
-          className="mt-3 text-blue-600 text-sm"
+          disabled={rows.length >= maxRows}
+          className={`mt-3 text-sm ${rows.length >= maxRows
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-blue-600"
+            }`}
         >
           + Add More Charge
         </button>
@@ -457,7 +463,7 @@ const AdditionalDetailsForm = ({
                   errors={errors}
                   required
                   options={[
-                    `SUNDARAM INDUSTRIES PRIVATE LIMITED~(Formerly Known as T.S.RAJAM TYRES PRIVATE LIMITED)~SOLID TYRE DIVISION (SUN-TWS, SUN TYRE AND WHEEL SYSTEMS)~7B/1, SIPCOT INDUSTRIAL COMPLEX, VELLANUR, PUDUKKOTTAI,~TAMIL NADU, 622002, INDIA.~I.E.CODE: AAGCT6465R~PAN: AAGCT6465R~GSTIN: 33AAGCT6465R2ZJ~AD CODE: 0009999~WAREHOUSE CODE: TRZ4R001`,
+                    `SUNDARAM INDUSTRIES PRIVATE LIMITED~(Formerly Known as T.S.RAJAM TYRES PRIVATE LIMITED)~SOLID TYRE DIVISION (SUN-TWS, SUN TYRE AND WHEEL SYSTEMS)~7B/1, SIPCOT INDUSTRIAL COMPLEX, VELLANUR, PUDUKKOTTAI, TAMIL NADU, 622002, INDIA.~I.E.CODE: AAGCT6465R, PAN: AAGCT6465R, GSTIN: 33AAGCT6465R2ZJ,`,
                     `SUN TYRE & WHEEL SYSTEMS~(A DIVISION OF SUNDARAM LANKA TYRES LIMITED)~LOT 02, BLOCK B, BIYAGAMA EXPORT PROCESSING ZONE,~BIYAGAMA, SRI LANKA.~VAT Registration No.114628417-7000`,
                     `SUN TYRE & WHEEL SYSTEMS~(A DIVISION OF SUNDARAM INDUSTRIES PRIVATE LIMITED)~A1-F3/A, SIDCO Industrial Estate~Maraimalai Nagar - 603 209~TAMIL NADU, INDIA`,
                     `SUNDARAM INDUSTRIES PRIVATE LIMITED~(Formerly Known as T.S. Rajam Tyres Pvt Limited)~KRISHNA TOWERS - 3RD FLOOR, NP-31B/4,~THIRU VI KA INDUSTRIAL ESTATE, EKKATTUTHANGAL,~CHENNAI – 600 032, INDIA`,
@@ -507,10 +513,6 @@ const AdditionalDetailsForm = ({
                 </div>
               </section>
 
-
-
-
-
             </div>
             {/* --- Notify Party Details (Optional) --- */}
             <div className="col-span-4 mt-6 p-5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
@@ -528,7 +530,6 @@ const AdditionalDetailsForm = ({
                   errors={errors}
 
                 />
-
                 <InputField
                   label="Email"
                   name="notifyPartyEmail"
@@ -650,7 +651,8 @@ const AdditionalDetailsForm = ({
                   errors={errors}
                   control={control}
                   setValue={setValue}
-                />
+                  maxRows={3} // 👈 LIMIT HERE
+                  />
               ))}
             </div>
           </section>
@@ -811,10 +813,22 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
               </span>
             </div>
           </div>
-          {schemeName !== "Direct" && (
+          {schemeName !== "Direct" && schemeName !== "Import_Invoice" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
               <InputField label="License Number" name={`${schemeName}_number`} register={register} errors={errors} placeholder="Enter License No" />
               <InputField label="License Date" type="date" name={`${schemeName}_date`} register={register} errors={errors} />
+            </div>
+          )}
+          {schemeName === "Import_Invoice" && (
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-3 mt-4">
+              <TextArea
+                  required
+                  label="Scheme Details"
+                  rows={3}
+                  placeholder="Enter Scheme Details..."
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-2"
+                  {...register("SchemeDetailsImportMoowr")}
+                />
             </div>
           )}
         </div>

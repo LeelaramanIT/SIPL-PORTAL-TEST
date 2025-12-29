@@ -35,6 +35,7 @@ import assets from "../../assets/assets";
 import "./SideBar.css";
 import { logout, userLogout } from "../../Redux/Slices/AuthSlice";
 import { MdOutlineContactEmergency } from "react-icons/md";
+import { MdOutlinePriceChange } from "react-icons/md";
 
 const { Sider } = Layout;
 
@@ -139,6 +140,11 @@ const SideBar = () => {
             { key: "/Masters/UserMaster/CreateUser", label: "Create User" },
           ],
         },
+        {
+          key: "/Masters/PriceMaster",
+          label: "Price Master",
+          icon: <MdOutlinePriceChange />,
+        }
       ],
     },
     {

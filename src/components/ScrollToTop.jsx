@@ -33,11 +33,11 @@ function ScrollToTop({ scrollContainerRef }) {
     visible && (
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-6 right-6 z-50 bg-gray-100 hover:bg-gray-300 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-500 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+        className={`fixed bottom-6 right-6 z-50 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-500 ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
           }`}
         title="Scroll to top"
       >
-        <IoIosArrowUp className="text-black" />
+        <IoIosArrowUp className="text-[var(--text)]" />
       </button>
     )
   );

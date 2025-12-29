@@ -172,12 +172,13 @@ const handleToggle = (value) => {
               />
               {!["completedDate", "dispatchedDate", "rfD_Date"].includes(
                 selectedColumn
-              ) ? (
+              ) ? (<div className="">
                 <SearchBar
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onSearch={() => { }}
                 />
+                </div>
               ) : (
                 <DatePickerComponent
                   startDate={startDate}

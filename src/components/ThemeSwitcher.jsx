@@ -100,10 +100,10 @@ export default function ThemeSwitcher({ variant = "floating" }) {
         {isOpen && (
           <div
             ref={containerRef}
-            className="absolute top-full right-0 mt-2 p-4 rounded-xl shadow-2xl glass border border-[var(--color-border)] min-w-[320px] animate-fade-in"
+            className="absolute top-full right-0 mt-2 p-4 rounded-xl shadow-2xl glass border border-[var(--border)] min-w-[320px] animate-fade-in"
           >
             <div className="mb-3">
-              <h3 className="text-sm font-semibold dark:text-white text-[var(--color-text)] mb-2">
+              <h3 className="text-sm font-semibold dark:text-white text-[var(--text)] mb-2">
                 Choose Theme
               </h3>
             </div>
@@ -120,8 +120,8 @@ export default function ThemeSwitcher({ variant = "floating" }) {
                   title={`Switch to ${theme.label} theme`}
                   className={`w-[45px] h-[45px] rounded-xl transition-all duration-300 border-2 flex flex-col items-center justify-center gap-1 hover:scale-110 hover:shadow-lg ${
                     currentTheme === theme.name
-                      ? "border-[var(--color-accent)] shadow-lg scale-105"
-                      : "border-transparent hover:border-[var(--color-secondary)]"
+                      ? "border-[var(--accent)] shadow-lg scale-105"
+                      : "border-transparent hover:border-[var(--secondary)]"
                   }`}
                   style={{ backgroundColor: theme.color }}
                 >
@@ -136,7 +136,7 @@ export default function ThemeSwitcher({ variant = "floating" }) {
         )}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-sm font-bold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
+          className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-sm font-bold cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
           aria-label="Toggle Theme Picker"
         >
           🎨
@@ -150,10 +150,10 @@ export default function ThemeSwitcher({ variant = "floating" }) {
       {isOpen && (
         <div
           ref={containerRef}
-          className="mb-3 p-4 rounded-2xl shadow-2xl glass border border-[var(--color-border)] animate-fade-in-up"
+          className="mb-3 p-4 rounded-2xl shadow-2xl glass border border-[var(--border)] animate-fade-in-up"
         >
           <div className="mb-3">
-            <h3 className="text-sm font-semibold dark:text-white text-[var(--color-text)] mb-2">
+            <h3 className="text-sm font-semibold dark:text-white text-[var(--text)] mb-2">
               Themes
             </h3>
           </div>
@@ -169,8 +169,8 @@ export default function ThemeSwitcher({ variant = "floating" }) {
                 title={`Switch to ${theme.label} theme`}
                 className={`w-[35px] h-[35px] rounded-lg transition-all duration-300 border-2 flex items-center justify-center hover:scale-110 hover:shadow-md ${
                   currentTheme === theme.name
-                    ? "border-[var(--color-accent)] shadow-lg scale-105"
-                    : "border-transparent hover:border-[var(--color-secondary)]"
+                    ? "border-[var(--accent)] shadow-lg scale-105"
+                    : "border-transparent hover:border-[var(--secondary)]"
                 }`}
                 style={{ backgroundColor: theme.color }}
               >
@@ -185,7 +185,7 @@ export default function ThemeSwitcher({ variant = "floating" }) {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-[var(--color-primary)] dark:text-white hover:bg-[var(--color-primary-hover)] text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-lg font-bold cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-xl animate-bounce-in"
+        className="bg-[var(--primary)] dark:text-white hover:bg-[var(--primary-hover)] text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-lg font-bold cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-xl animate-bounce-in"
         aria-label="Toggle Theme Picker"
       >
         🎨
