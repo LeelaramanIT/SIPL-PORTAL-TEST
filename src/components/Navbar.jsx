@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { persistor } from "../Redux/Store/app.jsx";
 import CustomBreadcrumbs from "./StyledBreadcrumb.jsx";
 import { toggleSidebar } from "../Redux/Slices/GlobalSlice";
+import { resetUploadState } from "../Redux/Slices/PriceMasterSlice.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate([]);
@@ -17,6 +18,7 @@ const Navbar = () => {
   const username = useSelector((state) => state.auth.username);
   const handleLogout = async ()=>{
     dispatch(logout())
+    dispatch(resetUploadState())
     dispatch(userLogout(navigate));
     await persistor.purge();
   }

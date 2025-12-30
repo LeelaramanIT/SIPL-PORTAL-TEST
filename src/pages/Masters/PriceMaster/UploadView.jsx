@@ -207,6 +207,9 @@ export default function UploadView() {
         });
 
         await dispatch(setExcelData(formattedJson));
+        dispatch(setErrorFilter("All"));
+        dispatch(setSelectedUpdateCustomer("All Customers"));
+        dispatch(setSearch(""));
         setIsProcessing(false);
         setVisibleRows(50);
       } catch (error) {
@@ -306,6 +309,8 @@ export default function UploadView() {
         dispatch(setExcelData([]))
         dispatch(setExcelFileName(""));
         dispatch(setSearch(""));
+        dispatch(setErrorFilter("All"));
+        dispatch(setSelectedUpdateCustomer("All Customers"));
         // setPriceSheetRef("PS-" + Math.floor(100000 + Math.random() * 900000));
       }
     } catch (error) {
@@ -321,6 +326,8 @@ export default function UploadView() {
     dispatch(setExcelData([]));
     dispatch(setExcelFileName(""));
     dispatch(setSearch(""));
+    dispatch(setErrorFilter("All"));
+    dispatch(setSelectedUpdateCustomer("All Customers"));
   };
   const filtered = useMemo(() => {
     let data = excelJson;
