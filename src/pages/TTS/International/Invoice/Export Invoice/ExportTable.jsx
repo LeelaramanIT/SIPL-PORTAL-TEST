@@ -74,7 +74,7 @@ const ExportTable = ({
               {headers.map((heading, index) => (
                 <th
                   key={index}
-                  className="py-4 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 "
+                  className="py-3 px-3 text-center text-[13px] sticky top-0 bg-[#eaeaef] z-10 text-black hover:text-[var(--primary)] dark:bg-gray-500 "
                 >
                   {heading.label}
                 </th>

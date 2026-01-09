@@ -10,7 +10,7 @@ export const highlightMatch = (text, query) => {
 
   return parts.map((part, i) =>
     part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
-      <span key={i} className="bg-[var(--color-primary-hover)]/30 text-[var(--color-text-hover)] font-semibold rounded px-1">
+      <span key={i} className="bg-[var(--primary-hover)]/70 text-[var(--text)] font-semibold rounded px-1">
         {part}
       </span>
     ) : (

@@ -242,7 +242,7 @@ const SampleSplit = () => {
         </div>
       </div>
 
-      <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
+      <div className="max-h-[calc(100vh-62px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
         <table className="w-full text-sm text-left table-fixed shadow-lg">
           <thead className="bg-[#ECECEC] dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold sticky top-0 z-10">
             <tr>

@@ -21,11 +21,15 @@ Font.register({
   family: "Roboto",
   src: "/fonts/Roboto-Regular.ttf"
 });
+Font.register({
+  family: "Noto Sans",
+  src: "/fonts/Roboto-Regular.ttf"
+});
 
 // Styles
 export const styles = StyleSheet.create({
   textValue: {
-    fontFamily: "Arial", // force Arial instead of default
+    fontFamily: "Noto Sans", // force Arial instead of default
     fontSize: 6,
     paddingHorizontal: "3px",
     paddingVertical: "1px",

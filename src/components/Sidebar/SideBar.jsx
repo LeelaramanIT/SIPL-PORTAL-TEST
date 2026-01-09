@@ -195,30 +195,30 @@ const SideBar = () => {
   ];
 
   function extractMenuData(items) {
-  const result = [];
+    const result = [];
 
-  const traverse = (menuList) => {
-    menuList.forEach((item) => {
-      // Only push if key starts with "/" (means it's a real route)
-      if (typeof item.key === "string" && item.key.startsWith("/")) {
-        result.push({
-          menuName: item.label,
-          menuUrl: item.key,
-        });
-      }
+    const traverse = (menuList) => {
+      menuList.forEach((item) => {
+        // Only push if key starts with "/" (means it's a real route)
+        if (typeof item.key === "string" && item.key.startsWith("/")) {
+          result.push({
+            menuName: item.label,
+            menuUrl: item.key,
+          });
+        }
 
-      // If this item has children → continue recursion
-      if (item.children && Array.isArray(item.children)) {
-        traverse(item.children);
-      }
-    });
-  };
+        // If this item has children → continue recursion
+        if (item.children && Array.isArray(item.children)) {
+          traverse(item.children);
+        }
+      });
+    };
 
-  traverse(items);
-  return result;
-}
-const menuData = extractMenuData(menuItems);
-// console.log(menuData);
+    traverse(items);
+    return result;
+  }
+  const menuData = extractMenuData(menuItems);
+  // console.log(menuData);
 
 
   // ✅ Filter based on user.permissions
@@ -288,33 +288,31 @@ const menuData = extractMenuData(menuItems);
       )}
 
       <Sider
-  theme={isDark ? "dark" : "light"}
-  collapsed={collapsed}
-  width={240}
-  collapsedWidth={isMobile ? 0 : 80}
-  style={{
-    height: "100vh",
-    overflow: "auto",
-    position: "relative",
-    zIndex: 10, // ✅ ensures sidebar appears above nearby content
-    display: "flex",
-    flexDirection: "column",
-    transition: "width 0.3s ease-in-out",
-  }}
-  className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
-  trigger={null}
-  onMouseEnter={() => {
-    if (!isMobile && collapsed) dispatch(toggleSidebar());
-  }}
-  onMouseLeave={() => {
-    if (!isMobile && !collapsed) dispatch(toggleSidebar());
-  }}
->
-
-
+        theme={isDark ? "dark" : "light"}
+        collapsed={collapsed}
+        width={240}
+        collapsedWidth={isMobile ? 0 : 80}
+        style={{
+          height: "100vh",
+          overflow: "auto",
+          position: "relative",
+          zIndex: 10,
+          display: "flex",
+          flexDirection: "column",
+          transition: "width 0.3s ease-in-out",
+        }}
+        className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
+        trigger={null}
+        onMouseEnter={() => {
+          if (!isMobile && collapsed) dispatch(toggleSidebar());
+        }}
+        onMouseLeave={() => {
+          if (!isMobile && !collapsed) dispatch(toggleSidebar());
+        }}
+      >
         {/* Logo & Toggle */}
         <div
-          className={`flex items-center h-16 p-4 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"
+          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"
             }`}
           style={{
             transition: "all 0.3s ease",
@@ -384,7 +382,7 @@ const menuData = extractMenuData(menuItems);
         </div>
 
         {/* Theme Toggle */}
-        <div className="p-2 mt-auto flex justify-center">
+        <div className="p-1 mt-auto flex justify-center">
           <ThemeSwitcher />
         </div>
       </Sider>

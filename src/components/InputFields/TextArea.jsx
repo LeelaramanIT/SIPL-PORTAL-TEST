@@ -7,6 +7,8 @@ const TextArea = ({
   placeholder = "Enter text...",
   className = "",
   rows = 4,
+  icon: Icon, // Added Icon prop
+  required = false,
   ...rest
 }) => {
   return (
@@ -14,10 +16,13 @@ const TextArea = ({
       <div className="relative">
         <label
           htmlFor={id || name}
+          /* Added flex and items-center to align icon with text */
           className="absolute -top-2 left-2 sm:left-2.5 bg-white dark:bg-gray-900 px-1 
-            text-xs text-slate-500 dark:text-slate-300 z-10"
+            text-xs text-slate-500 dark:text-slate-300 z-10 flex items-center gap-1"
         >
           {label}
+          {Icon && <Icon className="text-slate-400" size={12} />}
+          {required && <span className="text-red-500">*</span>}
         </label>
         <textarea
           name={name}

@@ -23,7 +23,7 @@ export default function ToggleSwitchWord({
   const slideWidth = 100 / options.length; // Dynamic width based on number of options
 
   return (
-    <div className="relative flex items-center bg-[var(--input)] rounded-full shadow-md border-[var(--hadow-card)] p-1 w-fit min-w-[220px]">
+    <div className="relative flex items-center bg-[var(--input)] rounded-full shadow-md border-[var(--hadow-card)] p-0.5 w-fit min-w-[220px]">
       {/* Sliding highlight */}
       <div
         className={`absolute top-1 bottom-1 left-1 rounded-full ${color} transition-all duration-300`}

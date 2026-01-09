@@ -10,7 +10,7 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => 
         }}
         className="
             w-full 
-            pl-3 pr-28 py-2 
+            pl-3 pr-28 py-[7px]  ml-1
             text-sm 
             rounded-md 
             shadow-sm 
@@ -40,7 +40,7 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => 
       
       <button
         className="
-            absolute top-1 right-1 
+            absolute top-[3px] right-1 
             flex items-center 
             rounded 
             py-1 px-2.5 

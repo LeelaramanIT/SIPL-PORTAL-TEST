@@ -22,7 +22,7 @@ const CustomInput = forwardRef(({ value, onClick }, ref) => (
 
 const DatePickerComponent = ({ startDate, handleDateChange, onSearch }) => {
   return (
-    <div className="flex relative w-full md:w-[60%] lg:w-[33%]">
+    <div className="flex relative w-full md:w-[60%] lg:w-[33%] ml-1">
       <DatePicker
         selected={startDate}
         onChange={handleDateChange}

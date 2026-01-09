@@ -3,6 +3,8 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { routePermissions } from "./routePermissions";
 import toast from "react-hot-toast";
 import ProtectedPage from "../../pages/NotFound/protectedPage";
+import { useEffect } from "react";
+import { api } from "../../utils/axios";
 
 const ProtectedRoutes = () => {
   const isLoggedIn = useSelector((state) => state.auth?.loggedIn);
@@ -10,6 +12,28 @@ const ProtectedRoutes = () => {
   const menus = useSelector((state) => state.auth?.menus || []);
   const roleID = useSelector((state) => state.auth?.RoleID);
   const location = useLocation();
+
+
+ useEffect(() => {
+  const refreshSession = async () =>{
+    try {
+      if (!isLoggedIn) <Navigate to="/login" replace />;
+      // console.log("Refreshing token...");
+      // const res = await api.get("auth/verify-token")
+      // console.log(res);
+      
+      // if (!res.status === 401) {
+      //   throw new Error("Refresh failed");
+      // }
+      console.log("Token refreshed successfully");
+    } catch (error) {
+      console.error("Silent refresh failed:", error);
+    }
+  }
+  // const intervalId = setInterval(refreshSession,  5 * 1000);
+  refreshSession();
+  // return () => clearInterval(intervalId);
+},[isLoggedIn] )
 
   // 1️⃣ Not logged in → redirect
   if (!isLoggedIn) return <Navigate to="/login" replace />;

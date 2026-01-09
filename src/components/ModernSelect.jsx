@@ -15,7 +15,7 @@ const ModernSelect = ({ label, children, className = "w-40", ...props }) => {
           {...props}
           className="
             w-full appearance-none 
-            text-sm font-medium 
+            text-xs font-medium 
             py-2.5 pl-4 pr-10 
             rounded-xl shadow-sm 
             transition-all cursor-pointer

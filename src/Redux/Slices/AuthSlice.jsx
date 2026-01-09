@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../utils/axios";
 import { toast } from "react-hot-toast";
-import axios from "axios";
 
 const initialState = {
   token: localStorage.getItem('authToken') || null,
@@ -14,9 +13,6 @@ const initialState = {
   Department: JSON.parse(localStorage.getItem('user'))?.Department || '',
   RoleID: JSON.parse(localStorage.getItem('user'))?.RoleID || '',
 };
-
-
-
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -24,7 +20,7 @@ const authSlice = createSlice({
     loginStart: (state, action) => {
       state.loading = action.payload;
       state.error = null;
-    },
+    },  
     loginSuccess: (state, action) => {
       console.log(action.payload);
 
@@ -37,6 +33,15 @@ const authSlice = createSlice({
       state.RoleID = RoleID;
       state.loggedIn = true;
       state.loading = false;
+      localStorage.setItem('authToken',Token)
+      const userObj = {
+        username,
+        roles,
+        menus: Menus, // Ensure this matches the casing in initialState
+        Department,
+        RoleID
+      };
+      localStorage.setItem('user', JSON.stringify(userObj));
 
     },
 
@@ -48,7 +53,6 @@ const authSlice = createSlice({
       state.loggedIn = false;
       state.Department = '';
       state.RoleID = '';
-      // Clear session storage and localStorage on logout
       window.localStorage.clear();
       window.sessionStorage.clear();
       console.log('logout');
@@ -62,7 +66,8 @@ const authSlice = createSlice({
       } else if (action.payload?.status === 400) {
         state.error = 'Bad request, please check your input';
       } else {
-        state.error = action.payload?.message || 'An error occurred';
+      console.log(state.error);
+        state.error = action.payload || 'An error occurred';
       }
     }
 
@@ -72,7 +77,6 @@ const authSlice = createSlice({
 export const userLogin = (credentials) => async (dispatch) => {
   dispatch(loginStart(true));
 
-
   try {
     const res = await api.post("/Auth/logins", credentials, { withCredentials: true });
     if (res.status === 200) {
@@ -80,16 +84,6 @@ export const userLogin = (credentials) => async (dispatch) => {
       dispatch(loginSuccess(data));
       dispatch(loginStart(false));
     }
-
-    //     const res = await axios.get("http://localhost:5000/users");
-    // const user = res.data.find(
-    //   u => u.username === credentials.username && u.password === credentials.password
-    // );
-    // console.log(user);
-
-    // dispatch(loginSuccess(user));
-
-
   } catch (error) {
     console.log(error);
     dispatch(loginStart(false));
@@ -102,7 +96,6 @@ export const userLogin = (credentials) => async (dispatch) => {
 export const userLogout = (navigate) => async (dispatch) => {
   try {
     dispatch(logout());
-
     const res = await api.post("/Auth/logout");
     if (res.status === 200) {
       navigate('/login')
@@ -110,13 +103,11 @@ export const userLogout = (navigate) => async (dispatch) => {
     }
   } catch (error) {
     console.log(error);
-
     const errorMessage =
       error?.response?.data || error?.message || "Logout faild";
     dispatch(loginFailure(errorMessage));
   }
 };
-
 export const { loginSuccess, logout, loginStart, loginFailure } =
   authSlice.actions;
 

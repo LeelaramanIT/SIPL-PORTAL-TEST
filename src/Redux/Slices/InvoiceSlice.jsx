@@ -29,7 +29,7 @@ const initialState = {
     isPallateChecked: false,
   },
   domesticInvoices: {
-    list: [],
+    listOfInvoices: [],
     loading: false,
     error: null,
   },
@@ -87,8 +87,6 @@ const invoiceSlice = createSlice({
     // ...inside the invoiceSlice reducers
 
     setFinalInvoiceData: (state, action) => {
-
-
       // 1️⃣ Split invoices by scheme
       const groupedInvoices = splitInvoiceByScheme(action.payload);
       const totalInvoices = groupedInvoices.length;
@@ -106,7 +104,6 @@ const invoiceSlice = createSlice({
           0
         );
 
-
         const unitPrice = totalwt > 0 ? (grandTotal / totalwt).toFixed(5) : "0";
         const userCurrency = invoice?.usercurrency;
 
@@ -117,10 +114,16 @@ const invoiceSlice = createSlice({
         let pallatCount = "";
         let pallatWeight = "";
         let pallatTyres = 0
+        let palletDimension = 0;
         let isWoodenBox = false;
         let woodenBoxCount = 0;
         let woodenBoxTyres = 0;
         let woodenBoxWeight = 0;
+        let woodenBoxDimension = 0;
+        let InvoiceDiscription = "";
+        let ImportedCountryOfOriginGoods = '';
+        let plantAddress = '';
+        
 
         // Note: Use 'schemeDetails' if you used the updated code from the previous step, 
         // otherwise use 'schemeLicences'
@@ -130,7 +133,6 @@ const invoiceSlice = createSlice({
 
           // 1. Find the object that matches the current invoice scheme name
           const matched = listToCheck.find((item) => item.scheme === invoice.scheme);
-
           if (matched) {
             schemeLicenceValue = matched.schemeNumber || "";
             schemeDate = matched.schemeDate || "";
@@ -140,15 +142,21 @@ const invoiceSlice = createSlice({
             pallatCount = Number(matched.pallatCount ?? 0);
             pallatTyres = Number(matched.numberOfTyres ?? 0);
             pallatWeight = Number(matched.pallatWeight ?? 0);
+            palletDimension = matched.palletDimension || ""
 
             // Wooden box (new)
             isWoodenBox = Boolean(matched.isWoodenBox);
             woodenBoxCount = Number(matched.woodenBoxCount ?? 0);
             woodenBoxTyres = Number(matched.woodenBoxTyres ?? 0);
             woodenBoxWeight = Number(matched.woodenBoxWeight ?? 0);
-          }
+            woodenBoxDimension = matched.woodenBoxDimension || ''
 
+            InvoiceDiscription = matched.InvoiceDiscription || '';
+            ImportedCountryOfOriginGoods = matched.ImportedCountryOfOriginGoods || '';
+            plantAddress = matched.plantAddress || '';
+          }
         }
+
         const totalGrossWeight =
           (Number(totalwt) || 0) +
           (isPallat ? (Number(pallatWeight) || 0) : 0) +
@@ -173,15 +181,33 @@ const invoiceSlice = createSlice({
         const otherChargesValue2 = Number(row2.value) || 0;
         const otherChargesValue3 = Number(row3.value) || 0;
 
+        const addDiscounts = invoice.discountDetails?.find(
+          (x) => x.invoiceIndex === index + 1
+        )
+        const discountRows = addDiscounts?.rows || []
+
+        const disrow1 = discountRows[0] || { desc: "", value: 0 };
+        const disrow2 = discountRows[1] || { desc: "", value: 0 };
+        const disrow3 = discountRows[2] || { desc: "", value: 0 };
+
+        const discount1 = disrow1.desc || '';
+        const discount2 = disrow2.desc || '';
+        const discount3 = disrow3.desc || '';
+
+        const discountValue1 = Number(disrow1.value) || 0;
+        const discountValue2 = Number(disrow2.value) || 0;
+        const discountValue3 = Number(disrow3.value) || 0;
+
+        const totalDiscount = discountRows.reduce((acc, row) => acc + (Number(row.value) || 0), 0);
+
         const finalGrandTotal =
           grandTotal +
           otherChargesValue1 +
           otherChargesValue2 +
-          otherChargesValue3;
+          otherChargesValue3 -
+          totalDiscount;
 
         const formattedGrandTotal = finalGrandTotal.toFixed(5);
-
-
 
         // 4️⃣ Return final invoice with single schemeLicence value
         return {
@@ -203,7 +229,12 @@ const invoiceSlice = createSlice({
           otherChargesValue1,
           otherChargesValue2,
           otherChargesValue3,
-
+          discount1,
+          discount2,
+          discount3,
+          discountValue1,
+          discountValue2,
+          discountValue3,
           amountInWords: `${userCurrency}${numberToWords(
             finalGrandTotal,
             userCurrency
@@ -217,14 +248,20 @@ const invoiceSlice = createSlice({
           pallatCount: isPallat ? pallatCount : 0,
           pallatWeight: isPallat ? pallatWeight : 0,
           pallatTyres: isPallat ? pallatTyres : 0,
+          palletDimension: palletDimension ? palletDimension: '',
 
           isWoodenBox,
           woodenBoxCount: isWoodenBox ? woodenBoxCount : 0,
           woodenBoxTyres: isWoodenBox ? woodenBoxTyres : 0,
           woodenBoxWeight: isWoodenBox ? woodenBoxWeight : 0,
+          woodenBoxDimension: woodenBoxDimension ? woodenBoxDimension:'', 
+          InvoiceDiscription: InvoiceDiscription ? InvoiceDiscription : '',
+          ImportedCountryOfOriginGoods: ImportedCountryOfOriginGoods ? ImportedCountryOfOriginGoods : '',
+          plantAddress: plantAddress ? plantAddress : '',
         };
 
       });
+
       // 5️⃣ Save result in Redux state
       state.exportInvoices.FinalInvoiceDetails = processedInvoices;
     },
@@ -284,10 +321,14 @@ const invoiceSlice = createSlice({
         let pallatCount = 0;
         let pallatWeight = 0;
         let pallatTyres = 0
+        let palletDimension = '';
         let isWoodenBox = false;
         let woodenBoxCount = 0;
         let woodenBoxTyres = 0;
         let woodenBoxWeight = 0;
+        let woodenBoxDimension = ''
+        let InvoiceDiscription = "";
+        let plantAddress = '';
 
         const listToCheck = invoice.schemeDetails || []; // Default to empty array
 
@@ -305,23 +346,30 @@ const invoiceSlice = createSlice({
             pallatCount = Number(matched.pallatCount ?? 0);
             pallatTyres = Number(matched.numberOfTyres ?? 0);
             pallatWeight = Number(matched.pallatWeight ?? 0);
+            palletDimension = (matched.palletDimension).toUpperCase() ?? '';
+
 
             // Wooden box (new)
             isWoodenBox = Boolean(matched.isWoodenBox);
             woodenBoxCount = Number(matched.woodenBoxCount ?? 0);
             woodenBoxTyres = Number(matched.woodenBoxTyres ?? 0);
             woodenBoxWeight = Number(matched.woodenBoxWeight ?? 0);
+            woodenBoxDimension = (matched.woodenBoxDimension).toUpperCase() ?? '';
+            InvoiceDiscription = matched.InvoiceDiscription;
+            plantAddress = matched.plantAddress;
           }
 
         }
 
         // Calculate Total Gross Weight
-      // console.log(invoice.scheme);
+        // console.log(invoice.scheme);
         const totalInvoiceQty = totalqty; // (calculated from invoice.items previously)
         const palletizedQty = Number(pallatCount) || 0; // The entered 'numberOfTyres'
+        const palletizedTyres = Number(pallatTyres) || 0;
         // console.log("pallet QTY",palletizedQty);
         // console.log("pallet Tyres",pallatTyres);
         const woodenBoxQty = Number(woodenBoxCount) || 0;
+        const woodenBoxedTyres = Number(woodenBoxTyres)
         // console.log("woodenBox Qty",woodenBoxQty);
         // console.log("woodenBox Tyres",woodenBoxTyres);
         const totalPacked = Number(palletizedQty) + Number(woodenBoxQty);
@@ -342,10 +390,12 @@ const invoiceSlice = createSlice({
             looseTyre: `${looseQty} LOOSE TYRES`
           }),
           ...(palletizedQty > 0 && {
-            palletizedTyres: `${palletizedQty} PALLET`
+            palletizedTyres: `${palletizedTyres} TYRES PACKED IN ${palletizedQty} ${palletizedQty>1?"PALLETS":"PALLET"}`,
+            palletDimension,
           }),
           ...(woodenBoxQty > 0 && {
-            woodenBoxTyres: `${woodenBoxQty} WOODEN BOX `
+            woodenBoxTyres: `${woodenBoxedTyres}TYRES PACKED IN ${woodenBoxQty} WOODEN BOX`,
+            woodenBoxDimension
           }),
           totalTyres: `TOTAL: ${totalCount}`
         };
@@ -388,13 +438,29 @@ const invoiceSlice = createSlice({
           (sum, x) => sum + Number(x.value || 0),
           0
         );
+        // ------------------------------------------
+        // 🔥 NEW CODE: Process Discounts for PDF
+        // ------------------------------------------
+        const addDiscounts = invoice.discountDetails?.find(
+          (x) => x.invoiceIndex === index + 1
+        );
+        const discountRows = addDiscounts?.rows || [];
+        // Create array for PDF Table (Optional, if you want to list them)
+        const otherDiscountsList = discountRows
+          .filter(row => Number(row.value) > 0)
+          .map(row => ({ name: row.desc, value: Number(row.value).toFixed(2) }));
+        // Calculate Total
+        const totalDiscount = discountRows.reduce(
+          (sum, x) => sum + Number(x.value || 0),
+          0
+        );
 
         // ⭐ 6. Updated grandTotal
-        const finalGrandTotal = (grandTotal + additionalChargesTotal).toFixed(2);
+        const finalGrandTotal = (grandTotal + additionalChargesTotal - totalDiscount).toFixed(2);
 
 
 
-        console.log(finalGrandTotal);
+        console.log("PDF", invoice);
         // 3. Return Sanitized Data (NO NULLS ALLOWED)
         return {
           invoiceNumber: Number(invoice?.invoiceNumber || 0) + index,
@@ -413,6 +479,7 @@ const invoiceSlice = createSlice({
             : "",
           otherReferences: "SDF Form",
           exporter: invoice?.exporterAuthorizedAddress || "",
+          plantAddress: plantAddress || '',
           consignee: {
             name: invoice?.billingCompanyName || "",
             address: invoice?.billingAddress?.split("~") || [],
@@ -434,13 +501,16 @@ const invoiceSlice = createSlice({
             city: invoice?.shippingCity?.toUpperCase() || "",
             state: invoice?.shippingState?.toUpperCase() || "",
             country: invoice?.shippingCountry?.toUpperCase() || "",
-          },
-          countryOfOrigin: invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
+          }, countryOfOrigin: invoice?.scheme === "Import Invoice"
+            ? (invoice?.schemeDetails?.find(s => s.scheme === "Import Invoice")?.ImportedCountryOfOriginGoods?.toUpperCase() || "")
+            : (invoice?.countryOfOriginOfGoods?.toUpperCase() || ""),
+          // countryOfOrigin: invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
           countryOfDestination: invoice?.shippingCountry?.toUpperCase() || "",
           containerLoadFrom: invoice?.containerLoadFrom?.toUpperCase() || "",
           incoterm: invoice?.incoterm || "",
           placeOfIncoterm: (invoice?.placeOfIncoterm)?.toUpperCase() || "",
           paymentTerms: invoice?.paymentTerms || "",
+          REXNumber:invoice?.REXNumber || '',
           bankDetails: {
             accountHolder: "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
             address: "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
@@ -462,7 +532,7 @@ const invoiceSlice = createSlice({
               .trim() || ""
           },
           otherCharges,
-
+          otherDiscountsList,
           items: invoice.items || [],
           usercurrency: userCurrency,
           currencySymble: getCurrencySymble(userCurrency),
@@ -474,6 +544,7 @@ const invoiceSlice = createSlice({
 
           totalPrices: formattedGrandTotal,
           // totalValue: formattedGrandTotal,
+          otherDiscount: totalDiscount,
           grandTotal: finalGrandTotal,
 
           amountInWords: `${userCurrency} ${numberToWords(parseFloat(finalGrandTotal), userCurrency)}`,
@@ -485,23 +556,26 @@ const invoiceSlice = createSlice({
           pallatWeight,
           pallatCount: Number(pallatCount),
           pallatTyres,
+          palletDimension,
           isWoodenBox,
           woodenBoxCount,
           woodenBoxWeight,
           woodenBoxTyres,
+          woodenBoxDimension,
           declaration: "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
           licenceDetails: {
-            description: invoice?.scheme === "Import_Invoice"
-              ? invoice?.SchemeDetailsImportMoowr
+            description: invoice?.scheme === "Import Invoice" || invoice?.scheme === "DDB" || 'Direct'
+              ? InvoiceDiscription
               : `This Shipment is Under ${invoice?.scheme || ""} Scheme.${invoice?.scheme === "Direct"
                 ? ""
                 : ` Licence No. ${schemeLicenceValue} dt. ${schemeDate}`
               }`,
-            igstLUT: "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
+            igstLUT: invoice?.IGSTLUT || "",
+            REXNumber: invoice?.REXNumber || "",
+            // igstLUT: "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
             scheme: invoice?.scheme || "",
           },
-
-          SchemeDetailsImportMoowr: invoice?.SchemeDetailsImportMoowr || "",
+          InvoiceDiscription: invoice?.InvoiceDiscription || "",
           authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
           footer: {
             line1: "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
@@ -509,7 +583,6 @@ const invoiceSlice = createSlice({
             line3: "CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website: www.sun-tws.com , Tel: 044 - 43857129",
           },
           tyreCount: tyreCount,
-
         };
       });
       state.exportInvoices.FinalInvoicePDFData = data;
@@ -538,6 +611,8 @@ export const getExportInvoice = (payload) => async (dispatch) => {
     if (payload.type === "Custom") {
       const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`, { withCredentials: true });
       const data = res.data
+      console.log(data);
+      
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
       // await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
 
@@ -582,57 +657,93 @@ const parseDMY = (dateStr) => {
 };
 
 export const submitInvoice = (payload, navigate) => async (dispatch) => {
-  const safeDateDMY = (value) => {
+  const REGEX_DMY = /^\d{2}[-/]\d{2}[-/]\d{4}$/;
+const REGEX_YMD = /^\d{4}-\d{2}-\d{2}$/;
+
+const safeDateDMY = (value) => {
     if (!value) return "";
 
     let d;
 
-    // Date object
     if (value instanceof Date) {
-      d = value;
-    }
-    // String
+        d = value;
+    } 
     else if (typeof value === "string") {
-      const cleaned = value.trim();
-      if (!cleaned) return "";
+        const cleaned = value.trim();
+        if (!cleaned) return "";
 
-      const dateOnly = cleaned.split("T")[0];
+        // Handle ISO strings like "2023-01-01T00:00:00"
+        const dateOnly = cleaned.split("T")[0];
 
-      let day, month, year;
+        let day, month, year;
 
-      // DD-MM-YYYY or DD/MM/YYYY
-      if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dateOnly)) {
-        const sep = dateOnly.includes("/") ? "/" : "-";
-        [day, month, year] = dateOnly.split(sep);
-        d = new Date(Number(year), Number(month) - 1, Number(day));
-      }
-      // YYYY-MM-DD
-      else if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
-        [year, month, day] = dateOnly.split("-");
-        d = new Date(Number(year), Number(month) - 1, Number(day));
-      }
-      // Fallback (browser parse)
-      else {
-        d = new Date(cleaned);
-      }
+        // DD-MM-YYYY or DD/MM/YYYY
+        if (REGEX_DMY.test(dateOnly)) {
+            const sep = dateOnly.includes("/") ? "/" : "-";
+            [day, month, year] = dateOnly.split(sep);
+            d = new Date(Number(year), Number(month) - 1, Number(day));
+        }
+        // YYYY-MM-DD
+        else if (REGEX_YMD.test(dateOnly)) {
+            [year, month, day] = dateOnly.split("-");
+            d = new Date(Number(year), Number(month) - 1, Number(day));
+        }
+        else {
+            d = new Date(cleaned);
+        }
     } else {
-      return "";
+        return "";
     }
 
     if (!d || isNaN(d.getTime())) return "";
 
-    // ✅ FORMAT OUTPUT AS DD-MM-YYYY
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = d.getFullYear();
 
     return `${dd}-${mm}-${yyyy}`;
-  };
+};
 
+// ✅ FIX 2: Helper that returns NULL for empty dates and YYYY-MM-DD for valid dates
+const formatDateForAPI = (value) => {
+  if (!value) return null; // 👈 CRITICAL: Backend needs null, not ""
 
+  let d;
+  if (value instanceof Date) {
+    d = value;
+  } else if (typeof value === "string") {
+    const cleaned = value.trim();
+    if (!cleaned) return null; // Return null for empty strings
+
+    const dateOnly = cleaned.split("T")[0]; // Handle ISO strings
+    let day, month, year;
+
+    if (REGEX_DMY.test(dateOnly)) {
+      const sep = dateOnly.includes("/") ? "/" : "-";
+      [day, month, year] = dateOnly.split(sep);
+      d = new Date(Number(year), Number(month) - 1, Number(day));
+    } else if (REGEX_YMD.test(dateOnly)) {
+      [year, month, day] = dateOnly.split("-");
+      d = new Date(Number(year), Number(month) - 1, Number(day));
+    } else {
+      d = new Date(cleaned);
+    }
+  } else {
+    return null;
+  }
+
+  if (!d || isNaN(d.getTime())) return null;
+
+  // ✅ OUTPUT as YYYY-MM-DD (Standard for APIs)
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+
+  return `${yyyy}-${mm}-${dd}`;
+};
 
   try {
-    dispatch(setExportInvoiceLoading(true));
+    // dispatch(setExportInvoiceLoading(true));
 
     const formattedPayload = {
       finalInvoiceDetails: payload.map((data, index) => {
@@ -658,15 +769,35 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
         const otherChargesValue2 = Number(row2.value) || 0;
         const otherChargesValue3 = Number(row3.value) || 0;
 
+        // --- 2. HANDLE DISCOUNTS (🔥 NEW UPDATE) ---
+        const discountMatch = (data.discountDetails || []).find(
+          (item) => item.invoiceIndex === invoiceIndex
+        );
+        const discountRows = discountMatch?.rows || [];
+        // Extract individual rows (just like charges)
+        const disRow1 = discountRows[0] || { desc: "", value: 0 };
+        const disRow2 = discountRows[1] || { desc: "", value: 0 };
+        const disRow3 = discountRows[2] || { desc: "", value: 0 };
+
+        // Extract Descriptions
+        const discount1 = disRow1.desc || "";
+        const discount2 = disRow2.desc || "";
+        const discount3 = disRow3.desc || "";
+
+        // Extract Values
+        const discountValue1 = Number(disRow1.value) || 0;
+        const discountValue2 = Number(disRow2.value) || 0;
+        const discountValue3 = Number(disRow3.value) || 0;
+
+        const totalDiscount = discountRows.reduce((acc, row) => acc + (Number(row.value) || 0), 0);
+
         // grand total + additional charges
         const finalGrandTotal =
           (parseFloat(data.grandTotal) || 0) +
           otherChargesValue1 +
           otherChargesValue2 +
-          otherChargesValue3;
-
-        // --------------------------------------------------------
-
+          otherChargesValue3 -
+          totalDiscount;
         return {
           o_ID: Number(data.o_id) || 0,
           exchangeRate: data.ExchangeCurrency || 0,
@@ -680,7 +811,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           buyersOrderRefNo: data.BuyersOrderNumber || "",
           exportAuthorisedAddress: data.exporterAuthorizedAddress || "",
           isSchemeSplit: Boolean(data.items.some((i) => i.isSplit)),
-          dispatchedDate: safeDateDMY(data.dispatchedDate),
+          dispatchedDate: formatDateForAPI(data.dispatchedDate),
           shipmentType: data.shipmentType || "",
           userCurrency: data.usercurrency || "",
           billingCompanyName: data.billingCompanyName || "",
@@ -692,18 +823,18 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           billingContactName: data.billingContactName || "",
           billingEmailId: data.billingEmailId || "",
           billingMobile: data.billingMobile || "",
-          completedDate: safeDateDMY(data.completedDate),
-          rfD_Date: safeDateDMY(data.rfD_Date),
+          completedDate: formatDateForAPI(data.completedDate) || "",
+          rfD_Date: formatDateForAPI(data.rfD_Date),
           totalQty: data.totalqty || "",
           plant: data.containerLoadFrom || "",
+          plantAddress: data.plantAddress || "", // add
           isScheme: Boolean(data.items.some((i) => i.isScheme)),
           itcHsNo: data.itcHsNo || "",
-          licenceDate: safeDateDMY(data.licenceDate ?? data.schemeDate),
+          licenceDate: formatDateForAPI(data.licenceDate ?? data.schemeDate),
           paymentTerms: data.paymentTerms || "",
           schemeId: 0,
           schemeLicences: data.schemeLicences || "",
-          schemeDate: safeDateDMY(data.schemeDate),
-
+          schemeDate: formatDateForAPI(data.schemeDate),
           shippingCompanyName: data.shippingCompanyName || "",
           shippingAddress: data.shippingAddress || "",
           shippingCity: data.shippingCity || "",
@@ -713,10 +844,9 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           shippingContactName: data.shippingContactName || "",
           shippingEmailId: data.shippingEmailId || "",
           shippingMobile: data.shippingMobile || "",
-
           preCarriageBy: data.preCarriageBy || "",
           invoiceNumber: String(data.invoiceNumber || ""),
-          invoiceDate: safeDateDMY(data.invoiceDate) || new Date().toISOString(),
+          invoiceDate: formatDateForAPI(data.invoiceDate) || new Date().toISOString(),
           containerLoadFrom: data.containerLoadFrom || "",
           containerNo: data.containerNo || "",
           countryOfOriginOfGoods: data.countryOfOriginOfGoods || "",
@@ -730,48 +860,44 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           inCoterm: (data.incoterm)?.toUpperCase() || "",
           placeOfIncoterm: data.placeOfIncoterm || "",
           scheme: data.scheme || "",
-
-          // ---------------------------------------------------
-          // 💥 SEND NEW ADDITIONAL CHARGES TO API
-          // ---------------------------------------------------
           otherCharges1,
           otherCharges2,
           otherCharges3,
           otherChargesValue1,
           otherChargesValue2,
           otherChargesValue3,
+          // --- 🔥 DISCOUNT FIELDS (Added) ---
+          discount1, //add
+          discount2, //add
+          discount3, //add
+          discountValue1, //add
+          discountValue2, //add
+          discountValue3, //add
           // ---------------------------------------------------
-
-          otherDiscount: data.otherDiscount || 0,
+          otherDiscount: totalDiscount || 0,
           paymentermsId: 0,
           otsNo: data.otsNo || 0,
           paymentDays: data.paymentDays || 0,
-
           // GRAND TOTAL WITH NEW VALUES
           grandTotal: finalGrandTotal,
-
           totalPrice: data.totalPrices || 0,
           totalWeight: parseFloat(data.grossWeight) || 0,
           netweight: parseFloat(data.totalwt) || 0,
-
           amountInWords: `${data?.usercurrency} ${numberToWords(finalGrandTotal, data?.usercurrency)}`,
-
           docUnitPrice: String(data.unitPrice || 0),
-
           // pallet fields
           isPallet: data.isPallat || false,
           palletCount: data.pallatCount || 0,
           palletTyres: data.pallatTyres || 0,
           palletWeight: data.pallatWeight || 0,
-
+          palletDimension: data.palletDimension || '', //add
           // wooden fields
           isWoodenBox: data.isWoodenBox || false,
           woodenBoxCount: data.woodenBoxCount || 0,
           woodenBoxTyres: data.woodenBoxTyres || 0,
           woodenBoxWeight: data.woodenBoxWeight || 0,
-
+          woodenBoxDimension:data.woodenBoxDimension || '', //add
           workorderno: data.workorderno || "",
-
           notifyPartyAddress: data.notifyPartyAddress || "",
           notifyPartyCity: data.notifyPartyCity || "",
           notifyPartyCountry: data.notifyPartyCountry || "",
@@ -779,7 +905,11 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           notifyPartyName: data.notifyPartyName || "",
           notifyPartyPhone: data.notifyPartyPhone || "",
           notifyPartyState: data.notifyPartyState || "",
-
+          // 🚨 FIX 3: Add potentially missing Description
+          InvoiceDiscription: data.InvoiceDiscription || "", //add
+          ImportedCountryOfOriginGoods: data.ImportedCountryOfOriginGoods || "", //add
+          REXNumber:data.REXNumber || "",
+          IGSTLUT:data.IGSTLUT || '',
           items: data.items.map((item) => ({
             category: item.category || "",
             Platforms: item.platforms || "",

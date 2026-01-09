@@ -118,7 +118,7 @@ export default function ManageView({ }) {
 
   // --- RESIZABLE COLUMNS ---
   const [columns, setColumns] = useState([
-    { name: "CustCode", width: 80, align: "left" },
+    { name: "CustCode", width: 65, align: "left" },
     { name: "Customer", width: 200, align: "left" }, // Increased: Names need space
     { name: "Category", width: 80, align: "left" },
     { name: "Platform", width: 80, align: "left" },
@@ -566,7 +566,7 @@ export default function ManageView({ }) {
       <div className="flex flex-col md:flex-row mb-4 px-3 items-center justify-between">
         <div className="flex gap-4 w-full md:w-auto flex-1">
           <div className="shrink-0 flex flex-col ">
-            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">
+            <h3 className="text-md font-bold text-slate-700 dark:text-slate-200">
               Preview Data
             </h3>
 
@@ -575,24 +575,24 @@ export default function ManageView({ }) {
 
               {/* Ref Section */}
               <div className="flex items-center gap-2">
-                <span className="text-slate-500 dark:text-slate-400 font-sm">Ref:</span>
-                <span className="font-mono font-bold text-[var(--primary)] dark:text-blue-400 bg-slate-100 dark:bg-slate-800 rounded text-sm">
+                <span className="text-slate-500 dark:text-slate-400 text-xs">Ref:</span>
+                <span className="font-mono font-bold text-[var(--primary)] dark:text-blue-400 bg-slate-100 dark:bg-slate-800 rounded text-xs">
                   {currentSheet ? currentSheet.priceSheetRefNo : "N/A"}
                 </span>
               </div>
 
               {/* Rows Section */}
               <div className="flex items-center gap-2">
-                | <span className="text-slate-500 dark:text-slate-400 font-sm">Rows:</span>
+                | <span className="text-slate-500 dark:text-slate-400 text-xs">Rows:</span>
                 <span className="font-bold text-[var(--primary)] dark:text-slate-200">
                   {filtered.length}
                 </span>
               </div>
               {/* Info Section */}
               <div className="flex items-center gap-2">
-                | <span className="text-slate-500 dark:text-slate-400 font-sm">Info:</span>
+                | <span className="text-slate-500 dark:text-slate-400 text-xs">Info:</span>
                 <InfoTooltip
-                  iconSize={18}
+                  iconSize={16}
                   // Pass the JSX variable here, NOT a string
                   content={sheetDetailsContent}
                   className="text-amber-500 hover:text-amber-600"
@@ -607,8 +607,8 @@ export default function ManageView({ }) {
               {/* Validity Section */}
               {currentSheet && (
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 dark:text-slate-400 font-sm">Validity:</span>
-                  <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="text-slate-500 dark:text-slate-400 text-xs">Validity:</span>
+                  <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300 text-xs">
                     <span className="text-[var(--primary)]">{formatDate(currentSheet.startDate)}</span>
                     <span className="text-slate-400 font-light text-xs">to</span>
                     <span className="text-[var(--primary)]">{formatDate(currentSheet.endDate)}</span>
@@ -753,16 +753,16 @@ export default function ManageView({ }) {
                     style={gridStyle}
                     className={`grid gap-4 px-4 py-4 items-center rounded-lg border border-slate-100 dark:border-slate-700 bg-white dark:bg-blue-400/10 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors w-max ${!moduleOn ? "opacity-50 grayscale" : ""}`}
                   >
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate" title={item.custcode}>{item.custcode}</span>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate" title={item.customer}>{item.customer}</span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate" title={item.custcode}>{item.custcode}</span>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 " title={item.customer}>{item.customer}</span>
                     <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.category}</span>
                     <span className="font-mono text-xs text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded w-fit truncate">{item.platform}</span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300 truncate" title={item.brand}>{item.brand}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate" title={item.brand}>{item.brand}</span>
                     <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{item.sidewall}</span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 truncate" title={item.tyreType}>{item.tyreType}</span>
-                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" title={item.tyreSize}>{item.tyreSize}</span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300 truncate">{item.rimWidth}</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm truncate" title={item.processID}>{item.processID}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate" title={item.tyreType}>{item.tyreType}</span>
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate" title={item.tyreSize}>{item.tyreSize}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.rimWidth}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate" title={item.processID}>{item.processID}</span>
                     <div className="flex flex-col text-xs text-slate-500 dark:text-slate-400 truncate">
                       <span>{item.startDate}</span>
                       <span className="text-slate-400 dark:text-slate-500">to {item.endDate}</span>

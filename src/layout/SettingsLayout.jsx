@@ -39,7 +39,7 @@ const SettingsLayout = () => {
   ];
 
   return (
-    <div className="w-full h-[calc(100vh-63px)] bg-[var(--secondary)] flex flex-col">
+    <div className="w-full h-[calc(100vh-62px)] bg-[var(--secondary)] flex flex-col">
       {/* Page Header */}
       <div className="mb-2 flex flex-col sm:flex-row sm:items-end justify-between px-4">
         <div>

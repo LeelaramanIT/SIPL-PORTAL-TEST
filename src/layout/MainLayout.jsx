@@ -21,7 +21,7 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col ">
         <Navbar />
 
-        <div ref={scrollRef} className="flex-1 h-[calc(100vh-63px)] layout-scroll overflow-auto rounded-none lg:rounded-t-2xl dark:bg-gray-800 custom-scrollbar">
+        <div ref={scrollRef} className="flex-1 h-[calc(100vh-62px)] layout-scroll overflow-auto rounded-none lg:rounded-t-2xl dark:bg-gray-800 custom-scrollbar">
           <Outlet />
         </div>
       </div>

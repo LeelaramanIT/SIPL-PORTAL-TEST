@@ -5,7 +5,7 @@
 /* Standard menu item sizing and vertical centering */
 .ant-menu-item,
 .ant-menu-submenu-title {
-  height: 32px !important;
+  height: 28px !important;
   padding: 0 14px !important;
   font-size: 13px;
   display: flex !important;
@@ -98,10 +98,6 @@
   color: var(--text-hover) !important;
 }
 
-/* ----------------------------
-   🔹 SIDEBAR TRANSITIONS
------------------------------ */
-
 /* Smooth width & fade animation */
 .sidebar-transition {
   transition: width 0.25s ease-in-out, background-color 0.3s ease-in-out !important;
@@ -119,10 +115,6 @@
   transform: translateX(0);
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
-
-/* -----------------------------------
-   🧱 Sidebar Layer Fix (Always on Top)
------------------------------------- */
 
 .ant-layout-sider {
   position: relative !important;

@@ -20,6 +20,7 @@ import {
   submitInvoice,
   setShowSubmit,
 } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
+import { FiSearch } from "react-icons/fi";
 
 const ExportInvoicePrepare = () => {
   // State management using React Hooks and Redux
@@ -35,6 +36,7 @@ const ExportInvoicePrepare = () => {
   const [splitInputs, setSplitInputs] = useState([]); // Stores the quantity input for splitting each item.
   const [useGlobalScheme, setUseGlobalScheme] = useState(false); // Determines if a single scheme applies to all items.
   const [globalScheme, setGlobalScheme] = useState(""); // Stores the value of the globally selected scheme.
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Destructuring relevant data from the Redux store
   const {
@@ -113,6 +115,23 @@ const ExportInvoicePrepare = () => {
       })
     );
   }, [FinalSplitResult, formDAta, dispatch, invoiceDetails]);
+
+  const matchesSearch = (item) => { //SEARCH
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    
+    // Combine fields you want to search by
+    const searchString = `
+      ${item?.category || ""} 
+      ${item?.tyreSize || ""} 
+      ${item?.brand || ""} 
+      ${item?.itemCode || ""} 
+      ${item?.plant || ""}
+      ${item?.tyreType || ""}
+    `.toLowerCase();
+
+    return searchString.includes(lowerQuery);
+  };
 
   // useEffect to prepare and dispatch the final data for the invoice.
   useEffect(() => {
@@ -379,36 +398,52 @@ const ExportInvoicePrepare = () => {
     <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
       <div className="flex flex-wrap items-center justify-between">
         <div className="ml-1">
-          <h1 className="text-2xl font-bold  tracking-tight">
+          <h1 className="text-xl font-bold  tracking-tight">
             {invoiceDetails?.type} Invoice Details
           </h1>
-          <p className="text-md text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Fill in the details below to generate and finalize this invoice
           </p>
         </div>
       </div>
-      {/*  */}
+
       {loading ? (<ClientDetailsSkeleton />) : (<ClientDetailsSection
         invoiceDetails={{ ...invoiceDetails, ...additionalForm }}
       />)}
 
       <div className="flex justify-between items-start">
         <div className="ml-1">
-          <h1 className="text-2xl font-bold  tracking-tight">
+          <h1 className="text-xl font-bold  tracking-tight">
             Item Details
           </h1>
-          <p className="text-md text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             List of all billable items and their applicable rates.
           </p>
         </div>
 
         <div className="flex justify-center gap-4 mb-4">
+          {/* --- NEW SEARCH INPUT --- */}
           <div className="flex flex-col">
-            <label className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-1 font-medium text-sm text-gray-700 dark:text-gray-300">
+              Search Items
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by Size, Brand, Code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="border rounded px-3 py-1.5 pl-8 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              />
+              <FiSearch className="absolute left-2.5 top-2 text-gray-400" />
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <label className="mb-1 font-medium text-sm text-gray-700 dark:text-gray-300">
               Invoice Type
             </label>
             <select
-              className="border rounded px-2 py-1"
+              className="border rounded px-1 py-1"
               onChange={(e) => handleInvoiceTypeChange(e.target.value)}
               value={invoiceType}
             >
@@ -430,7 +465,7 @@ const ExportInvoicePrepare = () => {
                 <option value="Individual_Scheme">Individual scheme</option>
                 <option value="Advance">Advance</option>
                 <option value="Moowr">Moowr</option>
-                <option value="Import_Invoice">Import Invoice</option>
+                <option value="Import Invoice">Import Invoice</option>
                 <option value="DDB">DDB</option>
               </select>
             </div>
@@ -441,7 +476,7 @@ const ExportInvoicePrepare = () => {
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="max-h-[calc(100vh-63px-150px)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
+        <div className="max-h-[calc(100vh)] w-full overflow-y-auto custom-scrollbar bg-[#f7f2ef] dark:bg-gray-800 shadow-sm">
           <table
             border={1}
             className="w-full text-sm text-left table-fixed shadow-lg"
@@ -466,7 +501,7 @@ const ExportInvoicePrepare = () => {
                   "PLANT",
                   "PART-NO",
                   ...(invoiceType === "Scheme_Invoice"
-                    ? ["Split Qty", "Scheme", "Action"]
+                    ? ["Split Qty", "Invoice / Scheme", "Action"]
                     : []),
                 ].map((head, idx) => (
                   <th
@@ -480,7 +515,9 @@ const ExportInvoicePrepare = () => {
               </tr>
             </thead>
             <tbody>
-              {(localItems || []).map((item, idx) => (
+              {(localItems || []).map((item, idx) => {
+              if (!matchesSearch(item)) return null;
+              return(
                 <tr
                   key={idx}
                   className={`text-[13px] text-center border-b border-[var(--primary-hover)]/30`}
@@ -541,7 +578,7 @@ const ExportInvoicePrepare = () => {
                           <option value="">Select Scheme</option>
                           <option value="Advance">Advance</option>
                           <option value="Moowr">Moowr</option>
-                          <option value="Import_Invoice">Import Invoice</option>
+                          <option value="Import Invoice">Import Invoice</option>
                           <option value="DDB">DDB</option>
                         </select>
                       </td>
@@ -560,10 +597,12 @@ const ExportInvoicePrepare = () => {
                     </>
                   )}
                 </tr>
-              ))}
+              )})}
 
               {/* Display Split Items */}
-              {(splitItems || []).map((splitItem, i) => (
+              {(splitItems || []).map((splitItem, i) => {
+              if (!matchesSearch(splitItem)) return null;
+              return (
                 <tr
                   key={`split-${i}`}
                   className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--primary-hover)]/30"
@@ -603,7 +642,7 @@ const ExportInvoicePrepare = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
 
             <tfoot className="font-semibold text-gray-800 dark:text-white">
@@ -959,11 +998,11 @@ export function ClientDetailsSection({ invoiceDetails }) {
               <span className="text-white font-bold text-lg">
                 {invoiceDetails?.custfullname
                   ? invoiceDetails.custfullname
-                    .split(" ")              // Split into words ["MOIDDEEN", "KAJA"]
-                    .map((word) => word[0])  // Get first letter ["M", "K"]
-                    .slice(0, 2)             // Take only first 2 initials (optional)
-                    .join("")                // Join them "MK"
-                    .toUpperCase()           // Ensure it's Uppercase
+                    .split(" ")              
+                    .map((word) => word[0])  
+                    .slice(0, 2)             
+                    .join("")                
+                    .toUpperCase()           
                   : "?"}
               </span>
             </div>

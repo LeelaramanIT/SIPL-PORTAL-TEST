@@ -30,7 +30,7 @@ const InvoicePDF = ({ data, styles }) => (
       </Text>
     </View>
     <View style={styles.row1}>
-      <Text style={styles.heading}>{data?.licenceDetails?.scheme === "Import_Invoice" ? "IMPORTED INVOICE CUM PACKING LIST" : "INVOICE CUM PACKING LIST"}</Text>
+      <Text style={styles.heading}>{data?.licenceDetails?.scheme === "Import Invoice" ? "INVOICE CUM PACKING LIST" : "INVOICE CUM PACKING LIST"}</Text>
     </View>
     <View style={styles.row2}>
       <View style={styles.row2left}>
@@ -38,7 +38,17 @@ const InvoicePDF = ({ data, styles }) => (
         <View>
           {(data?.exporter ? data?.exporter.toUpperCase().split("~") : []).map(
             (line, index) => (
-              <Text key={index} style={styles.textValue}>
+              <Text key={index} style={{fontSize:'6px',marginLeft:'4px'}}>
+                {line.trim()}
+              </Text>
+            )
+          )}
+        </View>
+        {data?.plantAddress && <Text style={[styles.text, { fontWeight: "bold" }]}>DELIVERY FROM :</Text>}
+        <View>
+          {(data?.plantAddress ? data?.plantAddress.toUpperCase().split("~") : []).map(
+            (line, index) => (
+              <Text key={index} style={{fontSize:'6px',marginLeft:'4px'}}>
                 {line.trim()}
               </Text>
             )
@@ -233,11 +243,11 @@ const InvoicePDF = ({ data, styles }) => (
           <View>
             <Text style={[styles.text, { fontWeight: "bold" }]}> TERMS OF DELIVERY AND PAYMENT: </Text>
             <Text style={styles.textValue}>
-              {`THE ABOVE PRICES ARE ${data?.incoterm?.toUpperCase()} ${data?.placeOfIncoterm}, USD BY ${data?.preCarriageBy}.`}
+              {`THE ABOVE PRICES ARE ${data?.incoterm?.toUpperCase()} ${data?.placeOfIncoterm},IN ${data?.usercurrency}, BY ${data?.preCarriageBy}.`}
             </Text>
+            <Text style={[styles.textValue,{marginTop:'4px'}]}>{data?.paymentTerms}</Text>
           </View>
-          <Text style={styles.textValue}>{data?.paymentTerms}</Text>
-          <View>
+          {/* <View>
             <Text style={styles.textlight}>
               Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE
               LIMITED), KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA
@@ -250,7 +260,7 @@ const InvoicePDF = ({ data, styles }) => (
               </Text>
               <Text style={styles.textValue}>Swift Code: SBININBB174</Text>
             </View>
-          </View>
+          </View> */}
         </View>
       </View>
     </View>
@@ -308,15 +318,6 @@ const InvoicePDF = ({ data, styles }) => (
                 <Text key={i} style={styles.text}>{text}</Text>
               ))}
           </View>
-          {/* <View>
-            {data?.tyreCount?.totalTyres && (
-              <Text style={styles.text}>
-                {data?.tyreCount?.totalTyres}
-              </Text>
-            )}
-            {console.log("Rendering totalTyres:", data?.tyreCount?.totalTyres)
-}
-          </View> */}
         </View>
       </View>
 
@@ -327,8 +328,8 @@ const InvoicePDF = ({ data, styles }) => (
         </View>
 
         <View style={[styles.row4_1value, { flexDirection: "column" }]}>
-
-          {/* Description Centered */}
+        
+          {/*Description Centered */}
           <View style={{ flex: 1, justifyContent: "center" }}>
             {data?.packingDetails?.description
               ?.split(",")
@@ -340,18 +341,36 @@ const InvoicePDF = ({ data, styles }) => (
           {/* Other Charges at Bottom */}
           {data?.otherCharges?.length > 0 && (
             <View style={{ marginTop: "auto" }}>
-              <Text style={[styles.text, { fontWeight: "bold" }]}>OTHER CHARGES:</Text>
+              <Text style={[ { fontWeight: "bold",fontSize:"6px", }]}>OTHER CHARGES:</Text>
               {data?.otherCharges?.map((charge, index) => (
                 <View
                   key={index}
                   style={{
                     flexDirection: "row",
                     width: "100%",
-                    paddingVertical: 2,
+                    paddingVertical: 1,
                     // borderBottom: "0.5px solid #ccc",
                   }}
                 >
-                  <Text style={{ ...styles.text, width: "100%" }}>{charge.name}</Text>
+                  <Text style={{ width: "100%",fontSize:"7px",marginTop:'1px' }}>{charge.name}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {data?.otherDiscountsList?.length > 0 && (
+            <View style={{ marginTop: 2 }}>
+              <Text style={[ { fontWeight: "bold",fontSize:"6px", }]}>DISCOUNT:</Text>
+              {data?.otherDiscountsList?.map((discount, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingVertical: 1,
+                    // borderBottom: "0.5px solid #ccc",
+                  }}
+                >
+                  <Text style={{ width: "100%",fontSize:"7px",marginTop:'1px' }}>{discount.name}</Text>
                 </View>
               ))}
             </View>
@@ -366,7 +385,7 @@ const InvoicePDF = ({ data, styles }) => (
       {/* ---------------------- ROW 4 : QUANTITY ---------------------- */}
       <View style={styles.row4_5}>
         <View style={styles.row4_1heading}>
-          <Text>QUANTITY</Text>
+          <Text style={{}}>QTY</Text>
         </View>
         <View style={styles.row4_1value}>
           <Text style={styles.text}>{data?.totalqty}</Text>
@@ -376,11 +395,26 @@ const InvoicePDF = ({ data, styles }) => (
               style={{
                 marginTop:
                   data.otherCharges.length === 1
-                    ? -35
+                    ? -65
                     : data.otherCharges.length === 2
-                      ? -10
+                      ? -38
                       : data.otherCharges.length === 3
-                        ? 15
+                        ? -16
+                        : 0,
+                backgroundColor: "#ccc",
+              }}
+            />
+          )}
+          {data?.otherDiscountsList?.length > 0 && (
+            <View
+              style={{
+                marginTop:
+                  data.otherDiscountsList.length === 1
+                    ? -65
+                    : data.otherDiscountsList.length === 2
+                      ? -38
+                      : data.otherDiscountsList.length === 3
+                        ? -16
                         : 0,
                 backgroundColor: "#ccc",
               }}
@@ -395,7 +429,7 @@ const InvoicePDF = ({ data, styles }) => (
       {/* ---------------------- ROW 5 : QUANTITY KGS ---------------------- */}
       <View style={styles.row4_4}>
         <View style={styles.row4_1heading}>
-          <Text>QUANTITY KGS</Text>
+          <Text>QTY KGS</Text>
         </View>
         <View style={styles.row4_1value}>
           <Text style={styles.text}>{data?.netWeight}</Text>
@@ -405,11 +439,26 @@ const InvoicePDF = ({ data, styles }) => (
               style={{
                 marginTop:
                   data.otherCharges.length === 1
-                    ? -35
+                    ? -65
                     : data.otherCharges.length === 2
-                      ? -10
+                      ? -38
                       : data.otherCharges.length === 3
-                        ? 15
+                        ? -16
+                        : 0,
+                backgroundColor: "#ccc",
+              }}
+            />
+          )}
+          {data?.otherDiscountsList?.length > 0 && (
+            <View
+              style={{
+                marginTop:
+                  data.otherDiscountsList.length === 1
+                    ? -65
+                    : data.otherDiscountsList.length === 2
+                      ? -38
+                      : data.otherDiscountsList.length === 3
+                        ? -16
                         : 0,
                 backgroundColor: "#ccc",
               }}
@@ -424,7 +473,7 @@ const InvoicePDF = ({ data, styles }) => (
       {/* ---------------------- ROW 6 : UNIT PRICE ---------------------- */}
       <View style={styles.row4_5}>
         <View style={styles.row4_1heading}>
-          <Text>UNIT PRICES</Text>
+          <Text>UNIT PRICES KG</Text>
         </View>
         <View style={styles.row4_1value}>
           <Text style={styles.text}>{data?.unitPrice}</Text>
@@ -434,11 +483,26 @@ const InvoicePDF = ({ data, styles }) => (
               style={{
                 marginTop:
                   data.otherCharges.length === 1
-                    ? -35
+                    ? -65
                     : data.otherCharges.length === 2
-                      ? -10
+                      ? -38
                       : data.otherCharges.length === 3
-                        ? 15
+                        ? -16
+                        : 0,
+                backgroundColor: "#ccc",
+              }}
+            />
+          )}
+          {data?.otherDiscountsList?.length > 0 && (
+            <View
+              style={{
+                marginTop:
+                  data.otherDiscountsList.length === 1
+                    ? -65
+                    : data.otherDiscountsList.length === 2
+                      ? -38
+                      : data.otherDiscountsList.length === 3
+                        ? -16
                         : 0,
                 backgroundColor: "#ccc",
               }}
@@ -469,22 +533,45 @@ const InvoicePDF = ({ data, styles }) => (
 
           {/* Other Charges */}
           {data?.otherCharges?.length > 0 && (
-            <View style={{ marginTop: 17 }}>
+            <View style={{ marginBottom: 5 }}>
               {data?.otherCharges?.map((charge, index) => (
                 <View
                   key={index}
                   style={{
                     flexDirection: "row",
                     width: "100%",
-                    paddingVertical: 2,
+                    paddingVertical: 1,
                     borderBottomWidth: 0.5,
                     borderColor: "#ccc",
                     justifyContent: "center",
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ ...styles.text, width: "30%", textAlign: "center" }}>
+                  <Text style={{ width: "30%", textAlign: "center",fontSize:'7px' }}>
                     {charge.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {/* Discount */}
+          {data?.otherDiscountsList?.length > 0 && (
+            <View style={{ marginBottom:0 }}>
+              {data?.otherDiscountsList?.map((discount, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingVertical: 1,
+                    borderBottomWidth: 0.5,
+                    borderColor: "#ccc",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ width: "30%", textAlign: "center",fontSize:'7px' }}>
+                    {- (discount.value)}
                   </Text>
                 </View>
               ))}
@@ -543,11 +630,15 @@ const InvoicePDF = ({ data, styles }) => (
           <Text style={[styles.text, { fontWeight: "bold" }]}>
             {data?.licenceDetails?.description}
           </Text>
-          <View style={{ display: "flex", flexDirection: "row" }}>
-            <Text style={{ fontSize: "7", padding: "5", color: "red" }}>
-              {data?.containerLoadFrom === "MMN" || data?.containerLoadFrom === "PDK"
+          <View style={{ display: "flex", flexDirection: "column" }}>
+            <Text style={{ fontSize: "7", paddingLeft: "5", color: "red" }}>
+              {/* {data?.containerLoadFrom === "MMN" || data?.containerLoadFrom === "PDK"
                 ? "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025"
-                : ""}
+                : ""} */}
+                {data?.licenceDetails?.REXNumber ? data?.licenceDetails?.REXNumber :''}
+            </Text>
+            <Text style={{ fontSize: "7", paddingLeft: "5", paddingTop:'2', color: "red" }}>
+                {data?.licenceDetails?.igstLUT ? data?.licenceDetails?.igstLUT :''}
             </Text>
           </View>
         </View>
@@ -572,11 +663,10 @@ const InvoicePDF = ({ data, styles }) => (
     {/* row6 */}
     <View style={styles.row6}>
       <Text style={{ fontWeight: "bold", fontSize: "7", textAlign: "center" }}>
-        SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres
-        Private Limited) Regd Office: 'NO. 10
+        SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited)
       </Text>
       <Text style={{ fontWeight: "bold", fontSize: "7", textAlign: "center" }}>
-        Jawahar road Chokkikulam, Madurai - 625002.
+         Regd Office: 'NO. 10 Jawahar road Chokkikulam, Madurai - 625002.
       </Text>
       <Text style={{ fontWeight: "bold", fontSize: "7", textAlign: "center" }}>
         CIN:U51901TN2018PTC121156 Email: crm@sun-tws.com , Website:

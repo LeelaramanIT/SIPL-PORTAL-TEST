@@ -67,11 +67,11 @@ export default function Header({ mode, setMode, setModuleOn, currentSheet }) {
       <div className="flex flex-wrap items-center justify-between gap-6">
         <div>
           {/* Added dark:text-slate-100 */}
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Price Sheet Management
           </h1>
           {/* Added dark:text-slate-400 */}
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Manage global pricing and bulk uploads
           </p>
         </div>
@@ -112,10 +112,10 @@ export default function Header({ mode, setMode, setModuleOn, currentSheet }) {
             key={tab}
             onClick={() => setMode(tab)}
             // Added dark:text-slate-400 and dark:hover:text-slate-200
-            className={`pb-3 text-sm font-medium relative cursor-pointer transition-colors ${mode === tab
+            className={`pb-3 text-xs font-medium relative cursor-pointer transition-colors ${mode === tab
                 ? "text-[var(--primary)]"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
+              }`} 
           >
             {tab === "manage" ? "Manage Existing" : "New Price Upload"}
             {mode === tab && (

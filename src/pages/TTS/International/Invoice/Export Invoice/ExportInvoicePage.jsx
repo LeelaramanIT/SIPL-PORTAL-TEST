@@ -62,7 +62,7 @@ const ExportInvoice = () => {
 
   const handleDropdownSelect = (item) => {
     setSelectedColumn(item.key || "all");
-  };
+  }; 
 
   const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
   const {menus} = useSelector((state)=> state.auth)
@@ -153,17 +153,23 @@ const handleToggle = (value) => {
 };
 
   return (
-    <div className="px-6 pt-4 max-w-full h-[calc(100vh-63px)] mx-auto flex flex-col ">
-      <h1 className="text-2xl font-bold text-[var(--primary)] hover:text-[var(--accent-foreground)] mb-2">
-        Export {state?.type} Invoice
-      </h1>
+    <div className="px-2 pt-3 max-w-full h-[calc(100vh-62px)] mx-auto flex flex-col ">
+      <div className="ml-1">
+          <h1 className="text-xl font-bold  tracking-tight">
+            {/* {invoiceDetails?.type} Invoice Details */}
+             Export {state?.type} Invoice
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            View and Manage all Export {state?.type} Invoices
+          </p>
+        </div>
 
-      <div className="bg-white shadow-md px-2 py-4 rounded-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900 flex flex-col flex-grow" >
+      <div className="bg-white shadow-md px-2 py-2 rounded-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900 flex flex-col flex-grow" >
         <div
           ref={animateRef}
           className="w-full py-1 px-2.5 rounded-2xl text-[var(--text)] flex flex-col h-full"
         >
-          <div className="flex flex-col md:flex-row w-full py-1 px-1 items-center gap-4 justify-between mb-4">
+          <div className="flex flex-col md:flex-row w-full py-1 px-0.5 items-center gap-4 justify-between mb-2">
             <div className="w-[80%] flex justify-start items-center">
               <Dropdown
                 label="Filter"
@@ -210,7 +216,6 @@ const handleToggle = (value) => {
                 }}
                 renderAction={(row, index) => (
                   <button
-
                     // onClick={() => handleAction(row)}
                     onClick={() => {
                       if (state.type === 'Customer') {

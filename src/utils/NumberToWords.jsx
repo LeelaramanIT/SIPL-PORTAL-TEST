@@ -38,7 +38,6 @@ export function numberToWords(num, currencyCode) {
     },
     'JPY': {
         name: { singular: 'yen', plural: 'yen' },
-        // The Yen does not have a commonly used subunit, but for the sake of completeness, 'sen' is the official subunit.
         subUnit: { singular: 'sen', plural: 'sen' }
     },
     'MXN': {
@@ -71,7 +70,6 @@ export function numberToWords(num, currencyCode) {
     },
     'KRW': {
         name: { singular: 'won', plural: 'won' },
-        // The Won does not have a commonly used subunit. 'Jeon' is the official subunit.
         subUnit: { singular: 'jeon', plural: 'jeon' }
     },
     'BRL': {
@@ -90,12 +88,10 @@ export function numberToWords(num, currencyCode) {
         name: { singular: 'krone', plural: 'kroner' },
         subUnit: { singular: 'øre', plural: 'øre' }
     },
-    // ... add more as needed
-};
+  };
 
   const currency = currencyMap[currencyCode];
 
-  // Handle invalid currency codes
   if (!currency) {
       throw new Error(`Unsupported currency code: ${currencyCode}`);
   }
@@ -163,14 +159,21 @@ export function numberToWords(num, currencyCode) {
       result += ` ${currencyName.plural.toUpperCase()}`;
   }
 
+  // --- MODIFIED SECTION START ---
   if (parseInt(subUnit, 10) > 0) {
-      result += ` AND ${subUnitWords.toUpperCase()}`;
+      result += ` AND`; 
+
+      // 1. Add the Currency Name first (e.g., CENTS)
       if (parseInt(subUnit, 10) === 1) {
           result += ` ${currencySubUnitName.singular.toUpperCase()}`;
       } else {
           result += ` ${currencySubUnitName.plural.toUpperCase()}`;
       }
+
+      // 2. Add the Number words second (e.g., SEVENTY EIGHT)
+      result += ` ${subUnitWords.toUpperCase()}`;
   }
+  // --- MODIFIED SECTION END ---
 
   return result + ' ONLY';
 }

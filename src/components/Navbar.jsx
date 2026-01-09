@@ -19,11 +19,11 @@ const Navbar = () => {
   const handleLogout = async ()=>{
     dispatch(logout())
     dispatch(resetUploadState())
-    dispatch(userLogout(navigate));
-    await persistor.purge();
+    dispatch(userLogout(navigate))
+    await persistor.purge()
   }
   return (
-    <div className="h-[63px] flex justify-between items-center px-2 sm:px-4 duration-400 dark:bg-[#001529] select-none">
+    <div className="h-[62px] flex justify-between items-center px-2 sm:px-4 duration-400 dark:bg-[#001529] select-none">
       {/* Left Side */}
       <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
         {/* Mobile Menu Toggle */}
@@ -38,18 +38,18 @@ const Navbar = () => {
 
       {/* Right Side */}
       <div className="flex items-center gap-1 sm:gap-3.5 ml-2 sm:ml-auto mr-1 sm:mr-3">
-        <DarkModeToggle />
+        <DarkModeToggle className=""/>
         <img
-          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-[var(--border)] border cursor-pointer"
+          className="w-8 h-8 sm:w-8 sm:h-8 rounded-full border-[var(--border)] border cursor-pointer"
           src={assets.DefaultLogo}
           alt="UserLogo"
         />
-        <p className="hidden sm:block cursor-pointer text-[var(--primary)] hover:text-[var(--primary-hover)] dark:text-white text-sm sm:text-base">
+        <p className="hidden sm:block cursor-pointer text-[var(--primary)] hover:text-[var(--primary-hover)] dark:text-white text-sm sm:text-sm">
           {username ? username : "User"}
         </p>
-        <IoMdNotificationsOutline className="text-[1.2rem] sm:text-[1.5rem] cursor-pointer text-primary dark:text-white" />
+        <IoMdNotificationsOutline className="text-[1rem] sm:text-[1.2rem] cursor-pointer text-primary dark:text-white" />
         <TbLogout
-          className="text-[1.2rem] sm:text-[1.5rem] cursor-pointer text-primary dark:text-white"
+          className="text-[1rem] sm:text-[1.2rem] cursor-pointer text-primary dark:text-white"
           onClick={handleLogout}
         />
       </div>
