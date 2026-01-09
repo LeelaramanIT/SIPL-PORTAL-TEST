@@ -276,22 +276,22 @@ const InvoicePDF = ({ data, styles }) => (
 
         <View style={styles.row4_1value}>
           <View>
-            <Text style={[styles.text, { fontWeight: "bold" }]}>CONTAINER SIZE:</Text>
+            {data?.preCarriageBy === "AIR"? "":<Text style={[styles.text, { fontWeight: "bold" }]}>CONTAINER SIZE:</Text>}
             <Text style={styles.text}>{data?.containerDetails?.size}</Text>
           </View>
 
           <View>
-            <Text style={[styles.text, { fontWeight: "bold" }]}>CONTAINER NO:</Text>
+            {data?.containerDetails?.containerNo ? <Text style={[styles.text, { fontWeight: "bold" }]}>CONTAINER NO:</Text>:''}
             <Text style={styles.text}>{data?.containerDetails?.containerNo}</Text>
           </View>
 
           <View>
-            <Text style={[styles.text, { fontWeight: "bold" }]}>LINER SEAL NO:</Text>
+            {data?.containerDetails?.linerSealNo ? <Text style={[styles.text, { fontWeight: "bold" }]}>LINER SEAL NO:</Text>:''}
             <Text style={styles.text}>{data?.containerDetails?.linerSealNo}</Text>
           </View>
 
           <View>
-            <Text style={[styles.text, { fontWeight: "bold" }]}>OTS NO:</Text>
+            {data?.containerDetails?.otsNo ?<Text style={[styles.text, { fontWeight: "bold" }]}>OTS NO:</Text>:''}
             <Text style={styles.text}>{data?.containerDetails?.otsNo}</Text>
           </View>
         </View>
@@ -517,7 +517,7 @@ const InvoicePDF = ({ data, styles }) => (
         {/* LEFT HEADING */}
         <View style={styles.row4_1heading}>
           <Text style={{ fontSize: 6 }}>
-            TOTAL PRICES {data?.incoterm?.toUpperCase()} {data?.placeOfIncoterm} {data?.usercurrency}
+            TOTAL PRICES {data?.incoterm?.toUpperCase()} {data?.usercurrency}
           </Text>
         </View>
 
@@ -629,6 +629,9 @@ const InvoicePDF = ({ data, styles }) => (
         >
           <Text style={[styles.text, { fontWeight: "bold" }]}>
             {data?.licenceDetails?.description}
+          </Text>
+          <Text style={[styles.text, { fontWeight: "bold" }]}>
+            {data?.InvoiceDis}
           </Text>
           <View style={{ display: "flex", flexDirection: "column" }}>
             <Text style={{ fontSize: "7", paddingLeft: "5", color: "red" }}>

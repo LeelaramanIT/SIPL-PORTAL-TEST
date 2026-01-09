@@ -17,4 +17,6 @@ export const routePermissions = {
   "invoice Customer": "/TTS/Domestic/Invoice/Customer",
   "Home": "/",
   "Dashboard": "/Dashboard",
+  "PriceMaster Manage":'',
+  'PriceMaster Create': '',
 };

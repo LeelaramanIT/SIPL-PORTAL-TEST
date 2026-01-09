@@ -90,6 +90,8 @@ const invoiceSlice = createSlice({
       // 1️⃣ Split invoices by scheme
       const groupedInvoices = splitInvoiceByScheme(action.payload);
       const totalInvoices = groupedInvoices.length;
+      console.log(groupedInvoices);
+
 
       // 2️⃣ Prepare processed invoices
       const processedInvoices = groupedInvoices.map((invoice, index) => {
@@ -123,11 +125,13 @@ const invoiceSlice = createSlice({
         let InvoiceDiscription = "";
         let ImportedCountryOfOriginGoods = '';
         let plantAddress = '';
-        
+
 
         // Note: Use 'schemeDetails' if you used the updated code from the previous step, 
         // otherwise use 'schemeLicences'
         const listToCheck = invoice.schemeDetails
+        console.log(listToCheck);
+
 
         if (invoice.scheme && Array.isArray(listToCheck)) {
 
@@ -248,13 +252,13 @@ const invoiceSlice = createSlice({
           pallatCount: isPallat ? pallatCount : 0,
           pallatWeight: isPallat ? pallatWeight : 0,
           pallatTyres: isPallat ? pallatTyres : 0,
-          palletDimension: palletDimension ? palletDimension: '',
+          palletDimension: palletDimension ? palletDimension : '',
 
           isWoodenBox,
           woodenBoxCount: isWoodenBox ? woodenBoxCount : 0,
           woodenBoxTyres: isWoodenBox ? woodenBoxTyres : 0,
           woodenBoxWeight: isWoodenBox ? woodenBoxWeight : 0,
-          woodenBoxDimension: woodenBoxDimension ? woodenBoxDimension:'', 
+          woodenBoxDimension: woodenBoxDimension ? woodenBoxDimension : '',
           InvoiceDiscription: InvoiceDiscription ? InvoiceDiscription : '',
           ImportedCountryOfOriginGoods: ImportedCountryOfOriginGoods ? ImportedCountryOfOriginGoods : '',
           plantAddress: plantAddress ? plantAddress : '',
@@ -263,6 +267,8 @@ const invoiceSlice = createSlice({
       });
 
       // 5️⃣ Save result in Redux state
+      console.log(processedInvoices);
+
       state.exportInvoices.FinalInvoiceDetails = processedInvoices;
     },
 
@@ -390,7 +396,7 @@ const invoiceSlice = createSlice({
             looseTyre: `${looseQty} LOOSE TYRES`
           }),
           ...(palletizedQty > 0 && {
-            palletizedTyres: `${palletizedTyres} TYRES PACKED IN ${palletizedQty} ${palletizedQty>1?"PALLETS":"PALLET"}`,
+            palletizedTyres: `${palletizedTyres} TYRES PACKED IN ${palletizedQty} ${palletizedQty > 1 ? "PALLETS" : "PALLET"}`,
             palletDimension,
           }),
           ...(woodenBoxQty > 0 && {
@@ -458,10 +464,14 @@ const invoiceSlice = createSlice({
         // ⭐ 6. Updated grandTotal
         const finalGrandTotal = (grandTotal + additionalChargesTotal - totalDiscount).toFixed(2);
 
-
-
         console.log("PDF", invoice);
         // 3. Return Sanitized Data (NO NULLS ALLOWED)
+        const isDirectScheme =
+          invoice?.scheme === "Import Invoice" ||
+          invoice?.scheme === "DDB" ||
+          invoice?.scheme === "Direct";
+
+
         return {
           invoiceNumber: Number(invoice?.invoiceNumber || 0) + index,
           orderRefNo: invoice?.orderRefNo || "",
@@ -510,7 +520,7 @@ const invoiceSlice = createSlice({
           incoterm: invoice?.incoterm || "",
           placeOfIncoterm: (invoice?.placeOfIncoterm)?.toUpperCase() || "",
           paymentTerms: invoice?.paymentTerms || "",
-          REXNumber:invoice?.REXNumber || '',
+          REXNumber: invoice?.REXNumber || '',
           bankDetails: {
             accountHolder: "Sun Tyre & Wheel Systems (A Div of SUNDARAM INDUSTRIES PRIVATE LIMITED)",
             address: "KRISHNA TOWERS, 3RD FLOOR, NP-31B/4, THIRU-VI-KA INDUSTRIAL ESTATE, EKKATTUTHANGAL, CHENNAI - 600 032",
@@ -564,18 +574,15 @@ const invoiceSlice = createSlice({
           woodenBoxDimension,
           declaration: "WE DECLARE THAT THIS INVOICE CUM PACKING LIST SHOWS THE ACTUAL PRICE OF GOODS DESCRIBED AND ALL THE PARTICULARS ARE TRUE AND CORRECT.",
           licenceDetails: {
-            description: invoice?.scheme === "Import Invoice" || invoice?.scheme === "DDB" || 'Direct'
+            description: isDirectScheme
               ? InvoiceDiscription
-              : `This Shipment is Under ${invoice?.scheme || ""} Scheme.${invoice?.scheme === "Direct"
-                ? ""
-                : ` Licence No. ${schemeLicenceValue} dt. ${schemeDate}`
-              }`,
+              : `This Shipment is Under ${invoice?.scheme || ""} Scheme. Licence No. ${schemeLicenceValue} dt. ${schemeDate}`,
+
             igstLUT: invoice?.IGSTLUT || "",
             REXNumber: invoice?.REXNumber || "",
-            // igstLUT: "IGST-Letter Of Undertaking (ARN)AD3302240385774 valid till 31.03.2025",
             scheme: invoice?.scheme || "",
           },
-          InvoiceDiscription: invoice?.InvoiceDiscription || "",
+          InvoiceDis: isDirectScheme ? "" : InvoiceDiscription || "",
           authorizedSignatory: "FOR SUNDHARAM INDUSTRIES PRIVATE LIMITED",
           footer: {
             line1: "SUNDARAM INDUSTRIES PRIVATE LIMITED (Formerly Known as T.S.Rajam Tyres Private Limited) Regd Office: 'NO. 10",
@@ -585,6 +592,8 @@ const invoiceSlice = createSlice({
           tyreCount: tyreCount,
         };
       });
+      console.log(data);
+
       state.exportInvoices.FinalInvoicePDFData = data;
     },
     setPdfBlob: (state, action) => {
@@ -612,7 +621,7 @@ export const getExportInvoice = (payload) => async (dispatch) => {
       const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`, { withCredentials: true });
       const data = res.data
       console.log(data);
-      
+
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
       // await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
 
@@ -658,41 +667,41 @@ const parseDMY = (dateStr) => {
 
 export const submitInvoice = (payload, navigate) => async (dispatch) => {
   const REGEX_DMY = /^\d{2}[-/]\d{2}[-/]\d{4}$/;
-const REGEX_YMD = /^\d{4}-\d{2}-\d{2}$/;
+  const REGEX_YMD = /^\d{4}-\d{2}-\d{2}$/;
 
-const safeDateDMY = (value) => {
+  const safeDateDMY = (value) => {
     if (!value) return "";
 
     let d;
 
     if (value instanceof Date) {
-        d = value;
-    } 
+      d = value;
+    }
     else if (typeof value === "string") {
-        const cleaned = value.trim();
-        if (!cleaned) return "";
+      const cleaned = value.trim();
+      if (!cleaned) return "";
 
-        // Handle ISO strings like "2023-01-01T00:00:00"
-        const dateOnly = cleaned.split("T")[0];
+      // Handle ISO strings like "2023-01-01T00:00:00"
+      const dateOnly = cleaned.split("T")[0];
 
-        let day, month, year;
+      let day, month, year;
 
-        // DD-MM-YYYY or DD/MM/YYYY
-        if (REGEX_DMY.test(dateOnly)) {
-            const sep = dateOnly.includes("/") ? "/" : "-";
-            [day, month, year] = dateOnly.split(sep);
-            d = new Date(Number(year), Number(month) - 1, Number(day));
-        }
-        // YYYY-MM-DD
-        else if (REGEX_YMD.test(dateOnly)) {
-            [year, month, day] = dateOnly.split("-");
-            d = new Date(Number(year), Number(month) - 1, Number(day));
-        }
-        else {
-            d = new Date(cleaned);
-        }
+      // DD-MM-YYYY or DD/MM/YYYY
+      if (REGEX_DMY.test(dateOnly)) {
+        const sep = dateOnly.includes("/") ? "/" : "-";
+        [day, month, year] = dateOnly.split(sep);
+        d = new Date(Number(year), Number(month) - 1, Number(day));
+      }
+      // YYYY-MM-DD
+      else if (REGEX_YMD.test(dateOnly)) {
+        [year, month, day] = dateOnly.split("-");
+        d = new Date(Number(year), Number(month) - 1, Number(day));
+      }
+      else {
+        d = new Date(cleaned);
+      }
     } else {
-        return "";
+      return "";
     }
 
     if (!d || isNaN(d.getTime())) return "";
@@ -702,45 +711,45 @@ const safeDateDMY = (value) => {
     const yyyy = d.getFullYear();
 
     return `${dd}-${mm}-${yyyy}`;
-};
+  };
 
-// ✅ FIX 2: Helper that returns NULL for empty dates and YYYY-MM-DD for valid dates
-const formatDateForAPI = (value) => {
-  if (!value) return null; // 👈 CRITICAL: Backend needs null, not ""
+  // ✅ FIX 2: Helper that returns NULL for empty dates and YYYY-MM-DD for valid dates
+  const formatDateForAPI = (value) => {
+    if (!value) return null; // 👈 CRITICAL: Backend needs null, not ""
 
-  let d;
-  if (value instanceof Date) {
-    d = value;
-  } else if (typeof value === "string") {
-    const cleaned = value.trim();
-    if (!cleaned) return null; // Return null for empty strings
+    let d;
+    if (value instanceof Date) {
+      d = value;
+    } else if (typeof value === "string") {
+      const cleaned = value.trim();
+      if (!cleaned) return null; // Return null for empty strings
 
-    const dateOnly = cleaned.split("T")[0]; // Handle ISO strings
-    let day, month, year;
+      const dateOnly = cleaned.split("T")[0]; // Handle ISO strings
+      let day, month, year;
 
-    if (REGEX_DMY.test(dateOnly)) {
-      const sep = dateOnly.includes("/") ? "/" : "-";
-      [day, month, year] = dateOnly.split(sep);
-      d = new Date(Number(year), Number(month) - 1, Number(day));
-    } else if (REGEX_YMD.test(dateOnly)) {
-      [year, month, day] = dateOnly.split("-");
-      d = new Date(Number(year), Number(month) - 1, Number(day));
+      if (REGEX_DMY.test(dateOnly)) {
+        const sep = dateOnly.includes("/") ? "/" : "-";
+        [day, month, year] = dateOnly.split(sep);
+        d = new Date(Number(year), Number(month) - 1, Number(day));
+      } else if (REGEX_YMD.test(dateOnly)) {
+        [year, month, day] = dateOnly.split("-");
+        d = new Date(Number(year), Number(month) - 1, Number(day));
+      } else {
+        d = new Date(cleaned);
+      }
     } else {
-      d = new Date(cleaned);
+      return null;
     }
-  } else {
-    return null;
-  }
 
-  if (!d || isNaN(d.getTime())) return null;
+    if (!d || isNaN(d.getTime())) return null;
 
-  // ✅ OUTPUT as YYYY-MM-DD (Standard for APIs)
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
+    // ✅ OUTPUT as YYYY-MM-DD (Standard for APIs)
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
 
-  return `${yyyy}-${mm}-${dd}`;
-};
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   try {
     // dispatch(setExportInvoiceLoading(true));
@@ -896,7 +905,7 @@ const formatDateForAPI = (value) => {
           woodenBoxCount: data.woodenBoxCount || 0,
           woodenBoxTyres: data.woodenBoxTyres || 0,
           woodenBoxWeight: data.woodenBoxWeight || 0,
-          woodenBoxDimension:data.woodenBoxDimension || '', //add
+          woodenBoxDimension: data.woodenBoxDimension || '', //add
           workorderno: data.workorderno || "",
           notifyPartyAddress: data.notifyPartyAddress || "",
           notifyPartyCity: data.notifyPartyCity || "",
@@ -908,8 +917,8 @@ const formatDateForAPI = (value) => {
           // 🚨 FIX 3: Add potentially missing Description
           InvoiceDiscription: data.InvoiceDiscription || "", //add
           ImportedCountryOfOriginGoods: data.ImportedCountryOfOriginGoods || "", //add
-          REXNumber:data.REXNumber || "",
-          IGSTLUT:data.IGSTLUT || '',
+          REXNumber: data.REXNumber || "",
+          IGSTLUT: data.IGSTLUT || '',
           items: data.items.map((item) => ({
             category: item.category || "",
             Platforms: item.platforms || "",
@@ -955,7 +964,7 @@ const formatDateForAPI = (value) => {
         "/TTS/International/Invoice/CustomInvoice", {
         state: { type: "Custom" }
       }
-      ); 
+      );
     }
   } catch (error) {
     dispatch(setExportInvoiceLoading(false));

@@ -593,9 +593,9 @@ const AdditionalDetailsForm = ({
               <InputField label="Port of Discharge" name="portOfDischarge" required register={register} errors={errors} />
               <InputField label="Final Destination" name="finalDestination" required register={register} errors={errors} />
               {/* <SelectField label="Container Type" name="containerType" required register={register} errors={errors} options={["20' GP", "20' OT", "40' OT", "40' HC", "LCL"]} /> */}
-              <InputField label="Container Type" name="containerType" required register={register} errors={errors} />
-              <InputField label="Container No" name="containerNo" required register={register} errors={errors} />
-              <InputField label="Seal No" name="containerSEALNO" required register={register} errors={errors} />
+              <InputField label="Container Type" name="containerType"  register={register} errors={errors} />
+              <InputField label="Container No" name="containerNo"  register={register} errors={errors} />
+              <InputField label="Seal No" name="containerSEALNO"  register={register} errors={errors} />
             </div>
           </section>
 
@@ -613,16 +613,16 @@ const AdditionalDetailsForm = ({
                   errors={errors}
                   required
                   options={[
-                    `SUN TYRE & WHEEL SYSTEMS~(A DIVISION OF SUNDARAM INDUSTRIES PRIVATE LIMITED)~7B/1, SIPCOT INDUSTRIAL COMPLEX VELLANUR KULATHOOR,~PUDUKKOTTAI - 622 002, TAMIL NADU, INDIA.~IEC: AAGCT6465R GSTIN: 33AAGCT6465R2ZJ PAN: AAGCT6465R`,
+                    `SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited)~( DIVISION SUN TYRE & WHEEL SYSTEMS) 7B/1,SIPCOT INDUSTRIAL COMPLEX~VELLANUR KULATHOOR, PUDUKKOTTAI -622 002~I.E.CODE: AAGCT6465R, PAN: AAGCT6465R, GSTIN : 33AAGCT6465R2ZJ`,
                     `SUN TYRE & WHEEL SYSTEMS~(A DIVISION OF SUNDARAM LANKA TYRES LIMITED)~LOT 02, BLOCK B, BIYAGAMA EXPORT PROCESSING ZONE,~BIYAGAMA, SRI LANKA.~VAT Registration No.114628417-7000`,
-                    `SUN TYRE & WHEEL SYSTEMS~(A DIVISION OF SUNDARAM INDUSTRIES PRIVATE LIMITED)~A1-F3/A, SIDCO INDUSTRIAL ESTATE MARAIMALAI NAGAR - 603 209,~TAMIL NADU, INDIA~IEC: AAGCT6465R GSTIN: 33AAGCT6465R2ZJ PAN: AAGCT6465R`,
-                    `SUN TYRE AND WHEEL SYSTEMS~(SUN-TWS) SOLID TYRE DIVISION OF SUNDARAM~INDUSTRIES PRIVATE LIMITED, NP-31B/4, KRISHNA TOWERS,~GUINDY, CHENNAI - 600032, TAMIL NADU, INDIA.~IEC: AAGCT6465R GSTIN: 33AAGCT6465R2ZJ PAN: AAGCT6465R`,
+                    `SUNDARAM INDUSTRIES PRIVATE LIMITED~( Formerly known as T.S.Rajam Tyres Pvt Limited)~( DIVISION SUN TYRE & WHEEL SYSTEMS) A1-F3/A, Sidco Industrial Estate~Maraimalai Nagar - 603 209, Tamil Nadu , India~IEC CODE NO: AAGCT6465R, GSTIN NO: 33AAGCT6465R2ZJ, PAN NO: AAGCT6465R`,
+                    `SUNDARAM INDUSTRIES PRIVATE LIMITED~SOLID TYRE DIVISION, (SUN-TWS, SUN TYRE AND WHEEL SYSTEMS)~NP-31B/4 KRISHNA TOWERS, GUINDY,CHENNAI,~TAMIL NADU, 600032,INDIA.~I.E.CODE: AAGCT6465R,  PAN: AAGCT6465R, GSTIN : 33AAGCT6465R2ZJ`,
                   ]}
                 />
               </div>
               <SelectField label="Country of Origin" name="countryOfOriginOfGoods" required register={register} errors={errors} options={["INDIA", "SRI LANKA", "INDIA & SRI LANKA"]} />
               <InputField label="Invoice No" type="number" name="invoiceNumber" required register={register} errors={errors} />
-              <InputField label="OTS Number" name="otsNo" required register={register} errors={errors} />
+              <InputField label="OTS Number" name="otsNo" register={register} errors={errors} />
               <InputField label="Buyers Order No" name="BuyersOrderNumber" register={register} errors={errors} />
               <section className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-4">
                 <h2 className="text-lg font-semibold mb-3">HSN Codes Grouped by Scheme</h2>
@@ -743,7 +743,6 @@ const AdditionalDetailsForm = ({
           </section>
 
           {/* --- SESSION 3: FINANCIALS --- */}
-          {/* --- SESSION 3: FINANCIALS --- */}
           <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
               3. Financials & Charges <MdOutlinePayments className="text-[var(--primary)]" />
@@ -757,7 +756,7 @@ const AdditionalDetailsForm = ({
                 register={register}
                 required
                 errors={errors}
-                options={["FOB", "CIF", "DDU", "DDP", "C&F"]}
+                options={["FOB", "CIF", "DDU", "DDP", "C&F","DAT"]}
               />
               <InputField
                 label="Place Of Incoterm"
@@ -1007,7 +1006,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 icon={PiWarehouseLight}
               />
               <TextArea
-                required
+                
                 label="Other Details"
                 rows={3}
                 placeholder="Enter Scheme Details..."
