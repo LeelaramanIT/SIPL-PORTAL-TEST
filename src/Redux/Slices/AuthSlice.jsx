@@ -88,7 +88,7 @@ export const userLogin = (credentials) => async (dispatch) => {
     console.log(error);
     dispatch(loginStart(false));
     const errorMessage =
-      error?.response?.message || 'Login Filed';
+      error?.response?.message || 'Login Faild';
     dispatch(loginFailure(errorMessage));
   }
 };
@@ -104,7 +104,7 @@ export const userLogout = (navigate) => async (dispatch) => {
   } catch (error) {
     console.log(error);
     const errorMessage =
-      error?.response?.data || error?.message || "Logout faild";
+      error?.response?.data || error?.message || "Logout Faild";
     dispatch(loginFailure(errorMessage));
   }
 };

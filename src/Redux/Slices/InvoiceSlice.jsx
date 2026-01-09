@@ -951,6 +951,11 @@ const formatDateForAPI = (value) => {
 
     if (res.status === 200) {
       toast.success("File Uploaded Successfully");
+      navigate(
+        "/TTS/International/Invoice/CustomInvoice", {
+        state: { type: "Custom" }
+      }
+      ); 
     }
   } catch (error) {
     dispatch(setExportInvoiceLoading(false));

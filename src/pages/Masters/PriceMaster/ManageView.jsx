@@ -231,7 +231,7 @@ export default function ManageView({ }) {
               }
               : { updateType: "PriceSheet", PriceRefNos: [currentSheet.id] };
 
-            const res = await api.put("/PriceSheet/update-status-SINGLE", payload);
+            const res = await api.post("/PriceSheet/update-status-SINGLE", payload);
 
             if (res.status === 200) {
               toast.success("Price Sheet status updated successfully.");
@@ -345,7 +345,7 @@ export default function ManageView({ }) {
       onConfirm: async () => {
         // 1. Define the logic as a Promise function
         const executeUpdate = async () => {
-          const response = await api.put('/PriceSheet/update-status-SINGLE', payload);
+          const response = await api.post('/PriceSheet/update-status-SINGLE', payload);
 
           // Check custom validation if axios doesn't throw automatically on non-200
           if (response.status !== 200) {
