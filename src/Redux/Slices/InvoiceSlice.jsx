@@ -96,11 +96,18 @@ const invoiceSlice = createSlice({
       // 2️⃣ Prepare processed invoices
       const processedInvoices = groupedInvoices.map((invoice, index) => {
         // Calculate totals
-        const totalqty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
-        const totalwt = invoice.items.reduce(
-          (acc, item) => acc + Number(item.finishedWt + item?.rimfinishedwt) * item.itemQty,
+        const totalqty = invoice.items.reduce(
+          (acc, item) => acc + (Number(item.itemQty) || 0),
           0
         );
+        const totalwt = invoice.items.reduce((acc, item) => {
+          const finishedWt = Number(item.finishedWt) || 0;
+          const rimFinishedWt = Number(item.rimfinishedwt) || 0;
+          const qty = Number(item.itemQty) || 0;
+
+          return acc + (finishedWt + rimFinishedWt) * qty;
+        }, 0);
+
 
         const grandTotal = invoice.items.reduce((acc, item) => {
           const tyre = Number(item.basicprice) || 0;
@@ -109,8 +116,10 @@ const invoiceSlice = createSlice({
 
           return acc + (tyre + rim) * qty;
         }, 0);
-
-        const unitPrice = totalwt > 0 ? (grandTotal / totalwt).toFixed(5) : "0";
+        const unitPrice =
+          totalwt > 0 && !Number.isNaN(grandTotal)
+            ? (grandTotal / totalwt).toFixed(5)
+            : "0.00000";
         const userCurrency = invoice?.usercurrency;
 
         // 3️⃣ Extract the scheme value directly (not array)
@@ -221,7 +230,10 @@ const invoiceSlice = createSlice({
         return {
           ...invoice,
 
-          invoiceNumber: Number(invoice.invoiceNumber) + index,
+          invoiceNumber:
+            typeof invoice.invoiceNumber === "number"
+              ? invoice.invoiceNumber + index
+              : invoice.invoiceNumber,
           totalqty,
           totalwt: `${totalwt.toFixed(3)}`,
           grossWeight: `${totalGrossWeight.toFixed(3)}`,
@@ -244,9 +256,10 @@ const invoiceSlice = createSlice({
           discountValue2,
           discountValue3,
           amountInWords: `${userCurrency}${numberToWords(
-            finalGrandTotal,
+            Number.isFinite(finalGrandTotal) ? finalGrandTotal : 0,
             userCurrency
           )}`,
+
 
           unitPrice,
           schemeLicences: schemeLicenceValue,
@@ -307,10 +320,13 @@ const invoiceSlice = createSlice({
         const totalqty = invoice.items.reduce((acc, item) => acc + (Number(item.itemQty) || 0), 0);
 
         // Net Weight (Goods only)
-        const goodsWeight = invoice.items.reduce(
-          (acc, item) => acc + (Number(item.finishedWt + item?.rimfinishedwt) || 0) * (Number(item.itemQty) || 0),
-          0
-        );
+        const goodsWeight = invoice.items.reduce((acc, item) => {
+          const finishedWt = Number(item.finishedWt) || 0;
+          const rimFinishedWt = Number(item.rimfinishedwt) || 0;
+          const qty = Number(item.itemQty) || 0;
+
+          return acc + (finishedWt + rimFinishedWt) * qty;
+        }, 0);
 
         const totalPrices = invoice.items.map((item) => {
           const tyre = Number(item.basicprice) || 0;
@@ -359,7 +375,9 @@ const invoiceSlice = createSlice({
             pallatCount = Number(matched.pallatCount ?? 0);
             pallatTyres = Number(matched.numberOfTyres ?? 0);
             pallatWeight = Number(matched.pallatWeight ?? 0);
-            palletDimension = (matched.palletDimension).toUpperCase() ?? '';
+            palletDimension = matched.palletDimension
+              ? String(matched.palletDimension).toUpperCase()
+              : '';
 
 
             // Wooden box (new)
@@ -367,7 +385,9 @@ const invoiceSlice = createSlice({
             woodenBoxCount = Number(matched.woodenBoxCount ?? 0);
             woodenBoxTyres = Number(matched.woodenBoxTyres ?? 0);
             woodenBoxWeight = Number(matched.woodenBoxWeight ?? 0);
-            woodenBoxDimension = (matched.woodenBoxDimension).toUpperCase() ?? '';
+            woodenBoxDimension = matched.woodenBoxDimension
+              ? String(matched.woodenBoxDimension).toUpperCase()
+              : '';
             InvoiceDiscription = matched.InvoiceDiscription;
             plantAddress = matched.plantAddress;
           }
@@ -382,7 +402,7 @@ const invoiceSlice = createSlice({
         // console.log("pallet QTY",palletizedQty);
         // console.log("pallet Tyres",pallatTyres);
         const woodenBoxQty = Number(woodenBoxCount) || 0;
-        const woodenBoxedTyres = Number(woodenBoxTyres)
+        const woodenBoxedTyres = Number(woodenBoxTyres) || 0;
         // console.log("woodenBox Qty",woodenBoxQty);
         // console.log("woodenBox Tyres",woodenBoxTyres);
         const totalPacked = Number(palletizedQty) + Number(woodenBoxQty);
@@ -480,7 +500,10 @@ const invoiceSlice = createSlice({
 
 
         return {
-          invoiceNumber: Number(invoice?.invoiceNumber || 0) + index,
+          invoiceNumber:
+            typeof invoice?.invoiceNumber === "number"
+              ? invoice.invoiceNumber + index
+              : invoice.invoiceNumber,
           orderRefNo: invoice?.orderRefNo || "",
           unitPrice, // Already a string
           date: new Date().toLocaleDateString("en-GB", {
@@ -564,7 +587,10 @@ const invoiceSlice = createSlice({
           otherDiscount: totalDiscount,
           grandTotal: finalGrandTotal,
 
-          amountInWords: `${userCurrency} ${numberToWords(parseFloat(finalGrandTotal), userCurrency)}`,
+          amountInWords: `${userCurrency} ${numberToWords(
+            Number.isFinite(Number(finalGrandTotal)) ? Number(finalGrandTotal) : 0,
+            userCurrency
+          )}`,
 
           // Ensure these are strings
           grossWeight: totalGrossWeight.toFixed(3),
@@ -675,9 +701,9 @@ const parseDMY = (dateStr) => {
 export const submitInvoice = (payload, navigate) => async (dispatch) => {
   const REGEX_DMY = /^\d{2}[-/]\d{2}[-/]\d{4}$/;
   const REGEX_YMD = /^\d{4}-\d{2}-\d{2}$/;
-  
-  
-console.log(payload)
+
+
+  console.log(payload)
   const safeDateDMY = (value) => {
     if (!value) return "";
 
@@ -812,10 +838,10 @@ console.log(payload)
         // grand total + additional charges
         const finalGrandTotal =
           (parseFloat(data.grandTotal) || 0)// +
-          // otherChargesValue1 +
-          // otherChargesValue2 +
-          // otherChargesValue3 -
-          // totalDiscount;
+        // otherChargesValue1 +
+        // otherChargesValue2 +
+        // otherChargesValue3 -
+        // totalDiscount;
         return {
           o_ID: Number(data.o_id) || 0,
           exchangeRate: Number(data.ExchangeCurrency) || 0,
