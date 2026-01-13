@@ -14,6 +14,7 @@ const Input = ({
       <div className="relative">
         <input
           type={type}
+          inputMode={type}
           name={name}
           id={id || name}
           placeholder={placeholder}

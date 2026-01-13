@@ -30,7 +30,7 @@ const InvoicePDF = ({ data, styles }) => (
       </Text>
     </View>
     <View style={styles.row1}>
-      <Text style={styles.heading}>{data?.licenceDetails?.scheme === "Import Invoice" ? "INVOICE CUM PACKING LIST" : "INVOICE CUM PACKING LIST"}</Text>
+      <Text style={styles.heading}>{data?.licenceDetails?.scheme === "Import Invoice" ? "RE EXPORT INVOICE CUM PACKING LIST" : "INVOICE CUM PACKING LIST"}</Text>
     </View>
     <View style={styles.row2}>
       <View style={styles.row2left}>
@@ -276,7 +276,7 @@ const InvoicePDF = ({ data, styles }) => (
 
         <View style={styles.row4_1value}>
           <View>
-            {data?.preCarriageBy === "AIR"? "":<Text style={[styles.text, { fontWeight: "bold" }]}>CONTAINER SIZE:</Text>}
+            {data?.containerDetails?.size ? <Text style={[styles.text, { fontWeight: "bold" }]}>CONTAINER SIZE:</Text>:''}
             <Text style={styles.text}>{data?.containerDetails?.size}</Text>
           </View>
 

@@ -98,13 +98,17 @@ const invoiceSlice = createSlice({
         // Calculate totals
         const totalqty = invoice.items.reduce((acc, item) => acc + item.itemQty, 0);
         const totalwt = invoice.items.reduce(
-          (acc, item) => acc + item.finishedWt * item.itemQty,
+          (acc, item) => acc + Number(item.finishedWt + item?.rimfinishedwt) * item.itemQty,
           0
         );
-        const grandTotal = invoice.items.reduce(
-          (acc, item) => acc + item.basicprice * item.itemQty,
-          0
-        );
+
+        const grandTotal = invoice.items.reduce((acc, item) => {
+          const tyre = Number(item.basicprice) || 0;
+          const rim = item.rimStatus ? Number(item.rimUnitPrice) || 0 : 0;
+          const qty = Number(item.itemQty) || 0;
+
+          return acc + (tyre + rim) * qty;
+        }, 0);
 
         const unitPrice = totalwt > 0 ? (grandTotal / totalwt).toFixed(5) : "0";
         const userCurrency = invoice?.usercurrency;
@@ -304,14 +308,17 @@ const invoiceSlice = createSlice({
 
         // Net Weight (Goods only)
         const goodsWeight = invoice.items.reduce(
-          (acc, item) => acc + (Number(item.finishedWt) || 0) * (Number(item.itemQty) || 0),
+          (acc, item) => acc + (Number(item.finishedWt + item?.rimfinishedwt) || 0) * (Number(item.itemQty) || 0),
           0
         );
 
-        const totalPrices = invoice.items.map(
-          (item) => (Number(item.basicprice) || 0) * (Number(item.itemQty) || 0)
-        );
+        const totalPrices = invoice.items.map((item) => {
+          const tyre = Number(item.basicprice) || 0;
+          const rim = item.rimStatus ? Number(item.rimUnitPrice) || 0 : 0;
+          const qty = Number(item.itemQty) || 0;
 
+          return (tyre + rim) * qty;
+        });
         const grandTotal = totalPrices.reduce((acc, price) => acc + price, 0);
         const formattedGrandTotal = grandTotal.toFixed(5);
 
@@ -668,7 +675,9 @@ const parseDMY = (dateStr) => {
 export const submitInvoice = (payload, navigate) => async (dispatch) => {
   const REGEX_DMY = /^\d{2}[-/]\d{2}[-/]\d{4}$/;
   const REGEX_YMD = /^\d{4}-\d{2}-\d{2}$/;
-
+  
+  
+console.log(payload)
   const safeDateDMY = (value) => {
     if (!value) return "";
 
@@ -802,14 +811,14 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
 
         // grand total + additional charges
         const finalGrandTotal =
-          (parseFloat(data.grandTotal) || 0) +
-          otherChargesValue1 +
-          otherChargesValue2 +
-          otherChargesValue3 -
-          totalDiscount;
+          (parseFloat(data.grandTotal) || 0)// +
+          // otherChargesValue1 +
+          // otherChargesValue2 +
+          // otherChargesValue3 -
+          // totalDiscount;
         return {
           o_ID: Number(data.o_id) || 0,
-          exchangeRate: data.ExchangeCurrency || 0,
+          exchangeRate: Number(data.ExchangeCurrency) || 0,
           type: (data.type)?.toUpperCase() || "",
           SpecialRequest: data.specialRequest || "",
           billID: Number(data.billid) || 0,
@@ -893,7 +902,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           totalWeight: parseFloat(data.grossWeight) || 0,
           netweight: parseFloat(data.totalwt) || 0,
           amountInWords: `${data?.usercurrency} ${numberToWords(finalGrandTotal, data?.usercurrency)}`,
-          docUnitPrice: String(data.unitPrice || 0),
+          docUnitPrice: Number(data.unitPrice || 0),
           // pallet fields
           isPallet: data.isPallat || false,
           palletCount: data.pallatCount || 0,

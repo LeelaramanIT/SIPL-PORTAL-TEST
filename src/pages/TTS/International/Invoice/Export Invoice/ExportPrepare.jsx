@@ -119,7 +119,7 @@ const ExportInvoicePrepare = () => {
   const matchesSearch = (item) => { //SEARCH
     if (!searchQuery) return true;
     const lowerQuery = searchQuery.toLowerCase();
-    
+
     // Combine fields you want to search by
     const searchString = `
       ${item?.category || ""} 
@@ -144,33 +144,39 @@ const ExportInvoicePrepare = () => {
 
   // UseMemo to get the user's currency symbol and code.
   const userCurrency = getCurrency(invoiceDetails?.usercurrency);
+  // useMemo for efficient total quantity calculation.
+  const totalQTY = useMemo(() => {
+    const items = [...(localItems || []), ...(splitItems || [])];
+    return items.reduce(
+      (sum, item) => sum + (Number(item?.itemQty) || 0),
+      0
+    );
+  }, [localItems, splitItems]);
 
   // useMemo for efficient total price calculation.
   const grandTotal = useMemo(() => {
-    const items = invoiceDetails?.items || [];
-    return items.reduce(
-      (sum, item) =>
-        sum + (parseFloat(item?.basicprice) || 0) * (parseFloat(item?.itemQty) || 0),
-      0
-    );
-  }, [invoiceDetails]);
+    const items = [...(localItems || []), ...(splitItems || [])];
 
+    return items.reduce((sum, item) => {
+      const tyre = Number(item?.basicprice) || 0;
+      const rim = item?.rimStatus ? Number(item?.rimUnitPrice) || 0 : 0;
+      const qty = Number(item?.itemQty) || 0;
 
-  // useMemo for efficient total quantity calculation.
-  const totalQTY = useMemo(() => {
-    const items = invoiceDetails?.items || [];
-    return items.reduce((sum, item) => sum + (parseFloat(item?.itemQty) || 0), 0);
-  }, [invoiceDetails?.item]);
-
+      return sum + (tyre + rim) * qty;
+    }, 0);
+  }, [localItems, splitItems]);
 
   // useMemo for efficient total finished weight (FWT) calculation.
   const totalFWT = useMemo(() => {
-    const items = invoiceDetails?.items ?? [];
-    return items.reduce(
-      (sum, item) => sum + (Number(item?.finishedWt) || 0) * (Number(item?.itemQty) || 0),
-      0
-    );
-  }, [invoiceDetails?.items]);
+    const items = [...(localItems || []), ...(splitItems || [])];
+    return items.reduce((sum, item) => {
+      const tyrefw = Number(item?.finishedWt) || 0;
+      const rimfw = Number(item?.rimfinishedwt) || 0;
+      const qty = Number(item?.itemQty) || 0;
+      return sum + (tyrefw + rimfw) * qty;
+    }, 0);
+  }, [localItems, splitItems]);
+
 
   // Function to handle changing the invoice type (Direct or Scheme).
   const handleInvoiceTypeChange = (type) => {
@@ -199,15 +205,17 @@ const ExportInvoicePrepare = () => {
 
   // useMemo to group items by plant for "COMBI" shipments.
   const combiOrders = useMemo(() => {
-    if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items) return {};
-    const grouped = invoiceDetails.items.reduce((acc, item) => {
-      const plant = item.plant;
+    if (invoiceDetails?.shipmentType !== "COMBI" || !invoiceDetails?.items) {
+      return {};
+    }
+
+    return invoiceDetails.items.reduce((acc, item) => {
+      const plant = item?.plant || "UNKNOWN";
       if (!acc[plant]) acc[plant] = [];
       acc[plant].push(item);
       return acc;
     }, {});
-    return grouped;
-  }, [invoiceDetails?.shipmentType, invoiceDetails?.items]); // Recalculates for COMBI orders or item changes.
+  }, [invoiceDetails?.shipmentType, invoiceDetails?.items]);
 
   // Function to close the AdditionalDetailsForm modal.
   const handleCloseForm = () => {
@@ -516,133 +524,137 @@ const ExportInvoicePrepare = () => {
             </thead>
             <tbody>
               {(localItems || []).map((item, idx) => {
-              if (!matchesSearch(item)) return null;
-              return(
-                <tr
-                  key={idx}
-                  className={`text-[13px] text-center border-b border-[var(--primary-hover)]/30`}
-                >
-                  {/* Existing Columns */}
-                  <td>{item?.category}</td>
-                  <td>{item?.platforms}</td>
-                  <td colSpan={2}>{item?.tyreSize}</td>
-                  <td>{item?.tyreRim}</td>
-                  <td>{item?.tyreType}</td>
-                  <td>{item?.brand}</td>
-                  <td>{item?.sidewall || "-"}</td>
-                  <td>{item?.basicprice}</td>
-                  <td>{item?.itemQty}</td>
-                  <td>{((Number(item?.basicprice) || 0) * (Number(item?.itemQty) || 0)).toFixed(2)}</td>
-                  <td>{((Number(item?.finishedWt) || 0) * (Number(item?.itemQty) || 0)).toFixed(3)}</td>
-                  <td colSpan={2}>{item?.additionalInfo || "-"}</td>
-                  <td>{item?.plant}</td>
-                  <td className="break-all">{item?.itemCode}</td>
+                if (!matchesSearch(item)) return null;
+                const tyre = Number(item?.basicprice) || 0;
+                const rim = item?.rimStatus ? Number(item?.rimUnitPrice) || 0 : 0;
+                const qty = Number(item?.itemQty) || 0;
+                const tyrefw = Number(item?.finishedWt) || 0;
+                const rimfw = Number(item?.rimfinishedwt) || 0;
+                return (
+                  <tr
+                    key={idx}
+                    className={`text-[13px] text-center border-b border-[var(--primary-hover)]/30`}
+                  >
+                    {/* Existing Columns */}
+                    <td>{item?.category}</td>
+                    <td>{item?.platforms}</td>
+                    <td colSpan={2}>{item?.tyreSize}</td>
+                    <td>{item?.tyreRim}</td>
+                    <td>{item?.tyreType}</td>
+                    <td>{item?.brand}</td>
+                    <td>{item?.sidewall || "-"}</td>
+                    <td>{item?.basicprice}</td>
+                    <td>{item?.itemQty}</td>
+                    <td>{((tyre + rim) * qty).toFixed(2)}</td>
+                    <td>{((tyrefw + rimfw) * qty).toFixed(3)}</td>
+                    <td colSpan={2}>{item?.additionalInfo || "-"}</td>
+                    <td>{item?.plant}</td>
+                    <td className="break-all">{item?.itemCode}</td>
 
-                  {invoiceType === "Scheme_Invoice" && (
-                    <>
-                      <td>
-                        <input
-                          type="number"
-                          min="1"
-                          max={item.itemQty}
-                          value={splitInputs[idx]?.splitQty || ""}
-                          onChange={(e) =>
-                            setSplitInputs((prev) => {
-                              const newInputs = [...prev];
-                              newInputs[idx] = {
-                                ...newInputs[idx],
-                                splitQty: Number(e.target.value),
+                    {invoiceType === "Scheme_Invoice" && (
+                      <>
+                        <td>
+                          <input
+                            type="number"
+                            min="1"
+                            max={item.itemQty}
+                            value={splitInputs[idx]?.splitQty || ""}
+                            onChange={(e) =>
+                              setSplitInputs((prev) => {
+                                const newInputs = [...prev];
+                                newInputs[idx] = {
+                                  ...newInputs[idx],
+                                  splitQty: Number(e.target.value),
+                                };
+                                return newInputs;
+                              })
+                            }
+                            className="w-16 border rounded px-1"
+                          />
+                        </td>
+
+                        <td colSpan={2}>
+                          <select
+                            value={item.scheme === "Direct" ? "" : item.scheme}
+                            onChange={(e) => {
+                              dispatch(setShowSubmit(false));
+                              const schemeValue = e.target.value;
+                              const updated = [...(localItems || [])];
+                              updated[idx] = {
+                                ...updated[idx],
+                                scheme: schemeValue ? schemeValue : "Direct",
+                                isScheme: !!schemeValue,
                               };
-                              return newInputs;
-                            })
-                          }
-                          className="w-16 border rounded px-1"
-                        />
-                      </td>
-
-                      <td colSpan={2}>
-                        <select
-                          value={item.scheme === "Direct" ? "" : item.scheme}
-                          onChange={(e) => {
-                            dispatch(setShowSubmit(false));
-                            const schemeValue = e.target.value;
-                            const updated = [...(localItems || [])];
-                            updated[idx] = {
-                              ...updated[idx],
-                              scheme: schemeValue ? schemeValue : "Direct",
-                              isScheme: !!schemeValue,
-                            };
-                            dispatch(setLocalItems(updated));
-                          }}
-                        >
-                          <option value="">Select Scheme</option>
-                          <option value="Advance">Advance</option>
-                          <option value="Moowr">Moowr</option>
-                          <option value="Import Invoice">Import Invoice</option>
-                          <option value="DDB">DDB</option>
-                        </select>
-                      </td>
-                      <td>
-                        <button
-                          className={`px-2 rounded ${splitInputs[idx]?.splitQty
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            }`}
-                          disabled={!splitInputs[idx]?.splitQty}
-                          onClick={() => handleSplitItem(idx)}
-                        >
-                          Split
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              )})}
+                              dispatch(setLocalItems(updated));
+                            }}
+                          >
+                            <option value="">Select Scheme</option>
+                            <option value="Advance">Advance</option>
+                            <option value="Moowr">Moowr</option>
+                            <option value="Import Invoice">Import Invoice</option>
+                            <option value="DDB">DDB</option>
+                          </select>
+                        </td>
+                        <td>
+                          <button
+                            className={`px-2 rounded ${splitInputs[idx]?.splitQty
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              }`}
+                            disabled={!splitInputs[idx]?.splitQty}
+                            onClick={() => handleSplitItem(idx)}
+                          >
+                            Split
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                )
+              })}
 
               {/* Display Split Items */}
               {(splitItems || []).map((splitItem, i) => {
-              if (!matchesSearch(splitItem)) return null;
-              return (
-                <tr
-                  key={`split-${i}`}
-                  className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--primary-hover)]/30"
-                >
-                  <td>{splitItem.category}</td>
-                  <td>{splitItem.platforms}</td>
-                  <td colSpan={2}>{splitItem.tyreSize}</td>
-                  <td>{splitItem.tyreRim}</td>
-                  <td>{splitItem.tyreType}</td>
-                  <td>{splitItem.brand}</td>
-                  <td>{splitItem.sidewall || "-"}</td>
-                  <td>{splitItem.basicprice}</td>
+                if (!matchesSearch(splitItem)) return null;
+                const tyre = Number(splitItem?.basicprice) || 0;
+                const rim = splitItem?.rimStatus ? Number(splitItem?.rimUnitPrice) || 0 : 0;
+                const qty = Number(splitItem?.splitQty) || 0;
+                const tyrefw = Number(splitItem?.finishedWt) || 0;
+                const rimfw = Number(splitItem?.rimfinishedwt) || 0;
+                return (
+                  <tr
+                    key={`split-${i}`}
+                    className="text-[13px] dark:text-black text-center bg-yellow-100 border-b border-[var(--primary-hover)]/30"
+                  >
+                    <td>{splitItem.category}</td>
+                    <td>{splitItem.platforms}</td>
+                    <td colSpan={2}>{splitItem.tyreSize}</td>
+                    <td>{splitItem.tyreRim}</td>
+                    <td>{splitItem.tyreType}</td>
+                    <td>{splitItem.brand}</td>
+                    <td>{splitItem.sidewall || "-"}</td>
+                    <td>{splitItem.basicprice}</td>
+                    <td>{splitItem.splitQty}</td>
+                    <td>{((tyre + rim) * qty).toFixed(2)}</td>
+                    <td>{((tyrefw + rimfw) * qty).toFixed(3)}</td>
+                    <td colSpan={2}>{splitItem.additionalInfo || "-"}</td>
+                    <td>{splitItem.plant}</td>
+                    <td className="break-all">{splitItem.itemCode}</td>
+                    <td>-</td>
+                    <td colSpan={2}>{splitItem.scheme}</td>
 
-                  <td>{splitItem.splitQty}</td>
-
-                  <td>
-                    {(Number(splitItem.basicprice || 0) * Number(splitItem.splitQty || 0)).toFixed(2)}
-                  </td>
-
-                  <td>
-                    {(Number(splitItem.finishedWt || 0) * Number(splitItem.splitQty || 0)).toFixed(3)}
-                  </td>
-
-                  <td colSpan={2}>{splitItem.additionalInfo || "-"}</td>
-                  <td>{splitItem.plant}</td>
-                  <td className="break-all">{splitItem.itemCode}</td>
-                  <td>-</td>
-                  <td colSpan={2}>{splitItem.scheme}</td>
-
-                  {/* Remove Button */}
-                  <td>
-                    <button
-                      className="bg-red-500 text-white px-2 rounded"
-                      onClick={() => handleRemoveSplitItem(splitItem, i)}
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              )})}
+                    {/* Remove Button */}
+                    <td>
+                      <button
+                        className="bg-red-500 text-white px-2 rounded"
+                        onClick={() => handleRemoveSplitItem(splitItem, i)}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
 
             <tfoot className="font-semibold text-gray-800 dark:text-white">
@@ -696,39 +708,63 @@ const ExportInvoicePrepare = () => {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(combiOrders || {})?.map(([plant, items], idx) => {
-                  // Calculate totals per plant
-                  const tyreQty = items.reduce(
-                    (sum, item) => sum + (Number(item.itemQty) || 0),
-                    0
+                {Object.entries(combiOrders || {}).map(([plant, items], idx) => {
+                  const {
+                    tyreQty,
+                    tyrePrice,
+                    tyreWt,
+                    rimQty,
+                    rimPrice,
+                    rimWt,
+                    totalQty,
+                    totalPrice,
+                    totalWt,
+                  } = items.reduce(
+                    (acc, item) => {
+                      const qty = Number(item.itemQty) || 0;
+
+                      const tyreUnitPrice = Number(item.basicprice) || 0;
+                      const rimUnitPrice =
+                        item.rimStatus ? Number(item.rimUnitPrice) || 0 : 0;
+
+                      const tyreWeight = Number(item.finishedWt) || 0;
+                      const rimWeight = Number(item.rimfinishedwt) || 0;
+
+
+                      acc.tyreQty += qty;
+                      acc.rimQty += item.rimStatus ? qty : 0;
+
+                      acc.tyrePrice += tyreUnitPrice * qty;
+                      acc.rimPrice += rimUnitPrice * qty;
+
+                      acc.tyreWt += tyreWeight * qty;
+                      acc.rimWt += rimWeight * qty;
+
+                      acc.totalQty += qty;
+                      acc.totalPrice += (tyreUnitPrice + rimUnitPrice) * qty;
+                      acc.totalWt += (tyreWeight + rimWeight) * qty;
+
+                      return acc;
+                    },
+                    {
+                      tyreQty: 0,
+                      tyrePrice: 0,
+                      tyreWt: 0,
+                      rimQty: 0,
+                      rimPrice: 0,
+                      rimWt: 0,
+                      totalQty: 0,
+                      totalPrice: 0,
+                      totalWt: 0,
+                    }
                   );
-                  const tyrePrice = items.reduce(
-                    (sum, item) => sum + (Number(item.basicprice) || 0) * (Number(item.itemQty) || 0),
-                    0
-                  );
-                  const tyreWt = items.reduce(
-                    (sum, item) => sum + (Number(item.finishedWt) || 0) * (Number(item.itemQty) || 0),
-                    0
-                  );
-                  const rimQty = items.reduce(
-                    (sum, item) => sum + (Number(item.rimItemQty) || 0),
-                    0
-                  );
-                  const rimPrice = items.reduce(
-                    (sum, item) => sum + (Number(item.rimUnitPrice) || 0) * (Number(item.rimItemQty) || 0),
-                    0
-                  );
-                  const rimWt = 0;
-                  const totalQty = tyreQty + rimQty;
-                  const totalPrice = tyrePrice + rimPrice;
-                  const totalWt = tyreWt + rimWt;
 
                   return (
                     <tr
                       key={plant}
                       className={`text-[13px] text-center ${idx % 2 === 0
-                        ? "bg-[#F4F3FE] dark:bg-gray-700"
-                        : "bg-white dark:bg-gray-800"
+                          ? "bg-[#F4F3FE] dark:bg-gray-700"
+                          : "bg-white dark:bg-gray-800"
                         } text-gray-700 dark:text-gray-300`}
                     >
                       <td>{plant}</td>
@@ -743,8 +779,10 @@ const ExportInvoicePrepare = () => {
                       <td>{totalWt.toFixed(2)}</td>
                       <td>RFD</td>
                     </tr>
+
                   );
                 })}
+
               </tbody>
               <tfoot className="font-semibold text-gray-800 dark:text-white">
                 <tr className="bg-gray-100 dark:bg-gray-700 sticky bottom-0 z-10">
@@ -970,20 +1008,20 @@ export function ClientDetailsSection({ invoiceDetails }) {
     };
   }, []); // The empty dependency array ensures this effect runs once on mount.
   const getAvatarLabel = (name) => {
-  if (!name) return "";
-  
-  const parts = name.trim().split(" ");
-  const firstWord = parts[0];
+    if (!name) return "";
 
-  // RULE: If the first word is short (3 letters or less), use it as is (e.g., "ATC", "IBM", "MRF")
-  if (firstWord.length <= 3) {
-    return firstWord.toUpperCase();
-  }
+    const parts = name.trim().split(" ");
+    const firstWord = parts[0];
 
-  // OTHERWISE: Take the first letter of the first 2 words (e.g., "Moiddeen Kaja" -> "MK")
-  if (parts.length === 1) return firstWord.charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-};
+    // RULE: If the first word is short (3 letters or less), use it as is (e.g., "ATC", "IBM", "MRF")
+    if (firstWord.length <= 3) {
+      return firstWord.toUpperCase();
+    }
+
+    // OTHERWISE: Take the first letter of the first 2 words (e.g., "Moiddeen Kaja" -> "MK")
+    if (parts.length === 1) return firstWord.charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+  };
 
   return (
     <div
@@ -998,11 +1036,11 @@ export function ClientDetailsSection({ invoiceDetails }) {
               <span className="text-white font-bold text-lg">
                 {invoiceDetails?.custfullname
                   ? invoiceDetails.custfullname
-                    .split(" ")              
-                    .map((word) => word[0])  
-                    .slice(0, 2)             
-                    .join("")                
-                    .toUpperCase()           
+                    .split(" ")
+                    .map((word) => word[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()
                   : "?"}
               </span>
             </div>

@@ -756,7 +756,7 @@ const AdditionalDetailsForm = ({
                 register={register}
                 required
                 errors={errors}
-                options={["FOB", "CIF", "DDU", "DDP", "C&F","DAT"]}
+                options={["FOB", "CIF", "DDU", "DDP", "C&F","DAP"]}
               />
               <InputField
                 label="Place Of Incoterm"
@@ -769,7 +769,7 @@ const AdditionalDetailsForm = ({
               {invoiceFinalData[0].usercurrency !== "INR" && (
                 <InputField
                 label={`Exchange Rate (${invoiceFinalData[0]?.usercurrency}) `}
-                type="number"
+                type="decimal"
                 name="ExchangeCurrency"
                 required
                 register={register}
