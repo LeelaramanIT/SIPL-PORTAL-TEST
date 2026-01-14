@@ -48,7 +48,7 @@ export default function UploadView() {
       dispatch(setDates({ start: today })); // Dispatch to Redux
     }
     // Do NOT call setStartDate(today) here
-  }, []);
+  }, [sheetMode]);
 
   // 2. FUNCTION TO FETCH EXISTING SHEETS
   const fetchExistingSheets = async () => {
@@ -73,8 +73,8 @@ export default function UploadView() {
   const handleModeChange = (mode) => {
     dispatch(setSheetMode(mode));
     if (mode === "new") {
+      dispatch(setPriceSheetRef("")); // Revert to the API ID
       fetchNextSheetID(); // Get a new ID
-      dispatch(setPriceSheetRef(generatedId)); // Revert to the API ID
     } else {
       dispatch(setPriceSheetRef("")); // Clear it for user input
       fetchExistingSheets(); // Fetch list when clicking "Existing"
@@ -88,19 +88,19 @@ export default function UploadView() {
     }
   }, [deferredSearch, errorFilter]);
 
-  useEffect(() => {
-    const fetchNextSheetID = async () => {
-      const res = await api.get('/PriceSheet/New-price-sheet-ref-no');
-      if (res.status === 200) {
-        dispatch(setPriceSheetRef(res.data.pricesheetNo));
-      }
-    };
-    fetchNextSheetID();
-    if (!startDate) {
-      const today = new Date().toISOString().split('T')[0];
-      dispatch(setDates({ start: today }));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const fetchNextSheetID = async () => {
+  //     const res = await api.get('/PriceSheet/New-price-sheet-ref-no');
+  //     if (res.status === 200) {
+  //       dispatch(setPriceSheetRef(res.data.pricesheetNo));
+  //     }
+  //   };
+  //   fetchNextSheetID();
+  //   if (!startDate) {
+  //     const today = new Date().toISOString().split('T')[0];
+  //     dispatch(setDates({ start: today }));
+  //   }
+  // }, []);
 
   const duplicateCount = useMemo(() => excelJson.filter(i => i.isDuplicate).length, [excelJson]);
 

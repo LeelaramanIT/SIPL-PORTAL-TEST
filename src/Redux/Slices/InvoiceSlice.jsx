@@ -90,8 +90,6 @@ const invoiceSlice = createSlice({
       // 1️⃣ Split invoices by scheme
       const groupedInvoices = splitInvoiceByScheme(action.payload);
       const totalInvoices = groupedInvoices.length;
-      console.log(groupedInvoices);
-
 
       // 2️⃣ Prepare processed invoices
       const processedInvoices = groupedInvoices.map((invoice, index) => {
@@ -143,8 +141,6 @@ const invoiceSlice = createSlice({
         // Note: Use 'schemeDetails' if you used the updated code from the previous step, 
         // otherwise use 'schemeLicences'
         const listToCheck = invoice.schemeDetails
-        console.log(listToCheck);
-
 
         if (invoice.scheme && Array.isArray(listToCheck)) {
 
@@ -284,7 +280,6 @@ const invoiceSlice = createSlice({
       });
 
       // 5️⃣ Save result in Redux state
-      console.log(processedInvoices);
 
       state.exportInvoices.FinalInvoiceDetails = processedInvoices;
     },
@@ -294,7 +289,7 @@ const invoiceSlice = createSlice({
       state.exportInvoices.updatedInvoiceDetails = action.payload;
 
       const invoices = splitInvoiceByScheme(action.payload);
-      console.log(invoices);
+
 
       // hsncode 
       const matchedHSN = invoices.map(invoice => {
@@ -395,27 +390,24 @@ const invoiceSlice = createSlice({
         }
 
         // Calculate Total Gross Weight
-        // console.log(invoice.scheme);
+
         const totalInvoiceQty = totalqty; // (calculated from invoice.items previously)
         const palletizedQty = Number(pallatCount) || 0; // The entered 'numberOfTyres'
         const palletizedTyres = Number(pallatTyres) || 0;
-        // console.log("pallet QTY",palletizedQty);
-        // console.log("pallet Tyres",pallatTyres);
+
         const woodenBoxQty = Number(woodenBoxCount) || 0;
         const woodenBoxedTyres = Number(woodenBoxTyres) || 0;
-        // console.log("woodenBox Qty",woodenBoxQty);
-        // console.log("woodenBox Tyres",woodenBoxTyres);
+
         const totalPacked = Number(palletizedQty) + Number(woodenBoxQty);
-        // console.log("Total Packed:", totalPacked);
+
         const looseQty = Number(totalInvoiceQty) - Number(woodenBoxTyres) - Number(pallatTyres);
-        // console.log("Loose Qty:", looseQty);
+
         const totalCount = looseQty + totalPacked;
 
         const totalGrossWeight =
           (Number(goodsWeight) || 0) +
           (isPallat ? (Number(pallatWeight) || 0) : 0) +
           (isWoodenBox ? (Number(woodenBoxWeight) || 0) : 0);
-
 
         // ---- TYRE COUNT OBJECT ----
         const tyreCount = {
@@ -492,11 +484,15 @@ const invoiceSlice = createSlice({
         const finalGrandTotal = (grandTotal + additionalChargesTotal - totalDiscount).toFixed(2);
 
         console.log("PDF", invoice);
+        console.log("items", invoice.items.some(item => item.rimStatus === true))
         // 3. Return Sanitized Data (NO NULLS ALLOWED)
         const isDirectScheme =
           invoice?.scheme === "Import Invoice" ||
           invoice?.scheme === "DDB" ||
           invoice?.scheme === "Direct";
+        const hasRimAssembly = invoice.items?.some(
+          item => item.rimStatus === true
+        );
 
 
         return {
@@ -566,10 +562,11 @@ const invoiceSlice = createSlice({
           },
           packingDetails: {
             itcHsNo: hsnCodeForScheme?.HSNCODE?.join(", ") || "",
-            description: hsnCodeForScheme?.HSNCODE
+            description: hasRimAssembly 
+            ? "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY" : (hsnCodeForScheme?.HSNCODE
               ?.map(code => HSN_CODE.find(item => item.hsn === code)?.description?.toUpperCase() || "")
               .join(" , ")
-              .trim() || ""
+              .trim()) || ""
           },
           otherCharges,
           otherDiscountsList,
@@ -625,8 +622,6 @@ const invoiceSlice = createSlice({
           tyreCount: tyreCount,
         };
       });
-      console.log(data);
-
       state.exportInvoices.FinalInvoicePDFData = data;
     },
     setPdfBlob: (state, action) => {
@@ -653,7 +648,6 @@ export const getExportInvoice = (payload) => async (dispatch) => {
     if (payload.type === "Custom") {
       const res = await api.get(`/Invoice/GettingSpecificOrders/${payload.id}`, { withCredentials: true });
       const data = res.data
-      console.log(data);
 
       await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
       // await dispatch(setExportInvoiceSalesDetails({ ...data, ...payload }));
@@ -702,8 +696,6 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
   const REGEX_DMY = /^\d{2}[-/]\d{2}[-/]\d{4}$/;
   const REGEX_YMD = /^\d{4}-\d{2}-\d{2}$/;
 
-
-  console.log(payload)
   const safeDateDMY = (value) => {
     if (!value) return "";
 
