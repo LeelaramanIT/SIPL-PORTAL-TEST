@@ -36,19 +36,17 @@ export default function UploadView() {
   // Add this right after duplicateCount definition
   const errorCount = useMemo(() => excelJson.filter(i => i.validationError).length, [excelJson]);
 
-  useEffect(() => {
-    // Only generate ID if needed
-    if (!priceSheetRef && sheetMode === 'new') {
-      fetchNextSheetID();
-    }
+useEffect(() => {
+  if (sheetMode === "new" && !generatedId) {
+    fetchNextSheetID();
+  }
 
-    // Only set default Start Date if Redux is empty (First load)
-    if (!startDate) {
-      const today = new Date().toISOString().split('T')[0];
-      dispatch(setDates({ start: today })); // Dispatch to Redux
-    }
-    // Do NOT call setStartDate(today) here
-  }, [sheetMode]);
+  if (!startDate) {
+    const today = new Date().toISOString().split("T")[0];
+    dispatch(setDates({ start: today }));
+  }
+}, [sheetMode]);
+
 
   // 2. FUNCTION TO FETCH EXISTING SHEETS
   const fetchExistingSheets = async () => {
@@ -70,16 +68,21 @@ export default function UploadView() {
       setIsLoadingList(false);
     }
   };
-  const handleModeChange = (mode) => {
-    dispatch(setSheetMode(mode));
-    if (mode === "new") {
-      dispatch(setPriceSheetRef("")); // Revert to the API ID
-      fetchNextSheetID(); // Get a new ID
-    } else {
-      dispatch(setPriceSheetRef("")); // Clear it for user input
-      fetchExistingSheets(); // Fetch list when clicking "Existing"
+  const handleModeChange = async (mode) => {
+  dispatch(setSheetMode(mode));
+
+  if (mode === "new") {
+    if (!generatedId) {
+      await fetchNextSheetID();
     }
-  };
+    dispatch(setPriceSheetRef(generatedId));
+  }
+
+  if (mode === "existing") {
+    dispatch(setPriceSheetRef(""));
+    fetchExistingSheets();
+  }
+};
 
   useEffect(() => {
     setVisibleRows(50);

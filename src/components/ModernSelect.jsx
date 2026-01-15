@@ -40,10 +40,10 @@ const ModernSelect = ({ label, children, className = "w-40", ...props }) => {
             /* FIX FOR OPTIONS: 
               These lines force the dropdown list to respect the theme.
             */
-            [&>option]:bg-white 
-            [&>option]:text-slate-700
-            dark:[&>option]:bg-slate-900 
-            dark:[&>option]:text-slate-200
+            // [&>option]:bg-white 
+            // [&>option]:text-slate-700
+            // dark:[&>option]:bg-slate-900 
+            // dark:[&>option]:text-slate-200
           "
         >
           {children}

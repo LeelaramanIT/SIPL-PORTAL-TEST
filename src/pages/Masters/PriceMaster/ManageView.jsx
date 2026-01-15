@@ -620,7 +620,7 @@ export default function ManageView({ }) {
           </div>
           <ModernSelect value={currentSheet?.id} onChange={(e) => dispatch(setSelectedSheet(e.target.value))} label={'Price Sheet'} className="w-40">
             {Array.isArray(sheetOptions) && sheetOptions.map((sheet, index) => (
-              <option className="text-black dark:text-slate-100 dark:bg-slate-800" key={index} value={sheet.id}>{sheet.priceSheetRefNo}</option>
+              <option className="bg-white text-black dark:bg-slate-900 dark:text-slate-100" key={index} value={sheet.id}>{`${sheet.priceSheetRefNo} - ${sheet.activeStatus=== true ? "Active" : "Inactive"} `}</option>
             ))}
           </ModernSelect>
           <ModernSelect

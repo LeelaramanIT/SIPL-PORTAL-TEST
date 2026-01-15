@@ -552,3 +552,12 @@ select option {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* Force native select dropdown to dark mode */
+.dark select {
+  color-scheme: dark;
+}
+
+select {
+  color-scheme: light;
+}

@@ -562,7 +562,7 @@ const invoiceSlice = createSlice({
           },
           packingDetails: {
             itcHsNo: hsnCodeForScheme?.HSNCODE?.join(", ") || "",
-            description: hasRimAssembly 
+            description: hasRimAssembly && hsnCodeForScheme?.HSNCODE?.join(", ") === '40129020'
             ? "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY" : (hsnCodeForScheme?.HSNCODE
               ?.map(code => HSN_CODE.find(item => item.hsn === code)?.description?.toUpperCase() || "")
               .join(" , ")

@@ -53,7 +53,7 @@ const priceMasterSlice = createSlice({
             if (state.sheetMode === "new" && state.generatedId) {
                 state.priceSheetRef = state.generatedId;
             } else if (state.sheetMode === "new") {
-                state.priceSheetRef = ""; 
+                state.priceSheetRef = "";
             } else {
                 state.priceSheetRef = "";
             }
@@ -63,11 +63,6 @@ const priceMasterSlice = createSlice({
         },
         setSheetMode: (state, action) => {
             state.sheetMode = action.payload;
-            if (action.payload === "new") {
-                state.priceSheetRef = state.generatedId;
-            } else {
-                state.priceSheetRef = "";
-            }
         },
         setSearch: (state, action) => {
             state.search = action.payload;
@@ -138,6 +133,6 @@ const priceMasterSlice = createSlice({
 export const { updateGlobalSheetStatus, setMode, setModuleOn, setSelectedCustomer, setExcelData, setDates, setCategory, resetUploadState, setSelectedSheet, setSheetOptions, setItems, setLoading, resetAll,
     // New Exports (Make sure to import these in your component)
     setGeneratedId, setSheetMode, setPriceSheetRef, setSearch, setExistingSheets,
-    setErrorFilter, setIsUploading, setIsLoadingList, setSelectedUpdateCustomer,setExcelFileName
+    setErrorFilter, setIsUploading, setIsLoadingList, setSelectedUpdateCustomer, setExcelFileName
 } = priceMasterSlice.actions;
 export default priceMasterSlice.reducer
