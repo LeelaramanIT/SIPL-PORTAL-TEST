@@ -5,7 +5,7 @@ const ModernSelect = ({ label, children, className = "w-40", ...props }) => {
   return (
     <div className={className}>
       {label && (
-        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-1 mb-1">
+        <label className="block text-[0.6rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-1 mb-0.5">
           {label}
         </label>
       )}
@@ -15,8 +15,8 @@ const ModernSelect = ({ label, children, className = "w-40", ...props }) => {
           {...props}
           className="
             w-full appearance-none 
-            text-xs font-medium 
-            py-2.5 pl-4 pr-10 
+            text-[0.7rem] font-medium 
+            py-2 pl-3 pr-12 
             rounded-xl shadow-sm 
             transition-all cursor-pointer
             focus:outline-none focus:ring-2 
@@ -50,7 +50,7 @@ const ModernSelect = ({ label, children, className = "w-40", ...props }) => {
         </select>
 
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 dark:text-slate-500">
-          <FaAngleDown className="h-4 w-4 fill-current" />
+          <FaAngleDown className="h-3 w-3 fill-current" />
         </div>
       </div>
     </div>

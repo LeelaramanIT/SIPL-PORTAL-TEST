@@ -13,21 +13,20 @@ import { FaFileDownload } from "react-icons/fa";
 import toast from "react-hot-toast";
 import DialogBox from "../../../components/DialogBox";
 import { useDispatch, useSelector } from "react-redux";
-import { setSelectedCustomer, setSelectedSheet, setSheetOptions, setItems, setLoading, resetAll } from "../../../Redux/Slices/PriceMasterSlice";
+import { setSelectedCustomer, setSelectedSheet, setSheetOptions, setItems, setLoading, resetAll, setActiveTab,setVisibleRows } from "../../../Redux/Slices/PriceMasterSlice";
 import { api } from "../../../utils/axios";
 import { IoMdWarning } from "react-icons/io";
 import InfoTooltip from "../../../components/InfoTooltip";
 
 export default function ManageView({ }) {
   const [search, setSearch] = useState("");
-  const [visibleRows, setVisibleRows] = useState(50);
+  // const [visibleRows, setVisibleRows] = useState(50);
   const [isOpen, setOpen] = useState(false);
   const [dialogConfig, setDialogConfig] = useState({ title: "", message: "", onConfirm: () => { } });
   const dispatch = useDispatch();
   const [endDate, setEndDate] = useState("");
-  const { selectedCustomer, selectedSheet, sheetOptions, items, loading } = useSelector((state) => state.priceMaster);
+  const { selectedCustomer, selectedSheet, sheetOptions, items, loading, activeTab,visibleRows } = useSelector((state) => state.priceMaster);
   const dateInputRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("active")
 
   const handleDateChange = (e) => {
     const newDate = e.target.value;
@@ -37,8 +36,8 @@ export default function ManageView({ }) {
     // }
   };
   const handleModeChange = (mode) => {
-    setActiveTab(mode);
-    setVisibleRows(50); // Reset visible rows to prevent blank spaces
+    dispatch(setActiveTab(mode));
+    dispatch(setVisibleRows(50)); // Reset visible rows to prevent blank spaces
   };
   const fetchData = async () => {
     try {
@@ -119,18 +118,18 @@ export default function ManageView({ }) {
   // --- RESIZABLE COLUMNS ---
   const [columns, setColumns] = useState([
     { name: "CustCode", width: 65, align: "left" },
-    { name: "Customer", width: 200, align: "left" }, // Increased: Names need space
-    { name: "Category", width: 80, align: "left" },
-    { name: "Platform", width: 80, align: "left" },
-    { name: "Brand", width: 120, align: "left" },    // Decreased: Brands usually fit here
+    { name: "Customer", width: 130, align: "left" }, // Increased: Names need space
+    { name: "Category", width: 65, align: "left" },
+    { name: "Platform", width: 70, align: "left" },
+    { name: "Brand", width: 90, align: "left" },    // Decreased: Brands usually fit here
     { name: "Sidewall", width: 90, align: "left" },
-    { name: "Type", width: 120, align: "left" },     // Decreased: Types are usually short
-    { name: "Tyre Size", width: 180, align: "left" }, // Decreased slightly
-    { name: "Rim", width: 60, align: "left" },       // Decreased: "R18" is short
-    { name: "Process ID", width: 110, align: "left" }, // Decreased
-    { name: "Valid Dates", width: 160, align: "left" },
+    { name: "Type", width: 40, align: "left" },     // Decreased: Types are usually short
+    { name: "Tyre Size", width: 140, align: "left" }, // Decreased slightly
+    { name: "Rim", width: 40, align: "left" },       // Decreased: "R18" is short
+    { name: "Process ID", width: 72, align: "left" }, // Decreased
+    { name: "Valid Dates", width: 90, align: "left" },
     { name: "Status", width: 90, align: "center" },
-    { name: "Price", width: 100, align: "right" },
+    { name: "Price", width: 100, align: "center" },
     { name: "Info", width: 70, align: "center" },    // Decreased & Centered (assuming icon)
   ]);
 
@@ -282,17 +281,21 @@ export default function ManageView({ }) {
   };
 
   useEffect(() => {
-    setVisibleRows(50);
+    dispatch(setVisibleRows(50));
   }, [search, selectedCustomer]);
 
   // --- FIXED SCROLL HANDLER ---
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    // Trigger when 100px from the bottom to make it feel smoother
-    if (scrollHeight - scrollTop <= clientHeight + 100) {
-      setVisibleRows((prev) => Math.min(prev + 50, filtered.length));
+    
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+        // Calculate the value HERE
+        const nextValue = Math.min(visibleRows + 50, filtered.length);
+        
+        // Dispatch the RESULT (a number), not a function
+        dispatch(setVisibleRows(nextValue));
     }
-  };
+};  
 
   const handleReload = () => {
     dispatch(resetAll());
@@ -418,11 +421,11 @@ export default function ManageView({ }) {
 
       {/* 1. Header: Reference & Status */}
       <div className="flex items-center justify-between border-b border-slate-600 pb-2 mb-2">
-        <span className="font-bold text-slate-100 text-sm">
+        <span className="font-bold text-slate-100 text-[0.7rem]">
           {currentSheet?.priceSheetRefNo || "No Ref"}
         </span>
         {/* Status Badge */}
-        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${currentSheet?.activeStatus
+        <span className={`text-[0.7rem] font-bold px-1.5 py-0.5 rounded border ${currentSheet?.activeStatus
           ? "border-green-500 text-green-400 bg-green-500/10"
           : "border-red-500 text-red-400 bg-red-500/10"
           }`}>
@@ -431,7 +434,7 @@ export default function ManageView({ }) {
       </div>
 
       {/* 2. Body: Data Grid */}
-      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[0.7rem]">
 
         {/* Start Date */}
         <span className="text-slate-300">Start:</span>
@@ -488,10 +491,10 @@ export default function ManageView({ }) {
 
         {/* 1. Header: Generic Title & Status */}
         <div className="flex items-center justify-between border-b border-slate-600 pb-2 mb-2">
-          <span className="font-bold text-slate-100 text-sm">Sheet Details</span>
+          <span className="font-bold text-slate-100 text-[0.7rem]">Sheet Details</span>
           {/* Status Badge */}
           <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${sheet.active
+            className={`text-[0.7rem] font-bold px-1.5 py-0.5 rounded border ${sheet.active
               ? "border-green-500 text-green-400 bg-green-500/10"
               : "border-red-500 text-red-400 bg-red-500/10"
               }`}
@@ -501,7 +504,7 @@ export default function ManageView({ }) {
         </div>
 
         {/* 2. Body: Data Grid */}
-        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[0.7rem]">
 
           {/* Start Date */}
           <span className="text-slate-300">Start:</span>
@@ -522,7 +525,7 @@ export default function ManageView({ }) {
           <span className="text-slate-300">Created:</span>
           <div className="text-right flex flex-col">
             <span className="text-slate-200">{sheet.createdBy}</span>
-            <span className="text-[10px] text-slate-300">
+            <span className="text-[0.6rem] text-slate-300">
               {/* Handling lowercase 'createddate' from your JSON */}
               {formatDate(sheet.createddate) || "-"}
             </span>
@@ -534,7 +537,7 @@ export default function ManageView({ }) {
               <span className="text-slate-300">Updated:</span>
               <div className="text-right flex flex-col">
                 <span className="text-slate-200">{sheet.updatedBy}</span>
-                <span className="text-[10px] text-slate-300">
+                <span className="text-[0.6rem] text-slate-300">
                   {formatDate(sheet.updateDate) || "-"}
                 </span>
               </div>
@@ -543,7 +546,7 @@ export default function ManageView({ }) {
         </div>
 
         {/* 3. Footer: Warning Message */}
-        <div className="mt-3 pt-2 border-t border-slate-600 text-[10px] text-amber-500 leading-tight">
+        <div className="mt-3 pt-2 border-t border-slate-600 text-[0.6rem] text-amber-500 leading-tight">
           ⚠️ <span className="font-bold">Warning:</span> This is the Master Price
           Sheet. Modifications directly affect system pricing. Do not edit unless
           strictly necessary.
@@ -566,16 +569,16 @@ export default function ManageView({ }) {
       <div className="flex flex-col md:flex-row mb-4 px-3 items-center justify-between">
         <div className="flex gap-4 w-full md:w-auto flex-1">
           <div className="shrink-0 flex flex-col ">
-            <h3 className="text-md font-bold text-slate-700 dark:text-slate-200">
+            <h3 className="text-[1rem] font-bold text-slate-700 dark:text-slate-200">
               Preview Data
             </h3>
 
             {/* ROW 1: Ref and Rows */}
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-4 text-[0.6rem]">
 
               {/* Ref Section */}
               <div className="flex items-center gap-2">
-                <span className="text-slate-500 dark:text-slate-400 text-xs">Ref:</span>
+                <span className="text-slate-500 dark:text-slate-400">Ref:</span>
                 <span className="font-mono font-bold text-[var(--primary)] dark:text-blue-400 bg-slate-100 dark:bg-slate-800 rounded text-xs">
                   {currentSheet ? currentSheet.priceSheetRefNo : "N/A"}
                 </span>
@@ -583,16 +586,16 @@ export default function ManageView({ }) {
 
               {/* Rows Section */}
               <div className="flex items-center gap-2">
-                | <span className="text-slate-500 dark:text-slate-400 text-xs">Rows:</span>
+                | <span className="text-slate-500 dark:text-slate-400">Rows:</span>
                 <span className="font-bold text-[var(--primary)] dark:text-slate-200">
                   {filtered.length}
                 </span>
               </div>
               {/* Info Section */}
               <div className="flex items-center gap-2">
-                | <span className="text-slate-500 dark:text-slate-400 text-xs">Info:</span>
+                | <span className="text-slate-500 dark:text-slate-400">Info:</span>
                 <InfoTooltip
-                  iconSize={16}
+                  iconSize={14}
                   // Pass the JSX variable here, NOT a string
                   content={sheetDetailsContent}
                   className="text-amber-500 hover:text-amber-600"
@@ -607,8 +610,8 @@ export default function ManageView({ }) {
               {/* Validity Section */}
               {currentSheet && (
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 dark:text-slate-400 text-xs">Validity:</span>
-                  <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 text-[0.6rem]">Validity:</span>
+                  <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300 text-[0.7rem]">
                     <span className="text-[var(--primary)]">{formatDate(currentSheet.startDate)}</span>
                     <span className="text-slate-400 font-light text-xs">to</span>
                     <span className="text-[var(--primary)]">{formatDate(currentSheet.endDate)}</span>
@@ -620,7 +623,7 @@ export default function ManageView({ }) {
           </div>
           <ModernSelect value={currentSheet?.id} onChange={(e) => dispatch(setSelectedSheet(e.target.value))} label={'Price Sheet'} className="w-40">
             {Array.isArray(sheetOptions) && sheetOptions.map((sheet, index) => (
-              <option className="bg-white text-black dark:bg-slate-900 dark:text-slate-100" key={index} value={sheet.id}>{`${sheet.priceSheetRefNo} - ${sheet.activeStatus=== true ? "Active" : "Inactive"} `}</option>
+              <option className="bg-white text-black dark:bg-slate-900 dark:text-slate-100" key={index} value={sheet.id}>{`${sheet.priceSheetRefNo} - ${sheet.activeStatus === true ? "Active" : "Inactive"} `}</option>
             ))}
           </ModernSelect>
           <ModernSelect
@@ -637,54 +640,54 @@ export default function ManageView({ }) {
           <div className="relative flex-1 max-w-sm mt-4.5">
             <SearchBar placeholder="Search by Process ID or Tyre Size" onChange={(e) => setSearch(e.target.value)} value={search} />
           </div>
-          
+
         </div>
-        <div className="flex flex-col gap-1">
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-1">
-              Active Status
-            </label>
-            <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
-              {/* Sliding Background Animation */}
-              <div
-                className={`absolute h-[calc(100%-8px)] w-[calc(50%-4px)] top-1 rounded-md bg-white dark:bg-slate-600 shadow-sm transition-all duration-200 ease-in-out ${activeTab === "inactive" ? "left-[calc(50%+2px)]" : "left-1"
-                  }`}
-              ></div>
+        {/* <div className="flex flex-col gap-1">
+          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-1">
+            Active Status
+          </label>
+          <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
+            {/* Sliding Background Animation */}
+            {/* <div
+              className={`absolute h-[calc(100%-8px)] w-[calc(50%-4px)] top-1 rounded-md bg-white dark:bg-slate-600 shadow-sm transition-all duration-200 ease-in-out ${activeTab === "inactive" ? "left-[calc(50%+2px)]" : "left-1"
+                }`}
+            ></div> */}
 
-              <button
-                type="button"
-                onClick={() => handleModeChange("active")}
-                className={`relative z-10 w-16 text-sm font-medium py-1.5 p-2 rounded-md transition-colors duration-200 ${activeTab === "active"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeChange("inactive")}
-                className={`relative z-10 w-1/2 text-sm font-medium py-1.5 p-2 rounded-md transition-colors duration-200 ${activeTab === "inactive"
-                    ? "text-black bg-red-200 dark:text-blue-400"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
-              >
-                Inactive
-              </button>
-            </div>
+            {/* <button
+              type="button"
+              onClick={() => handleModeChange("active")}
+              className={`relative z-10 w-16 text-xs font-medium py-1.5 p-2 rounded-md transition-colors duration-200 ${activeTab === "active"
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeChange("inactive")}
+              className={`relative z-10 w-1/2 text-xs font-medium py-1.5 p-2 rounded-md transition-colors duration-200 ${activeTab === "inactive"
+                ? "text-black bg-red-200 dark:text-blue-400"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+            >
+              Inactive
+            </button>
           </div>
-        <div className="flex gap-3">
+        </div> */}
+        <div className="flex gap-3 ml-3">
 
-          <button onClick={handleReload} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
-            <SlReload className="w-5 h-5 mr-2" /> Reload
+          <button onClick={handleReload} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
+            <SlReload className="w-4 h-4 mr-2" /> Reload
           </button>
           {currentSheet?.activeStatus === true && <div className="relative inline-block">
             {/* 1. The Visible Button */}
             <button
               type="button"
               onClick={() => dateInputRef.current.showPicker()} // Opens the date picker
-              className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-4 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600 cursor-pointer"
+              className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
             >
-              <CgArrowsExchange className="w-5 h-5 mr-2" />
+              <CgArrowsExchange className="w-4 h-4 mr-2" />
               Change End Date
             </button>
 
@@ -697,14 +700,14 @@ export default function ManageView({ }) {
               className="absolute opacity-0 pointer-events-none w-0 h-0 bottom-0 left-0" // Completely hidden
             />
           </div>}
-          {currentSheet?.activeStatus === true && <button onClick={() => handleUpdate("data", "Disable All")} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
-            <AiOutlineStop className="w-5 h-5 mr-2" /> Disable All
+          {currentSheet?.activeStatus === true && <button onClick={() => handleUpdate("data", "Disable All")} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
+            <AiOutlineStop className="w-4 h-4 mr-2" /> Disable All
           </button>}
-          <button onClick={downloadCurrentSheet} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
-            <FaFileDownload className="w-5 h-5 mr-2" /> Download Sheet
+          <button onClick={downloadCurrentSheet} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
+            <FaFileDownload className="w-4 h-4 mr-2" /> Download Sheet
           </button>
           {endDate && <button onClick={handleSaveChanges} className="flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1 mt-4.5 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
-            <IoSaveOutline className="w-5 h-5 mr-2" /> Save Changes
+            <IoSaveOutline className="w-4 h-4 mr-2" /> Save Changes
           </button>}
         </div>
       </div>
@@ -717,7 +720,7 @@ export default function ManageView({ }) {
           {/* --- STICKY HEADER --- */}
           <div
             style={gridStyle}
-            className="grid gap-4 px-6 py-3 bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky top-0 z-30 w-max"
+            className="grid gap-4 px-6 py-2.5 bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 text-[0.6rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky top-0 z-30 w-max"
           >
             {columns.map((col, index) => (
               <div key={index} className={`relative flex items-center ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'}`}>
@@ -751,25 +754,25 @@ export default function ManageView({ }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     style={gridStyle}
-                    className={`grid gap-4 px-4 py-4 items-center rounded-lg border border-slate-100 dark:border-slate-700 bg-white dark:bg-blue-400/10 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors w-max ${!moduleOn ? "opacity-50 grayscale" : ""}`}
+                    className={`grid gap-4 px-4 py-2 items-center rounded-lg border border-slate-100 dark:border-slate-700 bg-white dark:bg-blue-400/10 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors w-max ${!moduleOn ? "opacity-50 grayscale" : ""}`}
                   >
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate" title={item.custcode}>{item.custcode}</span>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 " title={item.customer}>{item.customer}</span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.category}</span>
-                    <span className="font-mono text-xs text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded w-fit truncate">{item.platform}</span>
+                    <span className="text-[0.7rem] font-medium text-slate-700 dark:text-slate-200 truncate" title={item.custcode}>{item.custcode}</span>
+                    <span className="text-[0.7rem] font-semibold text-slate-700 dark:text-slate-200 " title={item.customer}>{item.customer}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-300 truncate">{item.category}</span>
+                    <span className="font-mono text-[0.7rem] text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded w-fit truncate">{item.platform}</span>
                     <span className="text-xs text-slate-600 dark:text-slate-300 truncate" title={item.brand}>{item.brand}</span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{item.sidewall}</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate" title={item.tyreType}>{item.tyreType}</span>
-                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate" title={item.tyreSize}>{item.tyreSize}</span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.rimWidth}</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate" title={item.processID}>{item.processID}</span>
-                    <div className="flex flex-col text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-500 truncate">{item.sidewall}</span>
+                    <span className="text-[0.7rem] text-slate-500 dark:text-slate-400 truncate" title={item.tyreType}>{item.tyreType}</span>
+                    <span className="text-[0.7rem] font-medium text-slate-800 dark:text-slate-200 truncate" title={item.tyreSize}>{item.tyreSize}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-300 truncate">{item.rimWidth}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-200 text-[0.7rem] truncate" title={item.processID}>{item.processID}</span>
+                    <div className="flex flex-col text-[0.7rem] text-slate-500 dark:text-slate-400 truncate">
                       <span>{item.startDate}</span>
                       <span className="text-slate-400 dark:text-slate-500">to {item.endDate}</span>
                     </div>
                     <div className="text-center flex flex-col items-center justify-center">
                       {/* 2. Visual Badge */}
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold mb-1 transition-colors ${item.active ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"
+                      <span className={`px-2.5 py-0.5 rounded-full text-[0.5rem] font-bold mb-1 transition-colors ${item.active ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"
                         }`}>
                         {item.active ? "ACTIVE" : "INACTIVE"}
                       </span>
@@ -789,7 +792,7 @@ export default function ManageView({ }) {
                       </button>
                     </div>
 
-                    <div className="text-right font-bold text-slate-700 dark:text-slate-200 truncate">
+                    <div className="text-center text-[0.8rem] text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded truncate">
                       {getCurrencySymble(item.userCurrency)} {item.unitPrice ? `${Number(item.unitPrice).toLocaleString()}` : "-"}
                     </div>
                     <InfoTooltip className="text-amber-500 justify-center" content={<SheetDetailsContent sheet={item} />} />

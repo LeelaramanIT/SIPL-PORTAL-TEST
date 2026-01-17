@@ -16,14 +16,13 @@ import { setCategory, setErrorFilter, setExcelData, setSelectedUpdateCustomer, s
 export default function UploadView() {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  // const [startDate, setStartDate] = useState("");
-  // const [endDate, setEndDate] = useState("");
   const [visibleRows, setVisibleRows] = useState(50);
   const listRef = useRef(null);
   const [isLoadingList, setIsLoadingList] = useState(false);
   const dispatch = useDispatch();
   const { category = "Tyre", excelJson = [], selectedUpdateCustomer = "All Customers", errorFilter = "All", excelFileName = "", priceSheetRef, search, sheetMode, generatedId, existingSheets, startDate, endDate } = useSelector((state) => state.priceMaster || {})
   const deferredSearch = useDeferredValue(search);
+
   const fetchNextSheetID = async () => {
     const res = await api.get('/PriceSheet/New-price-sheet-ref-no');
     if (res.status === 200) {
@@ -33,25 +32,22 @@ export default function UploadView() {
     }
   }
 
+
   // Add this right after duplicateCount definition
   const errorCount = useMemo(() => excelJson.filter(i => i.validationError).length, [excelJson]);
 
-useEffect(() => {
-  if (sheetMode === "new" && !generatedId) {
-    fetchNextSheetID();
-  }
-
-  if (!startDate) {
-    const today = new Date().toISOString().split("T")[0];
-    dispatch(setDates({ start: today }));
-  }
-}, [sheetMode]);
-
+  useEffect(() => {
+    if (sheetMode === "new" && !generatedId) {
+      fetchNextSheetID();
+    }
+    if (!startDate) {
+      const today = new Date().toISOString().split("T")[0];
+      dispatch(setDates({ start: today }));
+    }
+  }, [sheetMode]);
 
   // 2. FUNCTION TO FETCH EXISTING SHEETS
   const fetchExistingSheets = async () => {
-    if (existingSheets.length > 0) return; // Don't fetch if we already have them
-
     setIsLoadingList(true);
     try {
       // REPLACE with your actual endpoint to get all PriceSheet Refs
@@ -68,21 +64,20 @@ useEffect(() => {
       setIsLoadingList(false);
     }
   };
+
   const handleModeChange = async (mode) => {
-  dispatch(setSheetMode(mode));
-
-  if (mode === "new") {
-    if (!generatedId) {
-      await fetchNextSheetID();
+    dispatch(setSheetMode(mode));
+    if (mode === "new") {
+      if (!generatedId) {
+        await fetchNextSheetID();
+      }
+      dispatch(setPriceSheetRef(generatedId));
     }
-    dispatch(setPriceSheetRef(generatedId));
-  }
-
-  if (mode === "existing") {
-    dispatch(setPriceSheetRef(""));
-    fetchExistingSheets();
-  }
-};
+    if (mode === "existing") {
+      dispatch(setPriceSheetRef(""));
+      fetchExistingSheets();
+    }
+  };
 
   useEffect(() => {
     setVisibleRows(50);
@@ -91,19 +86,19 @@ useEffect(() => {
     }
   }, [deferredSearch, errorFilter]);
 
-  // useEffect(() => {
-  //   const fetchNextSheetID = async () => {
-  //     const res = await api.get('/PriceSheet/New-price-sheet-ref-no');
-  //     if (res.status === 200) {
-  //       dispatch(setPriceSheetRef(res.data.pricesheetNo));
-  //     }
-  //   };
-  //   fetchNextSheetID();
-  //   if (!startDate) {
-  //     const today = new Date().toISOString().split('T')[0];
-  //     dispatch(setDates({ start: today }));
-  //   }
-  // }, []);
+  useEffect(() => {
+    const fetchNextSheetID = async () => {
+      const res = await api.get('/PriceSheet/New-price-sheet-ref-no');
+      if (res.status === 200) {
+        dispatch(setPriceSheetRef(res.data.pricesheetNo));
+      }
+    };
+    fetchNextSheetID();
+    if (!startDate) {
+      const today = new Date().toISOString().split('T')[0];
+      dispatch(setDates({ start: today }));
+    }
+  }, []);
 
   const duplicateCount = useMemo(() => excelJson.filter(i => i.isDuplicate).length, [excelJson]);
 
@@ -189,6 +184,7 @@ useEffect(() => {
           platform: row["Config"] || row["CONFIG"] || row["config"] || row["platform"] || row["Platform"] || ["PLATFORM"],
           isDuplicate: false
         }));
+
         // Duplicate Logic
         const occurrenceMap = new Map();
         formattedJson.forEach(item => {
@@ -242,10 +238,8 @@ useEffect(() => {
       })
       return acc;
     }, {});
-
-
+    console.log(groupedData)
     const payload = Object.values(groupedData);
-
     try {
       const res = await api.post('/PriceSheet/Validate-PriceSheet', payload);
       if (res.status === 200 && Array.isArray(res.data)) {
@@ -261,15 +255,19 @@ useEffect(() => {
       }
       console.log(res.data)
       return new Map();
-    } catch (error) {
+    }
+    catch (error) {
       console.error("Verification error:", error);
       return new Map();
     }
   };
-  console.log(errorFilter);
 
   const handleConfirmUpload = async () => {
-
+    console.log(priceSheetRef);
+    if (!priceSheetRef || priceSheetRef.trim() === "") {
+        toast.error("Price Sheet Reference is missing!");
+        return;
+    }
     if (duplicateCount > 0) {
       toast.error(`Cannot upload. Found ${duplicateCount} duplicate rows.`);
       return;
@@ -672,18 +670,20 @@ useEffect(() => {
                 <span className="text-sm font-medium">Found <strong>{duplicateCount} duplicate rows</strong>. Please fix and re-upload.</span>
               </div>
             )}
-            {/* {errorFilter.length > 0 && (
+            {errorCount > 0 && (
               <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-3 text-red-700">
-                <span className="text-sm font-medium">Found <strong>{errorFilter.length} Error rows</strong>. Please fix and re-upload.</span>
+                <span className="text-sm font-medium">Found <strong>{errorFilter} Error rows</strong>. Please fix and re-upload.</span>
               </div>
-            )} */}
+            )}
 
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 gap-4 px-3">
               <div className="shrink-0">
                 <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Preview Data</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   File Name: <span className="font-mono font-semibold text-[var(--primary))]">{excelFileName}</span> |
-                  Ref: <span className="font-mono font-semibold text-[var(--primary))]">{priceSheetRef}</span> |
+                  <span> {sheetMode.charAt(0).toUpperCase() + sheetMode.slice(1)}
+
+                  </span> Ref ID: <span className="font-mono font-semibold text-[var(--primary))]">{priceSheetRef}</span> |
                   Rows: <span className="font-semibold">{filtered.length}</span>
                 </p>
               </div>
@@ -711,7 +711,7 @@ useEffect(() => {
                       <div className="mt-auto">
                         <ModernSelect
                           label={'Filter By Error'}
-                          className="w-40 flex flex-col" F
+                          className="w-40 flex flex-col"
                           value={errorFilter}
                           onChange={(e) => dispatch(setErrorFilter(e.target.value))}
                         >

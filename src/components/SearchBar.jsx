@@ -11,7 +11,7 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => 
         className="
             w-full 
             pl-3 pr-28 py-[7px]  ml-1
-            text-sm 
+            text-[0.7rem] 
             rounded-md 
             shadow-sm 
             transition duration-300 ease-in-out 
@@ -44,7 +44,7 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => 
             flex items-center 
             rounded 
             py-1 px-2.5 
-            text-sm text-white 
+            text-[0.7rem] text-white 
             border border-transparent 
             shadow-sm transition-all 
             
@@ -60,7 +60,7 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => 
         type="button"
         onClick={onSearch}
       >
-        <IoMdSearch className="w-5 h-5 mr-2" />
+        <IoMdSearch className="w-4 h-4 mr-2" />
         Search
       </button>
     </div>

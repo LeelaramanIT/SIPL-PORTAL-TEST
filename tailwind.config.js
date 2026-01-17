@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
@@ -24,6 +25,13 @@ module.exports = {
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
+      },
+      fontSize: {
+        // Default xs is 0.75rem (12px)
+        // Creating a new 'xxs' at 0.625rem (10px)
+        'xxs': ['0.625rem', { lineHeight: '1rem' }],
+        // Creating a 'micro' at 0.5rem (8px)
+        'micro': ['0.5rem', { lineHeight: '0.75rem' }],
       },
     },
   },

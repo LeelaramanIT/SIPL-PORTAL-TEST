@@ -16,6 +16,9 @@ const initialState = {
     selectedSheet: "",
     sheetOptions: [],
     items: [],
+    activeTab: "active",
+    visibleRows: 50,
+
 
     // upload State
     excelJson: [],
@@ -128,11 +131,18 @@ const priceMasterSlice = createSlice({
         setExistingSheets: (state, action) => {
             state.existingSheets = action.payload;
         },
+        setActiveTab: (state, action) => {
+            state.activeTab = action.payload;
+        },
+        setVisibleRows: (state, action) => {
+            state.visibleRows = action.payload;
+        },
     }
 })
 export const { updateGlobalSheetStatus, setMode, setModuleOn, setSelectedCustomer, setExcelData, setDates, setCategory, resetUploadState, setSelectedSheet, setSheetOptions, setItems, setLoading, resetAll,
     // New Exports (Make sure to import these in your component)
     setGeneratedId, setSheetMode, setPriceSheetRef, setSearch, setExistingSheets,
-    setErrorFilter, setIsUploading, setIsLoadingList, setSelectedUpdateCustomer, setExcelFileName
+    setErrorFilter, setIsUploading, setIsLoadingList, setSelectedUpdateCustomer, setExcelFileName,
+    setActiveTab,setVisibleRows,
 } = priceMasterSlice.actions;
 export default priceMasterSlice.reducer
