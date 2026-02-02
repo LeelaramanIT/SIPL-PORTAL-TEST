@@ -265,8 +265,8 @@ export default function UploadView() {
   const handleConfirmUpload = async () => {
     console.log(priceSheetRef);
     if (!priceSheetRef || priceSheetRef.trim() === "") {
-        toast.error("Price Sheet Reference is missing!");
-        return;
+      toast.error("Price Sheet Reference is missing!");
+      return;
     }
     if (duplicateCount > 0) {
       toast.error(`Cannot upload. Found ${duplicateCount} duplicate rows.`);
@@ -443,8 +443,45 @@ export default function UploadView() {
             exit={{ opacity: 0 }}
             className="h-full flex flex-col items-center justify-center text-slate-500 dark:text-slate-400"
           >
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-            <p className="font-medium text-slate-600">Processing Excel File...</p>
+            <div className="relative w-32 h-16 mb-4">
+              <svg
+                viewBox="0 0 100 50"
+                className="w-full h-full fill-none"
+                style={{ stroke: 'var(--primary, #2563eb)' }}
+              >
+                {/* Pure Mathematical Infinity Path */}
+                {/* The 'd' attribute below defines a perfect smooth figure-eight loop */}
+                <path
+                  id="infinity-path"
+                  d="M31.6,15.5C21,15.5,12.5,24,12.5,34.5S21,53.5,31.6,53.5c6.2,0,11.7-3,15.1-7.5L66.7,21.5c3.4-4.5,8.9-7.5,15.1-7.5,10.6,0,19.1,8.5,19.1,19.1S92.4,52.4,81.8,52.4c-6.2,0-11.7-3-15.1-7.5L31.6,15.5Z"
+                  transform="scale(0.8) translate(12, 5)"
+                  className="stroke-slate-100 dark:stroke-slate-800"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+
+                <motion.path
+                  d="M31.6,15.5C21,15.5,12.5,24,12.5,34.5S21,53.5,31.6,53.5c6.2,0,11.7-3,15.1-7.5L66.7,21.5c3.4-4.5,8.9-7.5,15.1-7.5,10.6,0,19.1,8.5,19.1,19.1S92.4,52.4,81.8,52.4c-6.2,0-11.7-3-15.1-7.5L31.6,15.5Z"
+                  transform="scale(0.8) translate(12, 5)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0, pathOffset: 0 }}
+                  animate={{
+                    pathLength: [0.1, 0.4, 0.1],
+                    pathOffset: [0, 1]
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+              </svg>
+            </div>
+
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+              Processing Data
+            </p>
           </motion.div>
         ) : excelJson.length === 0 ? (
 
@@ -454,26 +491,23 @@ export default function UploadView() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="h-full flex items-center justify-center"
+            className="flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 p-10 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm max-w-2xl w-full text-center">
 
               {/* Icon & Title */}
-              <div className="mb-6 mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-[var(--primary)] rounded-full flex items-center justify-center">
-                <SlCloudUpload className="w-8 h-8" />
-                {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg> */}
+              <div className="mb-3 mx-auto w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[var(--primary)] rounded-full flex items-center justify-center">
+                <SlCloudUpload className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 hover:text-[var(--primary)]">Upload New Price Sheet</h3>
-              <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm hover:text-[var(--primary)]">Fill in the details below and attach your file.</p>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1 hover:text-[var(--primary)]">Upload New Price Sheet</h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-4 text-[0.7rem] hover:text-[var(--primary)]">Fill in the details below and attach your file.</p>
 
               {/* === NEW INPUTS GRID === */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-left">
-
-
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-left">
 
                 {/* 1. Mode Toggle */}
                 <div className="flex flex-col gap-2">
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-1">
+                  <label className="block text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-1">
                     Sheet Configuration
                   </label>
                   <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
@@ -483,14 +517,14 @@ export default function UploadView() {
                     <button
                       type="button"
                       onClick={() => handleModeChange("new")}
-                      className={`relative z-10 w-1/2 text-sm font-medium py-1.5 rounded-md transition-colors duration-200 ${sheetMode === "new" ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
+                      className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-colors duration-200 ${sheetMode === "new" ? "text-[var(--primary)] dark:text-blue-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                     >
                       New Sheet
                     </button>
                     <button
                       type="button"
                       onClick={() => handleModeChange("existing")}
-                      className={`relative z-10 w-1/2 text-sm font-medium py-1.5 rounded-md transition-colors duration-200 ${sheetMode === "existing" ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
+                      className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-colors duration-200 ${sheetMode === "existing" ? "text-[var(--primary)] dark:text-blue-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                     >
                       Existing
                     </button>
@@ -499,8 +533,8 @@ export default function UploadView() {
 
                 {/* 2. Dynamic Input (Input vs Select) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                    Ref ID <span className="text-red-600 text-sm">*</span>
+                  <label className="block text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Ref ID <span className="text-red-600 text-[0.7rem]">*</span>
                   </label>
 
                   <div className="relative">
@@ -511,9 +545,9 @@ export default function UploadView() {
                           type="text"
                           value={priceSheetRef}
                           readOnly
-                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm font-mono rounded-lg px-3 py-2 cursor-lock outline-none"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-[0.7rem] font-mono rounded-lg px-3 py-2 cursor-lock outline-none"
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-800 uppercase tracking-wider">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.7rem] text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-800 uppercase tracking-wider">
                           Auto
                         </div>
                       </>
@@ -538,7 +572,7 @@ export default function UploadView() {
                             }
                           }}
                           disabled={isLoadingList}
-                          className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-shadow outline-none appearance-none cursor-pointer"
+                          className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[0.8rem] rounded-lg px-3 py-2 focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-shadow outline-none appearance-none cursor-pointer"
                         >
                           <option value="" disabled>
                             {isLoadingList ? "Loading refs..." : "-- Select Sheet --"}
@@ -568,14 +602,14 @@ export default function UploadView() {
 
                 {/* Start Date */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Start Date <span className="text-red-600 text-sm">*</span></label>
+                  <label className="block text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Start Date <span className="text-red-600 text-[0.7rem]">*</span></label>
                   <input
                     type="date"
                     min={getTodayString()}
                     value={startDate || ''}
                     onChange={(e) => dispatch(setDates({ start: e.target.value }))}
                     readOnly={sheetMode === "existing"} // Lock if existing
-                    className={`w-full text-sm rounded-lg px-3 py-2 transition-shadow outline-none border
+                    className={`w-full text-[0.8rem] rounded-lg px-3 py-2 transition-shadow outline-none border
     ${sheetMode === "existing"
                         ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
                         : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-[var(--primary)]"
@@ -585,14 +619,14 @@ export default function UploadView() {
 
                 {/* End Date */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">End Date <span className="text-red-600 text-sm">*</span></label>
+                  <label className="block text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">End Date <span className="text-red-600 text-[0.7rem]">*</span></label>
                   <input
                     type="date"
                     min={startDate}
                     value={endDate || ''}
                     onChange={(e) => dispatch(setDates({ end: e.target.value }))}
                     readOnly={sheetMode === "existing"} // Lock if existing
-                    className={`w-full text-sm rounded-lg px-3 py-2 transition-shadow outline-none border
+                    className={`w-full text-[0.8rem] rounded-lg px-3 py-2 transition-shadow outline-none border
     ${sheetMode === "existing"
                         ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
                         : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-[var(--primary)]"
@@ -601,15 +635,15 @@ export default function UploadView() {
                 </div>
                 {/* Category Select */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                    Select Tyre or Rim <span className="text-red-600 text-sm">*</span>
+                  <label className="block text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Select Tyre or Rim <span className="text-red-600 text-[0.7rem]">*</span>
                   </label>
                   <div className="relative">
                     <select
                       onChange={(e) => dispatch(setCategory(e.target.value))}
                       value={category}
                       defaultValue="Tyre"
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none transition-shadow cursor-pointer appearance-none"
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[0.8rem] rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none transition-shadow cursor-pointer appearance-none"
                     >
                       <option value="Tyre">Tyre</option>
                       <option value="Rim">Rim</option>
@@ -626,16 +660,16 @@ export default function UploadView() {
               {/* File Upload Area */}
               <input type="file" accept=".xlsx,.xls" id="excelUpload" onChange={handleExcelUpload} className="hidden" />
               <div onClick={() => document.getElementById("excelUpload").click()} className="md:col-span-2 border-1 border-dashed border-[var(--accent)] rounded-xl p-4 flex flex-col items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer group">
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-[var(--primary)] transition-colors">
+                <span className="text-[0.7rem] font-medium text-slate-600 dark:text-slate-300 group-hover:text-[var(--primary)] transition-colors">
                   Click to browse or drag Excel file here
                 </span>
-                <span className="text-xs text-slate-400 dark:text-slate-500 mt-1">(Only .xlsx and .xls files allowed)</span>
+                <span className="text-[0.7rem] text-slate-400 dark:text-slate-500 mt-1">(Only .xlsx and .xls files allowed)</span>
               </div>
 
               {/* Actions */}
               <div className="flex gap-4 justify-center mt-6">
                 <button
-                  className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
+                  className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
                   type="button"
                   onClick={downloadPriceTemplate}
                 >
@@ -666,21 +700,21 @@ export default function UploadView() {
             )}
 
             {duplicateCount > 0 && (
-              <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-3 text-red-700 dark:text-red-300">
-                <span className="text-sm font-medium">Found <strong>{duplicateCount} duplicate rows</strong>. Please fix and re-upload.</span>
+              <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 flex items-center gap-3 text-red-700 dark:text-red-300">
+                <span className="text-[0.7rem] font-medium">Found <strong>{duplicateCount} duplicate rows</strong>. Please fix and re-upload.</span>
               </div>
             )}
             {errorCount > 0 && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-3 text-red-700">
-                <span className="text-sm font-medium">Found <strong>{errorFilter} Error rows</strong>. Please fix and re-upload.</span>
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-2 flex items-center gap-3 text-red-700">
+                <span className="text-[0.7rem] font-medium">Found <strong>{errorFilter} Error rows</strong>. Please fix and re-upload.</span>
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 gap-4 px-3">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-3 mb-1">
               <div className="shrink-0">
-                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Preview Data</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  File Name: <span className="font-mono font-semibold text-[var(--primary))]">{excelFileName}</span> |
+                <h3 className="text-md font-bold text-slate-700 dark:text-slate-200">Preview Data</h3>
+                <p className="text-[0.7rem] text-slate-500 dark:text-slate-400">
+                  File Name: <span className="font-mono font-semibold text-[var(--primary))]">{excelFileName}</span> <br />
                   <span> {sheetMode.charAt(0).toUpperCase() + sheetMode.slice(1)}
 
                   </span> Ref ID: <span className="font-mono font-semibold text-[var(--primary))]">{priceSheetRef}</span> |
@@ -724,35 +758,35 @@ export default function UploadView() {
                         </ModernSelect>
                       </div>
                       <button
-                        className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
+                        className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
                         type="button"
                         onClick={downloadErrorExcelFile}
                       >
-                        <FaDownload className="w-5 h-5 mr-2" />
+                        <FaDownload className="w-4 h-4 mr-2" />
                         Download Error File
                       </button>
                     </div>
                   )}
                   <div className="flex p-0.5 gap-2 ">
                     <button
-                      className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto  px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
+                      className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto  px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
                       type="button"
                       onClick={handleCancel}
                     >
-                      <MdOutlineCancel className="w-5 h-5 mr-2" />
+                      <MdOutlineCancel className="w-4 h-4 mr-2" />
                       Cancel
                     </button>
-                    <button onClick={handleReload} className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto  px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
-                      <SlReload className="w-5 h-5 mr-2" /> Reload
+                    <button onClick={handleReload} className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto  px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
+                      <SlReload className="w-4 h-4 mr-2" /> Reload
                     </button>
                     <button
-                      className={`flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto px-2.5 border border-transparent text-sm text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] cursor-pointer dark:hover:bg-gray-600 
+                      className={`flex items-center rounded bg-[var(--primary)] dark:bg-gray-700 py-1.5 mt-auto px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] cursor-pointer dark:hover:bg-gray-600 
     ${(duplicateCount > 0 || errorCount > 0) ? "opacity-50 cursor-not-allowed" : ""}`}
                       type="button"
                       onClick={handleConfirmUpload}
                       disabled={isUploading || duplicateCount > 0 || errorCount > 0}
                     >
-                      <MdOutlineSaveAlt className="w-5 h-5 mr-2" />
+                      <MdOutlineSaveAlt className="w-4 h-4 mr-2" />
                       Confirm & Save
                     </button>
                   </div>
@@ -762,7 +796,7 @@ export default function UploadView() {
 
             <div className="flex-1 overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex flex-col">
               {/* ... (Existing Table Header & Body) ... */}
-              <div className="grid grid-cols-[0.6fr_1.5fr_0.7fr_0.7fr_1fr_0.6fr_0.6fr_1.2fr_0.4fr_0.9fr_1.2fr_0.7fr_0.8fr] gap-4 px-6 py-3 bg-slate-100/80 dark:bg-slate-700/80 border-b border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky top-0 z-10">
+              <div className="grid grid-cols-[0.6fr_1.5fr_0.7fr_0.7fr_1fr_0.6fr_0.6fr_1.2fr_0.4fr_0.9fr_1.2fr_0.7fr_0.8fr] gap-4 px-6 py-3 bg-slate-100/80 dark:bg-slate-700/80 border-b border-slate-200 dark:border-slate-600 text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky top-0 z-10">
                 <div>CustCode</div>
                 <div>CustomerName</div>
                 <div>Category</div>
@@ -778,20 +812,20 @@ export default function UploadView() {
                 <div className="text-right">Price</div>
               </div>
 
-              <div ref={listRef} className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar bg-slate-50/30 dark:bg-slate-900/30" onScroll={handleScroll}>
+              <div ref={listRef} className="overflow-y-auto flex-1 p-1 space-y-1 custom-scrollbar bg-slate-50/30 dark:bg-slate-900/30" onScroll={handleScroll}>
                 {filtered.slice(0, visibleRows).map((item, idx) => (
-                  <div key={item.productKey} className={`grid grid-cols-[0.6fr_1.5fr_0.7fr_0.7fr_1fr_0.6fr_0.6fr_1.2fr_0.4fr_0.9fr_1.2fr_0.7fr_0.8fr] gap-4 px-4 py-3 items-center rounded-lg border transition-colors ${(item.isDuplicate || item.validationError) ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800" : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500/30"}`}>
-                    <span className={`text-xs font-mono ${(item.isDuplicate || item.validationError) ? "text-red-600 dark:text-red-400 font-bold" : "text-slate-500 dark:text-slate-400"}`}>{item.custCode}</span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.customerName}</span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.category}</span>
-                    <span className="font-mono text-xs text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded w-fit truncate">{item.config}</span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300 truncate">{item.brand}</span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{item.sidewall}</span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 truncate">{item.tyreType}</span>
-                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{item.tyreSize}</span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300">{item.rimWidth}</span>
-                    <span className={`text-sm truncate ${(item.isDuplicate || item.validationError) ? "text-red-600 dark:text-red-400 font-bold" : "font-semibold text-slate-700 dark:text-slate-200"}`}>{item.processID}</span>
-                    <div className="flex flex-col text-xs text-slate-500 dark:text-slate-400">
+                  <div key={item.productKey} className={`grid grid-cols-[0.6fr_1.5fr_0.7fr_0.7fr_1fr_0.6fr_0.6fr_1.2fr_0.4fr_0.9fr_1.2fr_0.7fr_0.8fr] gap-4 px-4 py-2 items-center rounded-lg border transition-colors ${(item.isDuplicate || item.validationError) ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800" : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500/30"}`}>
+                    <span className={`text-[0.7rem] font-mono ${(item.isDuplicate || item.validationError) ? "text-red-600 dark:text-red-400 font-bold" : "text-slate-500 dark:text-slate-400"}`}>{item.custCode}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-300 truncate">{item.customerName}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-300 truncate">{item.category}</span>
+                    <span className="font-mono text-[0.7rem] text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded w-fit truncate">{item.config}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-300 truncate">{item.brand}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-500 truncate">{item.sidewall}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-400 truncate">{item.tyreType}</span>
+                    <span className="text-[0.7rem] font-medium text-slate-800 dark:text-slate-200 truncate">{item.tyreSize}</span>
+                    <span className="text-[0.7rem] text-slate-600 dark:text-slate-300">{item.rimWidth}</span>
+                    <span className={`text-[0.7rem] truncate ${(item.isDuplicate || item.validationError) ? "text-red-600 dark:text-red-400 font-bold" : "font-semibold text-slate-700 dark:text-slate-200"}`}>{item.processID}</span>
+                    <div className="flex flex-col font-bold text-[0.7rem] text-slate-500 dark:text-slate-400">
                       <span>{item.startDate}</span>
                       <span className="text-slate-400 dark:text-slate-500">to {item.endDate}</span>
                     </div>
@@ -799,10 +833,10 @@ export default function UploadView() {
                       {item.validationError ? (
                         // Show Error State
                         <div className="flex flex-col items-center">
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
+                          <span className="px-2 py-0.5 rounded-full text-[0.5rem] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
                             INVALID
                           </span>
-                          <span className="text-[9px] text-red-500 mt-1 font-medium leading-tight">
+                          <span className="text-[0.6rem] text-red-500 mt-1 font-medium leading-tight">
                             {item.validationError}
                           </span>
                         </div>
@@ -813,21 +847,21 @@ export default function UploadView() {
                         </span>
                       )}
                     </div>
-                    <div className={`text-right font-bold ${(item.isDuplicate || item.validationError) ? "text-red-600 dark:text-red-400" : "text-slate-700 dark:text-slate-200"}`}>
+                    <div className={`text-right text-[0.8rem] font-bold ${(item.isDuplicate || item.validationError) ? "text-red-600 dark:text-red-400" : "text-slate-700 dark:text-slate-200"}`}>
                       {item.unitPrice.toLocaleString()}
                     </div>
                   </div>
                 ))}
-                {filtered.length === 0 && <div className="py-20 text-center text-slate-400 text-sm">No matching records found.</div>}
-                {visibleRows < filtered.length && <div className="py-4 text-center text-xs text-slate-400 italic">Loading more rows...</div>}
+                {filtered.length === 0 && <div className="py-20 text-center text-slate-400 text-[0.7rem]">No matching records found.</div>}
+                {visibleRows < filtered.length && <div className="py-4 text-center text-[0.7rem] text-slate-400 italic">Loading more rows...</div>}
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
       <style jsx>{`
-        .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm shadow-blue-500/30 text-sm; }
-        .btn-secondary { @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-medium transition text-sm; }
+        .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm shadow-blue-500/30 text-[0.7rem]; }
+        .btn-secondary { @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-medium transition text-[0.7rem]; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }

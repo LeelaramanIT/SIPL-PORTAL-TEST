@@ -30,6 +30,8 @@ import TaskHomePage from "../pages/Task Managment/Home/TaskHomePage";
 import MenuAccessManager from "../pages/MenuAccess/MenuAccessManager";
 import SettingsLayout from "../layout/SettingsLayout";
 import PriceMaster from "../pages/Masters/PriceMaster/PriceMaster";
+import InvoicePDF from "../pages/TTS/International/Invoice/Export Invoice/Customer Invoice/CustomerPDFViewer";
+import ExportCustInvoicePrepare from "../pages/TTS/International/Invoice/Export Invoice/Customer Invoice/ExportCustPrepare";
 
 
 
@@ -69,11 +71,13 @@ export const router = createBrowserRouter([
           children: [
             { path: "Invoice/CustomerInvoice", element: <ExportInvoice /> },
             { path: "Invoice/CustomInvoice", element: <ExportInvoice /> },
-            { path: "Invoice/CustomerInvoice/Prepare", element: <ExportInvoicePrepare /> },
+            { path: "Invoice/CustomerInvoice/Prepare", element: <ExportCustInvoicePrepare /> },
             { path: "Invoice/CustomInvoice/Prepare", element: <ExportInvoicePrepare /> },
             { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF/> },
+            { path: "Invoice/Customer/BillPDF", element: <InvoicePDF/> },
             { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind/> },
             { path: "Invoice/Export/Sample", element: <SampleSplit/> }
+            
           ],
         },
         {

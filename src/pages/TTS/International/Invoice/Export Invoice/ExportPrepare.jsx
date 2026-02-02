@@ -21,12 +21,13 @@ import {
   setShowSubmit,
 } from "../../../../../Redux/Slices/InvoiceSlice.jsx";
 import { FiSearch } from "react-icons/fi";
+import { IoChevronBackCircleOutline } from "react-icons/io5";
 
 const ExportInvoicePrepare = () => {
-  // State management using React Hooks and Redux
+
   const [showDetailsForm, setShowDetailsForm] = useState(false); // Manages the visibility of the mandatory details form.
   const dispatch = useDispatch(); // Redux hook to dispatch actions.
-  const navigate = useNavigate(null); // React Router hook to navigate between pages.
+  const navigate = useNavigate(); // React Router hook to navigate between pages.
   const loading = useSelector((state) => state.invoice.exportInvoices.loading); // Gets the loading state from Redux.
   const error = useSelector((state) => state.invoice.exportInvoices.error); // Gets any error messages from Redux.
   const [isOpen, setOpen] = useState(false); // Manages the visibility of the submit confirmation dialog.
@@ -322,7 +323,7 @@ const ExportInvoicePrepare = () => {
         isSplit: true,
       });
     }
-    dispatch(setSplitItems(newSplitItems)); // Update split items in Redux.
+    dispatch(setSplitItems(newSplitItems)); 
 
     // Clear the split quantity input for the item.
     setSplitInputs((prev) => {
@@ -349,7 +350,6 @@ const ExportInvoicePrepare = () => {
           (splitItem.splitQty || 0),
       };
 
-      // --- Start of Fix ---
       // Check if there are any other split items associated with the original item.
       const remainingSplits = (splitItems || []).filter(
         (item, i) =>
@@ -363,7 +363,6 @@ const ExportInvoicePrepare = () => {
           isSplit: false,
         };
       }
-      // --- End of Fix ---
     }
 
     // Filter out the removed split item.
@@ -403,15 +402,24 @@ const ExportInvoicePrepare = () => {
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col layout-scroll p-4 gap-6 dark:bg-gray-900 dark:text-gray-100">
-      <div className="flex flex-wrap items-center justify-between">
-        <div className="ml-1">
+    <div className="w-full flex-1 flex flex-col layout-scroll p-2 gap-2 dark:bg-gray-900 dark:text-gray-100">
+      <div className="flex flex-wrap items-center justify-between bg-white bg-gradient-to-r from-blue-500/5 to-purple-500/5 p-2 rounded-lg shadow-2xs border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/TTS/International/Invoice/CustomInvoice", { state: { type: "Custom" } })}
+            className="text-gray-500 hover:text-[var(--primary)] transition-colors"
+            title="Back to Custom Invoices"
+          >
+            <IoChevronBackCircleOutline size={28} />
+          </button>
+          <div>
           <h1 className="text-xl font-bold  tracking-tight">
             {invoiceDetails?.type} Invoice Details
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 ">
             Fill in the details below to generate and finalize this invoice
           </p>
+          </div>
         </div>
       </div>
 

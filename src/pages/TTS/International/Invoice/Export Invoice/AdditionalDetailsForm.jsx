@@ -42,7 +42,7 @@ const AdditionalDetailsForm = ({
     (state) => state?.invoice?.exportInvoices.FinalInvoiceDetails
   );
   console.log(invoiceFinalData[0].usercurrency === "INR");
-  
+
 
   // --- Helper: Get Unique Schemes ---
   const uniqueSchemes = useMemo(() => {
@@ -116,6 +116,7 @@ const AdditionalDetailsForm = ({
 
         defaults[`${scheme}_InvoiceDiscription`] = savedData.InvoiceDiscription || "";
         defaults[`${scheme}_ImportedCountryOfOriginGoods`] = savedData.ImportedCountryOfOriginGoods || "";
+        defaults[`${scheme}_ImportedREXNumber`] = savedData.ImportedREXNumber || "";
 
         // Wooden box fields (new)
         defaults[`${scheme}_isWoodenBox`] = savedData.isWoodenBox || false;
@@ -145,6 +146,7 @@ const AdditionalDetailsForm = ({
       containerSEALNO: invoiceData?.containerSEALNO || "",
       placeOfReceiptByPreCarrier: invoiceData?.placeOfReceiptByPreCarrier || "",
       finalDestination: invoiceData?.finalDestination || invoiceDetails?.shippingCity || "",
+      countryOfDestination: invoiceData?.countryOfDestination || "",
       otherCharges1: invoiceData?.otherCharges1 || "",
       otherCharges2: invoiceData?.otherCharges2 || "",
       otherCharges3: invoiceData?.otherCharges3 || "",
@@ -152,8 +154,8 @@ const AdditionalDetailsForm = ({
       otherChargesValue2: invoiceData?.otherChargesValue2 || "",
       otherChargesValue3: invoiceData?.otherChargesValue3 || "",
       paymentTerms: formattedDescription || "",
-      REXNumber:invoiceData?.REXNumber || "",
-      IGSTLUT:invoiceData?.IGSTLUT || "",
+      REXNumber: invoiceData?.REXNumber || "",
+      IGSTLUT: invoiceData?.IGSTLUT || "",
       additionalCharges: (() => {
         if (Array.isArray(invoiceData?.additionalCharges) && invoiceData.additionalCharges.length) {
           return invoiceData.additionalCharges.map((ac, idx) => {
@@ -268,6 +270,7 @@ const AdditionalDetailsForm = ({
         isWoodenBox: data[`${scheme}_isWoodenBox`] || false,
         InvoiceDiscription: data[`${scheme}_InvoiceDiscription`] || "",
         ImportedCountryOfOriginGoods: data[`${scheme}_ImportedCountryOfOriginGoods`] || "",
+        ImportedREXNumber: data[`${scheme}_ImportedREXNumber`],
         palletDimension: data[`${scheme}_palletDimension`] || "",
         woodenBoxDimension: data[`${scheme}_woodenBoxDimension`] || "",
         plantAddress: data[`${scheme}_plantAddress`] || "",
@@ -310,6 +313,7 @@ const AdditionalDetailsForm = ({
       delete staticData[`${scheme}_palletDimension`];
       delete staticData[`${scheme}_woodenBoxDimension`];
       delete staticData[`${scheme}_plantAddress`];
+      delete staticData[`${scheme}_ImportedREXNumber`];
     });
 
     const updatedInvoice = {
@@ -420,6 +424,7 @@ const AdditionalDetailsForm = ({
               <InputField
                 label="Value"
                 type="number"
+                step="any" 
                 placeholder="Amount"
                 name={`additionalCharges.${invoiceIndex}.rows.${rowIndex}.value`}
                 register={register}
@@ -519,6 +524,7 @@ const AdditionalDetailsForm = ({
               <InputField
                 label="Value"
                 type="number"
+                step="any" 
                 placeholder="Amount"
                 name={`discountDetails.${invoiceIndex}.rows.${rowIndex}.value`}
                 register={register}
@@ -583,26 +589,43 @@ const AdditionalDetailsForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <SelectField label="Pre-Carriage by" name="preCarriageBy" register={register} errors={errors} required options={["SEA", "AIR", "ROAD"]} />
               <SelectField label="Place of Receipt" name="placeOfReceiptByPreCarrier" register={register} required errors={errors} options={["CHENNAI", "SRI LANKA", "PUDUKKOTAI, INDIA"]} />
-              {invoiceFinalData[0]?.type === "Custom" || invoiceFinalData[0]?.type === "custom" && (
-                <>
-                  <InputField label="Vessel/Flight No" name="vesselFlightNo" required register={register} errors={errors} />
-                  <InputField label="Bill of Lading No" name="billOfLadingNo" required register={register} errors={errors} />
-                </>
-              )}
+              {(
+                invoiceFinalData[0]?.type === "Customer" ||
+                invoiceFinalData[0]?.type === "customer"
+              ) && (
+                  <>
+                    <InputField
+                      label="Vessel/Flight No"
+                      name="vesselFlightNo"
+                      required
+                      register={register}
+                      errors={errors}
+                    />
+                    <InputField
+                      label="Bill of Lading No"
+                      name="billOfLadingNo"
+                      required
+                      register={register}
+                      errors={errors}
+                    />
+                  </>
+                )}
+
               <InputField label="Port of Loading" name="portOfLoading" required register={register} errors={errors} />
               <InputField label="Port of Discharge" name="portOfDischarge" required register={register} errors={errors} />
               <InputField label="Final Destination" name="finalDestination" required register={register} errors={errors} />
+              <InputField label="Country of Destination" name="countryOfDestination" required register={register} errors={errors} />
               {/* <SelectField label="Container Type" name="containerType" required register={register} errors={errors} options={["20' GP", "20' OT", "40' OT", "40' HC", "LCL"]} /> */}
-              <InputField label="Container Type" name="containerType"  register={register} errors={errors} />
-              <InputField label="Container No" name="containerNo"  register={register} errors={errors} />
-              <InputField label="Seal No" name="containerSEALNO"  register={register} errors={errors} />
+              <InputField label="Container Type" name="containerType" register={register} errors={errors} />
+              <InputField label="Container No" name="containerNo" register={register} errors={errors} />
+              <InputField label="Seal No" name="containerSEALNO" register={register} errors={errors} />
             </div>
           </section>
 
           {/* --- SESSION 2: ADDRESS & REFERENCES --- */}
           <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg flex items-center gap-2 font-semibold mb-4 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
-              2. Address & References <FaMapMarkerAlt className="text-[var(--primary)]"/>
+              2. Address & References <FaMapMarkerAlt className="text-[var(--primary)]" />
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
               <div className="md:col-span-1">
@@ -757,7 +780,7 @@ const AdditionalDetailsForm = ({
                 register={register}
                 required
                 errors={errors}
-                options={["FOB", "CIF", "DDU", "DDP", "C&F","DAP"]}
+                options={["FOB", "CIF", "DDU", "DDP", "C&F", "DAP"]}
               />
               <InputField
                 label="Place Of Incoterm"
@@ -769,13 +792,13 @@ const AdditionalDetailsForm = ({
               />
               {invoiceFinalData[0].usercurrency !== "INR" && (
                 <InputField
-                label={`Exchange Rate (${invoiceFinalData[0]?.usercurrency}) `}
-                type="decimal"
-                name="ExchangeCurrency"
-                required
-                register={register}
-                errors={errors}
-              />)}
+                  label={`Exchange Rate (${invoiceFinalData[0]?.usercurrency}) `}
+                  type="decimal"
+                  name="ExchangeCurrency"
+                  required
+                  register={register}
+                  errors={errors}
+                />)}
               <div className="lg:col-span-1">
                 <TextArea
                   required
@@ -1007,7 +1030,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 icon={PiWarehouseLight}
               />
               <TextArea
-                
+
                 label="Other Details"
                 rows={3}
                 placeholder="Enter Scheme Details..."
@@ -1027,7 +1050,8 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-2"
                 {...register(`${schemeName}_InvoiceDiscription`)}
               />
-              <InputField label="Imported Country Of Origin Goods" name={`${schemeName}_ImportedCountryOfOriginGoods`} register={register} errors={errors} placeholder="Enter License No" />
+              <InputField label="Imported Country Of Origin Goods" name={`${schemeName}_ImportedCountryOfOriginGoods`} register={register} errors={errors} placeholder="Enter Imported Country Of Origin Goods" />
+              <InputField label="Imported REX Number" name={`${schemeName}_ImportedREXNumber`} register={register} errors={errors} placeholder="Enter " />
               <TextArea
                 // required
                 label="Plant or Bonded Warehouse Address"
@@ -1038,9 +1062,9 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 icon={PiWarehouseLight}
               />
             </div>
-            
+
           )}
-          {schemeName === "DDB" &&  (
+          {schemeName === "DDB" && (
             <div className="grid grid-cols-1 sm:grid-cols-1 gap-3 mt-4">
               <TextArea
                 required
@@ -1052,7 +1076,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
               />
             </div>
           )}
-          {schemeName === "Direct" &&  (
+          {schemeName === "Direct" && (
             <div className="grid grid-cols-1 sm:grid-cols-1 gap-3 mt-4">
               <TextArea
                 required
@@ -1095,7 +1119,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 label="No. of Pallets"
                 type="number"
                 placeholder="Count"
-                
+
                 name={`${schemeName}_palletCount`}
                 register={register}
                 errors={errors}
@@ -1107,10 +1131,10 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <span className="flex items-center gap-2 text-gray-600">No. of Tyres on Pallets <PiTireDuotone /></span><span className="text-gray-400 font-light">(Combined Max: {totalSchemeQty})</span>
                 </label>
-  
+
                 <input
                   type="number"
-                  
+
                   placeholder="Qty"
                   className="w-full px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   {...register(`${schemeName}_numberOfTyres`, {
@@ -1127,7 +1151,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 label="Pallet Weight KGs"
                 type="number"
                 placeholder="KGs"
-                
+
                 name={`${schemeName}_palletWeight`}
                 register={register}
                 errors={errors}
@@ -1135,7 +1159,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
               />
 
               {/* 4. Pallet Dimension */}
-            
+
               <TextArea
                 label="Pallet Dimension"
                 rows={3}
@@ -1155,7 +1179,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 label="No. of Wooden Boxes"
                 type="number"
                 placeholder="Count"
-                
+
                 name={`${schemeName}_woodenBoxCount`}
                 register={register}
                 errors={errors}
@@ -1165,13 +1189,13 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
               {/* 2. Tyres in Wooden Boxes - WITH VALIDATION */}
               <div className="relative">
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                 <span className="flex items-center gap-2 text-gray-600"> No. of Tyres in Wooden Boxes <LiaBoxesSolid /></span><span className="text-gray-400 font-light">(Combined Max: {totalSchemeQty})</span>
+                  <span className="flex items-center gap-2 text-gray-600"> No. of Tyres in Wooden Boxes <LiaBoxesSolid /></span><span className="text-gray-400 font-light">(Combined Max: {totalSchemeQty})</span>
                 </label>
                 <input
-                
-                  type="number" 
+
+                  type="number"
                   placeholder="Qty"
-                
+
                   className="w-full px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   {...register(`${schemeName}_woodenBoxTyres`, {
                     validate: validateWooden
@@ -1187,7 +1211,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 label="Wooden Box Weight KGs"
                 type="number"
                 placeholder="KGs"
-                
+
                 name={`${schemeName}_woodenBoxWeight`}
                 register={register}
                 errors={errors}
@@ -1219,18 +1243,19 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
 };
 
 // --- Standard UI Components ---
-const InputField = ({ 
-  label, 
-  name, 
-  register, 
-  errors, 
-  disabled = false, 
-  type = "text", 
-  placeholder, 
-  readOnly = false, 
-  className, 
+const InputField = ({
+  label,
+  name,
+  register,
+  errors,
+  disabled = false,
+  type = "text",
+  placeholder,
+  readOnly = false,
+  className,
   required = false,
-  icon: Icon // New prop for the icon component
+  icon: Icon, // New prop for the icon component
+  ...rest 
 }) => (
   <div className="w-full">
     {label && (
@@ -1251,6 +1276,7 @@ const InputField = ({
       {...register(name, {
         required: required ? `${label} is required` : false,
       })}
+      {...rest}
     />
     {errors[name] && <ErrorText message={errors[name].message} />}
   </div>

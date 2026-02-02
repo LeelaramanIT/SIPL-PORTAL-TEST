@@ -27,7 +27,8 @@ export default function ManageView({ }) {
   const [endDate, setEndDate] = useState("");
   const { selectedCustomer, selectedSheet, sheetOptions, items, loading, activeTab,visibleRows } = useSelector((state) => state.priceMaster);
   const dateInputRef = useRef(null);
-
+  console.log('', items);
+  
   const handleDateChange = (e) => {
     const newDate = e.target.value;
     setEndDate(newDate);
@@ -177,10 +178,12 @@ export default function ManageView({ }) {
   const filtered = items.filter((item) => {
     const term = search.toLowerCase();
     const matchesSearch =
+      (item.customer || "").toLowerCase().includes(term) ||
       (item.processID || "").toLowerCase().includes(term) ||
       (item.tyreSize || "").toLowerCase().includes(term) ||
       (item.brand || "").toLowerCase().includes(term) ||
-      (item.platform || "").toLowerCase().includes(term);
+      (item.platform || "").toLowerCase().includes(term) 
+      // (item.custcode || "");
     const matchesCustomer = selectedCustomer === "All Customers" || item.customer === selectedCustomer;
     const matchesStatus = activeTab === "active" ? item.active : !item.active;
     return matchesSearch && matchesCustomer && matchesStatus;
@@ -713,7 +716,7 @@ export default function ManageView({ }) {
       </div>
 
       {/* === DATA GRID TABLE === */}
-      <div className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex flex-col overflow-hidden">
+      <div className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex flex-col overflow-hidden">
         {/* Horizontal Scroll Wrapper */}
         <div className="flex-1 overflow-x-auto custom-scrollbar flex flex-col">
 
@@ -742,10 +745,53 @@ export default function ManageView({ }) {
             style={{ minWidth: 'max-content' }}
           >
             {loading ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-20">
-                <div className="w-8 h-8 border-4 border-blue-200 dark:border-blue-900 border-t-[var(--primary)] rounded-full animate-spin mb-2"></div>
-                <span className="text-xs">Loading Price Sheet...</span>
-              </div>
+              <motion.div
+            key="processing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-full flex flex-col items-center text-center justify-center text-slate-500 dark:text-slate-400"
+          >
+            <div className="relative w-32 h-16 mb-4">
+              <svg
+                viewBox="0 0 100 50"
+                className="w-full h-full fill-none"
+                style={{ stroke: 'var(--primary, #2563eb)' }}
+              >
+                {/* Pure Mathematical Infinity Path */}
+                {/* The 'd' attribute below defines a perfect smooth figure-eight loop */}
+                <path
+                  id="infinity-path"
+                  d="M31.6,15.5C21,15.5,12.5,24,12.5,34.5S21,53.5,31.6,53.5c6.2,0,11.7-3,15.1-7.5L66.7,21.5c3.4-4.5,8.9-7.5,15.1-7.5,10.6,0,19.1,8.5,19.1,19.1S92.4,52.4,81.8,52.4c-6.2,0-11.7-3-15.1-7.5L31.6,15.5Z"
+                  transform="scale(0.8) translate(12, 5)"
+                  className="stroke-slate-100 dark:stroke-slate-800"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+
+                <motion.path
+                  d="M31.6,15.5C21,15.5,12.5,24,12.5,34.5S21,53.5,31.6,53.5c6.2,0,11.7-3,15.1-7.5L66.7,21.5c3.4-4.5,8.9-7.5,15.1-7.5,10.6,0,19.1,8.5,19.1,19.1S92.4,52.4,81.8,52.4c-6.2,0-11.7-3-15.1-7.5L31.6,15.5Z"
+                  transform="scale(0.8) translate(12, 5)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0, pathOffset: 0 }}
+                  animate={{
+                    pathLength: [0.1, 0.4, 0.1],
+                    pathOffset: [0, 1]
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+              </svg>
+            </div>
+
+            <p className="text-[0.8rem] ml-4 font-bold uppercase tracking-[0.2em] text-center text-slate-500 dark:text-slate-400">
+              Loading Price Sheet...
+            </p>
+          </motion.div>
             ) : (
               <>
                 {filtered.slice(0, visibleRows).map((item, index) => (

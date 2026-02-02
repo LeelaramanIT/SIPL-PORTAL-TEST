@@ -22,13 +22,13 @@ export default function PriceSheetManagement() {
 
   return (
     // Added dark:bg-slate-900 and dark:text-slate-200
-    <div className="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200 p-2 min-h-[93vh] custom-scrollbar transition-colors duration-300">
+    <div className="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200 p-2 min-h-[88vh] custom-scrollbar transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 80, damping: 20 }}
         // Added dark:bg-slate-800 and dark:border-slate-700
-        className="max-w-full mx-auto rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[91.3vh]"
+        className="max-w-full mx-auto rounded-lg bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[89vh]"
       >
         {/* === HEADER SECTION === */}
         <Header

@@ -63,7 +63,8 @@ export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      thunk: true, // ✅ explicitly enable thunk
+      thunk: true, // explicitly enable thunk
+      immutableCheck: { warnAfter: 128 },
       serializableCheck: false,
     }),
   devTools: import.meta.env.MODE === "development",

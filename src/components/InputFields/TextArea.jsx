@@ -9,6 +9,8 @@ const TextArea = ({
   rows = 4,
   icon: Icon, // Added Icon prop
   required = false,
+  register,
+  errors,
   ...rest
 }) => {
   return (
@@ -38,6 +40,7 @@ const TextArea = ({
             hover:border-slate-300 dark:hover:border-slate-500
             shadow-sm focus:shadow dark:focus:shadow-md
             resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            {...(register ? register(name) : {})}
           {...rest}
         />
       </div>

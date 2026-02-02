@@ -390,21 +390,28 @@ const ExportInvoiceBillPDF = () => {
   }, [FinalInvoicePDFData]);
 
 
-  useEffect(() => {
-    // if (!data || pdfBlob) return; // already generated
+useEffect(() => {
+  if (!FinalInvoicePDFData || FinalInvoicePDFData.length === 0) return;
 
-    const generatePDF = async () => {
+  const generatePDF = async () => {
+    try {
       const blob = await pdf(
         <Document>
-          {FinalInvoicePDFData?.map((invoice, idx) => (
-          <InvoicePDF key={idx} data={invoice} styles={styles} />
-        ))}
+          {FinalInvoicePDFData.map((invoice, idx) => (
+            <InvoicePDF key={idx} data={invoice} styles={styles} />
+          ))}
         </Document>
       ).toBlob();
+
       dispatch(setPdfBlob(blob));
-    };
-    generatePDF();
-  }, []);
+      console.log("✅ PDF Blob stored in Redux:", blob);
+    } catch (err) {
+      console.error("❌ PDF generation failed", err);
+    }
+  };
+
+  generatePDF();
+}, [FinalInvoicePDFData, dispatch]);
 
   return (
     <div className="w-full p-1 bg-[var(--background)]">
@@ -413,7 +420,7 @@ const ExportInvoiceBillPDF = () => {
           icon={<IoChevronBackCircleOutline />}
           type="button"
           onClick={() => {
-            navigate("/TTS/International/Invoice/CustomerInvoice/Prepare");
+            navigate("/TTS/International/Invoice/CustomInvoice/Prepare");
           }}
           text={"Back"}
           className={""}

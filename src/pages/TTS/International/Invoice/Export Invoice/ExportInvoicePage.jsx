@@ -65,6 +65,7 @@ const ExportInvoice = () => {
   }; 
 
   const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
+
   const {menus} = useSelector((state)=> state.auth)
 
   // const tableData = useMemo(() => generateTableData(5), []);
@@ -103,33 +104,12 @@ const ExportInvoice = () => {
     setStartDate(date);
   };
 
-  // const highlightMatch = (text, query) => {
-
-  //   if (!query || typeof text !== "string" && typeof text !== "number") return text;
-
-  //   // Escape special regex characters in the query string
-  //   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  //   const regex = new RegExp(`(${escapedQuery})`, "gi");
-  //   const parts = String(text).split(regex);
-
-  //   return parts.map((part, i) =>
-  //     part.toString().toLowerCase().trim() === query.toString().toLowerCase().trim() ? (
-  //       <span key={i} className="bg-[var(--color-primary-hover)]/10 text-[var(--color-text)] font-semibold rounded px-1">
-  //         {part}
-  //       </span>
-  //     ) : (
-  //       part
-  //     )
-  //   );
-  // };
-
 const handleToggle = (value) => {
   console.log("Selected:", value);
 
   // Example user menu permissions (replace with actual data)
   const userMenus = [
-    // { MenuName: "ExportCustomerInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
+    { MenuName: "ExportCustomerInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
     { MenuName: "ExportCustomInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
   ];
 
@@ -154,17 +134,17 @@ const handleToggle = (value) => {
 
   return (
     <div className="px-2 pt-3 max-w-full h-[calc(100vh-62px)] mx-auto flex flex-col ">
-      <div className="ml-1">
-          <h1 className="text-xl font-bold  tracking-tight">
+      <div className="bg-white pb-1 rounded-t-md">
+          <h1 className="ml-2 text-xl font-bold  tracking-tight">
             {/* {invoiceDetails?.type} Invoice Details */}
              Export {state?.type} Invoice
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="ml-2 text-sm text-slate-500 mt-1">
             View and Manage all Export {state?.type} Invoices
           </p>
         </div>
 
-      <div className="bg-white shadow-md px-2 py-2 rounded-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900 flex flex-col flex-grow" >
+      <div className="bg-white shadow-md px-2 py-2 rounded-b-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900 flex flex-col flex-grow" >
         <div
           ref={animateRef}
           className="w-full py-1 px-2.5 rounded-2xl text-[var(--text)] flex flex-col h-full"
