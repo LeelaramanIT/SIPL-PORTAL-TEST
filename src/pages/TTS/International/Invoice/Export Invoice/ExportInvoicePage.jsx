@@ -67,6 +67,8 @@ const ExportInvoice = () => {
   const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
 
   const {menus} = useSelector((state)=> state.auth)
+  console.log("UserMenu",menus);
+  
 
   // const tableData = useMemo(() => generateTableData(5), []);
 
@@ -108,28 +110,32 @@ const handleToggle = (value) => {
   console.log("Selected:", value);
 
   // Example user menu permissions (replace with actual data)
-  const userMenus = [
-    { MenuName: "ExportCustomerInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
-    { MenuName: "ExportCustomInvoicePrepare", MenuUrl: "TTS/International/Invoice/CustomInvoice" },
-  ];
+  // const userMenus = [
+  //   { MenuName: "ExportCustomerInvoice", MenuUrl: "TTS/International/Invoice/CustomerInvoice" },
+  //   { MenuName: "ExportCustomInvoice", MenuUrl: "/TTS/International/Invoice/CustomInvoice" },
+  // ];
 
   // Map toggle options to the required MenuName
   const menuMap = {
-    Customer: "ExportCustomerInvoicePrepare",
-    Custom: "ExportCustomInvoicePrepare",
+    Customer: "ExportCustomerInvoice",
+    Custom: "ExportCustomInvoice",
   };
 
   const requiredMenu = menuMap[value];
-  const hasAccess = userMenus.some((menu) => menu.MenuName === requiredMenu);
+  const hasAccess = menus.some((menu) => menu.MenuName === requiredMenu);
 
   if (!hasAccess) {
     toast.error(`You don’t have access to ${value} invoices.`);
     return; // ⛔ stop navigation
   }
 
-  // ✅ If access is allowed → navigate
+
   const type = value === "Custom" ? "Custom" : "Customer";
-  navigate("/TTS/International/Invoice/CustomInvoice", { state: { type } });
+  if (type === 'Custom') {
+    navigate("/TTS/International/Invoice/CustomInvoice", { state: { type } });
+  }else {
+    navigate("/TTS/International/Invoice/CustomerInvoice", { state: { type } });
+  }
 };
 
   return (

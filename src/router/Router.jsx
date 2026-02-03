@@ -32,6 +32,7 @@ import SettingsLayout from "../layout/SettingsLayout";
 import PriceMaster from "../pages/Masters/PriceMaster/PriceMaster";
 import InvoicePDF from "../pages/TTS/International/Invoice/Export Invoice/Customer Invoice/CustomerPDFViewer";
 import ExportCustInvoicePrepare from "../pages/TTS/International/Invoice/Export Invoice/Customer Invoice/ExportCustPrepare";
+import ListOfPDInspection from "../pages/TTS/Domostic/Dispatch/PDI/PDIMaster";
 
 
 
@@ -62,6 +63,8 @@ export const router = createBrowserRouter([
           element: <InvoiceLayout />,
           children: [
             { path: "Invoice/Customer", element: <CustomerInvoice /> },
+            { path: "Invoice/Custom", element: <CustomInvoice /> },
+            { path: "Dispatch/PDI/ScanForInspection", element: <ListOfPDInspection /> },
             { path: "Invoice/Custom", element: <CustomInvoice /> },
           ],
         },

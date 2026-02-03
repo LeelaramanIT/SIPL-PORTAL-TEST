@@ -45,3 +45,15 @@ export const HSN_CODE = [
     description: "Other machinery and mechanical appliances (industrial use)"
   }
 ];
+
+// Function to get description by HSN code
+export const getDescriptionByHSN = (hsnCode, isAssRimstatus) => {
+  if (isAssRimstatus) {
+    // Display your custom message if isAssRimstatus is true
+    return "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY";
+  } else {
+    // Find the matching item by HSN code and return its description
+    const item = HSN_CODE.find((entry) => entry.hsn === hsnCode);
+    return item ? item.description : "HSN Code not found";
+  }
+};

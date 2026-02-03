@@ -21,6 +21,7 @@ import {
   FaFolderOpen,
   FaHome,
   FaFileInvoiceDollar,
+  FaTruck,
 } from "react-icons/fa";
 import { TfiBarChartAlt } from "react-icons/tfi";
 import { VscCalendar, VscGraphLine } from "react-icons/vsc";
@@ -36,6 +37,7 @@ import "./SideBar.css";
 import { logout, userLogout } from "../../Redux/Slices/AuthSlice";
 import { MdOutlineContactEmergency } from "react-icons/md";
 import { MdOutlinePriceChange } from "react-icons/md";
+import { MdOutlineQrCodeScanner } from "react-icons/md";
 
 const { Sider } = Layout;
 
@@ -64,9 +66,7 @@ const SideBar = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const customIcon = (
-    <img className="w-5 h-5" src={assets.CustomIcons} alt="Custom" />
-  );
+  const customIcon = (<img className="w-5 h-5" src={assets.CustomIcons} alt="Custom" />);
 
   // ✅ Define all possible menu items
   const menuItems = [
@@ -83,14 +83,21 @@ const SideBar = () => {
           label: "Domestic",
           children: [
             {
-              key: "DomesticInvoice",
-              icon: <FaFileInvoiceDollar />,
-              label: "Invoice",
+              key: "/TTS/Domestic/Dispatch",
+              icon: <FaTruck />,
+              label: "Dispatch",
               children: [
                 {
-                  key: "/TTS/Domestic/Invoice/Customer",
+                  key: "/TTS/Domestic/Dispatch/PDI",
                   icon: <SiGoogledocs />,
-                  label: "Customer",
+                  label: "PDI Inspection",
+                  children:[
+                    {
+                  key: "/TTS/Domestic/Dispatch/PDI/ScanForInspection",
+                  icon: <MdOutlineQrCodeScanner />,
+                  label: "Scan For Inspection",
+                }
+                  ]
                 }
               ],
             },
@@ -219,8 +226,6 @@ const SideBar = () => {
   }
   const menuData = extractMenuData(menuItems);
   // console.log(menuData);
-
-
   // ✅ Filter based on user.permissions
   const filterMenu = (items) => {
     // 🟩 Admin with RoleID 1 — full access
@@ -303,12 +308,13 @@ const SideBar = () => {
         }}
         className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
         trigger={null}
-        onMouseEnter={() => {
-          if (!isMobile && collapsed) dispatch(toggleSidebar());
-        }}
-        onMouseLeave={() => {
-          if (!isMobile && !collapsed) dispatch(toggleSidebar());
-        }}
+        // onMouseEnter={() => {
+        //   if (!isMobile && collapsed) dispatch(toggleSidebar());
+        // }}
+        // onMouseLeave={() => {
+        //   if (!isMobile && !collapsed) dispatch(toggleSidebar());
+        // }}
+        
       >
         {/* Logo & Toggle */}
         <div
@@ -320,8 +326,9 @@ const SideBar = () => {
         >
           {/* Full Logo */}
           <div
-            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+            className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
               } overflow-hidden`}
+              onClick={() => dispatch(toggleSidebar())}
           >
             <img
               src={assets.TVSLOGO}
@@ -339,6 +346,7 @@ const SideBar = () => {
               src={assets.TVS}
               alt="Small Logo"
               className="h-10 w-10 object-contain dark:invert"
+              onClick={() => dispatch(toggleSidebar())}
             />
           </div>
 
