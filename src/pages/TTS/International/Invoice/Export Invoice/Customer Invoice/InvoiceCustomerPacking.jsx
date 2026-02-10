@@ -86,7 +86,7 @@ const InvoiceCustomerPacking = ({ data }) => {
     0,
   );
   const uniqueHSNs = [...new Set(data?.items?.map((item) => item.hsnCode))];
-  console.log(uniqueHSNs);
+  // console.log(uniqueHSNs);
 
   const isAssRimstatus = data?.items?.some((item) => item.rimStatus === true);
   const amountInWords = numberToWords(totalPrice, data?.usercurrency);
@@ -124,7 +124,28 @@ const InvoiceCustomerPacking = ({ data }) => {
     0,
   );
 
+  const totalPalletWT = (data.additionalDetails || []).reduce(
+    (sum, det) => sum + (Number(det.isPallet ? det.palletweight : 0) || 0),
+    0,
+  )
+  const totalWoodenWT = (data.additionalDetails || []).reduce(
+    (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxWeight : 0) || 0),
+    0,
+  )
+
   const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
+
+  const totalGrossWT =
+    (Number(totalPalletWT) || 0) +
+    (Number(totalWoodenWT) || 0) +
+    (Number(totalWeight) || 0);
+
+  const finalGrossWT =
+    Number(data?.grossWeight) > 0
+      ? Number(data.grossWeight)
+      : totalGrossWT;
+
+  // console.log("TotalPallet",totalPalletWoodenWT + totalWeight);
 
   const totalLooseTyres = Math.max(
     0,
@@ -176,7 +197,7 @@ const InvoiceCustomerPacking = ({ data }) => {
     (sum, [label, value]) => sum + value,
     0,
   );
-  console.log(totalcharges);
+  // console.log(totalcharges);
 
   // 🔥 COMBINE ALL DISCOUNTS
   // 🔥 COMBINE DISCOUNTS FROM BACKEND STRUCTURE
@@ -226,13 +247,13 @@ const InvoiceCustomerPacking = ({ data }) => {
     );
   };
 
-  console.log(currency.symbol);
+  // console.log(currency.symbol);
 
   return (
     <>
       {itemPages.map((pageItems, pageIndex) => {
         const isLastPage = pageIndex === itemPages.length - 1;
-        console.log("-----SUBTOTAL", pageIndex, isLastPage);
+        // console.log("-----SUBTOTAL", pageIndex, isLastPage);
 
         return (
           <Page key={pageIndex} size="A4" style={styles.page}>
@@ -1296,7 +1317,10 @@ const InvoiceCustomerPacking = ({ data }) => {
                           }}
                         >
                           <Text style={{ fontSize: 5, textAlign: "center" }}>
-                            {(item.finishedWt + item.rimfinishedwt).toFixed(2)}
+                            {(
+                              (Number(item.finishedWt) || 0) +
+                              (Number(item.rimfinishedwt) || 0)
+                            ).toFixed(2)}
                           </Text>
                         </View>
                       );
@@ -1451,8 +1475,9 @@ const InvoiceCustomerPacking = ({ data }) => {
                   }}
                 >
                   <Text style={{ fontSize: 6, fontWeight: "bold" }}>
-                    GROSS WT: {(data?.grossWeight).toFixed(3)} KGS
+                    GROSS WT: {finalGrossWT.toFixed(3)} KGS
                   </Text>
+
                   <Text style={{ fontSize: 6, fontWeight: "bold" }}>
                     NET WT : {totalWeight.toFixed(4)} KGS
                   </Text>
@@ -1509,7 +1534,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                   >
                     <View>
                       {data.containerLoadFrom === "MMN" ||
-                      data.containerLoadFrom === "PDK" ? (
+                        data.containerLoadFrom === "PDK" ? (
                         <Text
                           style={{
                             fontSize: 7,
@@ -1551,7 +1576,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                 )}
               </View>
               {data?.containerLoadFrom === "MMN" ||
-              data?.containerLoadFrom === "PDK" ? (
+                data?.containerLoadFrom === "PDK" ? (
                 <View
                   style={{
                     borderTop: "0.03rem",

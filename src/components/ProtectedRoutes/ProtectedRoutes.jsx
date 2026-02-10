@@ -44,7 +44,7 @@ const ProtectedRoutes = () => {
 
   // 3️⃣ Clean current path
   const currentPath = location.pathname.replace(/\/+$/, "");
-  console.log("Current Path:", currentPath);
+  // console.log("Current Path:", currentPath);
 
   // 4️⃣ Exact match with routePermissions
   const requiredMenuName = routePermissions[currentPath];

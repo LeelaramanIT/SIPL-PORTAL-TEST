@@ -67,7 +67,7 @@ const ExportInvoice = () => {
   const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
 
   const {menus} = useSelector((state)=> state.auth)
-  console.log("UserMenu",menus);
+  // console.log("UserMenu",menus);
   
 
   // const tableData = useMemo(() => generateTableData(5), []);

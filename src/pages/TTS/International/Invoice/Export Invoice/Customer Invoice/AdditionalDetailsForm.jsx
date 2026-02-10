@@ -60,83 +60,83 @@ const AdditionalCustDetailsForm = ({
   );
 
   const handleResetToDatabase = () => {
-  dispatch(resetCustomerAdditionalData());
+    dispatch(resetCustomerAdditionalData());
 
-  const chargeSource = invoiceDetails?.otherChargesDetails || [];
-  const detailSource = invoiceDetails?.additionalDetails || [];
+    const chargeSource = invoiceDetails?.otherChargesDetails || [];
+    const detailSource = invoiceDetails?.additionalDetails || [];
 
-  const additionalCharges = [];
-  const discountDetails = [];
-  const packingDefaults = {};
+    const additionalCharges = [];
+    const discountDetails = [];
+    const packingDefaults = {};
 
-  chargeSource.forEach((charge, index) => {
-    const det = detailSource.find(
-      (d) =>
-        d.invoiceID === charge.invoiceID &&
-        d.schemeName === charge.schemeName
-    );
+    chargeSource.forEach((charge, index) => {
+      const det = detailSource.find(
+        (d) =>
+          d.invoiceID === charge.invoiceID &&
+          d.schemeName === charge.schemeName
+      );
 
-    const key = `${charge.schemeName}_${index}`;
+      const key = `${charge.schemeName}_${index}`;
 
-    // ---------- PACKING ----------
-    if (det) {
-      packingDefaults[`${key}_isPallet`] = det.isPallet || false;
-      packingDefaults[`${key}_palletCount`] = det.palletCount || "";
-      packingDefaults[`${key}_numberOfTyres`] = det.palletTyres || "";
-      packingDefaults[`${key}_palletWeight`] = det.palletweight || "";
-      packingDefaults[`${key}_palletDimension`] = det.palletDimension || "";
+      // ---------- PACKING ----------
+      if (det) {
+        packingDefaults[`${key}_isPallet`] = det.isPallet || false;
+        packingDefaults[`${key}_palletCount`] = det.palletCount || "";
+        packingDefaults[`${key}_numberOfTyres`] = det.palletTyres || "";
+        packingDefaults[`${key}_palletWeight`] = det.palletweight || "";
+        packingDefaults[`${key}_palletDimension`] = det.palletDimension || "";
 
-      packingDefaults[`${key}_isWoodenBox`] = det.isWoodenBox || false;
-      packingDefaults[`${key}_woodenBoxCount`] = det.woodenBoxCount || "";
-      packingDefaults[`${key}_woodenBoxTyres`] = det.woodenBoxTyres || "";
-      packingDefaults[`${key}_woodenBoxWeight`] = det.woodenBoxWeight || "";
-      packingDefaults[`${key}_woodenBoxDimension`] = det.woodenBoxDimension || "";
-    }
+        packingDefaults[`${key}_isWoodenBox`] = det.isWoodenBox || false;
+        packingDefaults[`${key}_woodenBoxCount`] = det.woodenBoxCount || "";
+        packingDefaults[`${key}_woodenBoxTyres`] = det.woodenBoxTyres || "";
+        packingDefaults[`${key}_woodenBoxWeight`] = det.woodenBoxWeight || "";
+        packingDefaults[`${key}_woodenBoxDimension`] = det.woodenBoxDimension || "";
+      }
 
-    // ---------- CHARGES ----------
-    const chargeRows = [];
-    if (charge.chargesType1)
-      chargeRows.push({ desc: charge.chargesType1, value: charge.otherCharges1 });
-    if (charge.chargesType2)
-      chargeRows.push({ desc: charge.chargesType2, value: charge.otherCharges2 });
-    if (charge.chargesType3)
-      chargeRows.push({ desc: charge.chargesType3, value: charge.otherCharges3 });
+      // ---------- CHARGES ----------
+      const chargeRows = [];
+      if (charge.chargesType1)
+        chargeRows.push({ desc: charge.chargesType1, value: charge.otherCharges1 });
+      if (charge.chargesType2)
+        chargeRows.push({ desc: charge.chargesType2, value: charge.otherCharges2 });
+      if (charge.chargesType3)
+        chargeRows.push({ desc: charge.chargesType3, value: charge.otherCharges3 });
 
-    additionalCharges.push({
-      invoiceIndex: index,
-      invoiceID: charge.invoiceID,
-      scheme: charge.schemeName,
-      rows: chargeRows.length ? chargeRows : [{ desc: "", value: "" }],
-      total: chargeRows.reduce((s, r) => s + Number(r.value || 0), 0),
+      additionalCharges.push({
+        invoiceIndex: index,
+        invoiceID: charge.invoiceID,
+        scheme: charge.schemeName,
+        rows: chargeRows.length ? chargeRows : [{ desc: "", value: "" }],
+        total: chargeRows.reduce((s, r) => s + Number(r.value || 0), 0),
+      });
+
+      // ---------- DISCOUNTS ----------
+      const discountRows = [];
+      if (charge.discount1)
+        discountRows.push({ desc: charge.discount1, value: charge.discountValue1 });
+      if (charge.discount2)
+        discountRows.push({ desc: charge.discount2, value: charge.discountValue2 });
+      if (charge.discount3)
+        discountRows.push({ desc: charge.discount3, value: charge.discountValue3 });
+
+      discountDetails.push({
+        invoiceIndex: index,
+        invoiceID: charge.invoiceID,
+        scheme: charge.schemeName,
+        rows: discountRows.length ? discountRows : [{ desc: "", value: "" }],
+        total: discountRows.reduce((s, r) => s + Number(r.value || 0), 0),
+      });
     });
 
-    // ---------- DISCOUNTS ----------
-    const discountRows = [];
-    if (charge.discount1)
-      discountRows.push({ desc: charge.discount1, value: charge.discountValue1 });
-    if (charge.discount2)
-      discountRows.push({ desc: charge.discount2, value: charge.discountValue2 });
-    if (charge.discount3)
-      discountRows.push({ desc: charge.discount3, value: charge.discountValue3 });
-
-    discountDetails.push({
-      invoiceIndex: index,
-      invoiceID: charge.invoiceID,
-      scheme: charge.schemeName,
-      rows: discountRows.length ? discountRows : [{ desc: "", value: "" }],
-      total: discountRows.reduce((s, r) => s + Number(r.value || 0), 0),
+    reset({
+      ...defaultValues, // keeps logistics & static fields
+      ...packingDefaults,
+      additionalCharges,
+      discountDetails,
     });
-  });
 
-  reset({
-    ...defaultValues, // keeps logistics & static fields
-    ...packingDefaults,
-    additionalCharges,
-    discountDetails,
-  });
-
-  toast.success("Reset to database values", { icon: "🔄" });
-};
+    toast.success("Reset to database values", { icon: "🔄" });
+  };
 
   const formatMultilineText = (text) => (text ? text.replace(/~/g, "\n") : "");
 
@@ -177,13 +177,30 @@ const AdditionalCustDetailsForm = ({
       countryOfOriginOfGoods: invoiceDetails?.countryOfOriginOfGoods || "",
       invoiceNumber: invoiceDetails?.invoiceNumber || "",
       otsNo: invoiceDetails?.otsNo || "",
-      orderRefNo:invoiceDetails?.orderRefNo, 
+      orderRefNo: invoiceDetails?.orderRefNo,
       BuyersOrderNumber: invoiceDetails?.buyerorderrefno || "",
       incoterm: invoiceDetails?.incoterm || "",
       ExchangeCurrency: invoiceDetails?.exchangeRate || "",
       paymentTerms: invoiceDetails?.paymentTerms || "",
-      additionalCharges: [],
-      discountDetails: [],
+      additionalCharges: [
+        {
+          invoiceIndex: 0,
+          invoiceID: invoiceDetails?.id || 1,
+          scheme: "Direct",
+          rows: [{ desc: "", value: "" }],
+          total: 0
+        }
+      ],
+      discountDetails: [
+        {
+          invoiceIndex: 0,
+          invoiceID: invoiceDetails?.id || 1,
+          scheme: "Direct",
+          rows: [{ desc: "", value: "" }],
+          total: 0
+        }
+      ],
+
       ...defaults,
     };
   };
@@ -342,8 +359,8 @@ const AdditionalCustDetailsForm = ({
       // --- Address & References ---
       exportAuthorisedAddress: formatMultilineText(
         savedFormData?.exportAuthorisedAddress ||
-          invoiceDetails?.exportAuthorisedAddress ||
-          "",
+        invoiceDetails?.exportAuthorisedAddress ||
+        "",
       ),
       countryOfOriginOfGoods:
         savedFormData?.countryOfOriginOfGoods ||
@@ -457,19 +474,31 @@ const AdditionalCustDetailsForm = ({
     );
 
     // ✅ Packing only stays in additionalDetails
-    finalData.additionalDetails = details.map((det, index) => ({
-      ...det,
-      isPallet: data[`${det.schemeName}_${index}_isPallet`],
-      palletCount: data[`${det.schemeName}_${index}_palletCount`],
-      palletTyres: data[`${det.schemeName}_${index}_numberOfTyres`],
-      palletweight: data[`${det.schemeName}_${index}_palletWeight`],
-      palletDimension: data[`${det.schemeName}_${index}_palletDimension`],
+    const baseDetails =
+      Array.isArray(invoiceDetails?.additionalDetails) &&
+        invoiceDetails.additionalDetails.length > 0
+        ? invoiceDetails.additionalDetails
+        : schemeGroups.map((group, index) => ({
+          invoiceID: group.invoiceID,
+          schemeName: group.schemeName,
+        }));
 
-      isWoodenBox: data[`${det.schemeName}_${index}_isWoodenBox`],
-      woodenBoxCount: data[`${det.schemeName}_${index}_woodenBoxCount`],
-      woodenBoxTyres: data[`${det.schemeName}_${index}_woodenBoxTyres`],
-      woodenBoxWeight: data[`${det.schemeName}_${index}_woodenBoxWeight`],
-      woodenBoxDimension: data[`${det.schemeName}_${index}_woodenBoxDimension`],
+    finalData.additionalDetails = baseDetails.map((det, index) => ({
+      ...det,
+
+      isPallet: data[`${det.schemeName}_${index}_isPallet`] || false,
+      palletCount: Number(data[`${det.schemeName}_${index}_palletCount`] || 0),
+      palletTyres: Number(data[`${det.schemeName}_${index}_numberOfTyres`] || 0),
+      palletweight: Number(data[`${det.schemeName}_${index}_palletWeight`] || 0),
+      palletDimension:
+        data[`${det.schemeName}_${index}_palletDimension`] || "",
+
+      isWoodenBox: data[`${det.schemeName}_${index}_isWoodenBox`] || false,
+      woodenBoxCount: Number(data[`${det.schemeName}_${index}_woodenBoxCount`] || 0),
+      woodenBoxTyres: Number(data[`${det.schemeName}_${index}_woodenBoxTyres`] || 0),
+      woodenBoxWeight: Number(data[`${det.schemeName}_${index}_woodenBoxWeight`] || 0),
+      woodenBoxDimension:
+        data[`${det.schemeName}_${index}_woodenBoxDimension`] || "",
     }));
 
     // Save UI state for edit mode
@@ -481,6 +510,37 @@ const AdditionalCustDetailsForm = ({
     setShowWarning(true);
     onClose();
   };
+
+  const isPrepared =
+    Array.isArray(invoiceDetails?.otherChargesDetails) &&
+    invoiceDetails.otherChargesDetails.length > 0;
+    
+  const schemeGroups = useMemo(() => {
+    if (
+      Array.isArray(invoiceDetails?.otherChargesDetails) &&
+      invoiceDetails.otherChargesDetails.length > 0
+    ) {
+      return invoiceDetails.otherChargesDetails;
+    }
+
+    // Direct Invoice Mode
+    return [
+      {
+        schemeName: "Direct",
+        invoiceID: invoiceDetails?.id || 1,
+        totalQty: Array.isArray(invoiceDetails?.items)
+          ? invoiceDetails.items.reduce(
+            (sum, item) => sum + Number(item?.itemQty || 0),
+            0
+          )
+          : 0,
+      },
+    ];
+  }, [invoiceDetails]);
+
+
+
+
 
   return (
     <div className="h-full flex flex-col dark:bg-gray-800">
@@ -735,13 +795,15 @@ const AdditionalCustDetailsForm = ({
 
             {/* Dynamic Sections per Scheme/Group */}
             <div className="space-y-8">
-              {invoiceDetails?.otherChargesDetails?.map(
-                (chargeDetail, index) => {
-                  const packDetail = invoiceDetails?.additionalDetails?.find(
-                    (p) =>
-                      p.invoiceID === chargeDetail.invoiceID &&
-                      p.schemeName === chargeDetail.schemeName,
-                  );
+              {Array.isArray(schemeGroups) &&
+                schemeGroups.map((chargeDetail, index) => {
+                  // const packDetail = invoiceDetails?.additionalDetails?.find(
+                  //   (p) =>
+                  //     p.invoiceID === chargeDetail.invoiceID &&
+                  //     p.schemeName === chargeDetail.schemeName,
+                  // );
+
+                  console.log("InvoiceDetails:", invoiceDetails);
 
                   return (
                     <div
@@ -758,7 +820,7 @@ const AdditionalCustDetailsForm = ({
                         </h3>
 
                         <div className="text-sm bg-white dark:bg-gray-800 px-3 py-1 rounded border">
-                          Total Qty: <b>{packDetail?.totalQty || 0}</b>
+                          Total Qty: <b>{chargeDetail?.totalQty || 0}</b>
                         </div>
                       </div>
 
@@ -775,6 +837,7 @@ const AdditionalCustDetailsForm = ({
                             (Number(chargeDetail?.otherCharges2) || 0) +
                             (Number(chargeDetail?.otherCharges3) || 0)
                           }
+                          isPrepared={isPrepared}
                         />
 
                         <DiscountRow
@@ -784,6 +847,7 @@ const AdditionalCustDetailsForm = ({
                           setValue={setValue}
                           errors={errors}
                           schemeName={chargeDetail.schemeName}
+                          isPrepared={isPrepared}
                         />
                       </div>
 
@@ -791,23 +855,22 @@ const AdditionalCustDetailsForm = ({
                         <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">
                           Packing Details
                         </h4>
+                        <PackingRow
+                          schemeKey={`${chargeDetail.schemeName}_${index}`}
+                          totalQty={chargeDetail.totalQty}
+                          register={register}
+                          control={control}
+                          setValue={setValue}
+                          getValues={getValues}
+                          errors={errors}
+                          isPrepared={isPrepared}
+                        />
 
-                        {packDetail && (
-                          <PackingRow
-                            schemeKey={`${packDetail.schemeName}_${index}`}
-                            totalQty={packDetail.totalQty}
-                            register={register}
-                            control={control}
-                            setValue={setValue}
-                            getValues={getValues}
-                            errors={errors}
-                          />
-                        )}
                       </div>
                     </div>
                   );
                 },
-              )}
+                )}
             </div>
           </section>
           {/* --- 4. Invoice Details --- */}
@@ -890,6 +953,7 @@ const PackingRow = ({
   setValue,
   getValues,
   errors,
+  isPrepared
 }) => {
   // Watch Checkboxes
   const isPallet = useWatch({ control, name: `${schemeKey}_isPallet` });
@@ -963,7 +1027,7 @@ const PackingRow = ({
             type="checkbox"
             {...register(`${schemeKey}_isPallet`)}
             className="w-4 h-4 text-blue-600 rounded"
-            disabled
+            disabled={isPrepared}
           />
           <span className="flex items-center gap-1 font-medium">
             <MdPallet className="text-blue-600" /> Pallet
@@ -975,7 +1039,7 @@ const PackingRow = ({
             type="checkbox"
             {...register(`${schemeKey}_isWoodenBox`)}
             className="w-4 h-4 text-amber-700 rounded"
-            disabled
+            disabled={isPrepared}
           />
           <span className="flex items-center gap-1 font-medium">
             <GiWoodenCrate className="text-amber-700" /> Wooden Box
@@ -998,7 +1062,7 @@ const PackingRow = ({
                 register={register}
                 errors={errors}
                 icon={LiaPalletSolid}
-                readOnly
+                readOnly={isPrepared}
               />
               <InputField
                 label="Tyre Qty"
@@ -1008,7 +1072,8 @@ const PackingRow = ({
                 errors={errors}
                 icon={PiTireDuotone}
                 validate={validateQty}
-                readOnly
+                readOnly={isPrepared}
+
               />
               <InputField
                 label="Weight (Kg)"
@@ -1017,14 +1082,16 @@ const PackingRow = ({
                 register={register}
                 errors={errors}
                 icon={GiWeight}
-                readOnly
+                readOnly={isPrepared}
+
               />
               <InputField
                 label="Dimensions"
                 name={`${schemeKey}_palletDimension`}
                 register={register}
                 errors={errors}
-                readOnly
+                readOnly={isPrepared}
+
               />
             </div>
           </div>
@@ -1044,7 +1111,8 @@ const PackingRow = ({
                 register={register}
                 errors={errors}
                 icon={LiaBoxesSolid}
-                readOnly
+                readOnly={isPrepared}
+
               />
               <InputField
                 label="Tyre Qty"
@@ -1054,7 +1122,8 @@ const PackingRow = ({
                 errors={errors}
                 icon={PiTireDuotone}
                 validate={validateQty}
-                readOnly
+                readOnly={isPrepared}
+
               />
               <InputField
                 label="Weight (Kg)"
@@ -1063,14 +1132,16 @@ const PackingRow = ({
                 register={register}
                 errors={errors}
                 icon={GiWeight}
-                readOnly
+                readOnly={isPrepared}
+
               />
               <InputField
                 label="Dimensions"
                 name={`${schemeKey}_woodenBoxDimension`}
                 register={register}
                 errors={errors}
-                readOnly
+                readOnly={isPrepared}
+
               />
             </div>
           </div>
@@ -1102,6 +1173,7 @@ const ChargesRow = ({
   setValue,
   schemeName,
   dbMaxTotal = 0,
+  isPrepared
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1122,8 +1194,10 @@ const ChargesRow = ({
     setValue(`additionalCharges.${invoiceIndex}.total`, total);
   }, [total, invoiceIndex, setValue]);
 
-  const remaining = dbMaxTotal - total;
-  const exceeded = total > dbMaxTotal;
+  const maxAllowed = isPrepared ? dbMaxTotal : Infinity;
+  const remaining = maxAllowed - total;
+  const exceeded = isPrepared && total > dbMaxTotal;
+
 
   return (
     <div className="bg-white p-3 rounded border border-gray-200">
@@ -1150,7 +1224,7 @@ const ChargesRow = ({
                     const current = Number(val || 0);
                     const otherTotal = total - (Number(rows?.[k]?.value) || 0);
 
-                    if (current + otherTotal > dbMaxTotal)
+                    if (isPrepared && current + otherTotal > dbMaxTotal)
                       return `Max allowed is ${dbMaxTotal}`;
 
                     return true;
@@ -1209,6 +1283,7 @@ const DiscountRow = ({
   control,
   setValue,
   schemeName,
+  isPrepared
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1240,14 +1315,16 @@ const DiscountRow = ({
               {...register(`discountDetails.${invoiceIndex}.rows.${k}.desc`)}
               placeholder="Reason"
               className="w-full px-2 py-1 text-sm border rounded"
+              readOnly={isPrepared}
             />
             <Input
               {...register(`discountDetails.${invoiceIndex}.rows.${k}.value`)}
               type="number"
               placeholder="0.00"
               className="w-24 px-2 py-1 text-sm border rounded"
+              readOnly={isPrepared}
             />
-            {fields.length > 1 && (
+            {fields.length > 1 && !isPrepared && (
               <button
                 type="button"
                 onClick={() => remove(k)}
@@ -1259,13 +1336,15 @@ const DiscountRow = ({
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={() => append({ desc: "", value: "" })}
-        className="text-xs text-red-600 mt-2 flex items-center gap-1"
-      >
-        <RiDiscountPercentLine /> Add Discount
-      </button>
+      {!isPrepared && (
+        <button
+          type="button"
+          onClick={() => append({ desc: "", value: "" })}
+          className="text-xs text-red-600 mt-2 flex items-center gap-1"
+        >
+          <RiDiscountPercentLine /> Add Discount
+        </button>
+      )}
     </div>
   );
 };

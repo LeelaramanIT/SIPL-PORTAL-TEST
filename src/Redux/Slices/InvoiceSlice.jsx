@@ -641,7 +641,7 @@ const invoiceSlice = createSlice({
           otherDiscount: totalDiscount,
           grandTotal: finalGrandTotal,
 
-          amountInWords: `${userCurrency} ${numberToWords(
+          amountInWords: `${numberToWords(
             Number.isFinite(Number(finalGrandTotal))
               ? Number(finalGrandTotal)
               : 0,
@@ -1342,6 +1342,26 @@ export const submitCustomerInvoice =
         .join(","); // Join all wooden box dimensions into a single string with commas
 
       const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
+      const totalPalletWT = (data.additionalDetails || []).reduce(
+    (sum, det) => sum + (Number(det.isPallet ? det.palletweight : 0) || 0),
+    0,
+  )
+  const totalWoodenWT = (data.additionalDetails || []).reduce(
+    (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxWeight : 0) || 0),
+    0,
+  )
+
+  // const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
+
+  const totalGrossWT =
+    (Number(totalPalletWT) || 0) +
+    (Number(totalWoodenWT) || 0) +
+    (Number(totalWeight) || 0);
+
+  const finalGrossWT =
+    Number(data?.grossWeight) > 0
+      ? Number(data.grossWeight)
+      : totalGrossWT;
 
       const data = {
         invoiceDto: {},
@@ -1436,7 +1456,7 @@ export const submitCustomerInvoice =
             otsNo: payload.otsNo || 0,
             grandTotal: invoiceValue || 0,
             totalPrice,
-            totalWeight: parseFloat(payload.grossWeight) || 0,
+            totalWeight: parseFloat(finalGrossWT) || 0,
             netweight: parseFloat(netWeight) || 0,
             amountInWords: `${payload.usercurrency} ${numberToWords(invoiceValue, payload.usercurrency)}`,
             docUnitPrice: Number(payload.unitPrice || 0),

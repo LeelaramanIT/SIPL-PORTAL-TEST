@@ -32,7 +32,11 @@ import SettingsLayout from "../layout/SettingsLayout";
 import PriceMaster from "../pages/Masters/PriceMaster/PriceMaster";
 import InvoicePDF from "../pages/TTS/International/Invoice/Export Invoice/Customer Invoice/CustomerPDFViewer";
 import ExportCustInvoicePrepare from "../pages/TTS/International/Invoice/Export Invoice/Customer Invoice/ExportCustPrepare";
-import ListOfPDInspection from "../pages/TTS/Domostic/Dispatch/PDI/PDIMaster";
+import PDIMaster from "../pages/TTS/Domostic/Dispatch/PDI/PDIMaster";
+// import ScanForInspectionDetails from "../pages/TTS/Domostic/Dispatch/PDI/ScanForInspection/ScanForInspectionDetails";
+import PPCMaster from "../pages/TTS/Domostic/Dispatch/PDC/PPCMaster";
+import SubstitutionDetails from "../pages/TTS/Domostic/Dispatch/PDC/Substitution/SubstitutionDetails";
+import ScanForInspectionDetails from "../pages/TTS/Domostic/Dispatch/PDI/ScanForInspection/ScanForInspectionDetails";
 
 
 
@@ -64,8 +68,10 @@ export const router = createBrowserRouter([
           children: [
             { path: "Invoice/Customer", element: <CustomerInvoice /> },
             { path: "Invoice/Custom", element: <CustomInvoice /> },
-            { path: "Dispatch/PDI/ScanForInspection", element: <ListOfPDInspection /> },
-            { path: "Invoice/Custom", element: <CustomInvoice /> },
+            { path: "Dispatch/PDI/Inspection/:plant", element: <PDIMaster /> },
+            { path: "Dispatch/PDI/Inspection/Details", element: <ScanForInspectionDetails /> },
+            { path: "Dispatch/PPC/Substitution/:plant/:custtype", element: <PPCMaster /> },
+            { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
           ],
         },
         {

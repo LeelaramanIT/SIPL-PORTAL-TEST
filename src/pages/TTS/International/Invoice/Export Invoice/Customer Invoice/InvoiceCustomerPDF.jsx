@@ -1464,8 +1464,11 @@ const InvoiceCustomerPDF = ({ data }) => {
                         >
                           <Text style={{ fontSize: 5, textAlign: "center" }}>
                             {(
-                              (item.basicprice + item.rimUnitPrice) *
-                              item.itemQty
+                              (
+                                (Number(item.basicprice) || 0) +
+                                (Number(item.rimUnitPrice) || 0)
+                              ) *
+                              (Number(item.itemQty) || 0)
                             ).toFixed(2)}
                           </Text>
                         </View>
@@ -1495,14 +1498,14 @@ const InvoiceCustomerPDF = ({ data }) => {
                         {/* Charges */}
                         {chargeLines.map(([label, value], i) => (
                           <Text key={i} style={{ fontSize: 5, height: "10px" }}>
-                            {+value.toFixed(2)}
+                            {+value.toFixed(2) || 0}
                           </Text>
                         ))}
 
                         {/* Discounts */}
                         {discountLines.map(([label, value], i) => (
                           <Text key={i} style={{ fontSize: 5, height: "10px" }}>
-                            {-value.toFixed(2)}
+                            {-value.toFixed(2) || 0}
                           </Text>
                         ))}
                       </View>
@@ -1582,7 +1585,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                   {isLastPage && (
                     <Text style={{ fontSize: 6, fontWeight: "bold" }}>
                       {currency.symbol === "₹" ? "" : currency.symbol}{" "}
-                      {invoiceValue.toFixed(2)}
+                      {(Number(invoiceValue) || 0).toFixed(2)}
                     </Text>
                   )}
                 </View>
@@ -1685,7 +1688,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                   >
                     <View>
                       {data.containerLoadFrom === "MMN" ||
-                      data.containerLoadFrom === "PDK" ? (
+                        data.containerLoadFrom === "PDK" ? (
                         <Text
                           style={{
                             fontSize: 7,
@@ -1727,7 +1730,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                 )}
               </View>
               {data?.containerLoadFrom === "MMN" ||
-              data?.containerLoadFrom === "PDK" ? (
+                data?.containerLoadFrom === "PDK" ? (
                 <View
                   style={{
                     borderTop: "0.03rem",

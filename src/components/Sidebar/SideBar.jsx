@@ -38,6 +38,7 @@ import { logout, userLogout } from "../../Redux/Slices/AuthSlice";
 import { MdOutlineContactEmergency } from "react-icons/md";
 import { MdOutlinePriceChange } from "react-icons/md";
 import { MdOutlineQrCodeScanner } from "react-icons/md";
+import { FcInspection } from "react-icons/fc";
 
 const { Sider } = Layout;
 
@@ -88,17 +89,60 @@ const SideBar = () => {
               label: "Dispatch",
               children: [
                 {
-                  key: "/TTS/Domestic/Dispatch/PDI",
-                  icon: <SiGoogledocs />,
+                  key: "/TTS/Domestic/Dispatch/PDI/Inspection",
+                  icon: <FcInspection />,
                   label: "PDI Inspection",
-                  children:[
+                  children: [
                     {
-                  key: "/TTS/Domestic/Dispatch/PDI/ScanForInspection",
-                  icon: <MdOutlineQrCodeScanner />,
-                  label: "Scan For Inspection",
-                }
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/MMN",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "MMN PDI Inspection",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/PDK",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "PDK PDI Inspection",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/SITL",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SITL PDI Inspection",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/SLTL",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SLTL PDI Inspection",
+                    }
                   ]
-                }
+
+                },
+                {
+                  key: "/TTS/Domestic/Dispatch/Substution",
+                  icon: <FcInspection />,
+                  label: "PPC Substitution",
+                  children: [
+                    {
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/MMN/Domestic",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "MMN PPC Substitution",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/PDK/Domestic",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "PDK PPC Substitution",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SITL/Domestic",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SITL PPC Substitution",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SLTL/Domestic",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SLTL PPC Substitution",
+                    }
+                  ]
+                },
               ],
             },
           ],
@@ -308,13 +352,13 @@ const SideBar = () => {
         }}
         className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
         trigger={null}
-        // onMouseEnter={() => {
-        //   if (!isMobile && collapsed) dispatch(toggleSidebar());
-        // }}
-        // onMouseLeave={() => {
-        //   if (!isMobile && !collapsed) dispatch(toggleSidebar());
-        // }}
-        
+      // onMouseEnter={() => {
+      //   if (!isMobile && collapsed) dispatch(toggleSidebar());
+      // }}
+      onMouseLeave={() => {
+        if (!isMobile && !collapsed) dispatch(toggleSidebar());
+      }}
+
       >
         {/* Logo & Toggle */}
         <div
@@ -328,7 +372,7 @@ const SideBar = () => {
           <div
             className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
               } overflow-hidden`}
-              onClick={() => dispatch(toggleSidebar())}
+            onClick={() => dispatch(toggleSidebar())}
           >
             <img
               src={assets.TVSLOGO}

@@ -1,100 +1,84 @@
 export function numberToWords(num, currencyCode) {
   const currencyMap = {
-    AED: { name: { singular: 'dirham', plural: 'dirhams' }, subUnit: { singular: 'fils', plural: 'fils' } },
-    AUD: { name: { singular: 'dollar', plural: 'dollars' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    CAD: { name: { singular: 'dollar', plural: 'dollars' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    CNY: { name: { singular: 'yuan', plural: 'yuan' }, subUnit: { singular: 'jiao', plural: 'jiao' } },
-    EUR: { name: { singular: 'euro', plural: 'euros' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    EURO: { name: { singular: 'euro', plural: 'euros' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    GBP: { name: { singular: 'pound', plural: 'pounds' }, subUnit: { singular: 'pence', plural: 'pence' } },
-    HKD: { name: { singular: 'dollar', plural: 'dollars' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    INR: { name: { singular: 'rupee', plural: 'rupees' }, subUnit: { singular: 'paisa', plural: 'paise' } },
-    JPY: { name: { singular: 'yen', plural: 'yen' }, subUnit: { singular: 'sen', plural: 'sen' } },
-    MXN: { name: { singular: 'peso', plural: 'pesos' }, subUnit: { singular: 'centavo', plural: 'centavos' } },
-    NZD: { name: { singular: 'dollar', plural: 'dollars' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    PKR: { name: { singular: 'rupee', plural: 'rupees' }, subUnit: { singular: 'paisa', plural: 'paise' } },
-    RUB: { name: { singular: 'ruble', plural: 'rubles' }, subUnit: { singular: 'kopeck', plural: 'kopecks' } },
-    SGD: { name: { singular: 'dollar', plural: 'dollars' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    USD: { name: { singular: 'dollar', plural: 'dollars' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    ZAR: { name: { singular: 'rand', plural: 'rand' }, subUnit: { singular: 'cent', plural: 'cents' } },
-    KRW: { name: { singular: 'won', plural: 'won' }, subUnit: { singular: 'jeon', plural: 'jeon' } },
-    BRL: { name: { singular: 'real', plural: 'reais' }, subUnit: { singular: 'centavo', plural: 'centavos' } },
-    SEK: { name: { singular: 'krona', plural: 'kronor' }, subUnit: { singular: 'öre', plural: 'öre' } },
-    NOK: { name: { singular: 'krone', plural: 'kroner' }, subUnit: { singular: 'øre', plural: 'øre' } },
-    DKK: { name: { singular: 'krone', plural: 'kroner' }, subUnit: { singular: 'øre', plural: 'øre' } },
+    AED: { subUnit: { singular: 'fils', plural: 'fils' } },
+    AUD: { subUnit: { singular: 'cent', plural: 'cents' } },
+    CAD: { subUnit: { singular: 'cent', plural: 'cents' } },
+    CNY: { subUnit: { singular: 'jiao', plural: 'jiao' } },
+    EUR: { subUnit: { singular: 'cent', plural: 'cents' } },
+    EURO: { subUnit: { singular: 'cent', plural: 'cents' } },
+    GBP: { subUnit: { singular: 'pence', plural: 'pence' } },
+    INR: { subUnit: { singular: 'paisa', plural: 'paise' } },
+    JPY: { subUnit: { singular: '', plural: '' } }, // no decimals normally
+    NZD: { subUnit: { singular: 'cent', plural: 'cents' } },
+    RUB: { subUnit: { singular: 'kopeck', plural: 'kopecks' } },
+    SGD: { subUnit: { singular: 'cent', plural: 'cents' } },
+    USD: { subUnit: { singular: 'cent', plural: 'cents' } },
+    ZAR: { subUnit: { singular: 'cent', plural: 'cents' } },
+    KRW: { subUnit: { singular: '', plural: '' } },
+    CHF: { subUnit: { singular: 'rappen', plural: 'rappen' } },
+    SAR: { subUnit: { singular: 'halala', plural: 'halalas' } },
   };
 
   const currency = currencyMap[currencyCode];
   if (!currency) throw new Error(`Unsupported currency code: ${currencyCode}`);
 
-  const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ',
-    'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
-  const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const ones = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ',
+    'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ',
+    'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
 
-  const convertHundreds = (num) => {
-    let word = '';
-    if (num >= 100) {
-      word += a[Math.floor(num / 100)] + 'hundred ';
-      num %= 100;
+  const tens = ['', '', 'twenty ', 'thirty ', 'forty ', 'fifty ',
+    'sixty ', 'seventy ', 'eighty ', 'ninety '];
+
+  const convertHundreds = (n) => {
+    let str = '';
+    if (n > 99) {
+      str += ones[Math.floor(n / 100)] + 'hundred ';
+      n %= 100;
     }
-    if (num >= 20) {
-      word += b[Math.floor(num / 10)] + ' ';
-      num %= 10;
+    if (n > 19) {
+      str += tens[Math.floor(n / 10)];
+      n %= 10;
     }
-    if (num > 0) word += a[num];
-    return word;
+    if (n > 0) {
+      str += ones[n];
+    }
+    return str;
   };
 
-  const convert = (num) => {
-    if (num === 0) return 'zero';
-    if (num < 0) return 'minus ' + convert(-num);
+  const convert = (n) => {
+    if (n === 0) return 'zero ';
+    let str = '';
 
-    let word = '';
+    const billions = Math.floor(n / 1000000000);
+    n %= 1000000000;
+    if (billions) str += convertHundreds(billions) + 'billion ';
 
-    const billions = Math.floor(num / 1000000000);
-    num %= 1000000000;
-    if (billions > 0) word += convertHundreds(billions) + 'billion ';
+    const millions = Math.floor(n / 1000000);
+    n %= 1000000;
+    if (millions) str += convertHundreds(millions) + 'million ';
 
-    const millions = Math.floor(num / 1000000);
-    num %= 1000000;
-    if (millions > 0) word += convertHundreds(millions) + 'million ';
+    const thousands = Math.floor(n / 1000);
+    n %= 1000;
+    if (thousands) str += convertHundreds(thousands) + 'thousand ';
 
-    const thousands = Math.floor(num / 1000);
-    num %= 1000;
-    if (thousands > 0) word += convertHundreds(thousands) + 'thousand ';
+    if (n) str += convertHundreds(n);
 
-    if (num > 0) word += convertHundreds(num);
-
-    return word.trim();
+    return str;
   };
 
-  const [mainUnit, subUnit] = num.toFixed(2).split('.');
-  const mainUnitWords = convert(parseInt(mainUnit, 10));
-  const subUnitWords = convert(parseInt(subUnit, 10));
+  const [mainPart, decimalPart] = Number(num).toFixed(2).split('.');
+  const mainNumber = parseInt(mainPart, 10);
+  const decimalNumber = parseInt(decimalPart, 10);
 
-  const currencyName = currency.name;
-  const currencySubUnitName = currency.subUnit;
+  let result = currencyCode + ' ';
+  result += convert(mainNumber).trim().toUpperCase();
 
-  let result = '';
-
-  // MAIN UNIT (Currency first)
-  if (parseInt(mainUnit, 10) === 1) {
-    result += `${currencyName.singular.toUpperCase()} `;
-  } else {
-    result += `${currencyName.plural.toUpperCase()} `;
-  }
-
-  result += mainUnitWords.toUpperCase();
-
-  // SUB UNIT
-  if (parseInt(subUnit, 10) > 0) {
+  if (decimalNumber > 0 && currency.subUnit.singular) {
     result += ' AND ';
-    if (parseInt(subUnit, 10) === 1) {
-      result += `${currencySubUnitName.singular.toUpperCase()} `;
-    } else {
-      result += `${currencySubUnitName.plural.toUpperCase()} `;
-    }
-    result += subUnitWords.toUpperCase();
+    result += convert(decimalNumber).trim().toUpperCase() + ' ';
+    result += decimalNumber === 1
+      ? currency.subUnit.singular.toUpperCase()
+      : currency.subUnit.plural.toUpperCase();
   }
 
   return result + ' ONLY';

@@ -424,7 +424,7 @@ const AdditionalDetailsForm = ({
               <InputField
                 label="Value"
                 type="number"
-                step="any" 
+                step="any"
                 placeholder="Amount"
                 name={`additionalCharges.${invoiceIndex}.rows.${rowIndex}.value`}
                 register={register}
@@ -524,7 +524,7 @@ const AdditionalDetailsForm = ({
               <InputField
                 label="Value"
                 type="number"
-                step="any" 
+                step="any"
                 placeholder="Amount"
                 name={`discountDetails.${invoiceIndex}.rows.${rowIndex}.value`}
                 register={register}
@@ -878,6 +878,7 @@ const AdditionalDetailsForm = ({
                   getValues={getValues}
                   invoiceFinalData={invoiceFinalData}
                 />
+
               ))}
             </div>
           </section>
@@ -897,7 +898,7 @@ const AdditionalDetailsForm = ({
 };
 
 // --- UPDATED SCHEME ROW (With Pallet + Wooden Box support) ---
-const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues, invoiceFinalData }) => {
+const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues, invoiceFinalData, isLocked =false }) => {
 
   const isPalletized = useWatch({
     control,
@@ -1097,13 +1098,13 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
             <div className="grid grid-cols-2 gap-2">
               <label className="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 <MdPallet size={20} className="text-[var(--primary)]" />
-                <input type="checkbox" {...register(`${schemeName}_isPallet`)} className="w-5 h-5 text-[var(--primary)] rounded focus:ring-blue-500 border-gray-300" />
+                <input disabled={isLocked} type="checkbox" {...register(`${schemeName}_isPallet`)} className="w-5 h-5 text-[var(--primary)] rounded focus:ring-blue-500 border-gray-300" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Is Palletized?</span>
               </label>
 
               <label className="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 <GiWoodenCrate size={20} />
-                <input type="checkbox" {...register(`${schemeName}_isWoodenBox`)} className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300" />
+                <input disabled={isLocked} type="checkbox" {...register(`${schemeName}_isWoodenBox`)} className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Is Wooden Box?</span>
               </label>
             </div>
@@ -1119,11 +1120,11 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 label="No. of Pallets"
                 type="number"
                 placeholder="Count"
-
                 name={`${schemeName}_palletCount`}
                 register={register}
                 errors={errors}
                 icon={LiaPalletSolid}
+                disabled={isLocked}
               />
 
               {/* 2. Number of Tyres (Quantity on Pallets) - WITH VALIDATION */}
@@ -1156,6 +1157,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 register={register}
                 errors={errors}
                 icon={GiWeight}
+                disabled={isLocked}
               />
 
               {/* 4. Pallet Dimension */}
@@ -1166,6 +1168,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 placeholder={`Enter Pallet Dimension...       4 x 4 x 4`}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-2"
                 {...register(`${schemeName}_palletDimension`)}
+                disabled={isLocked}
               />
             </div>
           </div>
@@ -1184,6 +1187,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 register={register}
                 errors={errors}
                 icon={GiWoodenCrate}
+                disabled={isLocked}
               />
 
               {/* 2. Tyres in Wooden Boxes - WITH VALIDATION */}
@@ -1216,6 +1220,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 register={register}
                 errors={errors}
                 icon={GiWeight}
+                disabled={isLocked}
               />
 
               {/* 4. Wooden Dimension */}
@@ -1225,6 +1230,7 @@ const SchemeRow = ({ schemeName, register, errors, control, setValue, getValues,
                 placeholder={`Enter Wooden Dimension... 4 x 4 x 4`}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-2"
                 {...register(`${schemeName}_woodenBoxDimension`)}
+                disabled={isLocked}
               />
             </div>
           </div>
@@ -1255,7 +1261,7 @@ const InputField = ({
   className,
   required = false,
   icon: Icon, // New prop for the icon component
-  ...rest 
+  ...rest
 }) => (
   <div className="w-full">
     {label && (

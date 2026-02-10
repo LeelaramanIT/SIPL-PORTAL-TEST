@@ -561,3 +561,12 @@ select option {
 select {
   color-scheme: light;
 }
+
+.custom-error-toast {
+    background-color: #e74c3c; /* Custom red background */
+    color: white;              /* White text */
+    font-size: 16px;           /* Larger font */
+    padding: 12px 20px;        /* Adjust padding */
+    border-radius: 8px;        /* Rounded corners */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
