@@ -579,8 +579,8 @@ const invoiceSlice = createSlice({
           countryOfOrigin:
             invoice?.scheme === "Import Invoice"
               ? invoice?.schemeDetails
-                  ?.find((s) => s.scheme === "Import Invoice")
-                  ?.ImportedCountryOfOriginGoods?.toUpperCase() || ""
+                ?.find((s) => s.scheme === "Import Invoice")
+                ?.ImportedCountryOfOriginGoods?.toUpperCase() || ""
               : invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
           // countryOfOrigin: invoice?.countryOfOriginOfGoods?.toUpperCase() || "",
           countryOfDestination:
@@ -592,8 +592,8 @@ const invoiceSlice = createSlice({
           REXNumber:
             invoice?.scheme === "Import Invoice"
               ? invoice?.schemeDetails
-                  ?.find((s) => s.scheme === "Import Invoice")
-                  ?.ImportedREXNumber?.toUpperCase() || ""
+                ?.find((s) => s.scheme === "Import Invoice")
+                ?.ImportedREXNumber?.toUpperCase() || ""
               : invoice?.REXNumber?.toUpperCase() || "",
           bankDetails: {
             accountHolder:
@@ -614,16 +614,16 @@ const invoiceSlice = createSlice({
             itcHsNo: hsnCodeForScheme?.HSNCODE?.join(", ") || "",
             description:
               hasRimAssembly &&
-              hsnCodeForScheme?.HSNCODE?.join(", ") === "40129020"
+                hsnCodeForScheme?.HSNCODE?.join(", ") === "40129020"
                 ? "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY"
                 : hsnCodeForScheme?.HSNCODE?.map(
-                    (code) =>
-                      HSN_CODE.find(
-                        (item) => item.hsn === code,
-                      )?.description?.toUpperCase() || "",
-                  )
-                    .join(" , ")
-                    .trim() || "",
+                  (code) =>
+                    HSN_CODE.find(
+                      (item) => item.hsn === code,
+                    )?.description?.toUpperCase() || "",
+                )
+                  .join(" , ")
+                  .trim() || "",
           },
           otherCharges,
           otherDiscountsList,
@@ -672,8 +672,8 @@ const invoiceSlice = createSlice({
             REXNumber:
               invoice?.scheme === "Import Invoice"
                 ? invoice?.schemeDetails
-                    ?.find((s) => s.scheme === "Import Invoice")
-                    ?.ImportedREXNumber?.toUpperCase() || ""
+                  ?.find((s) => s.scheme === "Import Invoice")
+                  ?.ImportedREXNumber?.toUpperCase() || ""
                 : invoice?.REXNumber?.toUpperCase() || "",
             scheme: invoice?.scheme || "",
           },
@@ -1084,11 +1084,11 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
     if (res.status === 200) {
       toast.success("Invoice Created Successfully");
       dispatch(uploadCustomInvoicePDF())
-        navigate(
-          "/TTS/International/Invoice/CustomInvoice", {
-          state: { type: "Custom" }
-        }
-        );
+      navigate(
+        "/TTS/International/Invoice/CustomInvoice", {
+        state: { type: "Custom" }
+      }
+      );
     }
   } catch (error) {
     dispatch(setExportInvoiceLoading(false));
@@ -1343,25 +1343,25 @@ export const submitCustomerInvoice =
 
       const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
       const totalPalletWT = (data.additionalDetails || []).reduce(
-    (sum, det) => sum + (Number(det.isPallet ? det.palletweight : 0) || 0),
-    0,
-  )
-  const totalWoodenWT = (data.additionalDetails || []).reduce(
-    (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxWeight : 0) || 0),
-    0,
-  )
+        (sum, det) => sum + (Number(det.isPallet ? det.palletweight : 0) || 0),
+        0,
+      )
+      const totalWoodenWT = (data.additionalDetails || []).reduce(
+        (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxWeight : 0) || 0),
+        0,
+      )
 
-  // const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
+      // const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
 
-  const totalGrossWT =
-    (Number(totalPalletWT) || 0) +
-    (Number(totalWoodenWT) || 0) +
-    (Number(totalWeight) || 0);
+      const totalGrossWT =
+        (Number(totalPalletWT) || 0) +
+        (Number(totalWoodenWT) || 0) +
+        (Number(totalWeight) || 0);
 
-  const finalGrossWT =
-    Number(data?.grossWeight) > 0
-      ? Number(data.grossWeight)
-      : totalGrossWT;
+      const finalGrossWT =
+        Number(data?.grossWeight) > 0
+          ? Number(data.grossWeight)
+          : totalGrossWT;
 
       const data = {
         invoiceDto: {},
@@ -1415,9 +1415,11 @@ export const submitCustomerInvoice =
             shippingMobile: payload.shippingMobile || "",
             specialRequest: payload.specialRequest || "",
             preCarriageBy: payload.preCarriageBy || "",
-            invoiceNumber: Array.isArray(payload?.invoiceNo)
-              ? payload.invoiceNo.join(", ")
-              : payload?.invoiceNumber || "",
+            invoiceNumber:
+              Array.isArray(payload?.invoiceNo) && payload.invoiceNo.length > 0
+                ? payload.invoiceNo.join(", ")
+                : payload?.invoiceNumber || "",
+
             invoiceDate:
               parseDMY(payload.invoiceDate) || new Date().toISOString(),
             containerLoadFrom: payload.containerLoadFrom || "",
@@ -1535,7 +1537,7 @@ export const submitCustomerInvoice =
       dispatch(setExportInvoiceLoading(false));
     }
   };
-  
+
 export const splitInvoiceByScheme = (invoice) => {
   const itemByScheme = invoice.items.reduce((acc, item) => {
     if (!acc[item.scheme]) {

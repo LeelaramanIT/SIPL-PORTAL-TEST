@@ -54,6 +54,9 @@ const AdditionalCustDetailsForm = ({
     }
     return decoded.replace(/~+/g, "\n").trim();
   };
+    const isPrepared =
+    Array.isArray(invoiceDetails?.otherChargesDetails) &&
+    invoiceDetails.otherChargesDetails.length > 0;
 
   const formattedDescription = formatPaymentTerms(
     savedFormData?.paymentTerms || invoiceDetails?.paymentTerms || "",
@@ -366,11 +369,16 @@ const AdditionalCustDetailsForm = ({
         savedFormData?.countryOfOriginOfGoods ||
         invoiceDetails?.countryOfOriginOfGoods ||
         "",
-      invoiceNumber:
-        savedFormData?.invoiceNumber ||
-        (Array.isArray(invoiceDetails?.invoiceNo)
+      invoiceNumber: isPrepared
+        ? (Array.isArray(invoiceDetails?.invoiceNo)
           ? invoiceDetails.invoiceNo.join(", ")
-          : invoiceDetails?.invoiceNumber || ""),
+          : invoiceDetails?.invoiceNumber || "")
+        : (savedFormData?.invoiceNumber || ""),
+
+      // invoiceNumber:
+      //   savedFormData?.invoiceNumber ??
+      //   invoiceDetails?.invoiceNumber ??
+      //   "",
       otsNo: savedFormData?.otsNo || invoiceDetails?.otsNo || "",
       BuyersOrderNumber:
         savedFormData?.BuyersOrderNumber || invoiceDetails?.orderRefNo || "",
@@ -437,7 +445,14 @@ const AdditionalCustDetailsForm = ({
   const onSubmit = async (data) => {
     toast.success("Processing Customer Invoice Details...");
 
-    const finalData = { ...invoiceDetails, ...data };
+    const finalData = {
+  ...invoiceDetails,
+  ...data,
+  invoiceNumber: isPrepared
+    ? invoiceDetails.invoiceNumber
+    : data.invoiceNumber,
+};
+
     const details = invoiceDetails?.additionalDetails || [];
 
     const buildOtherChargesForAPI = (additionalCharges, discountDetails) => {
@@ -511,10 +526,8 @@ const AdditionalCustDetailsForm = ({
     onClose();
   };
 
-  const isPrepared =
-    Array.isArray(invoiceDetails?.otherChargesDetails) &&
-    invoiceDetails.otherChargesDetails.length > 0;
-    
+
+
   const schemeGroups = useMemo(() => {
     if (
       Array.isArray(invoiceDetails?.otherChargesDetails) &&
@@ -674,7 +687,7 @@ const AdditionalCustDetailsForm = ({
                   name="invoiceNumber"
                   register={register}
                   errors={errors}
-                  readOnly
+                  readOnly={isPrepared}
                 />
                 <InputField
                   label="OTS Number"

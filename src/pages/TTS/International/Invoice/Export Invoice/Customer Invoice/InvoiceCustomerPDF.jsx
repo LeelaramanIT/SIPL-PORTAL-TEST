@@ -457,10 +457,11 @@ const InvoiceCustomerPDF = ({ data }) => {
                   >
                     <Text style={styles.text}>
                       Invoice No:{" "}
-                      {Array.isArray(data.invoiceNo)
+                      {Array.isArray(data?.invoiceNo) && data.invoiceNo.length > 0
                         ? data.invoiceNo.join(", ")
-                        : data.invoiceNo}
+                        : data?.invoiceNumber || ""}
                     </Text>
+
                     <Text style={styles.text}>Date: {formattedDate}</Text>
                   </View>
                   <View
