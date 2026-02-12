@@ -1004,7 +1004,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           // ---------------------------------------------------
           otherDiscount: totalDiscount || 0,
           paymentermsId: 0,
-          otsNo: data.otsNo || 0,
+          otsNo: data.otsNo || null,
           paymentDays: data.paymentDays || 0,
           // GRAND TOTAL WITH NEW VALUES
           grandTotal: finalGrandTotal,
@@ -1419,7 +1419,6 @@ export const submitCustomerInvoice =
               Array.isArray(payload?.invoiceNo) && payload.invoiceNo.length > 0
                 ? payload.invoiceNo.join(", ")
                 : payload?.invoiceNumber || "",
-
             invoiceDate:
               parseDMY(payload.invoiceDate) || new Date().toISOString(),
             containerLoadFrom: payload.containerLoadFrom || "",

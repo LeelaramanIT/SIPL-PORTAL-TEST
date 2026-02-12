@@ -5,6 +5,7 @@ import SearchBar from "../../../../../components/SearchBar";
 import { setSearch } from "../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { FaSearch, FaClipboardCheck, FaTruck, FaBarcode, FaThumbsUp, FaFileAlt, FaExchangeAlt } from "react-icons/fa"; // Import the icons you need
+import { handleCustType } from "../../../../../Redux/Slices/PPCSubstitutionMaster/PPCSubstitutionSlice";
 
 
 export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMode }) {
@@ -16,6 +17,7 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
   const dispatch = useDispatch()
   const [isOpen, setOpen] = useState(false);
   const reduxSearch = useSelector(state => state.scanforinspection?.search || "");
+  const { custType } = useSelector(state => state.PPCSubstitution || "");
   const [localSearch, setLocalSearch] = useState(reduxSearch);
   const { menus, roles } = useSelector(state => state.auth);
 
@@ -54,12 +56,12 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
   }, [mode]);
 
   const allTabs = [
-  {
-    id: "substitutiondetails",
-    label: "Substitution Page",
-    permissionKey: "PPC Substitution Details",
-    icon: <FaExchangeAlt />
-}
+    {
+      id: "substitutiondetails",
+      label: "Substitution Page",
+      permissionKey: "PPC Substitution Details",
+      icon: <FaExchangeAlt />
+    }
     // {
     //   id: "inspectionincomplite",
     //   label: "Inspection In Complete",
@@ -112,12 +114,29 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
         {mode === "substitutiondetails" && (
           <div className="flex flex-col gap-1">
             {/* 1. TOP SECTION: Sheet Status (Toggle) */}
-            <div className="flex items-center justify-between min-w-[140px]">
+            <div className="flex space-y-2 min-w-[140px] flex-col">
               <SearchBar
                 placeholder="Search by Work Order No, Order Ref No or Customer Name"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
+              <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
+  <button
+    type="button"
+    onClick={() => dispatch(handleCustType("Domestic"))}
+    className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-all duration-300 transform ${custType === "Domestic" ? "bg-[var(--primary)] text-[var(--text)] dark:text-blue-400 scale-105 shadow-lg" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:scale-105"}`}
+  >
+    Domestic
+  </button>
+  <button
+    type="button"
+    onClick={() => dispatch(handleCustType("Export"))}
+    className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-all duration-300 transform ${custType === "Export" ? "bg-[var(--primary)] text-[var(--text)] dark:text-blue-400 scale-105 shadow-lg" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:scale-105"}`}
+  >
+    Export
+  </button>
+</div>
+
             </div>
 
             {mode === "substitutiondetails" && visibleSheetTabs.length > 0 && (

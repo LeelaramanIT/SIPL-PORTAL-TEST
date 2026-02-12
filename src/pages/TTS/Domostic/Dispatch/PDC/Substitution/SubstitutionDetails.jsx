@@ -10,6 +10,9 @@ import { AiOutlineBarcode, AiOutlineCalendar, AiOutlineClockCircle, AiOutlineFil
 import { FaClipboardList } from 'react-icons/fa'
 import { FiPackage } from 'react-icons/fi'
 import SearchBar from '../../../../../../components/SearchBar'
+import toast from 'react-hot-toast'
+import VerificationSider from './VerificationSider'
+
 
 const SubstitutionDetails = () => {
     const location = useLocation()
@@ -17,12 +20,17 @@ const SubstitutionDetails = () => {
     const dispatch = useDispatch()
     const [localSearch, setLocalSearch] = useState("");
     const { SubstitutionDetails } = useSelector(state => state.PPCSubstitution)
-    const [ scanInput, setScanInput ] = useState('')
+    const [scanInput, setScanInput] = useState('')
+    const { loading } = useSelector(state => state.PPCMaster)
+    const [open, setOpen] = useState(false)
+    const [selectedData, setSelectedData] = useState(null)
+
 
     const fadeUp = {
         hidden: { opacity: 0, y: 15 },
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
     }
+    console.log(SubstitutionDetails);
 
     const items = useMemo(() => {
         if (!SubstitutionDetails?.items) return []
@@ -41,24 +49,59 @@ const SubstitutionDetails = () => {
     }, [location.state, dispatch])
 
     const handleScan = (e) => {
-        if (e.key === 'Enter' && scanInput.trim()) {
-            // Logic for scanning goes here
-            setScanInput('')
+        if (e.key === "Enter" && scanInput.trim()) {
+            const scannedCode = scanInput.trim().toUpperCase()
+
+            let foundSubstitution = null
+            let parentItem = null
+
+            // Loop through items
+            for (const item of SubstitutionDetails?.items || []) {
+                const match = item.substitutions?.find(
+                    sub => sub.barcode?.toUpperCase() === scannedCode
+                )
+
+                if (match) {
+                    foundSubstitution = match
+                    parentItem = item
+                    break
+                }
+            }
+
+            if (foundSubstitution) {
+                console.log("Matched Substitution:", foundSubstitution)
+                console.log("Parent Item:", parentItem)
+
+                setSelectedData({
+                    substitution: foundSubstitution,
+                    original: parentItem,
+                    orderDetails: SubstitutionDetails
+                })
+
+                setOpen(true)
+            } else {
+                toast.error("Barcode not found in this order")
+            }
+
+            setScanInput("")
         }
     }
 
+
     const columns = [
-        { header: "Process ID", accessor: "processId", width: "2fr", align: "center", title: 'process ID' },
+        { header: "Process ID", accessor: "processID", width: "2fr", align: "center", title: 'process ID' },
         { header: "PLATFORM", accessor: "config", width: "2fr", align: "center", title: 'PLATFORM' },
         { header: "TYRE SIZE", accessor: "tyreSize", width: "2fr", align: "center" },
         { header: "RIM", accessor: "tyreRim", width: "2fr", align: "center" },
         { header: "TYPE", accessor: "tyreType", width: "2fr", align: "center" },
-        { header: "TOTAL QTY", accessor: "itemQty", width: "2fr", align: "center",
-          render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
-         },
-         { header: "SUBSTITUTION QTY", accessor: "substitutionQty", width: "2fr", align: "center",
-          render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
-         },
+        {
+            header: "TOTAL QTY", accessor: "totaqty", width: "2fr", align: "center",
+            render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
+        },
+        {
+            header: "SUBSTITUTION QTY", accessor: "substitutionQty", width: "2fr", align: "center",
+            render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
+        },
     ]
 
     return (
@@ -80,19 +123,35 @@ const SubstitutionDetails = () => {
                         <div>
                             <h1 className="text-xl font-bold flex items-center gap-2">
                                 <ClipboardList className="text-[var(--primary)]" size={20} />
-                                Inspection Portal
+                                Substitution Portal
                             </h1>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Order Ref: <span className="font-bold text-[var(--primary)] dark:text-slate-200">{SubstitutionDetails?.orderRefNo || 'N/A'}</span></p>
+                            {loading ? (
+                                /* Skeleton Order Ref */
+                                <div className="flex items-center gap-1.5 animate-pulse">
+                                    <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded" />
+                                    <div className="h-3 w-24 bg-slate-300 dark:bg-slate-600 rounded font-bold" />
+                                </div>
+                            ) : (
+                                /* Actual UI */
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                    Order Ref: <span className="font-bold text-[var(--primary)] dark:text-slate-200">
+                                        {SubstitutionDetails?.orderRefNo || 'N/A'}
+                                    </span>
+                                </p>
+                            )}
+                            {/* <p className="text-sm text-slate-500 dark:text-slate-400">Order Ref: <span className="font-bold text-[var(--primary)] dark:text-slate-200">{SubstitutionDetails?.orderRefNo || 'N/A'}</span></p> */}
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
-                        <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--primary)] dark:text-[var(--primary)]/400">Scan Progress</p>
-                            <p className="text-sm font-semibold">45 / {SubstitutionDetails?.itemQty || 0} Units</p>
+                    {loading ? (<ScanProgressLoading />) : (
+                        <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                            <div className="text-right">
+                                <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--primary)] dark:text-[var(--primary)]/400">Scan Progress</p>
+                                <p className="text-sm font-semibold">45 / {SubstitutionDetails?.itemQty || 0} Units</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full border-2 border-[var(--primary)] dark:border-blue-[var(--primary)] border-t-transparent animate-spin-slow hidden sm:block" />
                         </div>
-                        <div className="w-10 h-10 rounded-full border-2 border-[var(--primary)] dark:border-blue-[var(--primary)] border-t-transparent animate-spin-slow hidden sm:block" />
-                    </div>
+                    )}
                 </motion.header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -111,10 +170,10 @@ const SubstitutionDetails = () => {
                                 </h2>
                             </div>
                             <div className="p-5 space-y-4">
-                                <DetailItem icon={<AiOutlineUser />} label="Full Name" value={SubstitutionDetails?.custfullname} />
-                                <DetailItem icon={<FaClipboardList />} label="Work Order" value={SubstitutionDetails?.workOrderNo} />
-                                <DetailItem icon={<FiPackage />} label="Order Quantity" value={SubstitutionDetails?.itemQty} />
-                                <DetailItem icon={<AiOutlineCalendar />} label="desired ShipDate" value={formatDateTime(SubstitutionDetails?.desiredShipDate)} />
+                                <DetailItem loading={loading} icon={<AiOutlineUser />} label="Full Name" value={SubstitutionDetails?.custfullname} />
+                                <DetailItem loading={loading} icon={<FaClipboardList />} label="Order Ref No" value={SubstitutionDetails?.orderRefNo} />
+                                <DetailItem loading={loading} icon={<FiPackage />} label="Order Quantity" value={SubstitutionDetails?.itemQty} />
+                                <DetailItem loading={loading} icon={<AiOutlineCalendar />} label="desired ShipDate" value={formatDateTime(SubstitutionDetails?.desiredShipDate)} />
                             </div>
                         </motion.section>
 
@@ -196,14 +255,27 @@ const SubstitutionDetails = () => {
                                             <Package size={22} strokeWidth={2.5} />
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
+                                            {loading ? (
+                                                /* Header Skeleton */
+                                                <div className="flex items-center gap-3 animate-pulse">
+                                                    {/* "Items List" Title Skeleton */}
+                                                    <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded-md" />
+
+                                                    {/* Pill Badge Skeleton */}
+                                                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                                        <div className="h-3 w-12 bg-slate-300 dark:bg-slate-600 rounded" />
+                                                        <div className="h-2 w-4 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                        <div className="h-3 w-10 bg-slate-300 dark:bg-slate-600 rounded" />
+                                                    </div>
+                                                </div>
+                                            ) : (<h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
                                                 Items List
                                                 <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                                                     <span className="text-xs font-bold text-[var(--primary)]">{items.length}</span>
                                                     <span className="text-[10px] text-slate-400 font-medium">OF</span>
                                                     <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{SubstitutionDetails?.itemQty || 0}</span>
                                                 </div>
-                                            </h2>
+                                            </h2>)}
                                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                                                 Filter and verify individual SKU details
                                             </p>
@@ -216,7 +288,7 @@ const SubstitutionDetails = () => {
                                     <div className="absolute -top-5 right-0 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-[var(--primary)] transition-colors">
                                         Quick Search
                                     </div>
-                                    <div className="relative shadow-sm group-focus-within:shadow-md transition-shadow duration-300 rounded-xl">
+                                    <div className="relative transition-shadow duration-300">
                                         <SearchBar
                                             onChange={(e) => setLocalSearch(e.target.value)}
                                             className="w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[var(--primary)]/20"
@@ -231,6 +303,7 @@ const SubstitutionDetails = () => {
                                         columns={columns}
                                         data={items}
                                         headerClassName='bg-[var(--primary)] text-white dark:bg-slate-950 shadow-md'
+                                        loading={loading}
                                     />
                                 </div>
                             </div>
@@ -238,122 +311,71 @@ const SubstitutionDetails = () => {
                     </motion.div>
                 </div>
             </div>
+            <VerificationSider
+                isOpen={open}
+                onClose={() => setOpen(false)}
+                item={selectedData}
+                onConfirm={() => {
+                    console.log("Confirmed:", selectedData)
+                }}
+            />
+
         </div>
     )
 }
 
 /** Helper Component for Details */
-const DetailItem = ({ icon, label, value }) => (
-    <div className="flex items-center gap-3 group">
-        <div className="text-slate-400 dark:text-slate-500 group-hover:text-blue-500 transition-colors">
-            {React.cloneElement(icon, { size: 18 })}
-        </div>
-        <div className="flex-1">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">{label}</p>
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{value || '—'}</p>
-        </div>
-    </div>
-)
+const DetailItem = ({ icon, label, value, loading = false }) => {
+    if (loading) {
+        return (
+            <div className="flex items-center gap-3 animate-pulse">
+                {/* Skeleton Icon */}
+                <div className="w-[18px] h-[18px] bg-slate-200 dark:bg-slate-700 rounded-md" />
 
+                <div className="flex-1 space-y-2">
+                    {/* Skeleton Label */}
+                    <div className="h-2 w-12 bg-slate-200 dark:bg-slate-700 rounded" />
+                    {/* Skeleton Value */}
+                    <div className="h-3 w-24 bg-slate-300 dark:bg-slate-600 rounded" />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-3 group">
+            <div className="text-slate-400 dark:text-slate-500 group-hover:text-[var(--primary)] transition-colors">
+                {React.cloneElement(icon, { size: 18 })}
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                    {label}
+                </p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                    {value || '—'}
+                </p>
+            </div>
+        </div>
+    );
+};
+const ScanProgressLoading = () => (
+    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800 animate-pulse">
+        {/* Text Section Skeleton */}
+        <div className="text-right space-y-2">
+            {/* Label Line */}
+            <div className="h-2 w-16 bg-slate-200 dark:bg-slate-700 rounded ml-auto" />
+            {/* Value Line */}
+            <div className="h-3 w-20 bg-slate-300 dark:bg-slate-600 rounded ml-auto" />
+        </div>
+
+        {/* Spinner Skeleton (Hidden on mobile to match your original class) */}
+        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 hidden sm:block shadow-inner" />
+    </div>
+);
 
 
 export default SubstitutionDetails
 
-// import { motion, AnimatePresence } from 'framer-motion';
-// import { X, CheckCircle2, ScanLine, AlertCircle } from 'lucide-react';
-
-export const VerificationSider = ({ isOpen, onClose, item, onConfirm }) => {
-    if (!item) return null;
-
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <>
-                    {/* Backdrop Overlay */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[999]"
-                    />
-
-                    {/* Sliding Panel */}
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl z-[1000] flex flex-col border-l border-slate-200 dark:border-slate-800"
-                    >
-                        {/* Header */}
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                            <div>
-                                <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white">
-                                    <ScanLine className="text-[var(--primary)]" size={24} />
-                                    Scan Verified
-                                </h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Review item details before processing</p>
-                            </div>
-                            <button 
-                                onClick={onClose}
-                                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Content Body */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            {/* Visual Indicator of the ID */}
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-100 dark:border-blue-800/30 text-center">
-                                <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-widest">Process ID Detected</span>
-                                <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white mt-1 uppercase">
-                                    {item.processId}
-                                </p>
-                            </div>
-
-                            {/* Data Grid */}
-                            <div className="grid grid-cols-1 gap-4">
-                                <InfoBlock label="Platform / Configuration" value={item.config} />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <InfoBlock label="Tyre Size" value={item.tyreSize} />
-                                    <InfoBlock label="Rim" value={item.tyreRim} />
-                                </div>
-                                <InfoBlock label="Tyre Type" value={item.tyreType} />
-                            </div>
-
-                            {/* Safety Check */}
-                            <div className="mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 flex gap-3">
-                                <AlertCircle className="text-amber-500 shrink-0" size={18} />
-                                <p className="text-xs text-amber-800 dark:text-amber-200">
-                                    Ensure the physical barcode matches the digital record above before submitting.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-                            <button 
-                                onClick={onConfirm}
-                                className="w-full bg-[var(--primary)] hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                            >
-                                <CheckCircle2 size={20} />
-                                Submit Verification
-                            </button>
-                            <button 
-                                onClick={onClose}
-                                className="w-full mt-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
-                            >
-                                Cancel & Discard
-                            </button>
-                        </div>
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
-    );
-};
 
 /* Helper Sub-component */
 const InfoBlock = ({ label, value }) => (

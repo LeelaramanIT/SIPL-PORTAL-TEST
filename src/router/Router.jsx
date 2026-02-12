@@ -70,7 +70,7 @@ export const router = createBrowserRouter([
             { path: "Invoice/Custom", element: <CustomInvoice /> },
             { path: "Dispatch/PDI/Inspection/:plant", element: <PDIMaster /> },
             { path: "Dispatch/PDI/Inspection/Details", element: <ScanForInspectionDetails /> },
-            { path: "Dispatch/PPC/Substitution/:plant/:custtype", element: <PPCMaster /> },
+            { path: "Dispatch/PPC/Substitution/:plant", element: <PPCMaster /> },
             { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
           ],
         },

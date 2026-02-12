@@ -9,10 +9,11 @@ import { getListOfSubstitutionData } from '../../../../../../Redux/Slices/PPCSub
 
 const PPCSubstitution = ({sheetMode}) => {
     const dispatch = useDispatch()
-    const { listOfSubstitutionData , search} = useSelector(state => state.PPCSubstitution)
+    const { listOfSubstitutionData ,custType, search} = useSelector(state => state.PPCSubstitution)
+
     const { loading, mode } = useSelector(state => state.PPCMaster)
     const [visibleRows, setVisibleRows] = useState(50);
-    const { plant,custtype } = useParams()
+    const { plant } = useParams()
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -48,10 +49,12 @@ const PPCSubstitution = ({sheetMode}) => {
     };
     const filteredInspectionData = useMemo(() => {
     const safe = (v) => String(v ?? "").toLowerCase();
-    console.log(sheetMode);
-    
-
     let data = listOfSubstitutionData;
+    // Ensure listOfSubstitutionData is an array
+  if (!Array.isArray(data)) {
+    console.error("listOfSubstitutionData is not an array", data);
+    return [];
+  }
 
     // 🔹 FIRST FILTER: Sheet Mode (Tyres / Split Rims / Claims)
     if (sheetMode) {
@@ -87,6 +90,7 @@ const PPCSubstitution = ({sheetMode}) => {
 }, [listOfSubstitutionData, search, sheetMode]);
 
 console.log(filteredInspectionData)
+
     const data = []
     const uploadColumns = [
         { header: "CUSTOMER NAME", accessor: "custfullname", width: "2fr", align: "center" },
@@ -110,8 +114,8 @@ console.log(filteredInspectionData)
     ];
 
     useEffect(() => {
-        dispatch(getListOfSubstitutionData(plant,custtype))
-    }, [plant,custtype])
+        dispatch(getListOfSubstitutionData(plant,custType))
+    }, [plant,custType])
 
     return (
         <div className='h-full flex flex-col min-h-0 p-3 bg-gray-50 dark:bg-slate-900'>

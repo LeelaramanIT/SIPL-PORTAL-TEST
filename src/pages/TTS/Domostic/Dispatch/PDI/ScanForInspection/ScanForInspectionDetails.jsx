@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { getCustomerDetails, PDICheckBarcode } from '../../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice'
+import { getCustomerDetails, PDICheckBarcode, resetBarcodeDetails, SubmitInspection } from '../../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice'
 import { formatDateTime } from '../../../../../../utils/FormatDate'
 import { ArrowLeft, ClipboardList, Package, ScanLine, } from 'lucide-react'
 import { DynamicDataTable } from '../../../../../../components/DynamicDataTable'
@@ -12,33 +12,39 @@ import { FiPackage } from 'react-icons/fi'
 import SearchBar from '../../../../../../components/SearchBar'
 import toast from 'react-hot-toast'
 import { VerificationSider } from './BarcodeSlider'
+import { SlReload } from 'react-icons/sl'
 
 const ScanForInspectionDetails = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const [localSearch, setLocalSearch] = useState("");
-    const { InspectionDetails , barcodeDetails } = useSelector(state => state.scanforinspection)
+    const { InspectionDetails, barcodeDetails } = useSelector(state => state.scanforinspection)
     const { loading } = useSelector(state => state.PDIDispatchMaster)
+    const roles = useSelector((state) => state.auth?.roles);
     const [scanInput, setScanInput] = useState('')
     const [error, setError] = useState('')
     const [open, setOpen] = useState(false)
-    console.log(barcodeDetails);
-    
 
+    // console.log(roles)
     const fadeUp = {
         hidden: { opacity: 0, y: 15 },
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
     }
 
+
     const items = useMemo(() => {
         if (!InspectionDetails?.items) return []
         const term = localSearch.toLowerCase()
         return InspectionDetails.items.filter(item =>
-            item.tyreSize?.toLowerCase().includes(term) ||
-            item.platform?.toLowerCase().includes(term) ||
-            item.tyreType?.toLowerCase().includes(term)
-        )
+            (item.tyreSize?.toLowerCase().includes(term)) ||
+            (item.platform?.toLowerCase().includes(term)) ||
+            (item.tyreType?.toLowerCase().includes(term)) ||
+            (item.processID?.toLowerCase().includes(term)) ||
+            (item.stencilNo?.toLowerCase().includes(term)) ||
+            (item.o_ItemID?.toString().includes(term))
+        );
+
     }, [localSearch, InspectionDetails])
 
     useEffect(() => {
@@ -53,16 +59,36 @@ const ScanForInspectionDetails = () => {
 
             // Check if the barcode starts with 'P-' and has a total length of 19 characters
             if (scanInput.trim().length === 19 && scanInput.trim().startsWith('P-')) {
-                console.log('Valid scanInput:', scanInput);
+                // console.log('Valid scanInput:', scanInput);
 
                 // Reset input field after successful scan
                 setScanInput('');
 
                 // Call function to process the valid barcode
+                const trimmedBarcode = scanInput.trim();
+                const processID = trimmedBarcode.substring(0, 8);
+                const stencilNo = trimmedBarcode.substring(8, 18);
+
+                // console.log("processID:", processID);
+                // console.log("stencilNo:", stencilNo);
+
+                const matchedItem = InspectionDetails.items.find(
+                    (item) => item.processID === processID
+                );
+
+                if (!matchedItem) {
+                    toast.error("No item found for this Order");
+                    return;
+                }
+
                 const payload = {
                     ...InspectionDetails,
-                    barcode: scanInput
+                    processID,
+                    stencilNo,
+                    barcode: scanInput,
+                    o_ItemID: matchedItem.o_ItemID
                 };
+                dispatch(resetBarcodeDetails());
                 dispatch(PDICheckBarcode(payload));
                 setOpen(true)
             } else {
@@ -82,8 +108,16 @@ const ScanForInspectionDetails = () => {
         }
     };
 
-
-
+    const scanedQty = InspectionDetails?.items?.reduce(
+        (total, item) => total + item.scannedQty,
+        0
+    )
+    const totalQty = InspectionDetails?.items?.reduce(
+        (total, item) => total + item.totalItemQty,
+        0
+    )
+    const percentage =
+        totalQty > 0 ? (scanedQty / totalQty) * 100 : 0;
 
     const columns = [
         { header: "PLATFORM", accessor: "config", width: "1fr", align: "center", title: 'PLATFORM' },
@@ -93,18 +127,23 @@ const ScanForInspectionDetails = () => {
         { header: "TOTAL QTY", accessor: "totalItemQty", width: "1fr", align: "center" },
         {
             header: "SCANNED QTY",
-            accessor: "scannedCount",
+            accessor: "scannedQty",
             width: "1fr",
             align: "center",
             title: 'SCANNED QTY',
             render: (val) => <span className="font-bold text-blue-600 dark:text-blue-400">{val || 0}</span>
         },
-        { header: "SUB-QTY", title: 'SUBSTITUTION QTY', accessor: "substituteQty", width: "1fr", align: "center" },
-        { header: "SUN-SCANNED QTY", accessor: "totalItemQty", width: "1fr", align: "center", title: 'TOTAL SUBSTITUTION QTY', },
+        { header: "SUB-QTY", title: 'SUBSTITUTION QTY', accessor: "substitutionQty", width: "1fr", align: "center" },
+        { header: "SUB-SCANNED QTY", accessor: "totalItemQty", width: "1fr", align: "center", title: 'TOTAL SUBSTITUTION QTY', },
     ]
-
+    // console.log(InspectionDetails)
+    // In the parent component that calls VerificationSider
+                    const handleConfirmation = (payload) => {
+                        dispatch(SubmitInspection(payload));
+                        setOpen(false); // Close the side panel after submission
+                    };
     return (
-        <div className="min-h-[calc(100vh-62px)] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+        <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             <div className="max-w-[1550px] mx-auto p-3 sm:p-3 space-y-3">
 
                 {/* --- HEADER SECTION --- */}
@@ -144,10 +183,24 @@ const ScanForInspectionDetails = () => {
                     {loading ? (<ScanProgressLoading />) : (<div className="flex items-center gap-3 bg-[var(--primary)]/10 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
                         <div className="text-right">
                             <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--primary)] dark:text-[var(--primary)]/400">Scan Progress</p>
-                            <p className="text-sm font-semibold">45 / {InspectionDetails?.itemQty || 0} Units</p>
+                            <p className="text-sm font-semibold">{scanedQty || 0} / {totalQty || 0} Units</p>
                         </div>
-                        <div className="w-10 h-10 rounded-full border-2 border-[var(--primary)] dark:border-blue-[var(--primary)] border-t-transparent animate-spin-slow hidden sm:block" />
-                    </div>)}
+                        <div className="relative w-10 h-10 hidden sm:block">
+                            <div
+                                className="w-full h-full rounded-full"
+                                style={{
+                                    background: `conic-gradient(var(--primary) ${percentage}%, #e5e7eb ${percentage}%)`,
+                                }}
+                            />
+                            <div className="absolute inset-1 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center">
+                                <span className="text-[10px] font-bold">
+                                    {Math.round(percentage)}%
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                    )}
                 </motion.header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -170,6 +223,7 @@ const ScanForInspectionDetails = () => {
                                 <DetailItem loading={loading} icon={<FaClipboardList />} label="Work Order" value={InspectionDetails?.workOrderNo} />
                                 <DetailItem loading={loading} icon={<FiPackage />} label="Order Quantity" value={InspectionDetails?.itemQty} />
                                 <DetailItem loading={loading} icon={<AiOutlineCalendar />} label="Order Date" value={formatDateTime(InspectionDetails?.orderDate)} />
+                                <DetailItem loading={loading} icon={<AiOutlineCalendar />} label="Ship Date" value={formatDateTime(InspectionDetails?.desiredShipDate)} />
                             </div>
                         </motion.section>
 
@@ -198,7 +252,7 @@ const ScanForInspectionDetails = () => {
                                 className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-400 to-transparent shadow-[0_0_8px_rgba(248,113,113,0.8)] z-0 opacity-50"
                             />
 
-                            <div className="relative z-10 px-3 py-2">
+                            <div className="relative z-10 px-1 py-1">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
                                         <ScanLine size={20} className="animate-pulse" />
@@ -253,7 +307,7 @@ const ScanForInspectionDetails = () => {
                         variants={fadeUp} initial="hidden" animate="show" transition={{ delay: 0.3 }}
                         className="lg:col-span-8 space-y-2"
                     >
-                        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-4 sm:py-6">
+                        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-4 sm:py-2">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
                                 {/* Left Side: Title & Description */}
                                 <div className="space-y-1">
@@ -294,11 +348,14 @@ const ScanForInspectionDetails = () => {
                                 </div>
 
                                 {/* Right Side: Search Bar */}
-                                <div className="relative w-full md:w-80 group">
+                                <div className="relative w-full md:w-lg group">
                                     <div className="absolute -top-5 right-0 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-[var(--primary)] transition-colors">
                                         Quick Search
                                     </div>
-                                    <div className="relative shadow-sm group-focus-within:shadow-md transition-shadow duration-300 rounded-xl">
+                                    <div className="relative flex transition-shadow duration-300">
+                                        <button onClick={"handleReload"} className="flex items-center w-2xs rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5  border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600">
+                                            <SlReload className="w-4 h-4 mr-2" /> Download Stencil
+                                        </button>
                                         <SearchBar
                                             onChange={(e) => setLocalSearch(e.target.value)}
                                             className="w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[var(--primary)]/20"
@@ -308,7 +365,7 @@ const ScanForInspectionDetails = () => {
                             </div>
 
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-                                <div className="h-[24rem]">
+                                <div className="h-[28.5rem]">
                                     <DynamicDataTable
                                         columns={columns}
                                         data={items}
@@ -324,10 +381,9 @@ const ScanForInspectionDetails = () => {
             <VerificationSider
                 isOpen={open}
                 onClose={() => setOpen(false)}
-                data={barcodeDetails} 
-                onConfirm={() => {
-                    console.log("Confirmed");
-                    setOpen(false);
+                data={barcodeDetails}
+                onConfirm={(data) => {
+                    handleConfirmation(data)
                 }}
             />
         </div>
@@ -353,7 +409,7 @@ const DetailItem = ({ icon, label, value, loading = false }) => {
 
     return (
         <div className="flex items-center gap-3 group">
-            <div className="text-slate-400 dark:text-slate-500 group-hover:text-blue-500 transition-colors">
+            <div className="text-slate-400 dark:text-slate-500 group-hover:text-[var(--primary)] transition-colors">
                 {React.cloneElement(icon, { size: 18 })}
             </div>
             <div className="flex-1 min-w-0">

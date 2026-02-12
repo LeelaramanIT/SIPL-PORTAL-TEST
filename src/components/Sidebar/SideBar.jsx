@@ -122,22 +122,22 @@ const SideBar = () => {
                   label: "PPC Substitution",
                   children: [
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/MMN/Domestic",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/MMN",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "MMN PPC Substitution",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/PDK/Domestic",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/PDK",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "PDK PPC Substitution",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SITL/Domestic",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SITL",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SITL PPC Substitution",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SLTL/Domestic",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SLTL",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PPC Substitution",
                     }
