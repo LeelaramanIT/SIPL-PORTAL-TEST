@@ -120,7 +120,7 @@ const invoiceSlice = createSlice({
 
         const grandTotal = invoice.items.reduce((acc, item) => {
           const tyre = Number(item.basicprice) || 0;
-          const rim = item.rimStatus ? Number(item.rimUnitPrice) || 0 : 0;
+          const rim = Number(item.rimUnitPrice) || 0 ;
           const qty = Number(item.itemQty) || 0;
 
           return acc + (tyre + rim) * qty;
@@ -382,7 +382,7 @@ const invoiceSlice = createSlice({
         const hsnCodeForScheme = matchedHSN.find(
           (h) => h.scheme === invoice.scheme?.toUpperCase(),
         );
-        console.log(hsnCodeForScheme);
+        
 
         if (invoice.scheme && Array.isArray(listToCheck)) {
           const matched = listToCheck.find(
@@ -448,7 +448,7 @@ const invoiceSlice = createSlice({
             palletDimension,
           }),
           ...(woodenBoxQty > 0 && {
-            woodenBoxTyres: `${woodenBoxedTyres}TYRES PACKED IN ${woodenBoxQty} WOODEN BOX`,
+            woodenBoxTyres: `${woodenBoxedTyres} TYRES PACKED IN ${woodenBoxQty} ${woodenBoxQty > 1 ? "WOODEN BOXES" : "WOODEN BOX"} `,
             woodenBoxDimension,
           }),
           totalTyres: `TOTAL: ${totalCount}`,
@@ -519,11 +519,6 @@ const invoiceSlice = createSlice({
           totalDiscount
         ).toFixed(2);
 
-        console.log("PDF", invoice);
-        console.log(
-          "items",
-          invoice.items.some((item) => item.rimStatus === true),
-        );
         // 3. Return Sanitized Data (NO NULLS ALLOWED)
         const isDirectScheme =
           invoice?.scheme === "Import Invoice" ||

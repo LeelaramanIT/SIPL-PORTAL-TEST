@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { getSubstitutionDetails } from '../../../../../../Redux/Slices/PPCSubstitutionMaster/PPCSubstitutionSlice'
+import { getSubstitutionDetails, resetSelectedData, setSelectedData } from '../../../../../../Redux/Slices/PPCSubstitutionMaster/PPCSubstitutionSlice'
 import { formatDateTime } from '../../../../../../utils/FormatDate'
 import { ArrowLeft, ClipboardList, Search, CheckCircle2, Package, ScanLine } from 'lucide-react'
 import { DynamicDataTable } from '../../../../../../components/DynamicDataTable'
@@ -19,11 +19,11 @@ const SubstitutionDetails = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const [localSearch, setLocalSearch] = useState("");
-    const { SubstitutionDetails } = useSelector(state => state.PPCSubstitution)
+    const { SubstitutionDetails, selectedData } = useSelector(state => state.PPCSubstitution)
     const [scanInput, setScanInput] = useState('')
     const { loading } = useSelector(state => state.PPCMaster)
     const [open, setOpen] = useState(false)
-    const [selectedData, setSelectedData] = useState(null)
+    // const [selectedData, setSelectedData] = useState(null)
 
 
     const fadeUp = {
@@ -52,6 +52,13 @@ const SubstitutionDetails = () => {
         if (e.key === "Enter" && scanInput.trim()) {
             const scannedCode = scanInput.trim().toUpperCase()
 
+            // Check if the input is exactly 19 characters long
+            if (scannedCode.length !== 19) {
+                toast.error("Barcode must be 19 characters long")
+                setScanInput("")  // Clear the input if invalid
+                return
+            }
+
             let foundSubstitution = null
             let parentItem = null
 
@@ -71,13 +78,12 @@ const SubstitutionDetails = () => {
             if (foundSubstitution) {
                 console.log("Matched Substitution:", foundSubstitution)
                 console.log("Parent Item:", parentItem)
-
-                setSelectedData({
+                dispatch(resetSelectedData())
+                dispatch(setSelectedData({
                     substitution: foundSubstitution,
                     original: parentItem,
                     orderDetails: SubstitutionDetails
-                })
-
+                }))
                 setOpen(true)
             } else {
                 toast.error("Barcode not found in this order")
@@ -86,6 +92,7 @@ const SubstitutionDetails = () => {
             setScanInput("")
         }
     }
+
 
 
     const columns = [
@@ -103,6 +110,13 @@ const SubstitutionDetails = () => {
             render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
         },
     ]
+
+    const totalQty = SubstitutionDetails?.items.reduce((acc, item) => acc + (item.totaqty || 0), 0)
+    const subQty = SubstitutionDetails?.items.reduce((acc, item) => acc + (item.substitutionQty || 0), 0)
+    const percentage =
+        totalQty > 0 ? (subQty / totalQty) * 100 : 0;
+
+
 
     return (
         <div className="min-h-[calc(100vh-62px)] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -143,15 +157,30 @@ const SubstitutionDetails = () => {
                         </div>
                     </div>
 
-                    {loading ? (<ScanProgressLoading />) : (
-                        <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                    {loading ? (
+                        <ScanProgressLoading />
+                    ) : (
+                        <div className="flex items-center gap-3 bg-[var(--primary)]/10 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
                             <div className="text-right">
                                 <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--primary)] dark:text-[var(--primary)]/400">Scan Progress</p>
-                                <p className="text-sm font-semibold">45 / {SubstitutionDetails?.itemQty || 0} Units</p>
+                                <p className="text-sm font-semibold">{subQty || 0} / {totalQty || 0} Units</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full border-2 border-[var(--primary)] dark:border-blue-[var(--primary)] border-t-transparent animate-spin-slow hidden sm:block" />
+                            <div className="relative w-10 h-10 hidden sm:block">
+                                <div
+                                    className="w-full h-full rounded-full"
+                                    style={{
+                                        background: `conic-gradient(var(--primary) ${percentage}%, #e5e7eb ${percentage}%)`,
+                                    }}
+                                />
+                                <div className="absolute inset-1 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center">
+                                    <span className="text-[10px] font-bold">
+                                        {Math.round(percentage)}%
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     )}
+
                 </motion.header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -313,6 +342,7 @@ const SubstitutionDetails = () => {
             </div>
             <VerificationSider
                 isOpen={open}
+                setOpen={setOpen}
                 onClose={() => setOpen(false)}
                 item={selectedData}
                 onConfirm={() => {

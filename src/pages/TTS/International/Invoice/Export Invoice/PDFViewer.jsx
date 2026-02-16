@@ -16,6 +16,8 @@ Font.register({
 const BORDER_THIN = "0.5px solid black";
 const BORDER_BOLD = "1.5px solid black";
 import { Font } from "@react-pdf/renderer";
+import LankaCustomPDF from "./SRILANKA_INVOICE/LankaCustomPDF";
+import LamkaCustomPackingPDF from "./SRILANKA_INVOICE/LamkaCustomPackingPDF";
 
 Font.register({
   family: "Roboto",
@@ -35,18 +37,18 @@ export const styles = StyleSheet.create({
     paddingVertical: "1px",
     fontWeight: "bold",
   },
-//   row4_1heading: {
-//   width: "35%",
-//   borderRightWidth: 0.7,
-//   borderRightColor: "#000",
-//   paddingRight: 4,
-//   justifyContent: "center",
-// },
+  //   row4_1heading: {
+  //   width: "35%",
+  //   borderRightWidth: 0.7,
+  //   borderRightColor: "#000",
+  //   paddingRight: 4,
+  //   justifyContent: "center",
+  // },
 
-// row4_1value: {
-//   width: "65%",
-//   paddingLeft: 6,
-// },
+  // row4_1value: {
+  //   width: "65%",
+  //   paddingLeft: 6,
+  // },
   // pdf
   pdf: {
     width: "100%",
@@ -68,7 +70,7 @@ export const styles = StyleSheet.create({
     fontSize: 8,
     padding: 0.5,
     textAlign: "center", // ✅ center text
-  },  
+  },
 
   // row1
   row1: {
@@ -175,7 +177,7 @@ export const styles = StyleSheet.create({
   row3left2row1: {
     width: "50%",
     height: "100%",
-    justifyContent:'space-evenly'
+    justifyContent: 'space-evenly'
   },
 
   // row3 left side 2 row 2
@@ -308,7 +310,7 @@ export const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     textAlign: "center",
     borderBottom: BORDER_THIN,
-    whiteSpace:'nowrap'
+    whiteSpace: 'nowrap'
   },
   row4_1botm: {
     width: "100%",
@@ -356,7 +358,7 @@ export const styles = StyleSheet.create({
     fontSize: 7,
     paddingLeft: "3px",
     paddingVertical: "2px",
-    flexWrap:'nowrap'
+    flexWrap: 'nowrap'
   },
   textlight: {
     fontSize: "6px",
@@ -367,7 +369,7 @@ export const styles = StyleSheet.create({
     padding: 5,
     textAlign: "center",
   },
-  
+
 });
 
 // Viewer component
@@ -380,8 +382,8 @@ const ExportInvoiceBillPDF = () => {
   } = useSelector((state) => state.invoice.exportInvoices);
 
   const dispatch = useDispatch();
-  console.log(FinalInvoicePDFData);
-  
+  // console.log(FinalInvoicePDFData);
+
 
   useEffect(() => {
     if (!FinalInvoicePDFData) {
@@ -390,28 +392,33 @@ const ExportInvoiceBillPDF = () => {
   }, [FinalInvoicePDFData]);
 
 
-useEffect(() => {
-  if (!FinalInvoicePDFData || FinalInvoicePDFData.length === 0) return;
+  useEffect(() => {
+    if (!FinalInvoicePDFData || FinalInvoicePDFData.length === 0) return;
 
-  const generatePDF = async () => {
-    try {
-      const blob = await pdf(
-        <Document>
-          {FinalInvoicePDFData.map((invoice, idx) => (
+    const generatePDF = async () => {
+  try {
+    const blob = await pdf(
+      <Document>
+        {FinalInvoicePDFData.map((invoice, idx) =>
+          invoice.containerLoadFrom === "SITL" ||
+          invoice.containerLoadFrom === "SLTL" ? (
+            <LankaCustomPDF key={idx} data={invoice} styles={styles} />
+          ) : (
             <InvoicePDF key={idx} data={invoice} styles={styles} />
-          ))}
-        </Document>
-      ).toBlob();
+          )
+        )}
+      </Document>
+    ).toBlob();
 
-      dispatch(setPdfBlob(blob));
-      console.log("✅ PDF Blob stored in Redux:", blob);
-    } catch (err) {
-      console.error("❌ PDF generation failed", err);
-    }
-  };
+    dispatch(setPdfBlob(blob));
+  } catch (err) {
+    console.error("❌ PDF generation failed", err);
+  }
+};
 
-  generatePDF();
-}, [FinalInvoicePDFData, dispatch]);
+
+    generatePDF();
+  }, [FinalInvoicePDFData, dispatch]);
 
   return (
     <div className="w-full p-1 bg-[var(--background)]">
@@ -425,6 +432,7 @@ useEffect(() => {
           text={"Back"}
           className={""}
         />
+        <h1 className="font-bold">{FinalInvoicePDFData?.[0]?.consignee?.name || "Default"} - Custom Invoice PDF</h1>
       </div>
       <PDFViewer style={styles.pdf}>
         <Document
@@ -435,8 +443,15 @@ useEffect(() => {
           producer="React PDF Generator"
         >
           {FinalInvoicePDFData?.map((invoice, index) => (
-            // The single Document will now contain multiple pages.
-            <InvoicePDF key={index} data={invoice} styles={styles} />
+            invoice.containerLoadFrom === "SITL" ||
+              invoice.containerLoadFrom === "SLTL" ? (
+              <>
+              <LankaCustomPDF key={index} data={invoice} styles={styles} />
+              <LamkaCustomPackingPDF key={index} data={invoice} styles={styles} />
+              </>
+            ) : (
+              <InvoicePDF key={index} data={invoice} styles={styles} />
+            )
           ))}
         </Document>
       </PDFViewer>

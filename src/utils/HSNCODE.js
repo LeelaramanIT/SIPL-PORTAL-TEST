@@ -37,7 +37,7 @@ export const HSN_CODE = [
   {
     name: "Handling Charges",
     hsn: "84312010",
-    description: "Parts of handling, loading and lifting machinery"
+    description: "SOLID INDUSTRIAL TYRES WITH RIM"
   },
   {
     name: "Fitment Hydraulic Press",
@@ -54,6 +54,6 @@ export const getDescriptionByHSN = (hsnCode, isAssRimstatus) => {
   } else {
     // Find the matching item by HSN code and return its description
     const item = HSN_CODE.find((entry) => entry.hsn === hsnCode);
-    return item ? item.description : "HSN Code not found";
+    return item ? item.description : "SOLID INDUSTRIAL TYRES";
   }
 };

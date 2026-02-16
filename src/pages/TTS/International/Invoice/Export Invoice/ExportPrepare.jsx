@@ -534,7 +534,7 @@ const ExportInvoicePrepare = () => {
               {(localItems || []).map((item, idx) => {
                 if (!matchesSearch(item)) return null;
                 const tyre = Number(item?.basicprice) || 0;
-                const rim = item?.rimStatus ? Number(item?.rimUnitPrice) || 0 : 0;
+                const rim = Number(item?.rimUnitPrice) || 0 ;
                 const qty = Number(item?.itemQty) || 0;
                 const tyrefw = Number(item?.finishedWt) || 0;
                 const rimfw = Number(item?.rimfinishedwt) || 0;
@@ -551,7 +551,7 @@ const ExportInvoicePrepare = () => {
                     <td>{item?.tyreType}</td>
                     <td>{item?.brand}</td>
                     <td>{item?.sidewall || "-"}</td>
-                    <td>{item?.basicprice}</td>
+                    <td>{item?.basicprice || item?.rimUnitPrice}</td>
                     <td>{item?.itemQty}</td>
                     <td>{((tyre + rim) * qty).toFixed(2)}</td>
                     <td>{((tyrefw + rimfw) * qty).toFixed(3)}</td>

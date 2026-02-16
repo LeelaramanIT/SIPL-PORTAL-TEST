@@ -23,6 +23,7 @@ import {
 import { FiSearch } from "react-icons/fi";
 import ClientDetailsSection, { ClientDetailsSkeleton } from "./ClientDetailsSection.jsx";
 import AdditionalCustDetailsForm from "./AdditionalDetailsForm.jsx";
+import { IoChevronBackCircleOutline } from "react-icons/io5";
 
 const ExportCustInvoicePrepare = () => {
 
@@ -161,13 +162,22 @@ const handleSubmit = async () => {
   return (
     <div className="w-full flex-1 flex flex-col layout-scroll p-2 gap-2 dark:bg-gray-900 dark:text-gray-100">
       <div className="flex flex-wrap items-center justify-between bg-white bg-gradient-to-r from-blue-500/5 to-purple-500/5 p-2 rounded-lg shadow-2xs border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900">
-        <div className="">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/TTS/International/Invoice/CustomerInvoice", { state: { type: "Customer" } })}
+            className="text-gray-500 hover:text-[var(--primary)] transition-colors"
+            title="Back to Custom Invoices"
+          >
+            <IoChevronBackCircleOutline size={28} />
+          </button>
+          <div>
           <h1 className="text-xl font-bold  tracking-tight">
             {invoiceCustDetails?.type} Invoice Details
           </h1>
           <p className="text-sm text-slate-500 ">
             Fill in the details below to generate and finalize this invoice
           </p>
+          </div>
         </div>
       </div>
 
@@ -250,7 +260,7 @@ const handleSubmit = async () => {
               {(invoiceCustDetails?.items || []).map((item, idx) => {
                 if (!matchesSearch(item)) return null;
                 const tyre = Number(item?.basicprice) || 0;
-                const rim = item?.rimStatus ? Number(item?.rimUnitPrice) || 0 : 0;
+                const rim =  Number(item?.rimUnitPrice) || 0;
                 const qty = Number(item?.itemQty) || 0;
                 const tyrefw = Number(item?.finishedWt) || 0;
                 const rimfw = Number(item?.rimfinishedwt) || 0;
@@ -267,7 +277,7 @@ const handleSubmit = async () => {
                     <td>{item?.tyreType}</td>
                     <td>{item?.brand}</td>
                     <td>{item?.sidewall || "-"}</td>
-                    <td>{item?.basicprice}</td>
+                    <td>{item?.basicprice || item?.rimUnitPrice}</td>
                     <td>{item?.itemQty}</td>
                     <td>{((tyre + rim) * qty).toFixed(2)}</td>
                     <td>{((tyrefw + rimfw) * qty).toFixed(3)}</td>

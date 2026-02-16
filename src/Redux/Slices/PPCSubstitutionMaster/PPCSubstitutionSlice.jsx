@@ -9,7 +9,8 @@ const initialState = {
     listOfSubstitutionData: [],
     search: "",
     SubstitutionDetails: null,
-    custType:"Domestic"
+    custType: "Domestic",
+    selectedData: null,
 };
 
 const substitutionSlice = createSlice({
@@ -20,7 +21,7 @@ const substitutionSlice = createSlice({
             state.listOfSubstitutionData = action.payload;
         },
         setSubstitutionDetails: (state, action) => {
-            state.SubstitutionDetails = action.payload; 
+            state.SubstitutionDetails = action.payload;
         },
         setSearch: (state, action) => {
             state.search = action.payload;
@@ -28,15 +29,54 @@ const substitutionSlice = createSlice({
         resetAll: (state) => {
             state.listOfSubstitutionData = [];
             state.SubstitutionDetails = null;
+            state.selectedData = null;
             state.search = "";
         },
         handleCustType: (state, action) => {
             state.custType = action.payload;
         },
+        setSelectedData: (state, action) => {
+            state.selectedData = action.payload
+        },
+        resetSelectedData: (state) => {
+            state.selectedData = null
+        },
+        updateSubstitutionDetails: (state, action) => {
+            const updatedItemsFromDB = action.payload; // array from backend
+
+            if (!state.SubstitutionDetails?.items) return;
+
+            state.SubstitutionDetails.items =
+                state.SubstitutionDetails.items.map(existingItem => {
+
+                    const updatedItem = updatedItemsFromDB.find(
+                        u => u.o_ItemID === existingItem.o_ItemID
+                    );
+
+                    if (updatedItem) {
+                        return {
+                            ...existingItem,
+                            substitutionQty: updatedItem.substitutionQty,
+                            totaqty: updatedItem.totaqty,
+                            substitutions: updatedItem.substitutions
+                        };
+                    }
+
+                    return existingItem;
+                });
+
+            // 🔥 Recalculate overall order substitutionQty
+            state.SubstitutionDetails.substitutionQty =
+                state.SubstitutionDetails.items.reduce(
+                    (sum, item) => sum + item.substitutionQty,
+                    0
+                );
+        }
+
     },
 })
 
-export const getListOfSubstitutionData = (Plant,custType) => async (dispatch) => {
+export const getListOfSubstitutionData = (Plant, custType) => async (dispatch) => {
     try {
         dispatch(setLoading(true))
         dispatch(resetAll())
@@ -54,13 +94,13 @@ export const getListOfSubstitutionData = (Plant,custType) => async (dispatch) =>
 }
 
 export const getSubstitutionDetails = (payload) => async (dispatch) => {
-    
+
     try {
         dispatch(setLoading(true))
         const res = await api.get(`/Substution/GettingSpecificSusbstitutionOrders/${payload.id}`,);
-        
+
         if (res.status === 200) {
-            dispatch(setSubstitutionDetails({...payload, items:res.data}))
+            dispatch(setSubstitutionDetails({ ...payload, items: res.data }))
         }
         dispatch(setLoading(false))
     } catch (error) {
@@ -76,5 +116,32 @@ export const getSubstitutionDetails = (payload) => async (dispatch) => {
     }
 }
 
-export const { setListOfSubstitutionData, setSearch, resetAll, setSubstitutionDetails, handleCustType } = substitutionSlice.actions;
+export const insertUpdateSubstitution = (payload) => async (dispatch) => {
+    try {
+        dispatch(setLoading(true))
+
+        const res = await api.post(
+            `/Substution/InsertUpdateItemSubstitution`,
+            null,
+            {
+                params: payload
+            }
+        )
+
+        if (res.status === 200) {
+            console.log("Substitution saved successfully:", res.data)
+            dispatch(updateSubstitutionDetails(res.data))
+            toast.success("Substitution saved successfully")
+        }
+
+        dispatch(setLoading(false))
+    } catch (error) {
+        dispatch(setLoading(false))
+        toast.error("Failed to save substitution")
+        console.error(error)
+    }
+}
+
+
+export const { setListOfSubstitutionData, setSearch, resetAll, setSubstitutionDetails, updateSubstitutionDetails, handleCustType, setSelectedData, resetSelectedData } = substitutionSlice.actions;
 export default substitutionSlice.reducer;

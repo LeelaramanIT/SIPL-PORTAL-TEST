@@ -37,6 +37,7 @@ const scanforinspectionSlice = createSlice({
         resetBarcodeDetails: (state) => {
             state.barcodeDetails = [];
         },
+        
     },
 })
 
@@ -119,26 +120,48 @@ export const PDICheckBarcode = (payload) => async (dispatch) => {
     }
 }
 
-export const SubmitInspection = (payload) => async (dispatch) => {
+export const SubmitInspection = (payload) => async (dispatch, getState) => {
     try {
-        console.log("SubmitInspection",payload)
+
         const res = await api.post('/PdiInspection/PDI_SaveItem', payload);
-        console.log(res.data);
+
         if (res.status === 200) {
-    
+
+            const response = res.data;
+
+            // check save success
+            if (!response.saveStatus) return;
+
+            // 1️⃣ get current state
+            const { InspectionDetails } = getState().scanforinspection;
+            if (!InspectionDetails) return;
+
+            // 2️⃣ update only matching item
+            const updatedItems = InspectionDetails.items.map(item => {
+                if (item.o_ItemID === response.o_ItemID) {
+                    return {
+                        ...item,
+                        scannedQty: response.scannedQty,
+                        pid: response.pid,
+                        substitutionQty: response.substitutionQty
+                    };
+                }
+                return item;
+            });
+
+            // 3️⃣ dispatch updated state
+            dispatch(setInspectionDetails({
+                ...InspectionDetails,
+                items: updatedItems
+            }));
+            toast.success("Scan Successful!")
         }
+
     } catch (error) {
         console.log(error);
-        if (error.response) {
-            console.error('Server responded with error:', error.response.data);
-            console.error('Error status:', error.response.status);
-        } else if (error.request) {
-            console.error('No response received:', error.request);
-        } else {
-            console.error('Request setup error:', error.message);
-        }
     }
-}
+};
+
 
 export const { setListOfInspectionData, setSearch, resetAll, setInspectionDetails, restInspectionDetails, setBarcodeDetails, resetBarcodeDetails } = scanforinspectionSlice.actions;
 export default scanforinspectionSlice.reducer;

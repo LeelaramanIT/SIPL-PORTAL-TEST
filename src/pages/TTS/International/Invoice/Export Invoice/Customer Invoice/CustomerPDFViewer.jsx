@@ -39,7 +39,7 @@ useEffect(() => {
 
   return (
     <div className="w-full h-screen bg-gray-100 p-4">
-      <PDFViewer style={{ width: '100%', height: '90vh', border: 'none' }}>
+      <PDFViewer style={{ width: '100%', height: '90vh', border: 'none', overflow: 'hidden'}}>
         <Document title="Invoice with Border">
           <InvoiceCustomerPDF data={finalCustomerData} />
           <InvoiceCustomerPacking data={finalCustomerData} />

@@ -7,7 +7,6 @@ function ClientDetailsSection({ invoiceDetails }) {
   const shipRefs = useRef([]);
   orderRefs.current = [];
   shipRefs.current = [];
-console.log(invoiceDetails);
 
   const addToOrderRefs = (el) => {
     if (el) orderRefs.current.push(el);

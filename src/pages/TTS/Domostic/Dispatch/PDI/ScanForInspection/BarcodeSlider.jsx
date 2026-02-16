@@ -31,7 +31,7 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
     };
 
     // 3. Submit logic
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         // Validation for required fields
         const isFormValid = selections.detector && selections.beadType;
 
@@ -42,27 +42,38 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
 
         // Prepare the payload for the inspection submission
         const payload = {
-        pid: data.pid,                          // From the barcode data
-        barcode: data.barcode,                  // From the barcode data
-        metalDetector: selections.detector === 'pass', // Assuming detector is a pass/fail selection
-        o_ID: data.o_Id || 0,                   // Fallback to 0 if not available in data
-        o_ItemID: data.o_ItemID || 0,           // Fallback to 0 if not available in data
-        substitutionStatus: data.substitutionStatus || false,               // Assuming this is true for the payload
-        idGauge: selections.idGauge === 'pass', // Assuming idGauge is a pass/fail selection
-        earmarkStatus: data.earmarkStatus || false,                    // Assuming earmarkStatus is true
-        concessionType: data.concessionType || "string", // Default value "string" or use data
-        beadType: selections.beadType === 'pass'? "YES" : "NO", // BeadType selection or default value
-        qualityTest: selections.bestQuality === 'pass'? "OK" : "NOT OK", // Best quality test value
-        physical: selections.physicalBarcode === 'pass'? "YES" : "NO", // Physical barcode check
-        remarks: selections.remarks || "string", // Inspector remarks
-        pdiPlant: data.pdiPlant || "string",   // Default "string" or use the data
-        custcode: data.custcode || "string",   // Customer code from barcode data
-        workorderno: data.workorderno || "string", // Work order number
-        orderQty: data.orderQty || 0,          // Quantity from data
-        orderrefno: data.orderrefno || "string", // Order reference number from data
-    };
-    
+            pid: data.pid,                          // From the barcode data
+            barcode: data.barcode,                  // From the barcode data
+            metalDetector: selections.detector === 'pass', // Assuming detector is a pass/fail selection
+            o_ID: data.o_Id || 0,                   // Fallback to 0 if not available in data
+            o_ItemID: data.o_ItemID || 0,           // Fallback to 0 if not available in data
+            substitutionStatus: data.substitutionStatus || false,               // Assuming this is true for the payload
+            idGauge: selections.idGauge === 'pass', // Assuming idGauge is a pass/fail selection
+            earmarkStatus: data.earmarkStatus || false,                    // Assuming earmarkStatus is true
+            concessionType: data.concessionType || "string", // Default value "string" or use data
+            beadType: selections.beadType === 'pass' ? "YES" : "NO", // BeadType selection or default value
+            qualityTest: selections.bestQuality === 'pass' ? "OK" : "NOT OK", // Best quality test value
+            physical: selections.physicalBarcode === 'pass' ? "YES" : "NO", // Physical barcode check
+            remarks: selections.remarks || "string", // Inspector remarks
+            pdiPlant: data.pdiPlant || "string",   // Default "string" or use the data
+            custcode: data.custcode || "string",   // Customer code from barcode data
+            workorderno: data.workorderno || "string", // Work order number
+            orderQty: data.orderQty || 0,          // Quantity from data
+            orderrefno: data.orderrefno || "string", // Order reference number from data
+        };
+
         onConfirm(payload);
+        setSelections({
+            detector: null,
+            beadType: null,
+            idGauge: null,
+            bestQuality: null,
+            physicalBarcode: null,
+            hardnessTread: "",
+            hardnessBase: "",
+            remarks: ""
+        })
+
     };
 
     return (
@@ -73,7 +84,20 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={() => {
+                            onClose()
+                            setSelections({
+                                detector: null,
+                                beadType: null,
+                                idGauge: null,
+                                bestQuality: null,
+                                physicalBarcode: null,
+                                hardnessTread: "",
+                                hardnessBase: "",
+                                remarks: ""
+                            })
+                        }
+                        }
                         className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[999]"
                     />
 
@@ -109,7 +133,19 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
                             <motion.button
                                 whileHover={{ rotate: 90, scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
-                                onClick={onClose}
+                                onClick={() => {
+                                    onClose()
+                                    setSelections({
+                                        detector: null,
+                                        beadType: null,
+                                        idGauge: null,
+                                        bestQuality: null,
+                                        physicalBarcode: null,
+                                        hardnessTread: "",
+                                        hardnessBase: "",
+                                        remarks: ""
+                                    })
+                                }}
                                 className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-400"
                             >
                                 <X size={20} />

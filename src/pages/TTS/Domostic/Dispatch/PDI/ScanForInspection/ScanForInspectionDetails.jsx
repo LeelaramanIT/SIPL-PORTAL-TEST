@@ -26,7 +26,7 @@ const ScanForInspectionDetails = () => {
     const [error, setError] = useState('')
     const [open, setOpen] = useState(false)
 
-    // console.log(roles)
+    console.log(InspectionDetails)
     const fadeUp = {
         hidden: { opacity: 0, y: 15 },
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
@@ -134,14 +134,13 @@ const ScanForInspectionDetails = () => {
             render: (val) => <span className="font-bold text-blue-600 dark:text-blue-400">{val || 0}</span>
         },
         { header: "SUB-QTY", title: 'SUBSTITUTION QTY', accessor: "substitutionQty", width: "1fr", align: "center" },
-        { header: "SUB-SCANNED QTY", accessor: "totalItemQty", width: "1fr", align: "center", title: 'TOTAL SUBSTITUTION QTY', },
+        { header: "SUB-SCANNED QTY", accessor: "substitutionQty", width: "1fr", align: "center", title: 'TOTAL SUBSTITUTION QTY', },
     ]
-    // console.log(InspectionDetails)
-    // In the parent component that calls VerificationSider
-                    const handleConfirmation = (payload) => {
-                        dispatch(SubmitInspection(payload));
-                        setOpen(false); // Close the side panel after submission
-                    };
+
+    const handleConfirmation = (payload) => {
+        dispatch(SubmitInspection(payload));
+        setOpen(false); // Close the side panel after submission
+    };
     return (
         <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             <div className="max-w-[1550px] mx-auto p-3 sm:p-3 space-y-3">
