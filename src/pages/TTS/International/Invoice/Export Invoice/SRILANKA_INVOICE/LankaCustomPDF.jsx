@@ -491,7 +491,7 @@ const LankaCustomPDF = ({ data }) => {
                   >
                     <Text style={styles.text}>
                       Buyers Orders No Ref:{" "}
-                      {data.buyerorderrefno || data.orderRefNo || ""}
+                      {data.BuyersOrderNumber || data.orderRefNo || ""}
                     </Text>
                     {/* <Text style={styles.text}>{data.buyerorderrefno || data.orderRefNo || ""}</Text> */}
                   </View>
