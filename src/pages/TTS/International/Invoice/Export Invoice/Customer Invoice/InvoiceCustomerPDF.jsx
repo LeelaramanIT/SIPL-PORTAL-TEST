@@ -516,7 +516,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                       Other Reference: {data.orderRefNo || ""}
                     </Text>
                     <Text style={styles.text}>
-                      Email Date: {data.rfD_Date || ""}
+                      {/* Email Date: {data.rfD_Date || ""} */}
                     </Text>
                   </View>
 

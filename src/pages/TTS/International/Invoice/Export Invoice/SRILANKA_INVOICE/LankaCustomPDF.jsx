@@ -509,7 +509,7 @@ const LankaCustomPDF = ({ data }) => {
                       Other Reference: {data.orderRefNo || ""}
                     </Text>
                     <Text style={styles.text}>
-                      {data.refDate || ""}
+                      {/* {data.refDate || ""} */}
                     </Text>
                   </View>
 
