@@ -90,7 +90,7 @@ const InvoiceCustomerPDF = ({ data }) => {
   const formattedDate = `${dd}/${mm}/${yyyy}`;
 
   // invoice hsn codes
-  const hasRimAssembly = data?.items?.some((item) => item.rimStatus === true);
+  // const hasRimAssembly = data?.items?.some((item) => item.rimStatus === true);
   const uniqueHsnCodes = [
     ...new Set(data?.items?.map((item) => item.hsnCode).filter(Boolean)),
   ];
@@ -219,6 +219,30 @@ const InvoiceCustomerPDF = ({ data }) => {
   };
 
   console.log(currency.symbol);
+
+  const hasRimAssembly = data?.items?.some(
+    (item) => item.rimStatus === true
+  );
+
+  const hasRimOnly = data?.items?.some(
+    (item) => item.hsnCode === "84312010"
+  );
+
+  let finalDescription = "SOLID INDUSTRIAL TYRES";
+
+  // 🔥 Priority 1 – Rim Assembly (Highest)
+  if (hasRimAssembly) {
+    finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY";
+  }
+  // 🔥 Priority 2 – Rim Only
+  else if (hasRimOnly) {
+    finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM";
+  }
+  // 🔥 Priority 3 – Only Tyres
+  else {
+    finalDescription = "SOLID INDUSTRIAL TYRES";
+  }
+
 
   return (
     <>
@@ -867,7 +891,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                         alignItems: "center",
                       }}
                     >
-                      {uniqueHSNs.map((hsnCode, index) => (
+                      {/* {uniqueHSNs.map((hsnCode, index) => (
                         <Text
                           key={index}
                           style={{
@@ -878,7 +902,17 @@ const InvoiceCustomerPDF = ({ data }) => {
                         >
                           {getDescriptionByHSN(hsnCode, isAssRimstatus)}
                         </Text>
-                      ))}
+                      ))} */}
+                      <Text
+                        style={{
+                          fontSize: 7,
+                          fontWeight: "bold",
+                          padding: 3,
+                        }}
+                      >
+                        {finalDescription}
+                      </Text>
+
                     </View>
 
                     {/* SUB-HEADER FOR ITEMS */}

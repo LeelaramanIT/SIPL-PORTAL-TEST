@@ -78,8 +78,8 @@ const LankaCustomPDF = ({ data }) => {
       sum + (Number((item.basicprice + item.rimUnitPrice) * item.itemQty) || 0),
     0,
   );
-  console.log("TOTAL",totalPrice);
-  
+  console.log("TOTAL", totalPrice);
+
   const uniqueHSNs = [...new Set(data?.items?.map((item) => item.hsnCode))];
   const isAssRimstatus = data?.items?.some((item) => item.rimStatus === true);
   const currency = currencies.find((item) => item.code === data.usercurrency);
@@ -92,7 +92,7 @@ const LankaCustomPDF = ({ data }) => {
   const formattedDate = `${dd}/${mm}/${yyyy}`;
 
   // invoice hsn codes
-  const hasRimAssembly = data?.items?.some((item) => item.rimStatus === true);
+  // const hasRimAssembly = data?.items?.some((item) => item.rimStatus === true);
   const uniqueHsnCodes = [
     ...new Set(data?.items?.map((item) => item.hsnCode).filter(Boolean)),
   ];
@@ -220,6 +220,31 @@ const LankaCustomPDF = ({ data }) => {
   };
 
   // console.log(currency.symbol);
+
+  // new HSN LOGIC
+  const hasRimAssembly = data?.items?.some(
+    (item) => item.rimStatus === true
+  );
+
+  const hasRimOnly = data?.items?.some(
+    (item) => item.hsnCode === "84312010"
+  );
+
+  let finalDescription = "SOLID INDUSTRIAL TYRES";
+
+  // 🔥 Priority 1 – Rim Assembly (Highest)
+  if (hasRimAssembly) {
+    finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY";
+  }
+  // 🔥 Priority 2 – Rim Only
+  else if (hasRimOnly) {
+    finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM";
+  }
+  // 🔥 Priority 3 – Only Tyres
+  else {
+    finalDescription = "SOLID INDUSTRIAL TYRES";
+  }
+
 
   return (
     <>
@@ -484,7 +509,7 @@ const LankaCustomPDF = ({ data }) => {
                       Other Reference: {data.orderRefNo || ""}
                     </Text>
                     <Text style={styles.text}>
-                     {data.refDate || ""}
+                      {data.refDate || ""}
                     </Text>
                   </View>
 
@@ -871,7 +896,7 @@ const LankaCustomPDF = ({ data }) => {
                         alignItems: "center",
                       }}
                     >
-                      {uniqueHSNs.map((hsnCode, index) => (
+                      {/* {uniqueHSNs.map((hsnCode, index) => (
                         <Text
                           key={index}
                           style={{
@@ -882,7 +907,17 @@ const LankaCustomPDF = ({ data }) => {
                         >
                           {getDescriptionByHSN(hsnCode, isAssRimstatus)}
                         </Text>
-                      ))}
+                      ))} */}
+                      <Text
+                        style={{
+                          fontSize: 7,
+                          fontWeight: "bold",
+                          padding: 3,
+                        }}
+                      >
+                        {finalDescription}
+                      </Text>
+
                     </View>
 
                     {/* SUB-HEADER FOR ITEMS */}

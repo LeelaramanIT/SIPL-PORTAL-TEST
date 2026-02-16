@@ -119,12 +119,14 @@ const invoiceSlice = createSlice({
         }, 0);
 
         const grandTotal = invoice.items.reduce((acc, item) => {
-          const tyre = Number(item.basicprice) || 0;
-          const rim = Number(item.rimUnitPrice) || 0 ;
-          const qty = Number(item.itemQty) || 0;
+          const tyre = Number(item?.basicprice) || 0;
+          const rim = Number(item?.rimUnitPrice) || 0 ;
+          const qty = Number(item?.itemQty) || 0;
 
           return acc + (tyre + rim) * qty;
         }, 0);
+        console.log("grandTotal.....",grandTotal);
+        
         const unitPrice =
           totalwt > 0 && !Number.isNaN(grandTotal)
             ? (grandTotal / totalwt).toFixed(5)
@@ -347,7 +349,7 @@ const invoiceSlice = createSlice({
 
         const totalPrices = invoice.items.map((item) => {
           const tyre = Number(item.basicprice) || 0;
-          const rim = item.rimStatus ? Number(item.rimUnitPrice) || 0 : 0;
+          const rim = Number(item.rimUnitPrice) || 0 ;
           const qty = Number(item.itemQty) || 0;
 
           return (tyre + rim) * qty;

@@ -160,7 +160,7 @@ const ExportInvoicePrepare = () => {
 
     return items.reduce((sum, item) => {
       const tyre = Number(item?.basicprice) || 0;
-      const rim = item?.rimStatus ? Number(item?.rimUnitPrice) || 0 : 0;
+      const rim = Number(item?.rimUnitPrice) || 0;
       const qty = Number(item?.itemQty) || 0;
 
       return sum + (tyre + rim) * qty;
