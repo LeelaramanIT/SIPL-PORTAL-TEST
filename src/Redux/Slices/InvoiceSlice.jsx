@@ -8,6 +8,18 @@ import { getCurrency, getCurrencySymble } from "../../utils/currencies";
 import { HSN_CODE } from "../../utils/HSNCODE";
 import { useMemo } from "react";
 
+const downloadPDF = (blob, fileName) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+
 const initialState = {
   exportInvoices: {
     invoiceType: "Direct_Invoice",
@@ -1145,6 +1157,11 @@ export const uploadCustomInvoicePDF = () => async (dispatch, getState) => {
     );
 
     console.log("✅ PDF Uploaded Successfully");
+
+     // 🔽 DOWNLOAD AFTER SUCCESS
+    await downloadPDF(pdfBlob,`Custom Invoice_${invoiceNumbers}.pdf`)
+
+    console.log("⬇ PDF Downloaded Successfully");
   } catch (error) {
     console.error("❌ PDF Upload Failed", error.response?.data || error);
   }
@@ -1173,6 +1190,7 @@ export const uploadCustomerInvoicePDF = () => async (dispatch, getState) => {
     const orderRefNo = invoiceCustDetails.orderRefNo || "";
     const custCode = invoiceCustDetails.custCode || invoiceCustDetails.customerCode || "";
     const year = new Date().getFullYear();
+   const invoiceNumbers = invoiceCustDetails.invoiceNo.join(',');
 
     if (!custCode) {
       console.error("❌ customerCode missing in invoiceCustDetails", invoiceCustDetails);
@@ -1206,6 +1224,10 @@ export const uploadCustomerInvoicePDF = () => async (dispatch, getState) => {
         withCredentials: true,
       }
     );
+    
+     // 🔽 DOWNLOAD AFTER SUCCESS
+     await downloadPDF(pdfBlob,`Customer Invoice_${invoiceNumbers}.pdf`)
+
 
     console.log("✅ Customer Invoice PDF Uploaded Successfully");
   } catch (error) {

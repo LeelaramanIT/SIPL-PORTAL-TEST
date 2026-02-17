@@ -909,7 +909,7 @@ const ExportInvoicePrepare = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 40 }}
               transition={{ duration: 0.1, ease: "easeIn" }}
-              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[50rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+              className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[45rem] min-[44rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
             >
               <h2 className="text-xl font-bold mb-4 text-[var(--primary)]">
                 Additional Invoice Details
