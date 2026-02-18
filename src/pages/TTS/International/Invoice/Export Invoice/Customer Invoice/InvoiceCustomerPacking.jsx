@@ -1567,29 +1567,46 @@ const InvoiceCustomerPacking = ({ data }) => {
                     <View>
                       {data.containerLoadFrom === "MMN" ||
                         data.containerLoadFrom === "PDK" ? (
-                        <Text
+                        <View style={{
+                          textAlign: 'center',
+                          flexDirection: 'col',
+                          justifyContent: 'center',
+                          alignItems: 'center'
+
+                        }}><Text
                           style={{
                             fontSize: 7,
                             fontWeight: "bold",
                             textAlign: "center",
                           }}
                         >
-                          FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
-                        </Text>
-                      ) : (
-                        <><Text
-                          style={{
-                            fontSize: 7,
-                            fontWeight: "bold",
-                            textAlign: "center",
-                          }}
-                        >
-                          FOR SUNDARAM LANKA TYRES LIMITED 
-                        </Text>
+                            FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
+                          </Text>
                           <Text style={{ fontSize: 5, textAlign: 'center' }}>
                             (SUN TYRES & WHEEL SYSTEM)
                           </Text>
-                        </>
+                        </View>
+                      ) : (
+                        <View style={{
+                          textAlign: 'center',
+                          flexDirection: 'col',
+                          justifyContent: 'center',
+                          alignItems: 'center'
+
+                        }}>
+                          <Text
+                            style={{
+                              fontSize: 7,
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            FOR SUNDARAM LANKA PRIVATE LIMITED
+                          </Text>
+                          <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                            (SUN TYRES & WHEEL SYSTEM)
+                          </Text>
+                        </View>
                       )}
                     </View>
 

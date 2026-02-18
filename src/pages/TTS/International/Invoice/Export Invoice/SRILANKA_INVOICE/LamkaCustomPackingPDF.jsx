@@ -311,18 +311,17 @@ const LamkaCustomPackingPDF = ({ data }) => {
                                                 ),
                                             )}
                                         </View>
-                                        <Text style={{ ...styles.text, fontWeight: "bold", marginTop: 2 }}>
+                                        {data?.plantAddress && (<><Text style={{ ...styles.text, fontWeight: "bold", marginTop: 2 }}>
                                             DELIVERY FROM :
-                                        </Text>
-                                        <View>
-                                            {(data?.plantAddress ? data?.plantAddress.toUpperCase().split("~") : []).map(
-                                                (line, index) => (
-                                                    <Text key={index} style={{ fontSize: "6px" }}>
-                                                        {line.trim()}
-                                                    </Text>
-                                                ),
-                                            )}
-                                        </View>
+                                        </Text><View>
+                                                {(data?.plantAddress ? data?.plantAddress.toUpperCase().split("~") : []).map(
+                                                    (line, index) => (
+                                                        <Text key={index} style={{ fontSize: "6px" }}>
+                                                            {line.trim()}
+                                                        </Text>
+                                                    )
+                                                )}
+                                            </View></>)}
                                     </View>
                                     <View
                                         style={{
@@ -1712,10 +1711,16 @@ const LamkaCustomPackingPDF = ({ data }) => {
                                     }}
                                 >
                                     {isLastPage && (
-                                        <Text style={styles.textBold}>
-                                            {" "}
-                                            {data?.licenceDetails?.description}
-                                        </Text>
+                                        <>
+                                            <Text style={styles.textBold}>
+                                                {" "}
+                                                {data?.licenceDetails?.description}
+                                            </Text>
+                                            <Text style={styles.textBold}>
+                                                {" "}
+                                                {data?.InvoiceDis}
+                                            </Text>
+                                        </>
                                     )}
                                     <View>
                                         {isLastPage && (

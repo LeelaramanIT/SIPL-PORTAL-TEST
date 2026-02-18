@@ -959,7 +959,7 @@ export const submitInvoice = (payload, navigate) => async (dispatch) => {
           billingContactName: data.billingContactName || "",
           billingEmailId: data.billingEmailId || "",
           billingMobile: data.billingMobile || "",
-          completedDate: formatDateForAPI(data.completedDate) || "",
+          completeddate: formatDateForAPI(data.completedDate) || "",
           rfD_Date: formatDateForAPI(data.rfD_Date),
           totalQty: data.totalqty || "",
           plant: data.containerLoadFrom || "",
@@ -1531,21 +1531,21 @@ export const submitCustomerInvoice =
       };
       console.log("final CUST SUBMIT data", data);
 
-      dispatch(setExportInvoiceLoading(true));
-      const res = await api.post("/Invoice/CreatingCustomerInvoice", data);
-      console.log(res.data);
+      // dispatch(setExportInvoiceLoading(true));
+      // const res = await api.post("/Invoice/CreatingCustomerInvoice", data);
+      // console.log(res.data);
 
-      dispatch(setExportInvoiceLoading(false));
-      if (res.status === 200) {
-        toast.success("File Uploaded Successfully");
-        dispatch(uploadCustomerInvoicePDF())
-        navigate(
-          "/TTS/International/Invoice/CustomerInvoice", {
-          state: { type: "Customer" }
-        }
-        );
+      // dispatch(setExportInvoiceLoading(false));
+      // if (res.status === 200) {
+      //   toast.success("File Uploaded Successfully");
+      //   dispatch(uploadCustomerInvoicePDF())
+      //   navigate(
+      //     "/TTS/International/Invoice/CustomerInvoice", {
+      //     state: { type: "Customer" }
+      //   }
+      //   );
 
-      }
+      // }
     } catch (error) {
       console.error(
         "❌ Error uploading customer invoice:",

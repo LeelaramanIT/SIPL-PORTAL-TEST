@@ -4,6 +4,7 @@ import { getDescriptionByHSN, HSN_CODE } from "../../../../../../utils/HSNCODE";
 import { numberToWords } from "../../../../../../utils/NumberToWords";
 import { currencies } from "../../../../../../utils/currencies";
 import { Font } from "@react-pdf/renderer";
+import { formatDateTime } from "../../../../../../utils/FormatDate";
 
 Font.register({
   family: "Roboto",
@@ -486,7 +487,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                         : data?.invoiceNumber || ""}
                     </Text>
 
-                    <Text style={styles.text}>Date: {formattedDate}</Text>
+                    <Text style={styles.text}>Date: {formatDateTime(data?.invoiceDate)}</Text>
                   </View>
                   <View
                     style={{
@@ -1724,33 +1725,46 @@ const InvoiceCustomerPDF = ({ data }) => {
                     <View>
                       {data.containerLoadFrom === "MMN" ||
                         data.containerLoadFrom === "PDK" ? (
-                        <><Text
+                        <View style={{
+                          textAlign: 'center',
+                          flexDirection: 'col',
+                          justifyContent: 'center',
+                          alignItems: 'center'
+
+                        }}><Text
                           style={{
                             fontSize: 7,
                             fontWeight: "bold",
                             textAlign: "center",
                           }}
                         >
-                          FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
-                        </Text>
-                        <Text style={{ fontSize: 5, textAlign: 'center' }}>
-                        (SUN TYRES & WHEEL SYSTEM)
-                      </Text>
-                      </>
+                            FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
+                          </Text>
+                          <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                            (SUN TYRES & WHEEL SYSTEM)
+                          </Text>
+                        </View>
                       ) : (
-                        <><Text
-                          style={{
-                            fontSize: 7,
-                            fontWeight: "bold",
-                            textAlign: "center",
-                          }}
-                        >
-                          FOR SUNDARAM LANKA PRIVATE LIMITED
-                        </Text>
-                        <Text style={{ fontSize: 5, textAlign: 'center' }}>
-                        (SUN TYRES & WHEEL SYSTEM)
-                      </Text>
-                        </>
+                        <View style={{
+                          textAlign: 'center',
+                          flexDirection: 'col',
+                          justifyContent: 'center',
+                          alignItems: 'center'
+
+                        }}>
+                          <Text
+                            style={{
+                              fontSize: 7,
+                              fontWeight: "bold",
+                              textAlign: "center",
+                            }}
+                          >
+                            FOR SUNDARAM LANKA PRIVATE LIMITED
+                          </Text>
+                          <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                            (SUN TYRES & WHEEL SYSTEM)
+                          </Text>
+                        </View>
                       )}
                     </View>
 
