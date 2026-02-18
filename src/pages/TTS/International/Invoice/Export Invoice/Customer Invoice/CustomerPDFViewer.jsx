@@ -7,7 +7,9 @@ import { useDispatch } from "react-redux";
 import { useEffect } from 'react';
 import { setPdfBlob } from '../../../../../../Redux/Slices/InvoiceSlice';
 import { IoChevronBackCircleOutline } from 'react-icons/io5';
-import { Button } from 'antd';
+import Button from '../../../../../../components/InputFields/Button';
+import { useNavigate } from 'react-router-dom';
+
 
 
 
@@ -38,6 +40,8 @@ const InvoicePDF = () => {
     };
     generateBlob();
   }, [finalCustomerData, dispatch]);
+  const navigate = useNavigate();
+
 
   return (
     <div className="w-full h-screen bg-gray-100 p-4">

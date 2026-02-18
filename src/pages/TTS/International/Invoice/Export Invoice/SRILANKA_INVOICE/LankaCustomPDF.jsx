@@ -295,16 +295,28 @@ const LankaCustomPDF = ({ data }) => {
                     style={{
                       borderBottom: "0.03rem",
                       borderColor: "black",
-                      height: "3.8rem",
+                      height: "5.1rem",
                       fontSize: "0.3rem",
                       padding: 2,
                     }}
                   >
                     <Text style={{ ...styles.text, fontWeight: "bold" }}>
-                      EXPORTER:
+                      EXPORTER :
                     </Text>
                     <View>
                       {(data?.exporter ? data?.exporter.toUpperCase().split("~") : []).map(
+                        (line, index) => (
+                          <Text key={index} style={{ fontSize: "6px" }}>
+                            {line.trim()}
+                          </Text>
+                        ),
+                      )}
+                    </View>
+                    <Text style={{ ...styles.text, fontWeight: "bold",marginTop:2 }}>
+                       DELIVERY FROM :
+                    </Text>
+                    <View>
+                      {(data?.plantAddress ? data?.plantAddress.toUpperCase().split("~") : []).map(
                         (line, index) => (
                           <Text key={index} style={{ fontSize: "6px" }}>
                             {line.trim()}
@@ -317,9 +329,10 @@ const LankaCustomPDF = ({ data }) => {
                     style={{
                       borderBottom: "0.03rem",
                       borderColor: "black",
-                      height: "5rem",
+                      height: "3.7rem",
                       padding: 2,
                       gap: "0.1rem",
+                      
                     }}
                   >
                     <Text style={styles.text}>BUYER / CONSIGNEE</Text>
@@ -1751,11 +1764,12 @@ const LankaCustomPDF = ({ data }) => {
                             textAlign: "center",
                           }}
                         >
-                          FOR SUN TYRES & WHEEL SYSTEMS
+                          FOR SUNDARAM LANKA TYRES LIMITED 
                         </Text>
-                          <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                          {/* <Text style={{ fontSize: 5, textAlign: 'center' }}>
                             (A DIVISION OF SUNDARAM LANKA TYRES LIMITED)
-                          </Text></>
+                          </Text> */}
+                          </>
                       )}
                       {/* <Text style={{ fontSize: 5, textAlign: 'center' }}>
                                             (A DIVISION OF SUNDARAM LANKA TYRES LIMITED)

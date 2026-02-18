@@ -1352,7 +1352,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                             {(
                               (Number(item.finishedWt) || 0) +
                               (Number(item.rimfinishedwt) || 0)
-                            ).toFixed(2)}
+                            ).toFixed(3)}
                           </Text>
                         </View>
                       );
@@ -1412,7 +1412,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                             {(
                               (item.finishedWt + item.rimfinishedwt) *
                               item.itemQty
-                            ).toFixed(2)}
+                            ).toFixed(3)}
                           </Text>
                         </View>
                       );
@@ -1577,19 +1577,20 @@ const InvoiceCustomerPacking = ({ data }) => {
                           FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
                         </Text>
                       ) : (
-                        <Text
+                        <><Text
                           style={{
                             fontSize: 7,
                             fontWeight: "bold",
                             textAlign: "center",
                           }}
                         >
-                          FOR SUN TYRES & WHEEL SYSTEMS
+                          FOR SUNDARAM LANKA TYRES LIMITED 
                         </Text>
+                          <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                            (SUN TYRES & WHEEL SYSTEM)
+                          </Text>
+                        </>
                       )}
-                      {/* <Text style={{ fontSize: 5, textAlign: 'center' }}>
-                                            (A DIVISION OF SUNDARAM LANKA TYRES LIMITED)
-                                        </Text> */}
                     </View>
 
                     {/* This will now definitely show at the bottom of the row */}

@@ -219,28 +219,28 @@ const LamkaCustomPackingPDF = ({ data }) => {
 
     // console.log(currency.symbol);
     // new HSN LOGIC
-  const hasRimAssembly = data?.items?.some(
-    (item) => item.rimStatus === true
-  );
+    const hasRimAssembly = data?.items?.some(
+        (item) => item.rimStatus === true
+    );
 
-  const hasRimOnly = data?.items?.some(
-    (item) => item.hsnCode === "84312010"
-  );
+    const hasRimOnly = data?.items?.some(
+        (item) => item.hsnCode === "84312010"
+    );
 
-  let finalDescription = "SOLID INDUSTRIAL TYRES";
+    let finalDescription = "SOLID INDUSTRIAL TYRES";
 
-  // 🔥 Priority 1 – Rim Assembly (Highest)
-  if (hasRimAssembly) {
-    finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY";
-  }
-  // 🔥 Priority 2 – Rim Only
-  else if (hasRimOnly) {
-    finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM";
-  }
-  // 🔥 Priority 3 – Only Tyres
-  else {
-    finalDescription = "SOLID INDUSTRIAL TYRES";
-  }
+    // 🔥 Priority 1 – Rim Assembly (Highest)
+    if (hasRimAssembly) {
+        finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY";
+    }
+    // 🔥 Priority 2 – Rim Only
+    else if (hasRimOnly) {
+        finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM";
+    }
+    // 🔥 Priority 3 – Only Tyres
+    else {
+        finalDescription = "SOLID INDUSTRIAL TYRES";
+    }
 
 
     return (
@@ -294,7 +294,7 @@ const LamkaCustomPackingPDF = ({ data }) => {
                                         style={{
                                             borderBottom: "0.03rem",
                                             borderColor: "black",
-                                            height: "3.8rem",
+                                            height: "5.1rem",
                                             fontSize: "0.3rem",
                                             padding: 2,
                                         }}
@@ -311,12 +311,24 @@ const LamkaCustomPackingPDF = ({ data }) => {
                                                 ),
                                             )}
                                         </View>
+                                        <Text style={{ ...styles.text, fontWeight: "bold", marginTop: 2 }}>
+                                            DELIVERY FROM :
+                                        </Text>
+                                        <View>
+                                            {(data?.plantAddress ? data?.plantAddress.toUpperCase().split("~") : []).map(
+                                                (line, index) => (
+                                                    <Text key={index} style={{ fontSize: "6px" }}>
+                                                        {line.trim()}
+                                                    </Text>
+                                                ),
+                                            )}
+                                        </View>
                                     </View>
                                     <View
                                         style={{
                                             borderBottom: "0.03rem",
                                             borderColor: "black",
-                                            height: "5rem",
+                                            height: "3.7rem",
                                             padding: 2,
                                             gap: "0.1rem",
                                         }}
@@ -1753,11 +1765,12 @@ const LamkaCustomPackingPDF = ({ data }) => {
                                                         textAlign: "center",
                                                     }}
                                                 >
-                                                    FOR SUN TYRES & WHEEL SYSTEMS
+                                                    FOR SUNDARAM LANKA TYRES LIMITED
                                                 </Text>
-                                                    <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                                                    {/* <Text style={{ fontSize: 5, textAlign: 'center' }}>
                                                         (A DIVISION OF SUNDARAM LANKA TYRES LIMITED)
-                                                    </Text></>
+                                                    </Text> */}
+                                                </>
                                             )}
                                             {/* <Text style={{ fontSize: 5, textAlign: 'center' }}>
                                             (A DIVISION OF SUNDARAM LANKA TYRES LIMITED)

@@ -558,7 +558,7 @@ const invoiceSlice = createSlice({
           HSNCode: hsnCodeForScheme?.HSNCODE || [],
           buyersOrderNo: invoice?.orderRefNo || "",
           BuyersOrderNumber: invoice?.BuyersOrderNumber || "",
-          refDate: invoice?.rfD_Date ? `E MAIL DATE ${invoice.rfD_Date}` : "",
+          refDate: invoice?.completedDate ? `E MAIL DATE ${invoice.completedDate}` : "",
           otherReferences: "SDF Form",
           exporter: invoice?.exporterAuthorizedAddress || "",
           plantAddress: plantAddress || "",

@@ -1404,7 +1404,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                           }}
                         >
                           <Text style={{ fontSize: 5, textAlign: "center" }}>
-                            {item.basicprice + item.rimUnitPrice}
+                            {(item.basicprice + item.rimUnitPrice).toFixed(2)}
                           </Text>
                         </View>
                       );
@@ -1724,7 +1724,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                     <View>
                       {data.containerLoadFrom === "MMN" ||
                         data.containerLoadFrom === "PDK" ? (
-                        <Text
+                        <><Text
                           style={{
                             fontSize: 7,
                             fontWeight: "bold",
@@ -1733,20 +1733,25 @@ const InvoiceCustomerPDF = ({ data }) => {
                         >
                           FOR SUNDARAM INDUSTRIES PRIVATE LIMITED
                         </Text>
+                        <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                        (SUN TYRES & WHEEL SYSTEM)
+                      </Text>
+                      </>
                       ) : (
-                        <Text
+                        <><Text
                           style={{
                             fontSize: 7,
                             fontWeight: "bold",
                             textAlign: "center",
                           }}
                         >
-                          FOR SUN TYRES & WHEEL SYSTEMS
+                          FOR SUNDARAM LANKA PRIVATE LIMITED
                         </Text>
+                        <Text style={{ fontSize: 5, textAlign: 'center' }}>
+                        (SUN TYRES & WHEEL SYSTEM)
+                      </Text>
+                        </>
                       )}
-                      {/* <Text style={{ fontSize: 5, textAlign: 'center' }}>
-                                            (A DIVISION OF SUNDARAM LANKA TYRES LIMITED)
-                                        </Text> */}
                     </View>
 
                     {/* This will now definitely show at the bottom of the row */}
