@@ -195,6 +195,11 @@ const SideBar = () => {
           key: "/Masters/PriceMaster",
           label: "Price Master",
           icon: <MdOutlinePriceChange />,
+        },
+        {
+          key: "/Masters/ItemIDMaster",
+          label: "Item ID Master",
+          icon: <MdOutlinePriceChange />,
         }
       ],
     },

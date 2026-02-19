@@ -37,6 +37,7 @@ import PDIMaster from "../pages/TTS/Domostic/Dispatch/PDI/PDIMaster";
 import PPCMaster from "../pages/TTS/Domostic/Dispatch/PDC/PPCMaster";
 import SubstitutionDetails from "../pages/TTS/Domostic/Dispatch/PDC/Substitution/SubstitutionDetails";
 import ScanForInspectionDetails from "../pages/TTS/Domostic/Dispatch/PDI/ScanForInspection/ScanForInspectionDetails";
+import ItemIDMaster from "../pages/Masters/Item ID Master/ItemIDMaster";
 
 
 
@@ -59,7 +60,9 @@ export const router = createBrowserRouter([
           children: [
             { path: "UserMaster/UserCreate", element: <UserCreate /> },
             { path: "/Masters/UserMaster/AllUsers", element: <AllUSers /> },
-            { path: "/Masters/PriceMaster", element: <PriceMaster /> }
+            { path: "/Masters/PriceMaster", element: <PriceMaster /> },
+            { path: "/Masters/ItemIDMaster", element: <ItemIDMaster /> },
+            
           ]
         },
         {

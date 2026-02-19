@@ -500,7 +500,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                   >
                     <Text style={styles.text}>
                       Buyers Orders No Ref:{" "}
-                      {data.buyerorderrefno || data.orderRefNo || ""}
+                      {data?.BuyersOrderNumber || data?.orderRefNo || ""}
                     </Text>
                     {/* <Text style={styles.text}>{data.buyerorderrefno || data.orderRefNo || ""}</Text> */}
                   </View>
@@ -1695,12 +1695,12 @@ const InvoiceCustomerPDF = ({ data }) => {
                     </Text>
                   )}
                   <View>
-                    {isLastPage && (
+                    {/* {isLastPage && (
                       <Text style={{ ...styles.textBold, color: "red" }}>
                         {" "}
                         {data?.igstlut}
                       </Text>
-                    )}
+                    )} */}
                     {isLastPage && (
                       <Text style={{ ...styles.textBold, color: "red" }}>
                         {" "}

@@ -197,27 +197,50 @@ const LankaCustomPDF = ({ data }) => {
   const invoiceValue = totalcharges + totalPrice - totalDiscounts;
   const amountInWords = numberToWords(invoiceValue, data?.usercurrency);
 
-  const cleanPaymentTermsForPDF = (text = "") => {
-    if (!text) return "";
+// Simple HTML entity decoder (works in react-pdf)
+const decodeHtmlEntities = (text) => {
+  if (!text) return "";
 
-    return (
-      text
-        // Decode HTML entities
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
+  return text
+    // Named entities
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
 
-        // Convert backend separator to real line break
-        .replace(/~/g, "\n")
-
-        // Ensure numbering always starts on new line
-        .replace(/\s*(\d{2}\.)/g, "\n$1")
-
-        .trim()
+    // Numeric entities (like &#246;)
+    .replace(/&#(\d+);/g, (match, dec) =>
+      String.fromCharCode(dec)
     );
-  };
+};
+
+const cleanPaymentTermsForPDF = (text = "") => {
+  if (!text) return "";
+
+  const decoded = decodeHtmlEntities(text);
+
+  return decoded
+    // Paragraph break (~~)
+    .replace(/~~+/g, "\n\n")
+
+    // Line break (~)
+    .replace(/~/g, "\n")
+
+    // Ensure numbering starts on new line
+    .replace(/\s*(\d+\.)/g, "\n$1 ")
+
+    // Fix broken words like BESENT -> BE SENT
+    .replace(/([A-Z])([A-Z]{2,})/g, (match) => match)
+
+    // Remove extra spaces
+    .replace(/[ \t]+/g, " ")
+
+    // Remove extra new lines
+    .replace(/\n{3,}/g, "\n\n")
+
+    .trim();
+};
 
   // console.log(currency.symbol);
 
