@@ -4,6 +4,7 @@ import { getDescriptionByHSN, HSN_CODE } from "../../../../../../utils/HSNCODE";
 import { numberToWords } from "../../../../../../utils/NumberToWords";
 import { currencies } from "../../../../../../utils/currencies";
 import { Font } from "@react-pdf/renderer";
+import { formatDateTime } from "../../../../../../utils/FormatDate";
 
 Font.register({
   family: "Roboto",
@@ -510,7 +511,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                         ? data.invoiceNo.join(", ")
                         : data?.invoiceNumber || ""}
                     </Text>
-                    <Text style={styles.text}>Date: {formattedDate}</Text>
+                    <Text style={styles.text}>Date: {formatDateTime(data?.invoiceDate)}</Text>
                   </View>
                   <View
                     style={{
