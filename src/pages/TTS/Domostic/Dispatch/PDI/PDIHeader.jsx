@@ -1,27 +1,18 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import DialogBox from "../../../../../components/DialogBox";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Search, ClipboardCheck, Truck, Barcode, ThumbsUp, FileText } from "lucide-react";
 import SearchBar from "../../../../../components/SearchBar";
-import { setSearch } from "../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice";
-import { useDispatch, useSelector } from "react-redux";
-import { FaSearch, FaClipboardCheck, FaTruck, FaBarcode, FaThumbsUp, FaFileAlt } from "react-icons/fa"; // Import the icons you need
 
+function PDIHeader() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { plant, custType } = useParams();
 
-export default function PDIHeader({ mode, setMode, plant, sheetMode, setSheetMode }) {
-  const [dialogConfig, setDialogConfig] = useState({
-    title: "",
-    message: "",
-    onConfirm: () => { },
-  });
-  const dispatch = useDispatch()
-  const [isOpen, setOpen] = useState(false);
-  const reduxSearch = useSelector(state => state.scanforinspection?.search || "");
-  const [localSearch, setLocalSearch] = useState(reduxSearch);
   const { menus, roles } = useSelector(state => state.auth);
 
   const hasPermission = (menus, requiredMenuNameOrUrl) => {
     if (roles?.toLowerCase() === "admin") return true;
-
     if (!menus || !Array.isArray(menus)) return false;
 
     const normalized = requiredMenuNameOrUrl.toLowerCase().trim();
@@ -31,166 +22,108 @@ export default function PDIHeader({ mode, setMode, plant, sheetMode, setSheetMod
       menu.MenuUrl?.toLowerCase().trim() === normalized
     );
   };
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      dispatch(setSearch(localSearch));
-    }, 300); // wait 300ms after typing stops
 
-    return () => clearTimeout(delayDebounce);
-  }, [localSearch, dispatch]);
-
-  const sheetOptionsByMode = {
-    scanforinspection: ["tyres", "splitRims", "claims"],
-    inspectionincomplite: ["tyres", "claims"],
-    loadingcheck: ["tyres", "splitRims"],
-    approvalforloading: ["tyres"],
-  };
-  const visibleSheetTabs = sheetOptionsByMode[mode] || [];
-
-  useEffect(() => {
-    if (!visibleSheetTabs.includes(sheetMode)) {
-      setSheetMode(visibleSheetTabs[0] || "");
-    }
-  }, [mode]);
+  const basePath = `/TTS/Domestic/Dispatch/PDI/Inspection/${plant}/${custType}`;
 
   const allTabs = [
     {
-      id: "scanforinspection",
       label: "Scan For Inspection",
-      permissionKey: "PDI Scan For Inspection",   // ← you need to define real names
-      icon: <FaSearch />
+      permissionKey: "PDI Scan For Inspection",
+      path: `${basePath}/ScanForInspection`,
+      icon: <Search className="w-3.5 h-3.5" />
     },
     {
-      id: "inspectionincomplite",
       label: "Inspection In Complete",
-      permissionKey: "PDI Inspection Incomplete", // adjust to real menu name
-      icon: <FaClipboardCheck/>
+      permissionKey: "PDI Inspection Incomplete",
+      path: `${basePath}/InspectionInComplete`,
+      icon: <ClipboardCheck className="w-3.5 h-3.5" />
     },
     {
-      id: "loadingcheck",
       label: "Loading Check",
       permissionKey: "PDI Loading Check",
-      icon: <FaTruck /> 
+      path: `${basePath}/LoadingCheck`,
+      icon: <Truck className="w-3.5 h-3.5" />
     },
     {
-      id: "barcodedelete",
       label: "Barcode Delete",
       permissionKey: "PDI Barcode Delete",
-      icon: <FaBarcode />
+      path: `${basePath}/BarcodeDelete`,
+      icon: <Barcode className="w-3.5 h-3.5" />
     },
     {
-      id: "approvalforloading",
       label: "Approval For Loading",
       permissionKey: "PDI Approval For Loading",
-      icon: <FaThumbsUp />
+      path: `${basePath}/ApprovalForLoading`,
+      icon: <ThumbsUp className="w-3.5 h-3.5" />
     },
     {
-      id: "finalinspectionreport",
       label: "Final Inspection Report",
       permissionKey: "PDI Final Inspection Report",
-      icon: <FaFileAlt />
-    },
+      path: `${basePath}/FinalInspectionReport`,
+      icon: <FileText className="w-3.5 h-3.5" />
+    }
   ];
-  // Filter tabs user is allowed to see
+
   const visibleTabs = allTabs.filter(tab =>
     hasPermission(menus, tab.permissionKey)
   );
 
-
-
   return (
-    <div className="px-6 border-b border-slate-100 bg-white dark:bg-slate-800 dark:border-slate-700 z-10 transition-colors duration-300">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="px-5 pt-3 border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 transition-all">
+
+      {/* Title */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            {plant} - DOMESTIC PDI INSPECTION
+          <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            {plant} - PDI Inspection
           </h1>
-          <p className="text-[0.7rem] text-slate-500 dark:text-slate-400 mt-1">
-            Manage List Of PDI Inspection
+          <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
+            Dispatch Quality Control
           </p>
         </div>
 
-        {/* Module Switch Section */}
-        {mode === "scanforinspection" && (
-          <div className="flex flex-col gap-1">
-            {/* 1. TOP SECTION: Sheet Status (Toggle) */}
-            <div className="flex items-center justify-between min-w-[140px]">
-              <SearchBar
-                placeholder="Search by Work Order No, Order Ref No or Customer Name"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-            </div>
-
-            {mode === "scanforinspection" && visibleSheetTabs.length > 0 && (
-              <div className="bg-slate-200/80 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
-                {/* Slider */}
-                <div
-                  className="absolute h-[calc(100%-8px)] top-1 rounded-md bg-white dark:bg-slate-600 shadow-sm transition-all duration-200 ease-in-out"
-                  style={{
-                    width: `${100 / visibleSheetTabs.length}%`,
-                    left: `calc(${visibleSheetTabs.indexOf(sheetMode) * (100 / visibleSheetTabs.length)}% + 4px)`
-                  }}
-                />
-
-                {visibleSheetTabs.map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setSheetMode(tab)}
-                    className={`relative z-10 flex-1 text-[0.8rem] font-medium py-1.5 rounded-md transition-colors duration-200
-          ${sheetMode === tab
-                        ? "text-[var(--primary)] dark:text-blue-400"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
-                  >
-                    {tab === "tyres" && "Tyres"}
-                    {tab === "splitRims" && "Split Rims"}
-                    {tab === "claims" && "Claims"}
-                  </button>
-                ))}
-              </div>
-            )}
-
-          </div>
-        )}
+        <div className="max-w-xs">
+          <SearchBar
+            placeholder="Search..."
+            className="text-xs py-1"
+            
+          />
+        </div>
       </div>
 
-      {/* Navigation Tabs */}
-      {/* Navigation Tabs – only show allowed ones */}
+      {/* Tabs */}
       {visibleTabs.length > 0 && (
-        <div className="flex gap-6 mt-2 border-b border-slate-100 dark:border-slate-700">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => dispatch(setMode(tab.id))}  // ← using internal id
-              className={`pb-3 text-[0.7rem] font-medium relative cursor-pointer transition-colors ${mode === tab.id
-                ? "text-[var(--primary)]"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+        <div className="flex gap-5 mt-3">
+          {visibleTabs.map(tab => {
+            const isActive = location.pathname === tab.path;
+
+            return (
+              <button
+                key={tab.path}
+                onClick={() => navigate(tab.path)}
+                className={`pb-2 text-[11px] font-bold uppercase tracking-tight relative transition-all flex items-center gap-1.5 ${
+                  isActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                 }`}
-            >
-              <span className="flex items-center gap-2">
-                {tab.icon} {/* Icon for the tab */}
+              >
+                {tab.icon}
                 {tab.label}
-              </span>
-              {mode === tab.id && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)]"
-                />
-              )}
-            </button>
-          ))}
+
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 dark:bg-blue-400 rounded-full"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
-      <DialogBox
-        isOpen={isOpen}
-        onClose={() => setOpen(false)}
-        title={dialogConfig.title}
-        message={dialogConfig.message}
-        confirmText="Confirm Disable"
-        cancelText="Go Back"
-        onConfirm={dialogConfig.onConfirm}
-      />
     </div>
   );
 }
+
+export default PDIHeader;

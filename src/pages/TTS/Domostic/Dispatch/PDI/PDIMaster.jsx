@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import PDIHeader from './PDIHeader'
-import { useParams } from 'react-router-dom'
+import { Outlet, useParams } from 'react-router-dom'
 import PDIScanForInspection from './ScanForInspection/PDIScanForInspection'
 import { useSelector } from 'react-redux'
 import { setMode } from '../../../../../Redux/Slices/PDIDispatchMaster/PDIMaster'
@@ -71,12 +71,13 @@ const PDIMaster = () => {
             transition={{ duration: 0.25 }}
             className="h-full"
           >
-              {mode === "scanforinspection" && <PDIScanForInspection sheetMode={sheetMode} />}
+            <Outlet />
+              {/* {mode === "scanforinspection" && <PDIScanForInspection sheetMode={sheetMode} />}
               {mode === "inspectionincomplite" && <InspectionInComplete />}
               {mode === "loadingcheck" && <LoadingCheck />}
               {mode === "barcodedelete" && <BarcodeDelete />}
               {mode === "approvalforloading" && <ApprovalForLoading />}
-              {mode === "finalinspectionreport" && <FinalInspectionReport  />}
+              {mode === "finalinspectionreport" && <FinalInspectionReport  />} */}
           </motion.div>
         </AnimatePresence>
       </div>

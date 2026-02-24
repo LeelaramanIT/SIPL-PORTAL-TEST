@@ -22,7 +22,7 @@ export default function ManageView({ }) {
   const [search, setSearch] = useState("");
   // const [visibleRows, setVisibleRows] = useState(50);
   const [isOpen, setOpen] = useState(false);
-  const [dialogConfig, setDialogConfig] = useState({ title: "", message: "", onConfirm: () => { } });
+  const [dialogConfig, setDialogConfig] = useState({ title: "", message: "", confirmText: "", onConfirm: () => { } });
   const dispatch = useDispatch();
   const [endDate, setEndDate] = useState("");
   const { selectedCustomer, selectedSheet, sheetOptions, items, loading, activeTab,visibleRows } = useSelector((state) => state.priceMaster);
@@ -398,10 +398,11 @@ export default function ManageView({ }) {
     const config = {
       title: "Update End Date",
       message: `Update end date to ${endDate} for all entries in sheet ${currentSheet.priceSheetRefNo}?`,
+      confirmText: "Update End Date",
       onConfirm: async () => {
         try {
           const payload = { updateType: "PriceSheet", priceRefNos: [currentSheet.id], endDate: endDate };
-          const res = await api.put('/PriceSheet/update-EndDate', payload);
+          const res = await api.post('/PriceSheet/update-EndDate', payload);
           if (res.status === 200) {
             toast.success("End dates updated successfully.");
             fetchSheetDetails();
@@ -864,7 +865,7 @@ export default function ManageView({ }) {
         onClose={() => setOpen(false)}
         title={dialogConfig.title}
         message={dialogConfig.message}
-        confirmText="Confirm Disable"
+        confirmText={dialogConfig.confirmText || "Confirm"}
         cancelText="Go Back"
         onConfirm={dialogConfig.onConfirm}
       />

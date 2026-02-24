@@ -44,7 +44,7 @@ export default function Header({ mode, setMode, setModuleOn, currentSheet }) {
 
       onConfirm: async () => {
         try {
-          const res = await api.put("/PriceSheet/update-status-SINGLE", payload);
+          const res = await api.post("/PriceSheet/update-status-SINGLE", payload);
           if (res.status === 200) {
             dispatch(updateGlobalSheetStatus({
               id: currentSheet.id,

@@ -41,12 +41,12 @@ const scanforinspectionSlice = createSlice({
     },
 })
 
-export const getListOfInspectionData = (plant) => async (dispatch) => {
+export const getListOfInspectionData = (plant,custType) => async (dispatch) => {
     try {
         dispatch(setLoading(true))
         dispatch(resetAll())
         console.log("called>>>>>>>>");
-        const res = await api.get(`/PdiInspection/GetListOfPdiInspectOrders:${plant}`);
+        const res = await api.get(`/PdiInspection/GetListOfPdiInspectOrders:${plant}:${custType}`);
         console.log(res.data)
         if (res.status === 200) {
             dispatch(setListOfInspectionData(res.data))

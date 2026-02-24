@@ -1,186 +1,144 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { api } from "../../../utils/axios";
-import DialogBox from "../../../components/DialogBox";
 import { useDispatch, useSelector } from "react-redux";
-import { updateGlobalSheetStatus, setActiveTab } from "../../../Redux/Slices/PriceMasterSlice";
-import { IoMdWarning } from "react-icons/io";
+import { useNavigate, useLocation } from "react-router-dom";
+// Swapped to Lucide for a cleaner, consistent look
+import { Settings2, Disc, CircleDot, Search as SearchIcon } from "lucide-react"; 
+import DialogBox from "../../../components/DialogBox";
+import SearchBar from "../../../components/SearchBar";
+import { setSearch } from "../../../Redux/Slices/PriceMasterSlice";
 
-export default function Header({ mode, setMode, setModuleOn, currentSheet }) {
-  const [dialogConfig, setDialogConfig] = useState({ title: "", message: "", onConfirm: () => { } });
-  const [isOpen, setOpen] = useState(false);
+function Header() {
   const dispatch = useDispatch();
-  // const [activeTab, setActiveTab] = useState("active");
-  const { activeTab } = useSelector((state) => state.priceMaster);
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  const [isOpen, setOpen] = useState(false);
+  const [localSearch, setLocalSearch] = useState("");
 
-  const moduleOn = Boolean(currentSheet?.activeStatus);
+  const { menus, roles } = useSelector(state => state.auth);
 
-  const handleSheetStatus = () => {
-    // Hard lock: inactive sheet cannot be changed
-    if (moduleOn === false) return;
+  const hasPermission = (menus, requiredMenuNameOrUrl) => {
+    if (roles?.toLowerCase() === "admin") return true;
+    if (!menus || !Array.isArray(menus)) return false;
 
-    const payload = {
-      updateType: "PriceSheet",
-      PriceRefNos: [currentSheet.id],
-    };
+    const normalized = requiredMenuNameOrUrl.toLowerCase().trim();
 
-    setDialogConfig({
-      title: "Disable Full Sheet",
-      message: (
-        <>
-          {/* Updated text colors for Dark Mode visibility (yellow-600 -> dark:text-yellow-400) */}
-          <span className="text-yellow-600 dark:text-yellow-400 flex items-center text-2xl font-semibold">
-            <IoMdWarning className="mr-2" />Warning:
-          </span>{" "}
-          This action will disable all pricing entries in the price sheet{" "}
-          <span className="font-semibold text-red-600 dark:text-red-400">
-            {currentSheet.priceSheetRefNo}
-          </span>
-          . Do you want to continue?
-        </>
-      ),
-
-      onConfirm: async () => {
-        try {
-          const res = await api.put("/PriceSheet/update-status-SINGLE", payload);
-          if (res.status === 200) {
-            dispatch(updateGlobalSheetStatus({
-              id: currentSheet.id,
-              status: false
-            }));
-            toast.success("Sheet disabled successfully");
-            setOpen(false); // ✅ CLOSE dialog
-          }
-        } catch (error) {
-          console.error("Failed to update status:", error);
-          toast.error("Could not update sheet status");
-        }
-      },
-    });
-
-    setOpen(true);
+    return menus.some(menu =>
+      menu.MenuName?.toLowerCase().trim() === normalized ||
+      menu.MenuUrl?.toLowerCase().trim() === normalized
+    );
   };
 
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      dispatch(setSearch(localSearch));
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [localSearch, dispatch]);
+
+  const allTabs = [
+    {
+      label: "Assembly Process ID",
+      permissionKey: "Assembly Process ID Creation",
+      URL: "/Masters/ItemIDMaster/AssemblyProcessIDCreation",
+      icon: <Settings2 className="w-3.5 h-3.5" />
+    },
+    {
+      label: "Tyre Process ID",
+      permissionKey: "Tyre Process ID Creation",
+      URL: "/Masters/ItemIDMaster/TyreProcessIDCreation",
+      icon: <CircleDot className="w-3.5 h-3.5" />
+    },
+    {
+      label: "RIM Process ID",
+      permissionKey: "RIM Process ID Creation",
+      URL: "/Masters/ItemIDMaster/RIMProcessIDCreation",
+      icon: <Disc className="w-3.5 h-3.5" />
+    }
+  ];
+
+  const visibleTabs = allTabs.filter(tab =>
+    hasPermission(menus, tab.permissionKey)
+  );
 
   return (
-    // Added dark:bg-slate-800 and dark:border-slate-700
-    <div className="px-6 pt-2 border-b border-slate-100 bg-white dark:bg-slate-800 dark:border-slate-700 z-10 transition-colors duration-300">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-            {/* Added dark:text-slate-100 */}
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                Assembly Process ID Creation
-            </h1>
-            {/* Added dark:text-slate-400 */}
-            <p className="text-[0.7rem] text-slate-500 dark:text-slate-400 mt-1">
-                Create and manage Assembly Process IDs
-            </p>
-            </div>
-
-        {/* Module Switch Section */}
-        {mode === "manage" && (
-          <div className="flex flex-col gap-1.5"> {/* Stacks the two status sections vertically */}
-
-            {/* 1. TOP SECTION: Sheet Status (Toggle) */}
-            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-600 min-w-[140px]">
-              <span className="text-[0.6rem] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-tight">
-                Sheet Status
-              </span>
-
-              <button
-                onClick={handleSheetStatus}
-                disabled={currentSheet?.activeStatus === false}
-                /* Reduced w-12 to w-9 and h-6 to h-5 */
-                className={`relative w-9 h-5 rounded-full transition-colors duration-300
-      ${moduleOn ? "bg-[var(--primary)]" : "bg-slate-300 dark:bg-slate-600"}
-      disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <motion.div
-                  layout
-                  /* Reduced w-5 to w-4 and h-5 to h-4 */
-                  className="w-4 h-4 bg-white rounded-full shadow-sm absolute top-0.5 left-0.5"
-                  /* Adjusted movement from 24 to 16 to fit smaller width */
-                  animate={{ x: moduleOn ? 16 : 0 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              </button>
-            </div>
-
-            {/* 2. BOTTOM SECTION: Active Status (Tabs) */}
-            <div className="flex items-center justify-between gap-4 bg-slate-50 dark:bg-slate-700/50 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-600">
-              <label className="text-[0.6rem] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
-                Sheet View
-              </label>
-              <div className="bg-slate-200 dark:bg-slate-800 p-1 rounded-lg flex items-center relative min-w-[140px]">
-                {/* Sliding Background Animation */}
-                <div
-                  className={`absolute h-[calc(100%-8px)] w-[calc(50%-4px)] top-1 rounded-md bg-white dark:bg-slate-600 shadow-sm transition-all duration-200 ease-in-out ${activeTab === "inactive" ? "left-[calc(50%+2px)]" : "left-1"
-                    }`}
-                ></div>
-
-                <button
-                  type="button"
-                  onClick={() => dispatch(setActiveTab("active"))}
-                  className={`relative z-10 w-1/2 text-[0.6rem] font-bold py-1 rounded-md transition-colors duration-200 ${activeTab === "active"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-slate-500 dark:text-slate-400"
-                    }`}
-                >
-                  Active
-                </button>
-                <button
-                  type="button"
-                  onClick={() => dispatch(setActiveTab("inactive"))}
-                  className={`relative z-10 w-1/2 text-[0.6rem] font-bold py-1 rounded-md transition-colors duration-200 ${activeTab === "inactive"
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-slate-500 dark:text-slate-400"
-                    }`}
-                >
-                  Inactive
-                </button>
-              </div>
-            </div>
-
+    <div className="px-5 pt-3 border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 z-10 transition-all">
+      <div className="flex items-center justify-between gap-4">
+        {/* Compact Title Section */}
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <Settings2 className="w-4 h-4 text-blue-600" />
           </div>
-        )}
+          <div>
+            <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
+              Item ID Master
+            </h1>
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
+              Manufacturing Registry
+            </p>
+          </div>
+        </div>
 
+        {/* Dense Search Bar */}
+        <div className="flex-1 max-w-xs">
+          <div className="relative group">
+            <SearchBar
+              placeholder="Quick search..."
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              // Note: Ensure your SearchBar component accepts a className or 
+              // is styled internally to be small (approx py-1 text-xs)
+              className="text-xs py-1" 
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Navigation Tabs */}
-      {/* Added dark:border-slate-700 */}
-      <div className="flex gap-6 mt-2 border-b border-slate-100 dark:border-slate-700">
-        {["manage", "upload",].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setMode(tab)}
-            // Added dark:text-slate-400 and dark:hover:text-slate-200
-            className={`pb-3 text-[0.7rem] font-medium relative cursor-pointer transition-colors ${mode === tab
-              ? "text-[var(--primary)]"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-          >
-            {tab === "manage" ? "Assembly Process ID" : "RIM Process ID"}
-            {mode === tab && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)]"
-              />
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Navigation Tabs - Dense version */}
+      {visibleTabs.length > 0 && (
+        <div className="flex gap-5 mt-3">
+          {visibleTabs.map((tab) => {
+            const isActive = location.pathname === tab.URL;
+
+            return (  
+              <button
+                key={tab.URL}
+                onClick={() => navigate(tab.URL)}
+                className={`pb-2 text-[11px] font-bold uppercase tracking-tight relative transition-all flex items-center gap-1.5 ${
+                  isActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 dark:bg-blue-400 rounded-full"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <DialogBox
         isOpen={isOpen}
         onClose={() => setOpen(false)}
-        title={dialogConfig.title}
-        message={dialogConfig.message}
-        confirmText="Confirm Disable"
-        cancelText="Go Back"
-        onConfirm={dialogConfig.onConfirm}
+        title=""
+        message=""
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={() => {}}
       />
     </div>
-
   );
 }
+
+export default Header;

@@ -12,7 +12,7 @@ const PDIScanForInspection = ({sheetMode}) => {
     const { listOfInspectionData, search} = useSelector(state => state.scanforinspection)
     const { loading,mode } = useSelector(state => state.PDIDispatchMaster)
     const [visibleRows, setVisibleRows] = useState(50);
-    const { plant } = useParams()
+    const { plant, custType } = useParams()
     const navigate = useNavigate();
 
 
@@ -21,7 +21,7 @@ const PDIScanForInspection = ({sheetMode}) => {
     }, [search,sheetMode]);
 
     const onActionClick = (row) => {
-        navigate("/TTS/Domestic/Dispatch/PDI/Inspection/Details",{state:row})
+        navigate("/TTS/Domestic/Dispatch/PDI/Inspection/ScanForInspection/Details",{state:row})
     };
 
     const formatDateTime = (value) => {
@@ -110,7 +110,7 @@ console.log(filteredInspectionData)
     ];
 
     useEffect(() => {
-        dispatch(getListOfInspectionData(plant))
+        dispatch(getListOfInspectionData(plant,custType))
     }, [plant])
 
     return (

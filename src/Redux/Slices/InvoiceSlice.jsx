@@ -51,7 +51,7 @@ const initialState = {
   },
 };
 
-const invoiceSlice = createSlice({
+const invoiceSlice = createSlice({  
   name: "invoice",
   initialState,
   reducers: {

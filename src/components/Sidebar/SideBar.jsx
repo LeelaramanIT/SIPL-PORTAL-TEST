@@ -94,22 +94,22 @@ const SideBar = () => {
                   label: "PDI Inspection",
                   children: [
                     {
-                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/MMN",
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/MMN/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "MMN PDI Inspection",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/PDK",
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/PDK/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "PDK PDI Inspection",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/SITL",
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/SITL/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SITL PDI Inspection",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/SLTL",
+                      key: "/TTS/Domestic/Dispatch/PDI/Inspection/SLTL/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PDI Inspection",
                     }
@@ -166,6 +166,68 @@ const SideBar = () => {
                   key: "/TTS/International/Invoice/CustomInvoice",
                   icon: customIcon,
                   label: "Custom",
+                },
+              ],
+            },
+            {
+              key: "/TTS/International/Dispatch",
+              icon: <FaTruck />,
+              label: "Dispatch",
+              children: [
+                {
+                  key: "/TTS/International/Dispatch/PDI/Inspection",
+                  icon: <FcInspection />,
+                  label: "PDI Inspection",
+                  children: [
+                    {
+                      key: "/TTS/International/Dispatch/PDI/Inspection/MMN/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "MMN PDI Inspection",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PDI/Inspection/PDK/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "PDK PDI Inspection",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PDI/Inspection/SITL/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SITL PDI Inspection",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PDI/Inspection/SLTL/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SLTL PDI Inspection",
+                    }
+                  ]
+
+                },
+                {
+                  key: "/TTS/International/Dispatch/Substution",
+                  icon: <FcInspection />,
+                  label: "PPC Substitution",
+                  children: [
+                    {
+                      key: "/TTS/International/Dispatch/PPC/Substitution/MMN",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "MMN PPC Substitution",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PPC/Substitution/PDK",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "PDK PPC Substitution",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PPC/Substitution/SITL",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SITL PPC Substitution",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PPC/Substitution/SLTL",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SLTL PPC Substitution",
+                    }
+                  ]
                 },
               ],
             },
