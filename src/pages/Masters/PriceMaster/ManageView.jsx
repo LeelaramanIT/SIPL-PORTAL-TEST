@@ -105,6 +105,7 @@ export default function ManageView({ }) {
           updateDate: row.updateDate || "",
           createdBy: row.createdBy || "",
           createdDate: row.createdDate || "",
+          id: row.id,
         }));
 
         dispatch(setItems(formattedData));
@@ -330,7 +331,8 @@ export default function ManageView({ }) {
       lines: [{
         priceSheetRefNo: currentSheet.id,
         custCode: item.custcode,
-        processId: item.processID
+        processId: item.processID,
+        id:item.id
       }]
     };
 
