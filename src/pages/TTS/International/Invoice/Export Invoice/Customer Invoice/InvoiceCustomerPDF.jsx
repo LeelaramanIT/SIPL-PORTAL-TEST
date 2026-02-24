@@ -105,6 +105,9 @@ const InvoiceCustomerPDF = ({ data }) => {
     (sum, det) => sum + (Number(det.isPallet ? det.palletCount : 0) || 0),
     0,
   );
+  const palletDimensions = (data?.additionalDetails || [])
+    .filter(det => det.isPallet) // Filter to only include entries with 'isPallet' true
+    .map(det => det.palletDimension); // Extract 'palletDimension'
 
   const totalWoodenTyres = (data?.additionalDetails || []).reduce(
     (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxTyres : 0) || 0),
@@ -114,8 +117,15 @@ const InvoiceCustomerPDF = ({ data }) => {
     (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxCount : 0) || 0),
     0,
   );
+  const woodenBoxDimensions = (data?.additionalDetails || [])
+    .filter(det => det.isWoodenBox) // Filter to only include entries with 'isWoodenBox' true
+    .map(det => det.woodenBoxDimension); // Extract 'woodenBoxDimension'
 
   const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
+  // If you want to join them as a comma-separated list:
+  const palletDimensionsList = palletDimensions.join(', ');
+  const woodenBoxDimensionsList = woodenBoxDimensions.join(', ');
+
 
   const totalLooseTyres = Math.max(
     0,
@@ -125,11 +135,23 @@ const InvoiceCustomerPDF = ({ data }) => {
     ) - totalPackedTyres,
   );
 
+  const totalPacked = totalPallets + totalWoodenBoxs + totalLooseTyres;
   const packingSummary = [];
+
+  if (totalLooseTyres > 0) {
+    packingSummary.push(
+      `${totalLooseTyres} LOOSE ${totalLooseTyres > 1 ? "TYRES" : "TYRE"}`,
+    );
+  }
 
   if (totalPalletTyres > 0) {
     packingSummary.push(
       `${totalPalletTyres} TYRES PACKED IN ${totalPallets} ${totalPallets > 1 ? "PALLETS" : "PALLET"}`,
+    );
+  }
+  if (palletDimensionsList) {
+    packingSummary.push(
+      `${palletDimensionsList}`,
     );
   }
 
@@ -138,12 +160,19 @@ const InvoiceCustomerPDF = ({ data }) => {
       `${totalWoodenTyres} TYRES PACKED IN ${totalWoodenBoxs} ${totalWoodenBoxs > 1 ? "WOODEN BOXES" : "WOODEN BOXE"}`,
     );
   }
-
-  if (totalLooseTyres > 0) {
+  if (woodenBoxDimensionsList) {
     packingSummary.push(
-      `${totalLooseTyres} LOOSE ${totalLooseTyres > 1 ? "TYRES" : "TYRE"}`,
+      `${woodenBoxDimensionsList}`,
     );
   }
+
+  if (totalPacked > 0) {
+    packingSummary.push(
+      `TOTAL: ${totalPacked}`,
+    )
+  }
+
+
 
   // 🔥 COMBINE CHARGES FROM BACKEND STRUCTURE
   const combinedCharges = {};
@@ -867,7 +896,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                     </View>
                     <View style={{ gap: 2 }}>
                       {packingSummary.map((line, i) => (
-                        <Text key={i} style={{ fontSize: 7 }}>
+                        <Text key={i} style={{ fontSize: 6 , marginTop:"0.5px" }}>
                           {line}
                         </Text>
                       ))}
@@ -1702,9 +1731,8 @@ const InvoiceCustomerPDF = ({ data }) => {
                       </Text>
                     )} */}
                     {isLastPage && (
-                      <Text style={{ ...styles.textBold, color: "red" }}>
-                        {" "}
-                        {data?.rexNumber}
+                      <Text style={{ ...styles.textBold }}>
+                      {data?.rexNumber}
                       </Text>
                     )}
                   </View>

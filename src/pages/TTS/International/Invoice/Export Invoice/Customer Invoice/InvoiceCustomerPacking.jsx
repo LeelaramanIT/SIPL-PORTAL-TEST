@@ -133,8 +133,18 @@ const InvoiceCustomerPacking = ({ data }) => {
     (sum, det) => sum + (Number(det.isWoodenBox ? det.woodenBoxWeight : 0) || 0),
     0,
   )
+  const palletDimensions = (data?.additionalDetails || [])
+    .filter(det => det.isPallet) // Filter to only include entries with 'isPallet' true
+    .map(det => det.palletDimension); // Extract 'palletDimension'
+
+  const woodenBoxDimensions = (data?.additionalDetails || [])
+    .filter(det => det.isWoodenBox) // Filter to only include entries with 'isWoodenBox' true
+    .map(det => det.woodenBoxDimension); // Extract 'woodenBoxDimension'
 
   const totalPackedTyres = totalPalletTyres + totalWoodenTyres;
+  // If you want to join them as a comma-separated list:
+  const palletDimensionsList = palletDimensions.join(', ');
+  const woodenBoxDimensionsList = woodenBoxDimensions.join(', ');
 
   const totalGrossWT =
     (Number(totalPalletWT) || 0) +
@@ -155,12 +165,23 @@ const InvoiceCustomerPacking = ({ data }) => {
       0,
     ) - totalPackedTyres,
   );
-
+  const totalPacked = totalPallets + totalWoodenBoxs + totalLooseTyres;
   const packingSummary = [];
+
+  if (totalLooseTyres > 0) {
+    packingSummary.push(
+      `${totalLooseTyres} LOOSE ${totalLooseTyres > 1 ? "TYRES" : "TYRE"}`,
+    );
+  }
 
   if (totalPalletTyres > 0) {
     packingSummary.push(
       `${totalPalletTyres} TYRES PACKED IN ${totalPallets} ${totalPallets > 1 ? "PALLETS" : "PALLET"}`,
+    );
+  }
+  if (palletDimensionsList) {
+    packingSummary.push(
+      `${palletDimensionsList}`,
     );
   }
 
@@ -170,10 +191,16 @@ const InvoiceCustomerPacking = ({ data }) => {
     );
   }
 
-  if (totalLooseTyres > 0) {
+  if (woodenBoxDimensionsList) {
     packingSummary.push(
-      `${totalLooseTyres} LOOSE ${totalLooseTyres > 1 ? "TYRES" : "TYRE"}`,
+      `${woodenBoxDimensionsList}`,
     );
+  }
+
+  if (totalPacked > 0) {
+    packingSummary.push(
+      `TOTAL: ${totalPacked}`,
+    )
   }
 
   // 🔥 COMBINE CHARGES FROM BACKEND STRUCTURE
@@ -889,7 +916,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                     </View>
                     <View style={{ gap: 2 }}>
                       {packingSummary.map((line, i) => (
-                        <Text key={i} style={{ fontSize: 7 }}>
+                        <Text key={i} style={{ fontSize: 6, marginTop: "0.5px" }}>
                           {line}
                         </Text>
                       ))}
@@ -1547,10 +1574,28 @@ const InvoiceCustomerPacking = ({ data }) => {
               <View style={{ flexDirection: "row", height: 70 }}>
                 {/* Left Side (Bank Details / Empty) */}
                 <View
-                  style={{ width: "50%", padding: 4, flexDirection: "column" }}
+                  style={{ width: "50%", padding: 4, flexDirection: "column",justifyContent: "space-between", }}
                 >
-                  {/* {isLastPage && <Text style={styles.textBold}> {data?.invoice_Details}</Text>}
-                                    {isLastPage && <Text style={styles.textBold}> {data?.igstlut}</Text>} */}
+                  {isLastPage && (
+                    <Text style={styles.textBold}>
+                      {" "}
+                      {data?.invoice_Details}
+                    </Text>
+                  )}
+                  <View>
+                    {/* {isLastPage && (
+                                        <Text style={{ ...styles.textBold, color: "red" }}>
+                                          {" "}
+                                          {data?.igstlut}
+                                        </Text>
+                                      )} */}
+                    {isLastPage && (
+                      <Text style={{ ...styles.textBold }}>
+                        
+                      {data?.rexNumber}
+                      </Text>
+                    )}
+                  </View>
                 </View>
 
                 {/* Right Side (Signatory) */}

@@ -902,17 +902,23 @@ const AdditionalCustDetailsForm = ({
                   register={register}
                   errors={errors}
                 />
-                <InputField
+                {/* <InputField
                   label="REX Number"
                   name="rexNumber"
                   register={register}
                   errors={errors}
-                />
+                /> */}
               </div>
-              <div className="lg:col-span-4">
+              <div className="lg:col-span-4 flex gap-2">
                 <TextArea
                   label="Invoice Details"
                   name="invoice_Details"
+                  register={register}
+                  rows={4}
+                />
+                <TextArea
+                  label="REX Number"
+                  name="rexNumber"
                   register={register}
                   rows={4}
                 />

@@ -902,11 +902,11 @@ const cleanPaymentTermsForPDF = (text = "") => {
                         data?.tyreCount?.palletDimension,
                         data?.tyreCount?.woodenBoxTyres,
                         data?.tyreCount?.woodenBoxDimension,
-                        // data?.tyreCount?.totalTyres,
+                        data?.tyreCount?.totalTyres,
                       ]
                         .filter(Boolean) // removes empty strings or null
                         .map((line, i) => (
-                          <Text key={i} style={{ fontSize: 7 }}>
+                          <Text key={i} style={{ fontSize: 6 }}>
                             {line}
                           </Text>
                         ))}
