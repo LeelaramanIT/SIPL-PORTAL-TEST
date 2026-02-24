@@ -65,6 +65,20 @@ export default function UploadView() {
     }
   };
 
+  const parseUnitPrice = (value) => { // convert to proper number
+    if (value === null || value === undefined) return 0;
+
+    // Remove commas and currency symbols
+    const cleaned = String(value)
+      .replace(/,/g, "")
+      .replace(/[₹$]/g, "")
+      .trim();
+
+    const number = parseFloat(cleaned);
+
+    return isNaN(number) ? 0 : number;
+  };
+
   const handleModeChange = async (mode) => {
     dispatch(setSheetMode(mode));
     if (mode === "new") {
@@ -167,7 +181,11 @@ export default function UploadView() {
           productKey: `${row["ProcessID"]}~${row["TyreSize"]}~${Math.random()}`,
           custCode: row["CustCode"] || row["CUSTCODE"] || row["custcode"] || row["Customer Code"] || row["customer code"] || row["customerCode"],
           processID: row["ProcessID"] || row["PROCESSID"] || row["processID"] || row["Process Id"] || row["process Id"] || row["processid"],
-          unitPrice: Number(row["UnitPrice"] || Number(row["unitprice"]) || Number(row["unitPrice"]) || 0),
+          unitPrice: parseUnitPrice(
+            row["UnitPrice"] ??
+            row["unitprice"] ??
+            row["unitPrice"]
+          ),
           customerName: row["CustomerName"] || row["CUSTOMERNAME"] || row["customername"] || row["Customer Name"] || row["customer name"] || row["customerName"],
           category: row["Category"] || row["CATEGORY"] || row["category"] || row["Category Name"] || row["category name"] || row["categoryName"],
           config: row["Config"] || row["CONFIG"] || row["config"] || row["Config Name"] || row["config name"] || row["configName"],
@@ -288,7 +306,7 @@ export default function UploadView() {
         .map((item) => ({
           processID: item.processID,
           custID: item.custCode,
-          unitPrice: Number(item.unitPrice) || 0,
+          unitPrice: parseUnitPrice(item.unitPrice) || 0,
           endDate,
           startDate,
           itemType: category
