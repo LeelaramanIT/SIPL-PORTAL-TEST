@@ -704,8 +704,7 @@ const InvoiceCustomerPacking = ({ data }) => {
                       TERMS OF DELIVERY AND PAYMENT:
                     </Text>
                     <Text style={styles.text}>
-                      THE PRICES ARE {data?.usercurrency} {data?.incoterm}{" "}
-                      {data?.placeOfIncoterm}, CA BY SEA:
+                      THE PRICES ARE {data?.incoterm}-{data?.placeOfIncoterm}, BY SEA, IN {data?.usercurrency}
                     </Text>
                     {/* <Text style={styles.text}>PAYMENT TERMS:</Text> */}
 

@@ -685,8 +685,7 @@ const InvoiceCustomerPDF = ({ data }) => {
                       TERMS OF DELIVERY AND PAYMENT:
                     </Text>
                     <Text style={styles.text}>
-                      THE PRICES ARE {data?.usercurrency} {data?.incoterm}{" "}
-                      {data?.placeOfIncoterm}, CA BY SEA:
+                      THE PRICES ARE {data?.incoterm}-{data?.placeOfIncoterm}, BY SEA, IN {data?.usercurrency}
                     </Text>
                     <View style={{ marginTop: 0 }}>
                       <Text style={[styles.text, { fontWeight: "bold" }]}>
