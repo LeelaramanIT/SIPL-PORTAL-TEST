@@ -391,11 +391,13 @@ const SideBar = () => {
   return (
     <>
       {isMobile && isSidebarOpen && (
-  <div
-    className="fixed inset-0 bg-opacity-40 z-40 lg:hidden"
-    onClick={() => dispatch(toggleSidebar())}
-  />
-)}
+      <div
+        className="fixed inset-0 bg-black/10 lg:hidden"
+        style={{ zIndex: -999 }} // Just below the sidebar
+        onClick={() => dispatch(toggleSidebar())} // Clicking background still closes it
+      />
+    )}
+
 
       <Sider
         theme={isDark ? "dark" : "light"}
@@ -422,15 +424,18 @@ const SideBar = () => {
         trigger={null}
       >
         {/* Logo & Toggle */}
-        {/* Logo & Toggle Section */}
         <div
-          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"}`}
-          style={{ transition: "all 0.3s ease" }}
+          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"
+            }`}
+          style={{
+            transition: "all 0.3s ease",
+          }}
         >
-          {/* Full Logo - Click to Close */}
+          {/* Full Logo */}
           <div
-            className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"} overflow-hidden`}
-            onClick={() => dispatch(toggleSidebar())} 
+            className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+              } overflow-hidden`}
+            onClick={() => dispatch(toggleSidebar())}
           >
             <img
               src={assets.TVSLOGO}
@@ -439,17 +444,29 @@ const SideBar = () => {
             />
           </div>
 
-          {/* Small Logo - Click to Open */}
+          {/* Collapsed Logo */}
           <div
-            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}
+            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"
+              }`}
           >
             <img
               src={assets.TVS}
               alt="Small Logo"
-              className="h-10 w-10 object-contain dark:invert cursor-pointer"
-              onClick={() => dispatch(toggleSidebar())} 
+              className="h-10 w-10 object-contain dark:invert"
+              onClick={() => dispatch(toggleSidebar())}
             />
           </div>
+
+          {/* <button
+            onClick={() => dispatch(toggleSidebar())}
+            className="text-xl text-primary transition-all duration-300 ease-in-out"
+          >
+            {collapsed ? (
+              <GoSidebarExpand className="dark:text-white" />
+            ) : (
+              <GoSidebarCollapse className="dark:text-white" />
+            )}
+          </button> */}
         </div>
 
         {/* Menu */}

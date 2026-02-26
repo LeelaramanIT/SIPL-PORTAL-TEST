@@ -24,19 +24,17 @@ import { toggleSidebar } from "../Redux/Slices/GlobalSlice";
 
 import { resetUploadState } from "../Redux/Slices/PriceMasterSlice.jsx";
 const Navbar = () => {
-  const navigate = useNavigate(); // Removed the unnecessary [] argument
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const username = useSelector((state) => state.auth.username);
+  
+  // Get the current sidebar state
+  const { open: isSidebarOpen } = useSelector((state) => state.global);
 
   const handleLogout = async () => {
-    // Clear everything first to prevent protected route redirects during logout
     dispatch(logout());
     dispatch(resetUploadState());
-    
-    // Purge persistent storage
     await persistor.purge();
-    
-    // Final logout and redirect
     dispatch(userLogout(navigate));
   };
 
@@ -44,17 +42,20 @@ const Navbar = () => {
     <div className="h-[62px] flex justify-between items-center px-2 sm:px-4 duration-400 dark:bg-[#001529] select-none shadow-sm">
       {/* Left Side */}
       <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-        {/* Mobile Menu Toggle - Uses the same Redux state as Sidebar */}
+        
+        {/* FIX: Change this button logic */}
         <button
-          onClick={() => dispatch(toggleSidebar())}
+          onClick={() => {
+           
+            if (!isSidebarOpen) {
+              dispatch(toggleSidebar());
+            }
+          }}
           className="lg:hidden p-2 text-[var(--text)] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-          aria-label="Toggle Menu"
         >
           <HiMenuAlt3 size={20} />
         </button>
         
-        {/* Breadcrumbs can sometimes overlap on very small screens, 
-            ensure min-w-0 is on the parent to allow truncation */}
         <div className="truncate">
           <CustomBreadcrumbs />
         </div>
@@ -76,13 +77,10 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3 ml-2">
-          <IoMdNotificationsOutline 
-            className="text-xl cursor-pointer text-gray-600 dark:text-white hover:text-primary transition-colors" 
-          />
+          <IoMdNotificationsOutline className="text-xl cursor-pointer text-gray-600 dark:text-white hover:text-primary" />
           <TbLogout
-            className="text-xl cursor-pointer text-red-500 hover:text-red-600 transition-colors"
+            className="text-xl cursor-pointer text-red-500"
             onClick={handleLogout}
-            title="Logout"
           />
         </div>
       </div>
