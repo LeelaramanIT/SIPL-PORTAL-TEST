@@ -32,7 +32,6 @@ const ScanForInspectionDetails = () => {
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
     }
 
-
     const items = useMemo(() => {
         if (!InspectionDetails?.items) return []
         const term = localSearch.toLowerCase()
@@ -134,7 +133,7 @@ const ScanForInspectionDetails = () => {
             render: (val) => <span className="font-bold text-blue-600 dark:text-blue-400">{val || 0}</span>
         },
         { header: "SUB-QTY", title: 'SUBSTITUTION QTY', accessor: "substitutionQty", width: "1fr", align: "center" },
-        { header: "SUB-SCANNED QTY", accessor: "substitutionQty", width: "1fr", align: "center", title: 'TOTAL SUBSTITUTION QTY', },
+        { header: "SUB-SCANNED QTY", accessor: "scannedCount", width: "1fr", align: "center", title: 'TOTAL SUBSTITUTION QTY', },
     ]
 
     const handleConfirmation = (payload) => {

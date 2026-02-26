@@ -9,8 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const PDIScanForInspection = ({sheetMode}) => {
     const dispatch = useDispatch()
-    const { listOfInspectionData, search} = useSelector(state => state.scanforinspection)
-    const { loading,mode } = useSelector(state => state.PDIDispatchMaster)
+    const { listOfInspectionData } = useSelector(state => state.scanforinspection)
+    const { search } = useSelector(state => state.PDIDispatchMaster)
+    const { loading, mode } = useSelector(state => state.PDIDispatchMaster)
     const [visibleRows, setVisibleRows] = useState(50);
     const { plant, custType } = useParams()
     const navigate = useNavigate();

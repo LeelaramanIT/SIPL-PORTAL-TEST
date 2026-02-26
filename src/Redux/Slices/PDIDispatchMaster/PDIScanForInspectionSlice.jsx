@@ -143,7 +143,8 @@ export const SubmitInspection = (payload) => async (dispatch, getState) => {
                         ...item,
                         scannedQty: response.scannedQty,
                         pid: response.pid,
-                        substitutionQty: response.substitutionQty
+                        substitutionQty: response.substitutionQty,
+                        scannedCount: response.ScannedSubtitutionQty,
                     };
                 }
                 return item;

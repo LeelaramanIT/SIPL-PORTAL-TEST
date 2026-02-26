@@ -12,6 +12,7 @@ import { FiPackage } from 'react-icons/fi'
 import SearchBar from '../../../../../../components/SearchBar'
 import toast from 'react-hot-toast'
 import VerificationSider from './VerificationSider'
+import { StencilDetailsSlider } from './StencilDetailsSlider'
 
 
 const SubstitutionDetails = () => {
@@ -23,7 +24,8 @@ const SubstitutionDetails = () => {
     const [scanInput, setScanInput] = useState('')
     const { loading } = useSelector(state => state.PPCMaster)
     const [open, setOpen] = useState(false)
-    // const [selectedData, setSelectedData] = useState(null)
+    const [openStencil, setOpenStencil] = useState(false)
+    const [stencilDetails, setStencilDetails] = useState(null)
 
 
     const fadeUp = {
@@ -96,20 +98,41 @@ const SubstitutionDetails = () => {
 
 
     const columns = [
-        { header: "Process ID", accessor: "processID", width: "2fr", align: "center", title: 'process ID' },
-        { header: "PLATFORM", accessor: "config", width: "2fr", align: "center", title: 'PLATFORM' },
-        { header: "TYRE SIZE", accessor: "tyreSize", width: "2fr", align: "center" },
-        { header: "RIM", accessor: "tyreRim", width: "2fr", align: "center" },
-        { header: "TYPE", accessor: "tyreType", width: "2fr", align: "center" },
+        { header: "Process ID", accessor: "processID", width: "1.5fr", align: "center", title: 'process ID' },
+        { header: "PLATFORM", accessor: "config", width: "1.3fr", align: "center", title: 'PLATFORM' },
+        { header: "TYRE SIZE", accessor: "tyreSize", width: "3fr", align: "center" },
+        { header: "RIM", accessor: "tyreRim", width: "1fr", align: "center" },
+        { header: "TYPE", accessor: "tyreType", width: "1fr", align: "center" },
         {
-            header: "TOTAL QTY", accessor: "totaqty", width: "2fr", align: "center",
+            header: "TOTAL QTY", accessor: "totaqty", width: "1.1fr", align: "center",
             render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
         },
         {
             header: "SUBSTITUTION QTY", accessor: "substitutionQty", width: "2fr", align: "center",
             render: (val) => <span className="font-bold text-[var(--primary))] dark:text-blue-400">{val || 0}</span>
         },
+        {
+            header: "STENCIL DETAILS", accessor: "StencilDetails", width: "2fr", align: "center", title: "STENCIL DETAILS",
+            render: (val, row) => (
+                <button
+                    onClick={() => handleViewClick(row)} // This function will handle the button click
+                    className="bg-[var(--primary)] text-[var(--text)] hover:text-[var(--text-hover)] py-1 px-3 rounded-lg hover:bg-[var(--primary-hover)]"
+                >
+                    View
+                </button>
+            )
+        },
     ]
+    const handleViewClick = (row) => {
+        console.log('Viewing details for row:', row);
+        setStencilDetails({
+            ...row, // Merge the main row data
+            customerName: SubstitutionDetails?.custfullname, // Add the customer full name
+            orderReference: SubstitutionDetails?.orderRefNo, // Add order reference
+            workOrder: SubstitutionDetails?.workorderno, // Add work order number
+        });
+        setOpenStencil(true);
+    };
 
     const totalQty = SubstitutionDetails?.items.reduce((acc, item) => acc + (item.totaqty || 0), 0)
     const subQty = SubstitutionDetails?.items.reduce((acc, item) => acc + (item.substitutionQty || 0), 0)
@@ -340,7 +363,7 @@ const SubstitutionDetails = () => {
                     </motion.div>
                 </div>
             </div>
-            <VerificationSider
+            {open && <VerificationSider
                 isOpen={open}
                 setOpen={setOpen}
                 onClose={() => setOpen(false)}
@@ -348,8 +371,13 @@ const SubstitutionDetails = () => {
                 onConfirm={() => {
                     console.log("Confirmed:", selectedData)
                 }}
-            />
-
+            />}
+            {openStencil && <StencilDetailsSlider
+                isOpen={openStencil}
+                setOpen={setOpenStencil}
+                onClose={() => setOpenStencil(false)}
+                data={stencilDetails}
+            />}
         </div>
     )
 }

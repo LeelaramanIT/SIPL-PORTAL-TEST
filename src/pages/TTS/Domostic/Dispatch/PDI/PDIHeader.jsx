@@ -1,15 +1,19 @@
 import { motion } from "framer-motion";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Search, ClipboardCheck, Truck, Barcode, ThumbsUp, FileText } from "lucide-react";
 import SearchBar from "../../../../../components/SearchBar";
+import { setSearch } from "../../../../../Redux/Slices/PDIDispatchMaster/PDIMaster";
+
 
 function PDIHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const diapatch = useDispatch();
   const { plant, custType } = useParams();
 
   const { menus, roles } = useSelector(state => state.auth);
+  const { search } = useSelector(state => state.PDIDispatchMaster);
 
   const hasPermission = (menus, requiredMenuNameOrUrl) => {
     if (roles?.toLowerCase() === "admin") return true;
@@ -86,7 +90,10 @@ function PDIHeader() {
           <SearchBar
             placeholder="Search..."
             className="text-xs py-1"
-            
+            onChange={e => {
+              diapatch(setSearch(e.target.value));
+            }}
+            value={search}
           />
         </div>
       </div>

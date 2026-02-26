@@ -41,7 +41,7 @@ export function DynamicDataTable({
   );
 
   return (
-    <div className="flex flex-col w-full h-full min-h-[400px] overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm">
+    <div className={`flex flex-col w-full h-full min-h-[400px] overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm`}>
       {/* --- FIXED HEADER --- */}
       <div
         className={`${headerClassName} grid gap-4 px-6 py-4 border-b border-slate-200 dark:border-slate-700 backdrop-blur-md z-20 text-[0.7rem] font-bold uppercase tracking-wider sticky top-0`}
