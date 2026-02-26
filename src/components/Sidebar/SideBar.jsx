@@ -362,27 +362,21 @@ const SideBar = () => {
   const filteredMenu = user ? filterMenu(menuItems) : [];
 
   // ✅ Navigation handler
+  // ✅ Navigation handler
   const handleClick = ({ key }) => {
     let state = null;
 
-    // 🟩 If navigating to International Invoice routes
-    if (key === "/TTS/International/Invoice/CustomInvoice") {
+    // Determine state
+    if (key === "/TTS/International/Invoice/CustomInvoice" || key === "/TTS/Domestic/Invoice/Custom") {
       state = { type: "Custom" };
-
-    } else if (key === "/TTS/International/Invoice/CustomerInvoice") {
+    } else if (key === "/TTS/International/Invoice/CustomerInvoice" || key === "/TTS/Domestic/Invoice/Customer") {
       state = { type: "Customer" };
     }
 
-    // 🟨 If navigating to Domestic Invoice routes
-    else if (key === "/TTS/Domestic/Invoice/Custom") {
-      state = { type: "Custom" };
-    } else if (key === "/TTS/Domestic/Invoice/Customer") {
-      state = { type: "Customer" };
-    }
-
-    if (state) navigate(key, { state })
-    else navigate(key);
-    if (isMobile) dispatch(toggleSidebar());
+    // 🚀 NAVIGATE IMMEDIATELY
+    // Do not toggle sidebar here. 
+    // This allows the page to change while the sidebar stays open.
+    navigate(key, { state });
   };
 
   const handleLogout = async () => {
@@ -397,11 +391,11 @@ const SideBar = () => {
   return (
     <>
       {isMobile && isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => dispatch(toggleSidebar())}
-        />
-      )}
+  <div
+    className="fixed inset-0 bg-opacity-40 z-40 lg:hidden"
+    onClick={() => dispatch(toggleSidebar())}
+  />
+)}
 
       <Sider
         theme={isDark ? "dark" : "light"}
@@ -409,37 +403,34 @@ const SideBar = () => {
         width={240}
         collapsedWidth={isMobile ? 0 : 80}
         style={{
-          height: "100vh",
-          overflow: "auto",
-          position: "relative",
-          zIndex: 10,
-          display: "flex",
-          flexDirection: "column",
-          transition: "width 0.3s ease-in-out",
-        }}
+  height: "100vh",
+  overflow: "auto",
+  position: isMobile ? "fixed" : "relative",
+  left: 0,
+  top: 0,
+  zIndex: isMobile ? 1000 : 10,
+  transform: isMobile
+    ? isSidebarOpen
+      ? "translateX(0)"
+      : "translateX(-100%)"
+    : "none",
+  transition: "transform 0.3s ease-in-out",
+  display: "flex",
+  flexDirection: "column",
+}}
         className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
         trigger={null}
-      // onMouseEnter={() => {
-      //   if (!isMobile && collapsed) dispatch(toggleSidebar());
-      // }}
-      onMouseLeave={() => {
-        if (!isMobile && !collapsed) dispatch(toggleSidebar());
-      }}
-
       >
         {/* Logo & Toggle */}
+        {/* Logo & Toggle Section */}
         <div
-          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"
-            }`}
-          style={{
-            transition: "all 0.3s ease",
-          }}
+          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"}`}
+          style={{ transition: "all 0.3s ease" }}
         >
-          {/* Full Logo */}
+          {/* Full Logo - Click to Close */}
           <div
-            className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
-              } overflow-hidden`}
-            onClick={() => dispatch(toggleSidebar())}
+            className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"} overflow-hidden`}
+            onClick={() => dispatch(toggleSidebar())} 
           >
             <img
               src={assets.TVSLOGO}
@@ -448,29 +439,17 @@ const SideBar = () => {
             />
           </div>
 
-          {/* Collapsed Logo */}
+          {/* Small Logo - Click to Open */}
           <div
-            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"
-              }`}
+            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}
           >
             <img
               src={assets.TVS}
               alt="Small Logo"
-              className="h-10 w-10 object-contain dark:invert"
-              onClick={() => dispatch(toggleSidebar())}
+              className="h-10 w-10 object-contain dark:invert cursor-pointer"
+              onClick={() => dispatch(toggleSidebar())} 
             />
           </div>
-
-          {/* <button
-            onClick={() => dispatch(toggleSidebar())}
-            className="text-xl text-primary transition-all duration-300 ease-in-out"
-          >
-            {collapsed ? (
-              <GoSidebarExpand className="dark:text-white" />
-            ) : (
-              <GoSidebarCollapse className="dark:text-white" />
-            )}
-          </button> */}
         </div>
 
         {/* Menu */}

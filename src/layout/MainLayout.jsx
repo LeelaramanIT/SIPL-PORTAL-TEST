@@ -9,24 +9,30 @@ import { useAxiosInterceptors } from "../utils/axios";
 
 const MainLayout = () => {
   const { isChatOpen } = useSelector((state) => state.global);
+  const { open: isSidebarOpen } = useSelector((state) => state.global);
   const scrollRef = useRef(null);
   useAxiosInterceptors();
   return (
-    <div className="w-full h-screen flex flex-col lg:flex-row bg-[var(--color-background)] dark:bg-gray-900">
-    {isChatOpen && <SupportChat />}
-      
-      {/* <SideBar /> */}
-      <SideBar />
+    <div className="w-full h-screen flex bg-[var(--color-background)] dark:bg-gray-900">
+  {isChatOpen && <SupportChat />}
 
-      <div className="flex-1 flex flex-col ">
-        <Navbar />
+  <SideBar />
 
-        <div ref={scrollRef} className="flex-1 h-[calc(100vh-62px)] layout-scroll overflow-auto rounded-none lg:rounded-t-2xl dark:bg-gray-800 custom-scrollbar">
-          <Outlet />
-        </div>
-      </div>
-      <ScrollToTop scrollContainerRef={scrollRef} />
+  <div
+    className="flex-1 flex flex-col transition-all duration-300"
+  >
+    <Navbar />
+
+    <div
+      ref={scrollRef}
+      className="flex-1 h-[calc(100vh-62px)] layout-scroll overflow-auto rounded-none lg:rounded-t-2xl dark:bg-gray-800 custom-scrollbar"
+    >
+      <Outlet />
     </div>
+  </div>
+
+  <ScrollToTop scrollContainerRef={scrollRef} />
+</div>
   );
 };
 
