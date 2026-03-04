@@ -64,80 +64,59 @@ function Header() {
   );
 
   return (
-    <div className="px-5 pt-3 border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 z-10 transition-all">
-      <div className="flex items-center justify-between gap-4">
-        {/* Compact Title Section */}
-        <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <Settings2 className="w-4 h-4 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
-              Item ID Master
-            </h1>
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
-              Manufacturing Registry
-            </p>
-          </div>
-        </div>
+    <div className="px-5 pt-3  border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 z-10 transition-all">
+  
+  <div className="flex items-center justify-between gap-6">
 
-        {/* Dense Search Bar */}
-        <div className="flex-1 max-w-xs">
-          <div className="relative group">
-            <SearchBar
-              placeholder="Quick search..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              // Note: Ensure your SearchBar component accepts a className or 
-              // is styled internally to be small (approx py-1 text-xs)
-              className="text-xs py-1" 
-            />
-          </div>
-        </div>
+    {/* LEFT: Title */}
+    <div className="flex items-center gap-3 mb-2">
+      <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <Settings2 className="w-4 h-4 text-[var(--primary)]" />
       </div>
-
-      {/* Navigation Tabs - Dense version */}
-      {visibleTabs.length > 0 && (
-        <div className="flex gap-5 mt-3">
-          {visibleTabs.map((tab) => {
-            const isActive = location.pathname === tab.URL;
-
-            return (  
-              <button
-                key={tab.URL}
-                onClick={() => navigate(tab.URL)}
-                className={`pb-2 text-[11px] font-bold uppercase tracking-tight relative transition-all flex items-center gap-1.5 ${
-                  isActive
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 dark:bg-blue-400 rounded-full"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <DialogBox
-        isOpen={isOpen}
-        onClose={() => setOpen(false)}
-        title=""
-        message=""
-        confirmText="Confirm"
-        cancelText="Cancel"
-        onConfirm={() => {}}
-      />
+      <div>
+        <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
+          Item ID Master
+        </h1>
+        <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
+          Assembly Process <span className="text-[var(--primary)] underline underline-offset-4 decoration-2">ID Registry</span>
+        </p>
+      </div>
     </div>
+
+    {/* RIGHT: Navigation Tabs */}
+    {visibleTabs.length > 0 && (
+      <div className="flex items-center gap-6">
+        {visibleTabs.map((tab) => {
+          const isActive = location.pathname === tab.URL;
+
+          return (
+            <button
+              key={tab.URL}
+              onClick={() => navigate(tab.URL)}
+              className={`pb-2 text-[11px] font-bold uppercase tracking-tight relative transition-all flex items-center gap-1.5 ${
+                isActive
+                  ? "text-[var(--primary)] dark:text-blue-400"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary))] dark:bg-blue-400 rounded-full"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    )}
+
+  </div>
+</div>
   );
 }
 

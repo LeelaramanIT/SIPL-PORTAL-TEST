@@ -47,6 +47,7 @@ import LoadingCheck from "../pages/TTS/Domostic/Dispatch/PDI/Loading Check/Loadi
 import BarcodeDelete from "../pages/TTS/Domostic/Dispatch/PDI/Barcode Delete/BarcodeDelete";
 import ApprovalForLoading from "../pages/TTS/Domostic/Dispatch/PDI/Approval For Loading/ApprovalForLoading";
 import FinalInspectionReport from "../pages/TTS/Domostic/Dispatch/PDI/Final Inspection Report/FinalInspectionReport";
+import ProformaPDFViewer from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPDFViewer";
 
 
 
@@ -156,7 +157,7 @@ export const router = createBrowserRouter([
               { path: "Invoice/Customer/BillPDF", element: <InvoicePDF /> },
               { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind /> },
               { path: "Invoice/Export/Sample", element: <SampleSplit /> },
-              { path: "ProformaInvoice/CustomerInvoice", element: <ExportInvoice /> },
+              { path: "Invoice/ProformaInvoice/PDF", element: <ProformaPDFViewer /> },
             ],
           },
           {

@@ -10,7 +10,7 @@ import {
   GoSidebarExpand,
 } from "react-icons/go";
 import { RxDashboard } from "react-icons/rx";
-import { MdOutlineManageAccounts } from "react-icons/md";
+import { MdOutlineManageAccounts, MdOutlineReceipt } from "react-icons/md";
 import { SiAwsorganizations, SiGoogledocs } from "react-icons/si";
 import {
   BsFillClipboard2DataFill,
@@ -39,6 +39,7 @@ import { MdOutlineContactEmergency } from "react-icons/md";
 import { MdOutlinePriceChange } from "react-icons/md";
 import { MdOutlineQrCodeScanner } from "react-icons/md";
 import { FcInspection } from "react-icons/fc";
+
 
 const { Sider } = Layout;
 
@@ -167,6 +168,11 @@ const SideBar = () => {
                   icon: customIcon,
                   label: "Custom",
                 },
+                {
+                  key: "/TTS/International/Invoice/ProformaInvoice/PDF",
+                  icon: <MdOutlineReceipt />,
+                  label: "Proforma",
+                },
               ],
             },
             {
@@ -260,7 +266,7 @@ const SideBar = () => {
         },
         {
           key: "/Masters/ItemIDMaster",
-          label: "Item ID Master",
+          label: "Item Master Creation",
           icon: <MdOutlinePriceChange />,
         }
       ],
@@ -391,12 +397,12 @@ const SideBar = () => {
   return (
     <>
       {isMobile && isSidebarOpen && (
-      <div
-        className="fixed inset-0 bg-black/10 lg:hidden"
-        style={{ zIndex: -999 }} // Just below the sidebar
-        onClick={() => dispatch(toggleSidebar())} // Clicking background still closes it
-      />
-    )}
+        <div
+          className="fixed inset-0 bg-black/10 lg:hidden"
+          style={{ zIndex: -999 }} // Just below the sidebar
+          onClick={() => dispatch(toggleSidebar())} // Clicking background still closes it
+        />
+      )}
 
 
       <Sider
@@ -405,21 +411,21 @@ const SideBar = () => {
         width={240}
         collapsedWidth={isMobile ? 0 : 80}
         style={{
-  height: "100vh",
-  overflow: "auto",
-  position: isMobile ? "fixed" : "relative",
-  left: 0,
-  top: 0,
-  zIndex: isMobile ? 1000 : 10,
-  transform: isMobile
-    ? isSidebarOpen
-      ? "translateX(0)"
-      : "translateX(-100%)"
-    : "none",
-  transition: "transform 0.3s ease-in-out",
-  display: "flex",
-  flexDirection: "column",
-}}
+          height: "100vh",
+          overflow: "auto",
+          position: isMobile ? "fixed" : "relative",
+          left: 0,
+          top: 0,
+          zIndex: isMobile ? 1000 : 10,
+          transform: isMobile
+            ? isSidebarOpen
+              ? "translateX(0)"
+              : "translateX(-100%)"
+            : "none",
+          transition: "transform 0.3s ease-in-out",
+          display: "flex",
+          flexDirection: "column",
+        }}
         className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
         trigger={null}
       >

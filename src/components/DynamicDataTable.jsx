@@ -40,7 +40,7 @@ export function DynamicDataTable({
   );
 
   return (
-    <div className="flex flex-col w-full h-full min-h-[400px] border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
+    <div className="flex flex-col w-full h-full min-h-[400px] border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 shadow-sm overflow-hidden ">
       
       {/* WRAPPER FOR MOBILE RESPONSIVENESS:
           - 'overflow-x-auto' allows horizontal swiping on mobile.
@@ -52,7 +52,7 @@ export function DynamicDataTable({
             This ensures that on mobile, the columns don't squash. 
             Adjust 'min-w-[1000px]' based on how wide your data is.
         */}
-        <div className="min-w-[1000px] lg:min-w-full flex flex-col h-full">
+        <div className="min-w-[1000px] lg:min-w-full flex flex-col h-full ">
           
           {/* --- FIXED HEADER --- */}
           <div
@@ -78,7 +78,7 @@ export function DynamicDataTable({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className="overflow-y-auto flex-1 p-2 space-y-2 bg-slate-50/30 dark:bg-slate-900/20"
+            className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-2 bg-slate-50/30 dark:bg-slate-900/20"
           >
             {loading ? (
               <div className="space-y-2">

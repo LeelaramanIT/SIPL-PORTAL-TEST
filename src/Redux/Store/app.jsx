@@ -12,6 +12,7 @@ import scanforlinspectionReducer from "../Slices/PDIDispatchMaster/PDIScanForIns
 import PDIDispatchMasterReducer from "../Slices/PDIDispatchMaster/PDIMaster";
 import PPCMasterReducer from "../Slices/PPCSubstitutionMaster/PPCMaster";
 import PPCSubstitutionReducer from "../Slices/PPCSubstitutionMaster/PPCSubstitutionSlice";
+import AssemblyProcessIDReducer from "../Slices/Master/PI_Master/AssemblyProcessIDSlice";
 import { version } from "react";
 
 // Encryption config
@@ -78,6 +79,14 @@ const PPCSubstitutionDetailsPersistConfig = {
   transforms: [encryptor],
 }
 
+const AssemblyProcessIDPersistConfig = {
+  key: "AssemblyProcessID",
+  version: 1,
+  storage: storageSession,
+  transforms: [encryptor],
+};
+
+
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
@@ -85,8 +94,10 @@ const persistedGlobalReducer = persistReducer(globalPersistConfig, globalReducer
 const persistedPriceMasterReducer = persistReducer(priceMasterPersistConfig, priceMasterSliceReducer);
 const persistedPDIDispatchMasterReducer = persistReducer(PDIDispatchMasterPersistConfig, PDIDispatchMasterReducer);
 const persistedScanforlinspectionReducer = persistReducer(scanforlinspectionPersistConfig, scanforlinspectionReducer);
-const persistedPPCMasterReducer = persistReducer(PPCMasterPersistConfig,PPCMasterReducer);
-const persistedPPCSubstitutionDetailsReducer = persistReducer(PPCSubstitutionDetailsPersistConfig,PPCSubstitutionReducer );
+const persistedPPCMasterReducer = persistReducer(PPCMasterPersistConfig, PPCMasterReducer);
+const persistedPPCSubstitutionDetailsReducer = persistReducer(PPCSubstitutionDetailsPersistConfig, PPCSubstitutionReducer );
+const persistedAssemblyProcessIDReducer = persistReducer(AssemblyProcessIDPersistConfig, AssemblyProcessIDReducer);
+
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -99,6 +110,7 @@ const rootReducer = combineReducers({
   PDIDispatchMaster: persistedPDIDispatchMasterReducer,
   PPCMaster: persistedPPCMasterReducer,
   PPCSubstitution: persistedPPCSubstitutionDetailsReducer,
+  AssemblyProcessID: persistedAssemblyProcessIDReducer,
 });
 
 // Store setup

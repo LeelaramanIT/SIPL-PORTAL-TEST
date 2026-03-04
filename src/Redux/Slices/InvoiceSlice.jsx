@@ -51,7 +51,7 @@ const initialState = {
   },
 };
 
-const invoiceSlice = createSlice({  
+const invoiceSlice = createSlice({
   name: "invoice",
   initialState,
   reducers: {
@@ -132,13 +132,13 @@ const invoiceSlice = createSlice({
 
         const grandTotal = invoice.items.reduce((acc, item) => {
           const tyre = Number(item?.basicprice) || 0;
-          const rim = Number(item?.rimUnitPrice) || 0 ;
+          const rim = Number(item?.rimUnitPrice) || 0;
           const qty = Number(item?.itemQty) || 0;
 
           return acc + (tyre + rim) * qty;
         }, 0);
-        console.log("grandTotal.....",grandTotal);
-        
+        console.log("grandTotal.....", grandTotal);
+
         const unitPrice =
           totalwt > 0 && !Number.isNaN(grandTotal)
             ? (grandTotal / totalwt).toFixed(5)
@@ -361,7 +361,7 @@ const invoiceSlice = createSlice({
 
         const totalPrices = invoice.items.map((item) => {
           const tyre = Number(item.basicprice) || 0;
-          const rim = Number(item.rimUnitPrice) || 0 ;
+          const rim = Number(item.rimUnitPrice) || 0;
           const qty = Number(item.itemQty) || 0;
 
           return (tyre + rim) * qty;
@@ -396,7 +396,7 @@ const invoiceSlice = createSlice({
         const hsnCodeForScheme = matchedHSN.find(
           (h) => h.scheme === invoice.scheme?.toUpperCase(),
         );
-        
+
 
         if (invoice.scheme && Array.isArray(listToCheck)) {
           const matched = listToCheck.find(
@@ -546,6 +546,25 @@ const invoiceSlice = createSlice({
           ? baseInvoiceNumber + index // 🔥 increases by 1 per invoice
           : invoice.invoiceNumber;
 
+        // const hasRimAssembly = data?.items?.some(
+        //   (item) => item.rimStatus === true
+        // );
+
+        const hasRimOnly = invoice.items?.some(
+          (item) => item.hsnCode === "84312010"
+        );
+
+        let finalDescription = "SOLID INDUSTRIAL TYRES";
+
+        // Priority 1 – Rim Assembly
+        if (hasRimAssembly) {
+          finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY";
+        }
+        // Priority 2 – Rim Only
+        else if (hasRimOnly) {
+          finalDescription = "SOLID INDUSTRIAL TYRES WITH RIM";
+        }
+
         return {
           invoiceNumber: finalInvoiceNumber,
           orderRefNo: invoice?.orderRefNo || "",
@@ -621,18 +640,7 @@ const invoiceSlice = createSlice({
           },
           packingDetails: {
             itcHsNo: hsnCodeForScheme?.HSNCODE?.join(", ") || "",
-            description:
-              hasRimAssembly &&
-                hsnCodeForScheme?.HSNCODE?.join(", ") === "40129020"
-                ? "SOLID INDUSTRIAL TYRES WITH RIM ASSEMBLY"
-                : hsnCodeForScheme?.HSNCODE?.map(
-                  (code) =>
-                    HSN_CODE.find(
-                      (item) => item.hsn === code,
-                    )?.description?.toUpperCase() || "",
-                )
-                  .join(" , ")
-                  .trim() || "",
+            description: finalDescription,
           },
           otherCharges,
           otherDiscountsList,
@@ -1158,8 +1166,8 @@ export const uploadCustomInvoicePDF = () => async (dispatch, getState) => {
 
     console.log("✅ PDF Uploaded Successfully");
 
-     // 🔽 DOWNLOAD AFTER SUCCESS
-    await downloadPDF(pdfBlob,`Custom Invoice_${invoiceNumbers}.pdf`)
+    // 🔽 DOWNLOAD AFTER SUCCESS
+    await downloadPDF(pdfBlob, `Custom Invoice_${invoiceNumbers}.pdf`)
 
     console.log("⬇ PDF Downloaded Successfully");
   } catch (error) {
@@ -1190,7 +1198,7 @@ export const uploadCustomerInvoicePDF = () => async (dispatch, getState) => {
     const orderRefNo = invoiceCustDetails.orderRefNo || "";
     const custCode = invoiceCustDetails.custCode || invoiceCustDetails.customerCode || "";
     const year = new Date().getFullYear();
-   const invoiceNumbers = invoiceCustDetails.invoiceNo.join(',');
+    const invoiceNumbers = invoiceCustDetails.invoiceNo.join(',');
 
     if (!custCode) {
       console.error("❌ customerCode missing in invoiceCustDetails", invoiceCustDetails);
@@ -1224,9 +1232,9 @@ export const uploadCustomerInvoicePDF = () => async (dispatch, getState) => {
         withCredentials: true,
       }
     );
-    
-     // 🔽 DOWNLOAD AFTER SUCCESS
-     await downloadPDF(pdfBlob,`Customer Invoice_${invoiceNumbers}.pdf`)
+
+    // 🔽 DOWNLOAD AFTER SUCCESS
+    await downloadPDF(pdfBlob, `Customer Invoice_${invoiceNumbers}.pdf`)
 
 
     console.log("✅ Customer Invoice PDF Uploaded Successfully");
