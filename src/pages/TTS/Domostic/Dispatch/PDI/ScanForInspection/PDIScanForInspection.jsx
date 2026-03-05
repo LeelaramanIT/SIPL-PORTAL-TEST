@@ -20,8 +20,9 @@ const PDIScanForInspection = ({ sheetMode }) => {
         setVisibleRows(50);
     }, [search, sheetMode]);
 
+    const type = custType === "Domestic" ? "Domestic" : "International";
     const onActionClick = (row) => {
-        navigate("/TTS/Domestic/Dispatch/PDI/Inspection/ScanForInspection/Details", { state: row })
+        navigate(`/TTS/${type}/Dispatch/PDI/Inspection/ScanForInspection/Details`, { state: row })
     };
 
     const formatDateTime = (value) => {
@@ -145,7 +146,7 @@ const PDIScanForInspection = ({ sheetMode }) => {
                 </motion.div>
             ) : (
                 <div className="flex-1 overflow-auto rounded-lg shadow-sm">
-                    <div className="min-w-[1000px] h-full"> {/* Ensures table doesn't squash on mobile */}
+                    <div className="w-full h-full overflow-auto"> {/* Ensures table doesn't squash on mobile */}
                         <DynamicDataTable 
                             columns={uploadColumns} 
                             data={filteredInspectionData} 

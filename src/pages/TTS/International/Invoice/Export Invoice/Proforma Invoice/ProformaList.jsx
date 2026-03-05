@@ -1,22 +1,17 @@
 import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import ExportTable from "./ExportTable";
-import SearchBar from "../../../../../components/SearchBar";
-import Dropdown from "../../../../../components/InputFields/DropDown";
+// import ExportTable from "./ExportTable";
+import SearchBar from "../../../../../../components/SearchBar";
+import Dropdown from "../../../../../../components/InputFields/DropDown";
 import gsap from "gsap";
-import DatePickerComponent from "../../../../../components/DatePicker/DatePicker";
-import TitleText from "../../../../..//components/TitleText";
+import DatePickerComponent from "../../../../../../components/DatePicker/DatePicker";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getExportInvoice,
   getExportInvoiceAll,
   resetExportInvoiceDetails,
-} from "../../../../../Redux/Slices/InvoiceSlice";
-import Button from "../../../../../components/InputFields/Button";
-import TableSkeleton from "./TableSkeleton";
-import { generateTableData } from "../../../../../utils/DummyJSON";
-import { highlightMatch } from "../../../../../utils/highlightMatch";
-import ToggleSwitchWord from "../../../../../components/WordToggleButton";
+} from "../../../../../../Redux/Slices/InvoiceSlice";
+// import TableSkeleton from "./TableSkeleton";
 import toast from "react-hot-toast";
 
 const ProformaList = () => {
@@ -143,10 +138,10 @@ const handleToggle = (value) => {
       <div className="bg-white pb-1 rounded-t-md">
           <h1 className="ml-2 text-xl font-bold  tracking-tight">
             {/* {invoiceDetails?.type} Invoice Details */}
-             Export {state?.type} Invoice
+             Proforma Invoice
           </h1>
           <p className="ml-2 text-sm text-slate-500 mt-1">
-            View and Manage all Export {state?.type} Invoices
+            View and Manage all Proforma Invoices
           </p>
         </div>
 
@@ -179,54 +174,50 @@ const handleToggle = (value) => {
               )}
             </div>
 
-            <ToggleSwitchWord options={["Custom","Customer"]}
-              defaultValue={state?.type}
-              color="bg-[var(--primary)]"
-              onChange={handleToggle}
-            />
           </div>
 
           <div className="w-full rounded-sm bg-[var(--background)] gap-5 flex flex-col flex-grow overflow-hidden">
             {loading ? (
               <TableSkeleton />
             ) : (
-              <ExportTable
-                headers={headers}
-                data={filteredData}
-                searchQuery={searchQuery}
-                highlightMatch={highlightMatch}
-                rowClassName={(row, index) => {
-                  if (index === 0) return "rounded-l-xl";
-                  if (index === row.length - 1) return "rounded-r-xl";
-                  return "";
-                }}
-                renderAction={(row, index) => (
-                  <button
-                    // onClick={() => handleAction(row)}
-                    onClick={() => {
-                      if (state.type === 'Customer') {
-                        navigate(
-                          "/TTS/International/Invoice/CustomerInvoice/Prepare", {
-                          state: state
-                        }
-                        );
-                        dispatch(getExportInvoice({ ...row, ...state }));
-                      }
-                      if (state.type === 'Custom') {
-                        navigate(
-                          "/TTS/International/Invoice/CustomInvoice/Prepare", {
-                          state: state
-                        }
-                        );
-                        dispatch(getExportInvoice({ ...row, ...state }));
-                      }
-                    }}
-                    className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)] px-4 py-1 rounded text-center"
-                  >
-                    Action
-                  </button>
-                )}
-              />
+              // <ExportTable
+              //   headers={headers}
+              //   data={filteredData}
+              //   searchQuery={searchQuery}
+              //   highlightMatch={highlightMatch}
+              //   rowClassName={(row, index) => {
+              //     if (index === 0) return "rounded-l-xl";
+              //     if (index === row.length - 1) return "rounded-r-xl";
+              //     return "";
+              //   }}
+              //   renderAction={(row, index) => (
+              //     <button
+              //       // onClick={() => handleAction(row)}
+              //       onClick={() => {
+              //         if (state.type === 'Customer') {
+              //           navigate(
+              //             "/TTS/International/Invoice/CustomerInvoice/Prepare", {
+              //             state: state
+              //           }
+              //           );
+              //           dispatch(getExportInvoice({ ...row, ...state }));
+              //         }
+              //         if (state.type === 'Custom') {
+              //           navigate(
+              //             "/TTS/International/Invoice/CustomInvoice/Prepare", {
+              //             state: state
+              //           }
+              //           );
+              //           dispatch(getExportInvoice({ ...row, ...state }));
+              //         }
+              //       }}
+              //       className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)] px-4 py-1 rounded text-center"
+              //     >
+              //       Action
+              //     </button>
+              //   )}
+              // />
+              <></>
             )}
           </div>
         </div>

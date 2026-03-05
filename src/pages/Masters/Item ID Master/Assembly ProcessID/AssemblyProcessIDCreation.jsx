@@ -286,22 +286,22 @@ const AssemblyProcessIDCreation = () => {
   };
 
   const uploadColumns = [
-    { header: "Category", width: '0.6fr', accessor: "category" },
-    { header: "Platform", width: '0.6fr', accessor: "config" },
-    { header: "Tyre Size", width: '1.2fr', accessor: "tyreSize" },
-    { header: "Rim", width: '0.5fr', accessor: "rimSize" },
-    { header: "Type", width: '0.9fr', accessor: "tyreType" },
-    { header: "Brand", width: '1.1fr', accessor: "brand" },
-    { header: "Sidewall", width: '1.1fr', accessor: "sidewall" },
-    { header: "Process ID", width: '1fr', accessor: "ttspid" },
-    { header: "Directional", width: '1fr', accessor: "directional" },
-    { header: "assy TyreSize", width: '1fr', accessor: "assyTyreSize" },
-    { header: "assy Pid", width: '0.9fr', accessor: "assyPid" },
-    { header: "assy EdcNo", width: '0.5fr', accessor: "assyEdcNo" },
+    { header: "Category", width: '0.5fr', accessor: "category", align:'center' },
+    { header: "Platform", width: '0.5fr', accessor: "config", align:'center' },
+    { header: "Tyre Size", width: '1.2fr', accessor: "tyreSize", align:'center' },
+    { header: "Rim", width: '0.5fr', accessor: "rimSize", align:'center' },
+    { header: "Type", width: '0.5fr', accessor: "tyreType", align:'center' },
+    { header: "Brand", width: '0.9fr', accessor: "brand", align:'center' },
+    { header: "Sidewall", width: '0.9fr', accessor: "sidewall", align:'center' },
+    { header: "Process ID", width: '1fr', accessor: "ttspid", align:'center' },
+    { header: "Directional", width: '1fr', accessor: "directional", align:'center' },
+    { header: "assy TyreSize", width: '1.5fr', accessor: "assyTyreSize", align:'center' },
+    { header: "assy Pid", width: '0.9fr', accessor: "assyPid", align:'center' },
+    { header: "assy EdcNo", width: '0.6fr', accessor: "assyEdcNo", align:'center' },
   ];
 
   return (
-    <div className="p-2 bg-slate-50 min-h-screen font-sans selection:bg-blue-100">
+    <div className="p-2 bg-slate-50 h-[calc(100vh-62px)] font-sans selection:bg-blue-100">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -447,7 +447,7 @@ const AssemblyProcessIDCreation = () => {
                 <h3 className="text-[10px] font-bold text-white uppercase tracking-widest">Active Record Preview {tableData.length}</h3>
                 <span className="text-[9px] font-bold px-1.5 py-0.5 bg-green-500 text-white rounded uppercase">Live</span>
               </div>
-              <div className="p-0 text-xs h-[40vh] overflow-y-auto custom-scrollbar">
+              <div className="p-0 text-xs h-[45vh] overflow-y-auto custom-scrollbar">
                 <DynamicDataTable
                   columns={uploadColumns}
                   data={finalTableData}

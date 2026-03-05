@@ -48,6 +48,8 @@ import BarcodeDelete from "../pages/TTS/Domostic/Dispatch/PDI/Barcode Delete/Bar
 import ApprovalForLoading from "../pages/TTS/Domostic/Dispatch/PDI/Approval For Loading/ApprovalForLoading";
 import FinalInspectionReport from "../pages/TTS/Domostic/Dispatch/PDI/Final Inspection Report/FinalInspectionReport";
 import ProformaPDFViewer from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPDFViewer";
+import ProformaList from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaList";
+import Barcode from "../pages/Dashboard/Barcode";
 
 
 
@@ -64,6 +66,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Home /> },
           { path: "Dashboard", element: <Dashboard /> },
+          { path: "Barcode", element: <Barcode /> },
           {
             path: "Masters",
             element: <MasterLayout />,
@@ -157,7 +160,48 @@ export const router = createBrowserRouter([
               { path: "Invoice/Customer/BillPDF", element: <InvoicePDF /> },
               { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind /> },
               { path: "Invoice/Export/Sample", element: <SampleSplit /> },
+              { path: "Invoice/ProformaInvoice/List", element: <ProformaList /> },
               { path: "Invoice/ProformaInvoice/PDF", element: <ProformaPDFViewer /> },
+              {
+                path: "Dispatch/PDI/Inspection/:plant/:custType",
+                element: <PDIMaster />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="ScanForInspection" />
+                  },
+                  {
+                    path: "ScanForInspection",
+                    element: <PDIScanForInspection />
+                  },
+                  {
+                    path: "InspectionInComplete",
+                    element: <InspectionInComplete />
+                  },
+                  {
+                    path: "LoadingCheck",
+                    element: <LoadingCheck />
+                  },
+                  {
+                    path: "BarcodeDelete",
+                    element: <BarcodeDelete />
+                  },
+                  {
+                    path: "ApprovalForLoading",
+                    element: <ApprovalForLoading />
+                  },
+                  {
+                    path: "FinalInspectionReport",
+                    element: <FinalInspectionReport />
+                  }
+                ]
+              },
+              {
+                path: "Dispatch/PDI/Inspection/ScanForInspection/Details",
+                element: <ScanForInspectionDetails />
+              },
+              { path: "Dispatch/PPC/Substitution/:plant", element: <PPCMaster /> },
+              { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
             ],
           },
           {

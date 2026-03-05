@@ -13,6 +13,8 @@ function PDIHeader() {
   const { plant, custType } = useParams();
 
   const { menus, roles } = useSelector(state => state.auth);
+  console.log(menus);
+  
   const { search } = useSelector(state => state.PDIDispatchMaster);
 
   const hasPermission = (menus, requiredMenuNameOrUrl) => {
@@ -26,8 +28,8 @@ function PDIHeader() {
       menu.MenuUrl?.toLowerCase().trim() === normalized
     );
   };
-
-  const basePath = `/TTS/Domestic/Dispatch/PDI/Inspection/${plant}/${custType}`;
+  const type = custType === "Domestic" ? "Domestic" : "International";
+  const basePath = `/TTS/${type}/Dispatch/PDI/Inspection/${plant}/${custType}`;
 
   const allTabs = [
     {
@@ -69,7 +71,7 @@ function PDIHeader() {
   ];
 
   const visibleTabs = allTabs.filter(tab =>
-    hasPermission(menus, tab.permissionKey)
+    hasPermission(menus, tab.path)
   );
 
   return (

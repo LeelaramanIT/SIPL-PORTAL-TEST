@@ -6,9 +6,7 @@ const ProtectedPage = () => {
   const location = useLocation();
 
   const handleGoBack = () => {
-    const fallbackPath = '/'; // Default fallback path
-    const backPath = location.state?.from?.pathname || fallbackPath;
-    navigate(backPath, { replace: true });
+    navigate(-1);
   };
 
   return (

@@ -39,6 +39,7 @@ import { MdOutlineContactEmergency } from "react-icons/md";
 import { MdOutlinePriceChange } from "react-icons/md";
 import { MdOutlineQrCodeScanner } from "react-icons/md";
 import { FcInspection } from "react-icons/fc";
+import { CiBarcode } from "react-icons/ci";
 
 
 const { Sider } = Layout;
@@ -74,6 +75,7 @@ const SideBar = () => {
   const menuItems = [
     { key: "/", icon: <IoHome />, label: "Home" },
     { key: "/Dashboard", icon: <RxDashboard />, label: "Dashboard" },
+    { key: "/Barcode", icon: <CiBarcode />, label: "Barcode" },
     {
       key: "TTS",
       icon: <SiAwsorganizations />,
@@ -169,7 +171,7 @@ const SideBar = () => {
                   label: "Custom",
                 },
                 {
-                  key: "/TTS/International/Invoice/ProformaInvoice/PDF",
+                  key: "/TTS/International/Invoice/ProformaInvoice/List",
                   icon: <MdOutlineReceipt />,
                   label: "Proforma",
                 },
@@ -183,7 +185,7 @@ const SideBar = () => {
                 {
                   key: "/TTS/International/Dispatch/PDI/Inspection",
                   icon: <FcInspection />,
-                  label: "PDI Inspection",
+                  label: "PDI Inspection Export",
                   children: [
                     {
                       key: "/TTS/International/Dispatch/PDI/Inspection/MMN/Export",
@@ -366,6 +368,9 @@ const SideBar = () => {
   };
 
   const filteredMenu = user ? filterMenu(menuItems) : [];
+
+  console.log(filteredMenu);
+  
 
   // ✅ Navigation handler
   // ✅ Navigation handler
