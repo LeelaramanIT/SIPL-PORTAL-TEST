@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env
 web.config
+
+zebra-browser-print-js-v31250
