@@ -144,7 +144,7 @@ export const router = createBrowserRouter([
                 path: "Dispatch/PDI/Inspection/ScanForInspection/Details",
                 element: <ScanForInspectionDetails />
               },
-              { path: "Dispatch/PPC/Substitution/:plant", element: <PPCMaster /> },
+              { path: "Dispatch/PPC/Substitution/:plant/:custType", element: <PPCMaster /> },
               { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
             ],
           },
@@ -200,7 +200,7 @@ export const router = createBrowserRouter([
                 path: "Dispatch/PDI/Inspection/ScanForInspection/Details",
                 element: <ScanForInspectionDetails />
               },
-              { path: "Dispatch/PPC/Substitution/:plant", element: <PPCMaster /> },
+              { path: "Dispatch/PPC/Substitution/:plant/:custType", element: <PPCMaster /> },
               { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
             ],
           },

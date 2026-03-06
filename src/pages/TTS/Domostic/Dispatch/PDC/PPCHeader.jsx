@@ -4,22 +4,37 @@ import DialogBox from "../../../../../components/DialogBox";
 import SearchBar from "../../../../../components/SearchBar";
 import { setSearch } from "../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { FaSearch, FaClipboardCheck, FaTruck, FaBarcode, FaThumbsUp, FaFileAlt, FaExchangeAlt } from "react-icons/fa"; // Import the icons you need
+import {
+  FaSearch,
+  FaClipboardCheck,
+  FaTruck,
+  FaBarcode,
+  FaThumbsUp,
+  FaFileAlt,
+  FaExchangeAlt,
+} from "react-icons/fa"; // Import the icons you need
 import { handleCustType } from "../../../../../Redux/Slices/PPCSubstitutionMaster/PPCSubstitutionSlice";
 
-
-export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMode }) {
+export default function PPCHeader({
+  mode,
+  setMode,
+  plant,
+  sheetMode,
+  setSheetMode,
+}) {
   const [dialogConfig, setDialogConfig] = useState({
     title: "",
     message: "",
-    onConfirm: () => { },
+    onConfirm: () => {},
   });
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const [isOpen, setOpen] = useState(false);
-  const reduxSearch = useSelector(state => state.scanforinspection?.search || "");
-  const { custType } = useSelector(state => state.PPCSubstitution || "");
+  const reduxSearch = useSelector(
+    (state) => state.scanforinspection?.search || "",
+  );
+  const { custType } = useSelector((state) => state.PPCSubstitution || "");
   const [localSearch, setLocalSearch] = useState(reduxSearch);
-  const { menus, roles } = useSelector(state => state.auth);
+  const { menus, roles } = useSelector((state) => state.auth);
 
   const hasPermission = (menus, requiredMenuNameOrUrl) => {
     if (roles?.toLowerCase() === "admin") return true;
@@ -28,9 +43,10 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
 
     const normalized = requiredMenuNameOrUrl.toLowerCase().trim();
 
-    return menus.some(menu =>
-      menu.MenuName?.toLowerCase().trim() === normalized ||
-      menu.MenuUrl?.toLowerCase().trim() === normalized
+    return menus.some(
+      (menu) =>
+        menu.MenuName?.toLowerCase().trim() === normalized ||
+        menu.MenuUrl?.toLowerCase().trim() === normalized,
     );
   };
   useEffect(() => {
@@ -60,8 +76,8 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
       id: "substitutiondetails",
       label: "Substitution Page",
       permissionKey: "PPC Substitution Details",
-      icon: <FaExchangeAlt />
-    }
+      icon: <FaExchangeAlt />,
+    },
     // {
     //   id: "inspectionincomplite",
     //   label: "Inspection In Complete",
@@ -94,8 +110,8 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
     // },
   ];
   // Filter tabs user is allowed to see
-  const visibleTabs = allTabs.filter(tab =>
-    hasPermission(menus, tab.permissionKey)
+  const visibleTabs = allTabs.filter((tab) =>
+    hasPermission(menus, tab.permissionKey),
   );
 
   return (
@@ -120,23 +136,22 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
-              <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
-  <button
-    type="button"
-    onClick={() => dispatch(handleCustType("Domestic"))}
-    className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-all duration-300 transform ${custType === "Domestic" ? "bg-[var(--primary)] text-[var(--text)] dark:text-blue-400 scale-105 shadow-lg" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:scale-105"}`}
-  >
-    Domestic
-  </button>
-  <button
-    type="button"
-    onClick={() => dispatch(handleCustType("Export"))}
-    className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-all duration-300 transform ${custType === "Export" ? "bg-[var(--primary)] text-[var(--text)] dark:text-blue-400 scale-105 shadow-lg" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:scale-105"}`}
-  >
-    Export
-  </button>
-</div>
-
+              {/* <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex items-center relative">
+                <button
+                  type="button"
+                  onClick={() => dispatch(handleCustType("Domestic"))}
+                  className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-all duration-300 transform ${custType === "Domestic" ? "bg-[var(--primary)] text-[var(--text)] dark:text-blue-400 scale-105 shadow-lg" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:scale-105"}`}
+                >
+                  Domestic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => dispatch(handleCustType("Export"))}
+                  className={`relative z-10 w-1/2 text-[0.8rem] font-medium py-1.5 rounded-md transition-all duration-300 transform ${custType === "Export" ? "bg-[var(--primary)] text-[var(--text)] dark:text-blue-400 scale-105 shadow-lg" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:scale-105"}`}
+                >
+                  Export
+                </button>
+              </div> */}
             </div>
 
             {mode === "substitutiondetails" && visibleSheetTabs.length > 0 && (
@@ -146,7 +161,7 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
                   className="absolute h-[calc(100%-8px)] top-1 rounded-md bg-white dark:bg-slate-600 shadow-sm transition-all duration-200 ease-in-out"
                   style={{
                     width: `${100 / visibleSheetTabs.length}%`,
-                    left: `calc(${visibleSheetTabs.indexOf(sheetMode) * (100 / visibleSheetTabs.length)}% + 4px)`
+                    left: `calc(${visibleSheetTabs.indexOf(sheetMode) * (100 / visibleSheetTabs.length)}% + 4px)`,
                   }}
                 />
 
@@ -156,9 +171,11 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
                     type="button"
                     onClick={() => setSheetMode(tab)}
                     className={`relative z-10 flex-1 text-[0.8rem] font-medium py-1.5 rounded-md transition-colors duration-200
-          ${sheetMode === tab
-                        ? "text-[var(--primary)] dark:text-blue-400"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
+          ${
+            sheetMode === tab
+              ? "text-[var(--primary)] dark:text-blue-400"
+              : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+          }`}
                   >
                     {tab === "tyres" && "Tyres"}
                     {tab === "splitRims" && "Split Rims"}
@@ -167,7 +184,6 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
                 ))}
               </div>
             )}
-
           </div>
         )}
       </div>
@@ -179,11 +195,12 @@ export default function PPCHeader({ mode, setMode, plant, sheetMode, setSheetMod
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => dispatch(setMode(tab.id))}  // ← using internal id
-              className={`pb-3 text-[0.7rem] font-medium relative cursor-pointer transition-colors ${mode === tab.id
-                ? "text-[var(--primary)]"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}
+              onClick={() => dispatch(setMode(tab.id))} // ← using internal id
+              className={`pb-3 text-[0.7rem] font-medium relative cursor-pointer transition-colors ${
+                mode === tab.id
+                  ? "text-[var(--primary)]"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
             >
               <span className="flex items-center gap-2">
                 {tab.icon} {/* Icon for the tab */}

@@ -9,17 +9,18 @@ import { getListOfSubstitutionData } from '../../../../../../Redux/Slices/PPCSub
 
 const PPCSubstitution = ({sheetMode}) => {
     const dispatch = useDispatch()
-    const { listOfSubstitutionData ,custType, search} = useSelector(state => state.PPCSubstitution)
+    const { listOfSubstitutionData, search} = useSelector(state => state.PPCSubstitution)
 
     const { loading, mode } = useSelector(state => state.PPCMaster)
     const [visibleRows, setVisibleRows] = useState(50);
-    const { plant } = useParams()
+    const { plant,custType} = useParams()
     const navigate = useNavigate();
 
     useEffect(() => {
         setVisibleRows(50);
     }, [search,sheetMode]);
-
+ 
+    
     const onActionClick = (row) => {
         navigate("/TTS/Domestic/Dispatch/PPC/Substitution/Details",{state:row})
     };

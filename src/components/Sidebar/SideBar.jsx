@@ -125,22 +125,22 @@ const SideBar = () => {
                   label: "PPC Substitution",
                   children: [
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/MMN",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/MMN/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "MMN PPC Substitution",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/PDK",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/PDK/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "PDK PPC Substitution",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SITL",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SITL/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SITL PPC Substitution",
                     },
                     {
-                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SLTL",
+                      key: "/TTS/Domestic/Dispatch/PPC/Substitution/SLTL/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PPC Substitution",
                     }
@@ -216,22 +216,22 @@ const SideBar = () => {
                   label: "PPC Substitution",
                   children: [
                     {
-                      key: "/TTS/International/Dispatch/PPC/Substitution/MMN",
+                      key: "/TTS/International/Dispatch/PPC/Substitution/MMN/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "MMN PPC Substitution",
                     },
                     {
-                      key: "/TTS/International/Dispatch/PPC/Substitution/PDK",
+                      key: "/TTS/International/Dispatch/PPC/Substitution/PDK/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "PDK PPC Substitution",
                     },
                     {
-                      key: "/TTS/International/Dispatch/PPC/Substitution/SITL",
+                      key: "/TTS/International/Dispatch/PPC/Substitution/SITL/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SITL PPC Substitution",
                     },
                     {
-                      key: "/TTS/International/Dispatch/PPC/Substitution/SLTL",
+                      key: "/TTS/International/Dispatch/PPC/Substitution/SLTL/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PPC Substitution",
                     }
