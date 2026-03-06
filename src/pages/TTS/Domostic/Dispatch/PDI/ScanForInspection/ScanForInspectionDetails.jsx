@@ -42,6 +42,8 @@ const ScanForInspectionDetails = () => {
             (item.o_ItemID?.toString().includes(term))
         );
     }, [localSearch, InspectionDetails])
+    console.log(items);
+    
 
     useEffect(() => {
         if (location.state) {
@@ -94,6 +96,8 @@ const ScanForInspectionDetails = () => {
         { header: "TYRE SIZE", accessor: "tyreSize", width: "1fr", align: "center" },
         { header: "RIM", accessor: "rimSize", width: "1fr", align: "center" },
         { header: "TYPE", accessor: "tyreType", width: "1fr", align: "center" },
+        { header: "BRAND", accessor: "brand", width: "1fr", align: "center" },
+        { header: "sidewall", accessor: "sidewall", width: "1fr", align: "center" },
         { header: "TOTAL QTY", accessor: "totalItemQty", width: "1fr", align: "center" },
         {
             header: "SCANNED QTY",
@@ -260,9 +264,9 @@ const ScanForInspectionDetails = () => {
 
                                 {/* Controls Wrapper */}
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full xl:w-auto">
-                                    <button className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all">
+                                    {/* <button className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all">
                                         <SlReload className="w-3 h-3 mr-2" /> Download Stencil
-                                    </button>
+                                    </button> */}
                                     <div className="w-full sm:w-64">
                                         <SearchBar
                                             onChange={(e) => setLocalSearch(e.target.value)}

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react"; 
+import { ChevronRight } from "lucide-react";
 
 export function DynamicDataTable({
   columns = [],
@@ -41,7 +41,7 @@ export function DynamicDataTable({
 
   return (
     <div className="flex flex-col w-full h-full min-h-[400px] border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 shadow-sm overflow-hidden">
-      
+
       {/* --- DESKTOP TABLE VIEW --- */}
       <div className="hidden md:flex flex-1 overflow-x-auto custom-scrollbar">
         <div className="min-w-[1000px] lg:min-w-full flex flex-col h-full">
@@ -54,9 +54,8 @@ export function DynamicDataTable({
               <div
                 key={idx}
                 title={col.title || col.header}
-                className={`truncate cursor-help ${
-                  col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                }`}
+                className={`truncate cursor-help ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                  }`}
               >
                 {col.header}
               </div>
@@ -86,9 +85,8 @@ export function DynamicDataTable({
                       exit="exit"
                       transition={{ duration: 0.2 }}
                       whileHover={{ y: -1, scale: 1.001 }}
-                      className={`grid gap-4 px-4 py-3 items-center rounded-lg border transition-all shadow-sm hover:shadow-md ${
-                        rowClassName ? rowClassName(row) : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900"
-                      }`}
+                      className={`grid gap-4 px-4 py-3 items-center rounded-lg border transition-all shadow-sm hover:shadow-md ${rowClassName ? rowClassName(row) : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900"
+                        }`}
                       style={{ gridTemplateColumns: gridTemplate }}
                     >
                       {columns.map((col, colIndex) => {
@@ -96,9 +94,8 @@ export function DynamicDataTable({
                         return (
                           <div
                             key={colIndex}
-                            className={`text-[0.8rem] text-slate-700 dark:text-slate-300 font-medium truncate ${
-                              col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
-                            }`}
+                            className={`text-[0.7rem] text-slate-700 dark:text-slate-300 font-medium break-all ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
+                              }`}
                           >
                             {col.render ? col.render(value, row) : value ?? "-"}
                           </div>
@@ -147,8 +144,8 @@ export function DynamicDataTable({
                         {columns[0]?.header}
                       </span>
                       <div className="text-base font-semibold text-slate-900 dark:text-white leading-tight">
-                        {columns[0]?.render 
-                          ? columns[0].render(row[columns[0].accessor], row) 
+                        {columns[0]?.render
+                          ? columns[0].render(row[columns[0].accessor], row)
                           : row[columns[0].accessor] ?? "-"}
                       </div>
                     </div>
