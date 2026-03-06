@@ -67,6 +67,8 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
             workorderno: data.workorderno || "string",
             orderQty: data.orderQty || 0,
             orderrefno: data.orderrefno || "string",
+            treadHard: selections.hardnessTread || 0,
+            baseHard: selections.hardnessBase || 0,
         };
 
         onConfirm(payload);
