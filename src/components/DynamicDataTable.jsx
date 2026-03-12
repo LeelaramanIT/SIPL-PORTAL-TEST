@@ -54,7 +54,7 @@ export function DynamicDataTable({
               <div
                 key={idx}
                 title={col.title || col.header}
-                className={`truncate cursor-help ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                className={`whitespace-normal break-words leading-tight ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                   }`}
               >
                 {col.header}

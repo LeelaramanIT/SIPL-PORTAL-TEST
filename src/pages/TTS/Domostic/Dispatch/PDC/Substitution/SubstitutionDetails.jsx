@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { getSubstitutionDetails, resetSelectedData, setSelectedData } from '../../../../../../Redux/Slices/PPCSubstitutionMaster/PPCSubstitutionSlice'
@@ -23,16 +23,37 @@ const SubstitutionDetails = () => {
     const { SubstitutionDetails, selectedData } = useSelector(state => state.PPCSubstitution)
     const [scanInput, setScanInput] = useState('')
     const { loading } = useSelector(state => state.PPCMaster)
+    const { RoleID } = useSelector(state => state.auth)
     const [open, setOpen] = useState(false)
     const [openStencil, setOpenStencil] = useState(false)
     const [stencilDetails, setStencilDetails] = useState(null)
+    const inputRef = useRef(null)
 
+    console.log(RoleID, "user......");
 
     const fadeUp = {
         hidden: { opacity: 0, y: 15 },
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
     }
+
     console.log(SubstitutionDetails);
+
+    useEffect(() => {
+        inputRef.current?.focus()
+    }, [])
+
+    useEffect(() => {
+        if (!open) {
+            setTimeout(() => {
+                inputRef.current?.focus()
+            }, 200)
+        }
+        if (!openStencil) {
+            setTimeout(() => {
+                inputRef.current?.focus()
+            }, 200) 
+        }
+    }, [open, openStencil])
 
     const items = useMemo(() => {
         if (!SubstitutionDetails?.items) return []
@@ -95,8 +116,6 @@ const SubstitutionDetails = () => {
         }
     }
 
-
-
     const columns = [
         { header: "Process ID", accessor: "processID", width: "1.5fr", align: "center", title: 'process ID' },
         { header: "PLATFORM", accessor: "config", width: "1.3fr", align: "center", title: 'PLATFORM' },
@@ -138,8 +157,6 @@ const SubstitutionDetails = () => {
     const subQty = SubstitutionDetails?.items.reduce((acc, item) => acc + (item.substitutionQty || 0), 0)
     const percentage =
         totalQty > 0 ? (subQty / totalQty) * 100 : 0;
-
-
 
     return (
         <div className="min-h-[calc(100vh-62px)] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -246,14 +263,12 @@ const SubstitutionDetails = () => {
                             <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/60 rounded-bl-lg" />
                             {/* Bottom Right */}
                             <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/60 rounded-br-lg" />
-
                             {/* --- Animated Scanning Laser Line --- */}
                             <motion.div
                                 animate={{ top: ['10%', '90%', '10%'] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                                 className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-400 to-transparent shadow-[0_0_8px_rgba(248,113,113,0.8)] z-0 opacity-50"
                             />
-
                             <div className="relative z-10 px-3 py-2">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -267,16 +282,18 @@ const SubstitutionDetails = () => {
 
                                 <div className="relative">
                                     <input
+                                        ref={inputRef}
                                         type="text"
                                         value={scanInput}
                                         onChange={(e) => setScanInput(e.target.value)}
                                         onKeyDown={handleScan}
                                         placeholder="Align barcode and scan..."
                                         className="w-full bg-black/20 border border-white/30 rounded-xl py-3 px-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all backdrop-blur-md"
-                                        autoFocus
+                                    // disabled={RoleID === 1 ? false : true}
                                     />
+
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                        <kbd className="hidden sm:inline-block px-2 py-1 bg-white/20 rounded text-[10px] border border-white/30 font-sans opacity-80">
+                                        <kbd onKeyDown={handleScan} className="hidden cursor-pointer sm:inline-block px-2 py-1 bg-white/20 rounded text-[10px] border border-white/30 font-sans opacity-80">
                                             ENTER
                                         </kbd>
                                     </div>
@@ -416,6 +433,7 @@ const DetailItem = ({ icon, label, value, loading = false }) => {
         </div>
     );
 };
+
 const ScanProgressLoading = () => (
     <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800 animate-pulse">
         {/* Text Section Skeleton */}
@@ -431,9 +449,7 @@ const ScanProgressLoading = () => (
     </div>
 );
 
-
 export default SubstitutionDetails
-
 
 /* Helper Sub-component */
 const InfoBlock = ({ label, value }) => (

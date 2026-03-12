@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { getCustomerDetails, PDICheckBarcode, resetBarcodeDetails, SubmitInspection } from '../../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice'
@@ -21,15 +21,26 @@ const ScanForInspectionDetails = () => {
     const [localSearch, setLocalSearch] = useState("");
     const { InspectionDetails, barcodeDetails } = useSelector(state => state.scanforinspection)
     const { loading } = useSelector(state => state.PDIDispatchMaster)
+    const { user } = useSelector(state => state.auth)
     const [scanInput, setScanInput] = useState('')
     const [error, setError] = useState('')
     const [open, setOpen] = useState(false)
+    const inputRef = useRef(null)
 
     const fadeUp = {
         hidden: { opacity: 0, y: 15 },
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
     }
-
+    useEffect(() => {
+        inputRef.current?.focus()
+    }, [])
+    useEffect(() => {
+        if (!open) {
+            setTimeout(() => {
+                inputRef.current?.focus()
+            }, 200)
+        }
+    }, [open])
     const items = useMemo(() => {
         if (!InspectionDetails?.items) return []
         const term = localSearch.toLowerCase()
@@ -43,7 +54,7 @@ const ScanForInspectionDetails = () => {
         );
     }, [localSearch, InspectionDetails])
     console.log(items);
-    
+
 
     useEffect(() => {
         if (location.state) {
@@ -92,11 +103,11 @@ const ScanForInspectionDetails = () => {
     const percentage = totalQty > 0 ? (scanedQty / totalQty) * 100 : 0;
 
     const columns = [
-        { header: "PLATFORM", accessor: "config", width: "1fr", align: "center" },
-        { header: "TYRE SIZE", accessor: "tyreSize", width: "1fr", align: "center" },
-        { header: "RIM", accessor: "rimSize", width: "1fr", align: "center" },
-        { header: "TYPE", accessor: "tyreType", width: "1fr", align: "center" },
-        { header: "BRAND", accessor: "brand", width: "1fr", align: "center" },
+        { header: "PLATFORM", accessor: "config", width: "0.8fr", align: "center" },
+        { header: "TYRE SIZE", accessor: "tyreSize", width: "1.2fr", align: "left" },
+        { header: "RIM", accessor: "rimSize", width: "0.5fr", align: "center" },
+        { header: "TYPE", accessor: "tyreType", width: "0.5fr", align: "center" },
+        { header: "BRAND", accessor: "brand", width: "1fr", align: "left" },
         { header: "sidewall", accessor: "sidewall", width: "1fr", align: "center" },
         { header: "TOTAL QTY", accessor: "totalItemQty", width: "1fr", align: "center" },
         {
@@ -150,7 +161,7 @@ const ScanForInspectionDetails = () => {
                     </div>
 
                     {loading ? (<ScanProgressLoading />) : (
-                        <div className="flex items-center justify-between sm:justify-end gap-3 bg-[var(--primary)]/10 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                        <div className="flex items-center justify-between sm:justify-end gap-6 bg-[var(--primary)]/10 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800/30">
                             <div className="text-left sm:text-right">
                                 <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--primary)]">Scan Progress</p>
                                 <p className="text-sm font-semibold">{scanedQty || 0} / {totalQty || 0} Units</p>
@@ -216,6 +227,7 @@ const ScanForInspectionDetails = () => {
 
                                 <div className="relative">
                                     <input
+                                        ref={inputRef}
                                         type="text"
                                         maxLength={19}
                                         value={scanInput}
@@ -223,7 +235,6 @@ const ScanForInspectionDetails = () => {
                                         onKeyDown={handleScan}
                                         placeholder="Scan barcode..."
                                         className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                                        autoFocus
                                     />
                                 </div>
                                 <p className="text-[10px] text-white/70 mt-3 flex items-center gap-1.5 italic">
@@ -265,8 +276,8 @@ const ScanForInspectionDetails = () => {
                                 {/* Controls Wrapper */}
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full xl:w-auto">
                                     {/* <button className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all">
-                                        <SlReload className="w-3 h-3 mr-2" /> Download Stencil
-                                    </button> */}
+                                            <SlReload className="w-3 h-3 mr-2" /> Download Stencil
+                                        </button> */}
                                     <div className="w-full sm:w-64">
                                         <SearchBar
                                             onChange={(e) => setLocalSearch(e.target.value)}
@@ -277,7 +288,7 @@ const ScanForInspectionDetails = () => {
                             </div>
 
                             {/* Table Container */}
-                            <div className="h-[400px] lg:h-[500px] w-full">
+                            <div className="h-[400px] lg:min-h-[calc(100vh-300px)] w-full">
                                 <DynamicDataTable
                                     columns={columns}
                                     data={items}
@@ -289,7 +300,7 @@ const ScanForInspectionDetails = () => {
                     </motion.div>
                 </div>
             </div>
-            
+
             <VerificationSider
                 isOpen={open}
                 onClose={() => setOpen(false)}

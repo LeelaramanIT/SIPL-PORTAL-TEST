@@ -17,7 +17,7 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
         {
             header: "Stencil Number",
             accessor: "stencilNo",
-            width: "2fr",
+            width: "1fr",
             align: "center",
             render: (value) => (
                 <div className="flex items-center justify-center gap-2">
@@ -27,9 +27,45 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
             )
         },
         {
+            header: "Category",
+            accessor: "category",
+            width: "0.7fr",
+            align: "center",
+        },
+        {
+            header: "Config",
+            accessor: "config",
+            width: "0.5fr",
+            align: "center",
+        },
+        {
+            header: "Tyre Size",
+            accessor: "tyreSize",
+            width: "1fr",
+            align: "center",
+        },
+        {
+            header: "Rim",
+            accessor: "tyreRim",
+            width: "0.5fr",
+            align: "center",
+        },
+        {
+            header: "Brand",
+            accessor: "brand",
+            width: "1fr",
+            align: "center",
+        },
+        {
+            header: "Sidewall",
+            accessor: "sidewall",
+            width: "1fr",
+            align: "center",
+        },
+        {
             header: "Process ID",
             accessor: "stencilProcessID",
-            width: "2fr",
+            width: "1fr",
             align: "center",
         },
         {
@@ -56,6 +92,13 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
             // Prepare the data for Excel
             const reportData = stencilList.map((item) => ({
                 "Stencil Number": item.stencilNo,
+                "Category": item.category,
+                "Config": item.config,
+                "Tyre Size": item.tyreSize,
+                "Rim": item.tyreRim,
+                "Brand": item.brand,
+                "Sidewall": item.sidewall,
+                "Process ID": item.stencilProcessID,
                 "Status": String(item.substitutionstatus) === "true" ? "Verified" : "Waiting",
                 "Customer": data?.customerName || "N/A",
                 "Order Reference": data?.orderReference || "N/A",
@@ -90,7 +133,7 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        // onClick={onClose}
                         className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[999]"
                     />
 
@@ -100,7 +143,7 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: '100%', opacity: 0.5 }}
                         transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-                        className="fixed right-0 top-0 h-full w-full sm:w-[580px] bg-slate-50 dark:bg-[#0b1120] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] z-[1000] flex flex-col border-l border-slate-200 dark:border-slate-800"
+                        className="fixed right-0 top-0 h-full w-full sm:w-[1000px] bg-slate-50 dark:bg-[#0b1120] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] z-[1000] flex flex-col border-l border-slate-200 dark:border-slate-800"
                     >
                         {/* Modern Header Section */}
                         <div className="relative p-8 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
@@ -123,7 +166,7 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
                                     whileHover={{ rotate: 90, scale: 1.1, backgroundColor: '#f1f5f9' }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onClose}
-                                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-400 border border-slate-100 dark:border-slate-800 transition-colors"
+                                    className="p-2.5 rounded-xl cursor-pointer bg-slate-50 dark:bg-slate-900 text-slate-400 border border-slate-100 dark:border-slate-800 transition-colors"
                                 >
                                     <X size={20} />
                                 </motion.button>
