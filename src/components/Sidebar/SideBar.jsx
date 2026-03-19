@@ -10,7 +10,7 @@ import {
   GoSidebarExpand,
 } from "react-icons/go";
 import { RxDashboard } from "react-icons/rx";
-import { MdOutlineManageAccounts, MdOutlineReceipt } from "react-icons/md";
+import { MdOutlineManageAccounts, MdOutlineReceipt, MdTireRepair } from "react-icons/md";
 import { SiAwsorganizations, SiGoogledocs } from "react-icons/si";
 import {
   BsFillClipboard2DataFill,
@@ -22,6 +22,7 @@ import {
   FaHome,
   FaFileInvoiceDollar,
   FaTruck,
+  FaExchangeAlt,
 } from "react-icons/fa";
 import { TfiBarChartAlt } from "react-icons/tfi";
 import { VscCalendar, VscGraphLine } from "react-icons/vsc";
@@ -211,8 +212,36 @@ const SideBar = () => {
 
                 },
                 {
+                   key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment",
+                  icon: <MdTireRepair />,
+                  label: "Rim & Tyre Fitment",
+                  children: [
+                    {
+                      key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment/MMN/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "MMN Rim & Tyre Fitment",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment/PDK/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "PDK Rim & Tyre Fitment",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment/SITL/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SITL Rim & Tyre Fitment",
+                    },
+                    {
+                      key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment/SLTL/Export",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "SLTL Rim & Tyre Fitment",
+                    }
+                  ]
+                },
+              
+                {
                   key: "/TTS/International/Dispatch/Substution",
-                  icon: <FcInspection />,
+                  icon: <FaExchangeAlt  />,
                   label: "PPC Substitution",
                   children: [
                     {
@@ -368,9 +397,6 @@ const SideBar = () => {
   };
 
   const filteredMenu = user ? filterMenu(menuItems) : [];
-
-  console.log(filteredMenu);
-  
 
   // ✅ Navigation handler
   // ✅ Navigation handler

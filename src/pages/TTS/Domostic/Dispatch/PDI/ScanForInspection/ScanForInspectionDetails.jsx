@@ -7,12 +7,16 @@ import { ArrowLeft, ClipboardList, Package, ScanLine, } from 'lucide-react'
 import { DynamicDataTable } from '../../../../../../components/DynamicDataTable'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AiOutlineBarcode, AiOutlineCalendar, AiOutlineUser } from 'react-icons/ai'
-import { FaClipboardList } from 'react-icons/fa'
+import { FaClipboardList, FaList } from 'react-icons/fa'
 import { FiPackage } from 'react-icons/fi'
 import SearchBar from '../../../../../../components/SearchBar'
 import toast from 'react-hot-toast'
 import { VerificationSider } from './BarcodeSlider'
 import { SlReload } from 'react-icons/sl'
+import { BsUpcScan } from 'react-icons/bs'
+import { HiOutlineViewList } from 'react-icons/hi'
+import { IoMdClose } from 'react-icons/io'
+import BarcodeDetailList from './BarcodeDetailList'
 
 const ScanForInspectionDetails = () => {
     const location = useLocation()
@@ -26,14 +30,20 @@ const ScanForInspectionDetails = () => {
     const [error, setError] = useState('')
     const [open, setOpen] = useState(false)
     const inputRef = useRef(null)
+    const [showDetailsForm, setShowDetailsForm] = useState(false)
 
     const fadeUp = {
         hidden: { opacity: 0, y: 15 },
         show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
     }
+    const handleCloseForm = () => {
+        setShowDetailsForm(false);
+    };
+
     useEffect(() => {
         inputRef.current?.focus()
     }, [])
+
     useEffect(() => {
         if (!open) {
             setTimeout(() => {
@@ -41,6 +51,7 @@ const ScanForInspectionDetails = () => {
             }, 200)
         }
     }, [open])
+
     const items = useMemo(() => {
         if (!InspectionDetails?.items) return []
         const term = localSearch.toLowerCase()
@@ -125,6 +136,11 @@ const ScanForInspectionDetails = () => {
         dispatch(SubmitInspection(payload));
         setOpen(false);
     };
+
+    const handleBarcodeOpen = () => {
+        console.log("kaja");
+        setShowDetailsForm(true);
+    }
 
     return (
         <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -275,9 +291,9 @@ const ScanForInspectionDetails = () => {
 
                                 {/* Controls Wrapper */}
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full xl:w-auto">
-                                    {/* <button className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all">
-                                            <SlReload className="w-3 h-3 mr-2" /> Download Stencil
-                                        </button> */}
+                                    <button onClick={handleBarcodeOpen} className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all">
+                                        <HiOutlineViewList className="w-3 h-3 mr-2" /> View Barcode List
+                                    </button>
                                     <div className="w-full sm:w-64">
                                         <SearchBar
                                             onChange={(e) => setLocalSearch(e.target.value)}
@@ -307,6 +323,42 @@ const ScanForInspectionDetails = () => {
                 data={barcodeDetails}
                 onConfirm={handleConfirmation}
             />
+
+            <AnimatePresence>
+                {showDetailsForm && (
+                    <motion.div
+                        key="modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
+                    >
+                        <motion.div
+                            key="modal-content"
+                            initial={{ scale: 0.95, opacity: 0, y: 40 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 40 }}
+                            transition={{ duration: 0.1, ease: "easeIn" }}
+                            className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-xl w-full max-w-11/12 max-h-[50rem] overflow-y-auto border border-gray-300 dark:border-gray-700 custom-scrollbar"
+                        >
+                            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                                <ClipboardList className="text-[var(--primary)]" size={20} />
+                                Barcode List
+                            </h1>
+                            <button
+                                onClick={handleCloseForm}
+                                className="absolute top-5 right-5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white z-20"
+                            >
+                                <IoMdClose className="text-2xl" />
+                            </button>
+                            <BarcodeDetailList
+                                onClose={handleCloseForm}
+                                
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

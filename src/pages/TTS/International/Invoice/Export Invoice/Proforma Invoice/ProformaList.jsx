@@ -6,26 +6,23 @@ import Dropdown from "../../../../../../components/InputFields/DropDown";
 import gsap from "gsap";
 import DatePickerComponent from "../../../../../../components/DatePicker/DatePicker";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  getExportInvoice,
-  getExportInvoiceAll,
-  resetExportInvoiceDetails,
-} from "../../../../../../Redux/Slices/InvoiceSlice";
-// import TableSkeleton from "./TableSkeleton";
 import toast from "react-hot-toast";
+import { DynamicDataTable } from "../../../../../../components/DynamicDataTable";
+import { getListOfProformaInvoice, resetMaster } from "../../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
+import { getCurrencySymble } from "../../../../../../utils/currencies";
+import Button from "../../../../../../components/InputFields/Button";
 
 const ProformaList = () => {
   const navigate = useNavigate();
-  const { state } = useLocation()
+  const { state } = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumn, setSelectedColumn] = useState("all");
   const [startDate, setStartDate] = useState(new Date());
+  const [mode, setMode] = useState('Proforma')
 
   const dispatch = useDispatch();
 
   const animateRef = useRef([]);
-
-  const loading = useSelector((state) => state.invoice.exportInvoices.loading);
 
   useLayoutEffect(() => {
     gsap.fromTo(
@@ -36,11 +33,11 @@ const ProformaList = () => {
   }, []);
 
   useEffect(() => {
-    if (state) {
-    dispatch(resetExportInvoiceDetails())
-    dispatch(getExportInvoiceAll(state));
+    if (mode === 'Proforma') {
+      dispatch(resetMaster())
+      dispatch(getListOfProformaInvoice('EXPORT'));
     }
-  }, [state]);
+  }, [mode]);
 
   const headers = [
     { label: "Customer", key: "custfullname" },
@@ -57,13 +54,13 @@ const ProformaList = () => {
 
   const handleDropdownSelect = (item) => {
     setSelectedColumn(item.key || "all");
-  }; 
+  };
 
-  const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
+  const tableData = useSelector((state) => state.proformaInvoice.listOfProformaInvoice);
 
-  const {menus} = useSelector((state)=> state.auth)
+  const { menus } = useSelector((state) => state.auth)
   console.log(tableData);
-  
+
 
   // const tableData = useMemo(() => generateTableData(5), []);
 
@@ -96,54 +93,65 @@ const ProformaList = () => {
   }, [searchQuery, tableData, selectedColumn, startDate]);
 
 
-
   const handleDateChange = (date) => {
     setStartDate(date);
   };
 
-const handleToggle = (value) => {
-  console.log("Selected:", value);
-
-  // Example user menu permissions (replace with actual data)
-  // const userMenus = [
-  //   { MenuName: "ExportCustomerInvoice", MenuUrl: "TTS/International/Invoice/CustomerInvoice" },
-  //   { MenuName: "ExportCustomInvoice", MenuUrl: "/TTS/International/Invoice/CustomInvoice" },
-  // ];
-
-  // Map toggle options to the required MenuName
-  const menuMap = {
-    Customer: "ExportCustomerInvoice",
-    Custom: "ExportCustomInvoice",
-  };
-
-  const requiredMenu = menuMap[value];
-  const hasAccess = menus.some((menu) => menu.MenuName === requiredMenu);
-
-  if (!hasAccess) {
-    toast.error(`You don’t have access to ${value} invoices.`);
-    return; // ⛔ stop navigation
-  }
 
 
-  const type = value === "Custom" ? "Custom" : "Customer";
-  if (type === 'Custom') {
-    navigate("/TTS/International/Invoice/CustomInvoice", { state: { type } });
-  }else {
-    navigate("/TTS/International/Invoice/CustomerInvoice", { state: { type } });
-  }
-};
+  const columns = [
+    { header: "Customer", width: '1fr', accessor: "custFullName", align: 'center' },
+    { header: "Order Ref No", width: '1fr', accessor: "orderRefNo", align: 'center' },
+    { header: "Order Date", width: '1fr', accessor: "completedDate", align: 'center' },
+    { header: "Desired Ship Date", width: '1fr', accessor: "desiredShipDate", align: 'center' },
+    { header: "Qty", width: '1fr', accessor: "directional", align: 'center' },
+    { header: "Total Weight", width: '1fr', accessor: "orderTotalWt", align: 'center' },
+    {
+      header: "Total Value",
+      width: "1fr",
+      accessor: "orderTotalValue",
+      align: "center",
+      render: (val, row) => (
+        <span className="font-bold text-blue-600 dark:text-blue-400">
+          {getCurrencySymble(row?.userCurrency)} {val || 0}
+        </span>
+      )
+    },
+    {
+      header: "user Currency", width: '1fr', accessor: "userCurrency", align: 'center',
+      render: (val) => <span className="font-bold text-blue-600 dark:text-blue-400">{val || 0}</span>
+    },
+    {
+      header: "Open",
+      width: "1fr",
+      accessor: "orderTotalValue",
+      align: "center",
+      render: (val, row) => (
+        <Button
+        text="Open"
+          className="bg-[var(--primary)] text-[var(--text)"
+          onClick={() => navigate(`/TTS/International/Invoice/ProformaInvoice/Prepare`, {
+            state: {
+              data: row
+            }
+          })}
+        >
+        </Button>
+      )
+    }
+  ];
 
   return (
     <div className="px-2 pt-3 max-w-full h-[calc(100vh-62px)] mx-auto flex flex-col ">
       <div className="bg-white pb-1 rounded-t-md">
-          <h1 className="ml-2 text-xl font-bold  tracking-tight">
-            {/* {invoiceDetails?.type} Invoice Details */}
-             Proforma Invoice
-          </h1>
-          <p className="ml-2 text-sm text-slate-500 mt-1">
-            View and Manage all Proforma Invoices
-          </p>
-        </div>
+        <h1 className="ml-2 text-xl font-bold  tracking-tight">
+          {/* {invoiceDetails?.type} Invoice Details */}
+          Proforma Invoice
+        </h1>
+        <p className="ml-2 text-sm text-slate-500 mt-1">
+          View and Manage all Proforma Invoices
+        </p>
+      </div>
 
       <div className="bg-white shadow-md px-2 py-2 rounded-b-lg border border-[var(--secondary)] dark:border-gray-700 dark:bg-gray-900 flex flex-col flex-grow" >
         <div
@@ -165,7 +173,7 @@ const handleToggle = (value) => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onSearch={() => { }}
                 />
-                </div>
+              </div>
               ) : (
                 <DatePickerComponent
                   startDate={startDate}
@@ -177,48 +185,7 @@ const handleToggle = (value) => {
           </div>
 
           <div className="w-full rounded-sm bg-[var(--background)] gap-5 flex flex-col flex-grow overflow-hidden">
-            {loading ? (
-              <TableSkeleton />
-            ) : (
-              // <ExportTable
-              //   headers={headers}
-              //   data={filteredData}
-              //   searchQuery={searchQuery}
-              //   highlightMatch={highlightMatch}
-              //   rowClassName={(row, index) => {
-              //     if (index === 0) return "rounded-l-xl";
-              //     if (index === row.length - 1) return "rounded-r-xl";
-              //     return "";
-              //   }}
-              //   renderAction={(row, index) => (
-              //     <button
-              //       // onClick={() => handleAction(row)}
-              //       onClick={() => {
-              //         if (state.type === 'Customer') {
-              //           navigate(
-              //             "/TTS/International/Invoice/CustomerInvoice/Prepare", {
-              //             state: state
-              //           }
-              //           );
-              //           dispatch(getExportInvoice({ ...row, ...state }));
-              //         }
-              //         if (state.type === 'Custom') {
-              //           navigate(
-              //             "/TTS/International/Invoice/CustomInvoice/Prepare", {
-              //             state: state
-              //           }
-              //           );
-              //           dispatch(getExportInvoice({ ...row, ...state }));
-              //         }
-              //       }}
-              //       className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-[var(--text)] px-4 py-1 rounded text-center"
-              //     >
-              //       Action
-              //     </button>
-              //   )}
-              // />
-              <></>
-            )}
+            <DynamicDataTable columns={columns} data={filteredData} headerClassName='bg-[var(--primary)]/60 text-[var(--text-color)] text-[10px] uppercase font-bold' />
           </div>
         </div>
       </div>

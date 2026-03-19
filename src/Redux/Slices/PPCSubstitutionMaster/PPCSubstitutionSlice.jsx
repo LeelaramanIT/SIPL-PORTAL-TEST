@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../utils/axios";
 import toast from "react-hot-toast";
 import { setLoading } from "../PPCSubstitutionMaster/PPCMaster";
+import ZplRenderer from "react-zpl-renderer";
 import axios from "axios";
 
 const initialState = {
@@ -11,6 +12,22 @@ const initialState = {
     SubstitutionDetails: null,
     custType: "Domestic",
     selectedData: null,
+};
+
+const printLabel = (zpl) => {
+
+  window.BrowserPrint.getDefaultDevice("printer", function(printer){
+
+    printer.send(zpl, function(){
+      console.log("Label Printed");
+    }, function(error){
+      console.error(error);
+    });
+
+  }, function(error){
+    console.error(error);
+  });
+
 };
 
 const substitutionSlice = createSlice({
@@ -70,9 +87,9 @@ const substitutionSlice = createSlice({
                 state.SubstitutionDetails.items.reduce(
                     (sum, item) => sum + item.substitutionQty,
                     0
-                );
-        }
+                );       
 
+        },
     },
 })
 
@@ -130,7 +147,14 @@ export const insertUpdateSubstitution = (payload) => async (dispatch) => {
 
         if (res.status === 200) {
             console.log("Substitution saved successfully:", res.data)
+            // 1.update 
             dispatch(updateSubstitutionDetails(res.data))
+            // 2.print
+            res.data.forEach(item => {
+                if (item.zpldata) {
+                    printLabel(item.zpldata);
+                }
+            });
             toast.success("Substitution saved successfully")
         }
 
@@ -143,5 +167,5 @@ export const insertUpdateSubstitution = (payload) => async (dispatch) => {
 }
 
 
-export const { setListOfSubstitutionData, setSearch, resetAll, setSubstitutionDetails, updateSubstitutionDetails, handleCustType, setSelectedData, resetSelectedData } = substitutionSlice.actions;
+export const { setListOfSubstitutionData, setSearch, resetAll, setSubstitutionDetails, updateSubstitutionDetails, handleCustType, setSelectedData, resetSelectedData, printBarcode } = substitutionSlice.actions;
 export default substitutionSlice.reducer;

@@ -50,6 +50,10 @@ import FinalInspectionReport from "../pages/TTS/Domostic/Dispatch/PDI/Final Insp
 import ProformaPDFViewer from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPDFViewer";
 import ProformaList from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaList";
 import Barcode from "../pages/Dashboard/Barcode";
+import TyreAndRimFitment from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/TyreAndRimFitment";
+import FitmentList from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentList";
+import FitmentMaster from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentMaster";
+import ProformaPrepare from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPrepare";
 
 
 
@@ -162,6 +166,7 @@ export const router = createBrowserRouter([
               { path: "Invoice/Export/Sample", element: <SampleSplit /> },
               { path: "Invoice/ProformaInvoice/List", element: <ProformaList /> },
               { path: "Invoice/ProformaInvoice/PDF", element: <ProformaPDFViewer /> },
+              { path: "Invoice/ProformaInvoice/Prepare", element: <ProformaPrepare /> },
               {
                 path: "Dispatch/PDI/Inspection/:plant/:custType",
                 element: <PDIMaster />,
@@ -202,6 +207,21 @@ export const router = createBrowserRouter([
               },
               { path: "Dispatch/PPC/Substitution/:plant/:custType", element: <PPCMaster /> },
               { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
+              {
+                path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType",
+                element: <FitmentMaster />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="List" replace />
+                  },
+                  {
+                    path: "List",
+                    element: <FitmentList />
+                  },
+                ]
+              },
+              { path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType/Details", element: <TyreAndRimFitment /> },
             ],
           },
           {

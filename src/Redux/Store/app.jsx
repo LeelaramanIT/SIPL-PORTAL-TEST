@@ -1,6 +1,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import globalReducer from "../Slices/GlobalSlice";
 import invoiceSlice from "../Slices/InvoiceSlice";
+import proformaInvoice from "../Slices/ProformaInvoice/ProformaInvoiceSlice";
 import authReducer from "../Slices/AuthSlice";
 import rimApplication from '../Slices/RimApplicationSlice'
 import priceMasterSliceReducer from "../Slices/PriceMasterSlice";
@@ -13,6 +14,8 @@ import PDIDispatchMasterReducer from "../Slices/PDIDispatchMaster/PDIMaster";
 import PPCMasterReducer from "../Slices/PPCSubstitutionMaster/PPCMaster";
 import PPCSubstitutionReducer from "../Slices/PPCSubstitutionMaster/PPCSubstitutionSlice";
 import AssemblyProcessIDReducer from "../Slices/Master/PI_Master/AssemblyProcessIDSlice";
+import PDIFitmentMasterReducer from "../Slices/PDIFitmentMaster/PPCMaster";
+import PDIFitmentReducer from "../Slices/PDIFitmentMaster/PDIFitmentSlice";
 import { version } from "react";
 
 // Encryption config
@@ -36,6 +39,13 @@ const invoicePersistConfig = {
   storage:storageSession,
   transforms: [encryptor],
 };
+
+const proformaInvoiceConfig = {
+  key : 'proformaInvoice',
+  version : 1,
+  storage : storageSession,
+  transforms : [encryptor]
+}
 
 const globalPersistConfig = {
   key: "global",
@@ -86,9 +96,21 @@ const AssemblyProcessIDPersistConfig = {
   transforms: [encryptor],
 };
 
+const PDIFitmentMasterPersistConfig = {
+  key: "PDIFitmentMaster",
+  version: 1,
+  storage: storageSession,
+}
+
+const PDIFitmentPersistConfig = {
+  key: "PDIFitment",
+  version: 1,
+  storage: storageSession,
+}
 
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
+const persistedProformaInvoiceReducer = persistReducer(proformaInvoiceConfig, proformaInvoice);
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedGlobalReducer = persistReducer(globalPersistConfig, globalReducer);
 const persistedPriceMasterReducer = persistReducer(priceMasterPersistConfig, priceMasterSliceReducer);
@@ -97,12 +119,14 @@ const persistedScanforlinspectionReducer = persistReducer(scanforlinspectionPers
 const persistedPPCMasterReducer = persistReducer(PPCMasterPersistConfig, PPCMasterReducer);
 const persistedPPCSubstitutionDetailsReducer = persistReducer(PPCSubstitutionDetailsPersistConfig, PPCSubstitutionReducer );
 const persistedAssemblyProcessIDReducer = persistReducer(AssemblyProcessIDPersistConfig, AssemblyProcessIDReducer);
-
+const persistedPDIFitmentMasterReducer = persistReducer(PDIFitmentMasterPersistConfig, PDIFitmentMasterReducer);
+const persistedPDIFitmentReducer = persistReducer(PDIFitmentPersistConfig, PDIFitmentReducer);
 
 // Root reducer
 const rootReducer = combineReducers({
   global: persistedGlobalReducer, 
   invoice: persistedInvoiceReducer,
+  proformaInvoice: persistedProformaInvoiceReducer,
   auth: persistedAuthReducer,
   rimApplication: rimApplication,
   priceMaster: persistedPriceMasterReducer,
@@ -111,6 +135,8 @@ const rootReducer = combineReducers({
   PPCMaster: persistedPPCMasterReducer,
   PPCSubstitution: persistedPPCSubstitutionDetailsReducer,
   AssemblyProcessID: persistedAssemblyProcessIDReducer,
+  PDIFitmentMaster: persistedPDIFitmentMasterReducer,
+  PDIFitment: persistedPDIFitmentReducer,
 });
 
 // Store setup

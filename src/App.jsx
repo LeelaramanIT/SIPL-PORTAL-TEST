@@ -4,11 +4,11 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./router/Router";
 import { Provider, useSelector } from "react-redux";
 import { persistor, store } from "./Redux/Store/app";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { PersistGate } from "redux-persist/integration/react";
 import ThemeSwitcher from "./components/ThemeSwitcher";
-import { useAxiosInterceptors } from "./utils/axios";
+
 
 // 🟢 Moved this to a child so useSelector is safe
 function ThemedApp() {
