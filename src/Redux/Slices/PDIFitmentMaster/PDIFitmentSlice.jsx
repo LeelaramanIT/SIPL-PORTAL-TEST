@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../utils/axios";
 import toast from "react-hot-toast";
 import { message } from "antd";
+import { printLabel } from "../../../utils/BarcodePrint";
 const initialState = {
   mode: "substitutiondetails",
   loading: false,
@@ -281,6 +282,7 @@ export const SubmitFitmentInspection = (payload, setViewMode) => async (dispatch
         }
         return item
       });
+      await printLabel(payload?.assemblyBarcode)
       dispatch(setFitmentDetails({
         ...FitmentDetails,
         items: updatedItems

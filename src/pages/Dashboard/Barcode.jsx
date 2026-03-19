@@ -34,15 +34,14 @@ const printLabel = () => {
 
 const zpl = `
 ^XA
-^FO35,30
+^FO65,30
 ^BY2
-^BCN,100,N,N,N
+^BCN,105,N,N,N
 ^FDP-193398C180607025A^FS
-
-^FO120,170
+ 
+^FO140,140
 ^A0N,30,30
 ^FDP-193398C180607025A^FS
-
 ^XZ
 `
   window.BrowserPrint.getDefaultDevice("printer", function(printer){
