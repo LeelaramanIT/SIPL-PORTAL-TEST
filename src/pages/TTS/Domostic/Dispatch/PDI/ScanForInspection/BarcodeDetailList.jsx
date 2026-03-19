@@ -1,20 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DynamicDataTable } from "../../../../../../components/DynamicDataTable";
 import { Button, Select, Space } from "antd";
 import SearchBar from "../../../../../../components/SearchBar";
 import { getBarcodeWise } from "../../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice";
-// import { Button, Select, Space } from "antd";
 
 const { Option } = Select;
 
-const BarcodeDetailList = ({
-
-}) => {
+const BarcodeDetailList = () => {
   const dispatch = useDispatch();
   const [mode, setMode] = useState("barcode");
-  const { InspectionDetails, barcodeDetails, loadingBarcode } = useSelector(state => state.scanforinspection)
-  const [localSearch, setLocalSearch] = useState(null)
+  const { InspectionDetails, barcodeDetails, loadingBarcode } = useSelector(state => state.scanforinspection);
+  const [localSearch, setLocalSearch] = useState("");
   const [filters, setFilters] = useState({
     platform: "",
     tyreSize: "",
@@ -25,39 +22,29 @@ const BarcodeDetailList = ({
   });
 
   const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value
-    }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-
-
-  const scanedQty = InspectionDetails?.items?.reduce((total, item) => total + item.scannedQty, 0)
-  const totalQty = InspectionDetails?.items?.reduce((total, item) => total + item.totalItemQty, 0)
+  const scanedQty = InspectionDetails?.items?.reduce((total, item) => total + item.scannedQty, 0);
+  const totalQty = InspectionDetails?.items?.reduce((total, item) => total + item.totalItemQty, 0);
   const percentage = totalQty > 0 ? (scanedQty / totalQty) * 100 : 0;
 
   const getBarcodeWisedata = async () => {
-    await dispatch(getBarcodeWise(InspectionDetails))
-  }
+    await dispatch(getBarcodeWise(InspectionDetails));
+  };
 
   useEffect(() => {
-    setFilters({
-      platform: "",
-      tyreSize: "",
-      rim: "",
-      type: "",
-      brand: "",
-      sidewall: ""
-    })
-
+    setFilters({ platform: "", tyreSize: "", rim: "", type: "", brand: "", sidewall: "" });
     if (mode === "barcode" || mode === "assignQty") {
-      getBarcodeWisedata()
+      getBarcodeWisedata();
     }
-  }, [mode])
+  }, [mode]);
 
-  console.log(barcodeDetails);
+  useEffect(() => {
+    setLocalSearch("");
+  }, []);
 
+  // --- Column Definitions ---
   const barcodeColumns = [
     { header: "PLATFORM", accessor: "platform", width: "0.8fr", align: "center" },
     { header: "TYRE SIZE", accessor: "tyreSize", width: "1.2fr", align: "left" },
@@ -77,7 +64,7 @@ const BarcodeDetailList = ({
     { header: "RE-SIDEWALL", accessor: "reSidewall", width: "1fr", align: "center" },
     { header: "BEAD TYPE", accessor: "beadType", width: "1fr", align: "center" },
     { header: "REMARKS", accessor: "remarks", width: "1fr", align: "center" },
-  ]
+  ];
 
   const assignColumns = [
     { header: "PLATFORM", accessor: "platform", width: "0.8fr", align: "center" },
@@ -92,7 +79,7 @@ const BarcodeDetailList = ({
     { header: "GRADE", accessor: "grade", width: "1fr", align: "center" },
     { header: "QTY", accessor: "qty", width: "1fr", align: "center" },
     { header: "LOCATION", accessor: "location", width: "1fr", align: "center" },
-  ]
+  ];
 
   const ItemsColumns = [
     { header: "PLATFORM", accessor: "config", width: "1fr", align: "center" },
@@ -102,63 +89,82 @@ const BarcodeDetailList = ({
     { header: "BRAND", accessor: "brand", width: "1fr", align: "left" },
     { header: "SIDEWALL", accessor: "sidewall", width: "1fr", align: "center" },
     { header: "PROCESSID", accessor: "processID", width: "1fr", align: "center" },
-    // { header: "GRADE", accessor: "-", width: "1fr", align: "center" },
-    // { header: "CONCESSION TYPE", accessor: "-", width: "1fr", align: "center" },
-    // { header: "RE-BRAND", accessor: "-", width: "1fr", align: "center" },
-    // { header: "RE-SIDEWALL", accessor: "-", width: "1fr", align: "center" },
     { header: "QTY", accessor: "orderQty", width: "1fr", align: "center" },
-  ]
+  ];
 
-  const items = InspectionDetails?.items
+  // --- Source Data ---
+  const processStencilList = barcodeDetails?.processStencilList;
+  const stencilList = barcodeDetails?.concessionSummaryList;
+  const items = InspectionDetails?.items;
 
-  const processStencilList = barcodeDetails?.processStencilList
-  const stencilList = barcodeDetails?.concessionSummaryList
-
-  const filteredBarcodeList = processStencilList?.filter((item) => {
-    return (
-      (!filters.platform || item.platform === filters.platform) &&
-      (!filters.tyreSize || item.tyreSize === filters.tyreSize) &&
-      (!filters.rim || item.rim === filters.rim) &&
-      (!filters.type || item.type === filters.type) &&
-      (!filters.brand || item.brand === filters.brand) &&
-      (!filters.sidewall || item.sidewall === filters.sidewall)
-    );
-  });
-  
+  // --- Filter dropdown options ---
   const platforms = [...new Set(processStencilList?.map(i => i.platform))];
   const tyreSizes = [...new Set(processStencilList?.map(i => i.tyreSize))];
   const rims = [...new Set(processStencilList?.map(i => i.rim))];
   const types = [...new Set(processStencilList?.map(i => i.type))];
   const brands = [...new Set(processStencilList?.map(i => i.brand))];
   const sidewalls = [...new Set(processStencilList?.map(i => i.sidewall))];
-  const grade = [...new Set(processStencilList?.map(i => i.grade))];
 
-  useEffect(() => {
-    setLocalSearch(null)
-  },[])
+  // --- Generic search helper ---
+  const matchesSearch = (row, query) => {
+    if (!query) return true;
+    const q = query.toLowerCase().trim();
+    return Object.values(row || {}).some((val) =>
+      String(val ?? "").toLowerCase().includes(q)
+    );
+  };
 
+  // --- Filtered data per mode ---
+  const filteredData = useMemo(() => {
+    const query = localSearch;
+
+    if (mode === "barcode") {
+      return (processStencilList || [])
+        .filter((item) =>
+          (!filters.platform || item.platform === filters.platform) &&
+          (!filters.tyreSize || item.tyreSize === filters.tyreSize) &&
+          (!filters.rim || item.rim === filters.rim) &&
+          (!filters.type || item.type === filters.type) &&
+          (!filters.brand || item.brand === filters.brand) &&
+          (!filters.sidewall || item.sidewall === filters.sidewall)
+        )
+        .filter((item) => matchesSearch(item, query));
+    }
+
+    if (mode === "assignQty") {
+      return (stencilList || []).filter((item) => matchesSearch(item, query));
+    }
+
+    if (mode === "itemQty") {
+      return (items || []).filter((item) => matchesSearch(item, query));
+    }
+
+    return [];
+  }, [mode, processStencilList, stencilList, items, filters, localSearch]);
+
+  const activeColumns =
+    mode === "barcode" ? barcodeColumns :
+    mode === "assignQty" ? assignColumns :
+    ItemsColumns;
 
   return (
-    <div className="h-full flex flex-col dark:bg-gray-800 p-2 gap-4">
+    // ✅ KEY FIX: h-full + overflow-hidden on outer — lets flexbox control height strictly
+    <div className="flex flex-col dark:bg-gray-800 p-2 gap-4 h-full overflow-hidden">
 
-      {/* Header Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-3 flex flex-col gap-4">
+      {/* ✅ flex-shrink-0 — header never grows or shrinks, always stays visible */}
+      <div className="flex-shrink-0 bg-white dark:bg-gray-900 rounded-lg shadow p-3 flex flex-col gap-4">
 
         {/* Customer + Workorder */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Customer Name
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Customer Name</p>
             <p className="text-lg font-semibold text-[var(--primary)] dark:text-white">
               {InspectionDetails?.custFullName || "-"}
             </p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Workorder
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Workorder</p>
             <p className="text-lg font-semibold text-[var(--primary)] dark:text-white">
               {InspectionDetails?.workOrderNo || "-"}
             </p>
@@ -181,7 +187,7 @@ const BarcodeDetailList = ({
           </div>
         </div>
 
-        {/* Mode Buttons */}
+        {/* Mode Buttons + Search */}
         <Space wrap>
           <Button
             type={mode === "barcode" ? "primary" : "default"}
@@ -189,83 +195,127 @@ const BarcodeDetailList = ({
           >
             Barcode wise List
           </Button>
-
           <Button
             type={mode === "itemQty" ? "primary" : "default"}
             onClick={() => setMode("itemQty")}
           >
             Item Qty wise List
           </Button>
-
           <Button
             type={mode === "assignQty" ? "primary" : "default"}
             onClick={() => setMode("assignQty")}
           >
             Assign Qty wise List
           </Button>
-          <SearchBar placeholder="Search" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)}/>
+          <SearchBar
+            placeholder="Search across all fields..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+          />
+          {localSearch && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {filteredData.length} result{filteredData.length !== 1 ? "s" : ""} found
+            </span>
+          )}
         </Space>
 
-        {/* Filter Dropdowns */}
-        {mode === "barcode" && (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* Filter Dropdowns — barcode mode only */}
+        {mode === "barcode" && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <Select
+              placeholder="Platform"
+              style={{ width: "100%" }}
+              value={filters.platform || undefined}
+              onChange={(value) => handleFilterChange("platform", value)}
+              allowClear
+              onClear={() => handleFilterChange("platform", "")}
+              getPopupContainer={(trigger) => trigger.parentNode}
+            >
+              {platforms?.map((item, index) => (
+                <Option key={index} value={item}>{item}</Option>
+              ))}
+            </Select>
 
-          <Select placeholder="Platform" style={{ width: "100%" }} onChange={(value) => handleFilterChange("platform", value)} getPopupContainer={(trigger) => trigger.parentNode}>
-            {platforms?.map((item, index) => (
-              <Option key={index} value={item}>
-                {item}
-              </Option>
-            ))}
-          </Select>
+            <Select
+              placeholder="Tyre Size"
+              style={{ width: "100%" }}
+              value={filters.tyreSize || undefined}
+              onChange={(value) => handleFilterChange("tyreSize", value)}
+              allowClear
+              onClear={() => handleFilterChange("tyreSize", "")}
+              getPopupContainer={(trigger) => trigger.parentNode}
+            >
+              {tyreSizes?.map((item, index) => (
+                <Option key={index} value={item}>{item}</Option>
+              ))}
+            </Select>
 
-          <Select placeholder="Tyre Size" style={{ width: "100%" }} getPopupContainer={(trigger) => trigger.parentNode}>
-            {tyreSizes?.map((item, index) => (
-              <Option key={index} value={item}>
-                {item}
-              </Option>
-            ))}
-          </Select>
+            <Select
+              placeholder="Rim Size"
+              style={{ width: "100%" }}
+              value={filters.rim || undefined}
+              onChange={(value) => handleFilterChange("rim", value)}
+              allowClear
+              onClear={() => handleFilterChange("rim", "")}
+              getPopupContainer={(trigger) => trigger.parentNode}
+            >
+              {rims?.map((item, index) => (
+                <Option key={index} value={item}>{item}</Option>
+              ))}
+            </Select>
 
-          <Select placeholder="Rim Size" style={{ width: "100%" }} getPopupContainer={(trigger) => trigger.parentNode}>
-            {rims?.map((item, index) => (
-              <Option key={index} value={item}>
-                {item}
-              </Option>
-            ))}
-          </Select>
+            <Select
+              placeholder="Tyre Type"
+              style={{ width: "100%" }}
+              value={filters.type || undefined}
+              onChange={(value) => handleFilterChange("type", value)}
+              allowClear
+              onClear={() => handleFilterChange("type", "")}
+              getPopupContainer={(trigger) => trigger.parentNode}
+            >
+              {types?.map((item, index) => (
+                <Option key={index} value={item}>{item}</Option>
+              ))}
+            </Select>
 
-          <Select placeholder="Tyre Type" style={{ width: "100%" }} getPopupContainer={(trigger) => trigger.parentNode}>
-            {sidewalls?.map((item, index) => (
-              <Option key={index} value={item}>
-                {item}
-              </Option>
-            ))}
-          </Select>
+            <Select
+              placeholder="Brand"
+              style={{ width: "100%" }}
+              value={filters.brand || undefined}
+              onChange={(value) => handleFilterChange("brand", value)}
+              allowClear
+              onClear={() => handleFilterChange("brand", "")}
+              getPopupContainer={(trigger) => trigger.parentNode}
+            >
+              {brands?.map((item, index) => (
+                <Option key={index} value={item}>{item}</Option>
+              ))}
+            </Select>
 
-          <Select placeholder="Brand" style={{ width: "100%" }} getPopupContainer={(trigger) => trigger.parentNode}>
-            {brands?.map((item, index) => (
-              <Option key={index} value={item}>
-                {item}
-              </Option>
-            ))}
-          </Select>
-
-          <Select placeholder="Sidewall" style={{ width: "100%" }} getPopupContainer={(trigger) => trigger.parentNode}>
-            {sidewalls?.map((item, index) => (
-              <Option key={index} value={item}>
-                {item}
-              </Option>
-            ))}
-          </Select>
-
-        </div>)}
+            <Select
+              placeholder="Sidewall"
+              style={{ width: "100%" }}
+              value={filters.sidewall || undefined}
+              onChange={(value) => handleFilterChange("sidewall", value)}
+              allowClear
+              onClear={() => handleFilterChange("sidewall", "")}
+              getPopupContainer={(trigger) => trigger.parentNode}
+            >
+              {sidewalls?.map((item, index) => (
+                <Option key={index} value={item}>{item}</Option>
+              ))}
+            </Select>
+          </div>
+        )}
       </div>
 
-      {/* Table Section */}
-      <div className="flex-1 overflow-auto">
+      {/* ✅ KEY FIX: flex-1 + min-h-0 — takes remaining space, min-h-0 lets it shrink below content size */}
+      {/* overflow-hidden here lets DynamicDataTable control its own internal scroll */}
+      <div className="flex-1 min-h-0 overflow-hidden rounded-lg">
         <DynamicDataTable
-          columns={mode === "barcode" ? barcodeColumns : mode === "assignQty" ? assignColumns : ItemsColumns}
-          headerClassName='bg-[var(--primary)] text-white dark:bg-slate-950 shadow-sm'
-          data={mode === "barcode" ? filteredBarcodeList : mode === "assignQty" ? stencilList : items}
+          columns={activeColumns}
+          headerClassName="bg-[var(--primary)] text-white dark:bg-slate-950 shadow-sm"
+          data={filteredData}
           loading={mode === "barcode" ? loadingBarcode : false}
         />
       </div>
