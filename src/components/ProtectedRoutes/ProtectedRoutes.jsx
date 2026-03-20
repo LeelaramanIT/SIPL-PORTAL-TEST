@@ -11,7 +11,7 @@ const ProtectedRoutes = () => {
   const roles = useSelector((state) => state.auth?.roles);
   const menus = useSelector((state) => state.auth?.menus || []);
   const roleID = useSelector((state) => state.auth?.RoleID);
-  const location = useLocation();
+  const location = useLocation(); 
 
 
 //  useEffect(() => {

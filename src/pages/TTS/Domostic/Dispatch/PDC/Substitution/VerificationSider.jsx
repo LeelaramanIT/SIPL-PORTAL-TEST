@@ -20,6 +20,7 @@ const VerificationSider = ({ isOpen,setOpen, onClose, item, onConfirm }) => {
     // LOGIC: Replace with original Process ID
     const targetProcessID = original?.processID || "";
     const reconstructedBarcode = `${targetProcessID}${barcodeSuffix}`;
+    
     const handleConfirmation = () => {
         if (!substitution || !original) return;
 

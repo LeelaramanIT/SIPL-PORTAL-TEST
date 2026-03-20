@@ -150,11 +150,11 @@ export const insertUpdateSubstitution = (payload) => async (dispatch) => {
             // 1.update 
             dispatch(updateSubstitutionDetails(res.data))
             // 2.print
-            res.data.forEach(item => {
-                if (item.zpldata) {
-                    printLabel(item.zpldata);
-                }
-            });
+            // res.data.forEach(item => {
+            //     if (item.zpldata) {
+            //         printLabel(item.zpldata);
+            //     }
+            // });
             toast.success("Substitution saved successfully")
         }
 
