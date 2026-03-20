@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    Activity, CheckCircle2, ClipboardCheck, ScanLine,
-    X, AlertCircle, MapPin, ShieldCheck, Beaker
+    CheckCircle2, ClipboardCheck, ScanLine,
+    X, ShieldCheck, Beaker
 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -24,30 +24,24 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
 
     const resetForm = () => {
         setSelections({
-            detector: null,
-            beadType: null,
-            idGauge: null,
-            bestQuality: null,
-            physicalBarcode: null,
-            hardnessTread: "",
-            hardnessBase: "",
-            remarks: ""
+            detector: null, beadType: null, idGauge: null,
+            bestQuality: null, physicalBarcode: null,
+            hardnessTread: "", hardnessBase: "", remarks: ""
         });
         onClose();
     };
+
+    const gread = data?.barcode?.slice(-1) || '';
 
     const handleUpdate = (field, value) => {
         setSelections(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async () => {
-        const isFormValid = selections.detector && selections.beadType;
-
-        if (!isFormValid) {
-            toast.error("Please complete the required inspection points.");
-            return;
-        }
-
+        // if (!selections.detector || !selections.beadType) {
+        //     toast.error("Please complete the required inspection points.");
+        //     return;
+        // }
         const payload = {
             pid: data.pid,
             barcode: data.barcode,
@@ -57,20 +51,19 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
             substitutionStatus: data.substitutionStatus || false,
             idGauge: selections.idGauge === 'pass',
             earmarkStatus: data.earmarkStatus || false,
-            concessionType: data.concessionType || "string",
+            concessionType: data.concessionType || "",
             beadType: selections.beadType === 'pass' ? "YES" : "NO",
             qualityTest: selections.bestQuality === 'pass' ? "OK" : "NOT OK",
             physical: selections.physicalBarcode === 'pass' ? "YES" : "NO",
-            remarks: selections.remarks || "string",
-            pdiPlant: data.pdiPlant || "string",
-            custcode: data.custcode || "string",
-            workorderno: data.workorderno || "string",
+            remarks: selections.remarks || "",
+            pdiPlant: data.pdiPlant || "",
+            custcode: data.custcode || "",
+            workorderno: data.workorderno || "",
             orderQty: data.orderQty || 0,
-            orderrefno: data.orderrefno || "string",
+            orderrefno: data.orderrefno || "",
             treadHard: selections.hardnessTread || 0,
             baseHard: selections.hardnessBase || 0,
         };
-
         onConfirm(payload);
         resetForm();
     };
@@ -85,191 +78,229 @@ export const VerificationSider = ({ isOpen = true, onClose, data, onConfirm }) =
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={resetForm}
-                        className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[999]"
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[999]"
                     />
 
-                    {/* Sider Container */}
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 h-full w-full sm:w-[500px] bg-white dark:bg-slate-950 shadow-2xl z-[1000] flex flex-col border-l border-slate-200 dark:border-slate-800"
-                    >
-                        {/* Top Status Bar */}
-                        <div className={`h-1.5 shrink-0 w-full ${isAlreadyProcessed ? 'bg-amber-500' : 'bg-green-500'}`} />
+                    {/* Modal Wrapper */}
+                    <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+                        <motion.div
+                            initial={{ opacity: 0, y: "100%" }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: "100%" }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="pointer-events-auto w-full sm:max-w-2xl lg:max-w-5xl bg-white dark:bg-slate-900 sm:rounded-2xl rounded-t-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh] sm:max-h-[95vh] overflow-hidden"
+                        >
+                            {/* Top status bar */}
+                            <div className={`h-1.5 w-full shrink-0 ${isAlreadyProcessed ? 'bg-amber-500' : 'bg-emerald-500'}`} />
 
-                        {/* Header - Responsive Padding */}
-                        <div className="p-5 sm:p-8 pb-4 flex justify-between items-start shrink-0">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-500/20 shrink-0">
+                            {/* Mobile drag handle */}
+                            <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+                                <div className="w-12 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                            </div>
+
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-2 bg-indigo-600 rounded-lg text-white shrink-0">
                                         <ScanLine size={18} />
                                     </div>
-                                    <span className="font-mono text-sm sm:text-base font-bold tracking-widest text-slate-400 uppercase truncate">
-                                        {data.barcode}
-                                    </span>
-                                </div>
-                                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                                    Quality Verification
-                                </h2>
-                                {data.infoMessage && (
-                                    <p className={`text-[10px] sm:text-[11px] font-bold ${isAlreadyProcessed ? 'text-red-500' : 'text-green-500'} mt-1 uppercase tracking-tighter`}>
-                                        {data.infoMessage}
-                                    </p>
-                                )}
-                            </div>
-                            
-                            <motion.button
-                                whileHover={{ rotate: 90, scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={resetForm}
-                                className="ml-4 p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-400 shrink-0"
-                            >
-                                <X size={20} />
-                            </motion.button>
-                        </div>
-
-                        {/* Content Area - Custom Scrollbar */}
-                        <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-4 space-y-8 custom-scrollbar">
-                            
-                            {/* Specs Section - Adaptive Grid */}
-                            <section>
-                                <SectionHeader icon={<ClipboardCheck size={16} />} title="Unit Specifications" />
-                                <div className="grid grid-cols-2 xs:grid-cols-3 gap-2 sm:gap-3 mt-5">
-                                    <SpecTile label="Platform" value={data.config} />
-                                    <SpecTile label="Brand" value={data.brand} />
-                                    <SpecTile label="Sidewall" value={data.sidewall} />
-                                    <SpecTile label="Type" value={data.tyreType} />
-                                    <SpecTile label="Tyre Size" value={data.tyreSize} />
-                                    <SpecTile label="Rim Size" value={data.rimSize} />
-                                    <SpecTile label="Stencil No" value={data.stencilNo} highlight />
-                                </div>
-                            </section>
-
-                            {/* Inspection Points */}
-                            <section>
-                                <SectionHeader icon={<ShieldCheck size={16} />} title="Inspection Points" />
-                                <p className="text-[10px] text-slate-400 mb-4 mt-1 font-medium italic">Select verification status:</p>
-                                <div className="space-y-3">
-                                    <ModernRadioGroup name="detector" label="Detector Check" selectedValue={selections.detector} onChange={(val) => handleUpdate('detector', val)} />
-                                    <ModernRadioGroup name="beadType" label="Bead Type" selectedValue={selections.beadType} onChange={(val) => handleUpdate('beadType', val)} />
-                                    <ModernRadioGroup name="idGauge" label="ID Gauge Check" selectedValue={selections.idGauge} onChange={(val) => handleUpdate('idGauge', val)} />
-                                    <ModernRadioGroup name="bestQuality" label="Quality Test (POB)" selectedValue={selections.bestQuality} onChange={(val) => handleUpdate('bestQuality', val)} />
-                                    <ModernRadioGroup name="physicalBarcode" label="Physical Check" selectedValue={selections.physicalBarcode} onChange={(val) => handleUpdate('physicalBarcode', val)} />
-                                </div>
-                            </section>
-
-                            {/* Measurement Section */}
-                            <section className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 mb-24">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <Beaker size={16} className="text-indigo-500" />
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tech Metrics</h3>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <MetricInput label="Hardness Tread" value={selections.hardnessTread} onChange={(e) => handleUpdate('hardnessTread', e.target.value)} />
-                                    <MetricInput label="Hardness Base" value={selections.hardnessBase} onChange={(e) => handleUpdate('hardnessBase', e.target.value)} />
-                                    <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Inspector Remarks</label>
-                                        <textarea
-                                            value={selections.remarks}
-                                            onChange={(e) => handleUpdate('remarks', e.target.value)}
-                                            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
-                                            placeholder="Enter quality notes..."
-                                        />
+                                    <div className="min-w-0">
+                                        <p className="font-mono text-[10px] font-bold tracking-widest text-slate-400 uppercase truncate">
+                                            {data.barcode}
+                                        </p>
+                                        <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+                                            Quality Verification
+                                        </h2>
                                     </div>
                                 </div>
-                            </section>
-                        </div>
+                                <button
+                                    onClick={resetForm}
+                                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
 
-                        {/* Sticky Footer - Responsive Height */}
-                        <div className="shrink-0 p-5 sm:p-8 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
-                            <motion.button
-                                whileHover={!isAlreadyProcessed ? { scale: 1.01 } : {}}
-                                whileTap={!isAlreadyProcessed ? { scale: 0.98 } : {}}
-                                onClick={handleSubmit}
-                                disabled={isAlreadyProcessed}
-                                className={`w-full py-4 sm:py-5 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all
-                                    ${isAlreadyProcessed
-                                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                                        : 'bg-slate-900 dark:bg-indigo-600 text-white shadow-xl shadow-indigo-500/20'}`}
-                            >
-                                <CheckCircle2 size={18} />
-                                {isAlreadyProcessed ? 'Already Processed' : 'Complete Inspection'}
-                            </motion.button>
-                        </div>
-                    </motion.div>
+                            {/* Scrollable Body Content */}
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                <div className="p-5 space-y-6">
+                                    
+                                    {/* Info message visible on all devices if exists */}
+                                    {data.infoMessage && (
+                                        <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tight text-center ${isAlreadyProcessed ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>
+                                            {data.infoMessage}
+                                        </div>
+                                    )}
+
+                                    {/* Specs Section */}
+                                    <div>
+                                        <SectionHeader icon={<ClipboardCheck size={14} />} title="Unit Specifications" />
+                                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-2 mt-3">
+                                            <SpecTile label="Platform" value={data.config} />
+                                            <SpecTile label="Brand" value={data.brand} />
+                                            <SpecTile label="Sidewall" value={data.sidewall} />
+                                            <SpecTile label="Type" value={data.tyreType} />
+                                            <SpecTile label="Size" value={data.tyreSize} />
+                                            <SpecTile label="Rim" value={data.rimSize} />
+                                            <SpecTile label="Stencil" value={data.stencilNo} highlight />
+                                            <SpecTile label="Gread" value={gread} />
+                                        </div>
+                                    </div>
+
+                                    {/* Main Form Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Inspection Points */}
+                                        <div className="space-y-3">
+                                            <SectionHeader icon={<ShieldCheck size={14} />} title="Inspection Points" />
+                                            <div className="space-y-2 mt-2">
+                                                <ModernRadioGroup name="detector" label="Detector Check" selectedValue={selections.detector} onChange={(val) => handleUpdate('detector', val)} />
+                                                <ModernRadioGroup name="beadType" label="Bead Type" selectedValue={selections.beadType} onChange={(val) => handleUpdate('beadType', val)} />
+                                                <ModernRadioGroup name="idGauge" label="ID Gauge Check" selectedValue={selections.idGauge} onChange={(val) => handleUpdate('idGauge', val)} />
+                                                <ModernRadioGroup name="bestQuality" label="Quality Test (POB)" selectedValue={selections.bestQuality} onChange={(val) => handleUpdate('bestQuality', val)} />
+                                                <ModernRadioGroup name="physicalBarcode" label="Physical Check" selectedValue={selections.physicalBarcode} onChange={(val) => handleUpdate('physicalBarcode', val)} />
+                                            </div>
+                                        </div>
+
+                                        {/* Metrics + Remarks */}
+                                        <div className="space-y-4">
+                                            <div>
+                                                <SectionHeader icon={<Beaker size={14} />} title="Tech Metrics" />
+                                                <div className="grid grid-cols-2 gap-3 mt-3">
+                                                    <MetricInput label="Hardness Tread" value={selections.hardnessTread} onChange={(e) => handleUpdate('hardnessTread', e.target.value)} />
+                                                    <MetricInput label="Hardness Base" value={selections.hardnessBase} onChange={(e) => handleUpdate('hardnessBase', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                                    Inspector Remarks
+                                                </label>
+                                                <textarea
+                                                    value={selections.remarks}
+                                                    onChange={(e) => handleUpdate('remarks', e.target.value)}
+                                                    rows={3}
+                                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all"
+                                                    placeholder="Enter quality notes..."
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer - Fixed at bottom */}
+                            <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shrink-0">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <motion.button
+                                        whileTap={!isAlreadyProcessed ? { scale: 0.98 } : {}}
+                                        onClick={handleSubmit}
+                                        disabled={isAlreadyProcessed}
+                                        className={`flex-[2] py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all
+                                            ${isAlreadyProcessed
+                                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                                : 'bg-indigo-600 text-white shadow-indigo-500/25 hover:bg-indigo-700'}`}
+                                    >
+                                        <CheckCircle2 size={18} />
+                                        {isAlreadyProcessed ? 'Already Processed' : 'Complete Inspection'}
+                                    </motion.button>
+                                    <button
+                                        onClick={resetForm}
+                                        className="flex-1 py-4 rounded-xl text-xs font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                                {/* Added spacing for iOS home indicator */}
+                                <div className="h-safe-area-inset-bottom mt-2 sm:hidden" />
+                            </div>
+                        </motion.div>
+                    </div>
                 </>
             )}
         </AnimatePresence>
     );
 };
 
-/* --- Sub-Components (Unchanged logic, minor CSS tweaks) --- */
+/* --- Refined Sub-components --- */
 
-const ModernRadioGroup = ({ name, label, selectedValue, onChange }) => {
-    return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight truncate">
-                {label}
-            </span>
-
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl relative w-full sm:w-auto min-h-[36px]">
-                {['pass', 'fail'].map((status) => (
-                    <label key={status} className="flex-1 sm:flex-none cursor-pointer relative z-10">
-                        <input
-                            type="radio"
-                            name={name}
-                            className="peer hidden"
-                            value={status}
-                            checked={selectedValue === status}
-                            onChange={() => onChange(status)}
-                        />
-                        <div className={`px-4 py-1.5 text-center rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${selectedValue === status ? "text-white" : "text-slate-400"}`}>
-                            {status}
-                        </div>
-                    </label>
-                ))}
+const ModernRadioGroup = ({ name, label, selectedValue, onChange }) => (
+    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight truncate flex-1">
+            {label}
+        </span>
+        <div className="flex bg-slate-200/50 dark:bg-slate-800 p-1 rounded-xl relative shrink-0 min-w-[120px]">
+            {['pass', 'fail'].map((status) => (
+                <label key={status} className="flex-1 cursor-pointer relative z-10">
+                    <input
+                        type="radio"
+                        name={name}
+                        className="peer hidden"
+                        value={status}
+                        checked={selectedValue === status}
+                        // Change: Logic to toggle null if already selected
+                        onClick={() => {
+                            if (selectedValue === status) {
+                                onChange(null);
+                            } else {
+                                onChange(status);
+                            }
+                        }}
+                        readOnly // Use onClick instead of onChange for better toggle control
+                    />
+                    <div className={`py-2 text-center rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${selectedValue === status ? "text-white" : "text-slate-500"}`}>
+                        {status}
+                    </div>
+                </label>
+            ))}
+            
+            {/* Animated Background Pill */}
+            <AnimatePresence>
                 {selectedValue && (
                     <motion.div
                         layoutId={`pill-${name}`}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
                         className={`absolute inset-y-1 rounded-lg z-0 ${selectedValue === "pass" ? "bg-emerald-500" : "bg-red-500"}`}
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                        transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
                         style={{
                             width: "calc(50% - 4px)",
                             left: selectedValue === "pass" ? "4px" : "50%",
                         }}
                     />
                 )}
-            </div>
+            </AnimatePresence>
         </div>
-    );
-};
+    </div>
+);
 
 const SectionHeader = ({ icon, title }) => (
-    <div className="flex items-center gap-3">
-        <span className="text-indigo-600 dark:text-indigo-400 shrink-0">{icon}</span>
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">{title}</h3>
-        <div className="flex-1 h-[1px] bg-slate-100 dark:bg-slate-800" />
+    <div className="flex items-center gap-2 mb-3">
+        <span className="text-indigo-500">{icon}</span>
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{title}</h3>
+        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
     </div>
 );
 
 const SpecTile = ({ label, value, highlight }) => (
-    <div className={`p-2 rounded-lg border ${highlight ? 'bg-indigo-50 border-indigo-100 dark:bg-indigo-500/5 dark:border-indigo-500/20' : 'bg-slate-50 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800'}`}>
-        <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">{label}</p>
-        <p className="text-[11px] sm:text-[12px] font-black text-slate-800 dark:text-slate-200 truncate">{value || '—'}</p>
+    <div className={`p-2.5 rounded-xl border flex flex-col justify-center items-center text-center ${highlight
+        ? 'bg-indigo-50 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20'
+        : 'bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800'}`}>
+        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[10px] font-black text-slate-800 dark:text-slate-200 leading-tight">{value || '—'}</p>
     </div>
 );
 
 const MetricInput = ({ label, value, onChange }) => (
-    <div className="space-y-1">
-        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{label}</label>
+    <div className="space-y-2">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
         <input
             type="number"
             step="0.01"
+            inputMode="decimal"
             value={value}
             onChange={onChange}
-            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             placeholder="0.00"
         />
     </div>

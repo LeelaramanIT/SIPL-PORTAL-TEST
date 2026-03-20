@@ -325,45 +325,45 @@ const ScanForInspectionDetails = () => {
             />
 
             {/* Fix: Remove overflow-y-auto from modal wrapper, use flex-col + fixed height instead */}
-<AnimatePresence>
-  {showDetailsForm && (
-    <motion.div
-      key="modal"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
-    >
-      <motion.div
-        key="modal-content"
-        initial={{ scale: 0.95, opacity: 0, y: 40 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 40 }}
-        transition={{ duration: 0.1, ease: "easeIn" }}
-        className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-11/12 h-[90vh] flex flex-col border border-gray-300 dark:border-gray-700"
-      >
-        {/* Fixed Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
-          <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-            <ClipboardList className="text-[var(--primary)]" size={20} />
-            Barcode List
-          </h1>
-          <button
-            onClick={handleCloseForm}
-            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-          >
-            <IoMdClose className="text-2xl" />
-          </button>
-        </div>
+            <AnimatePresence>
+                {showDetailsForm && (
+                    <motion.div
+                        key="modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center"
+                    >
+                        <motion.div
+                            key="modal-content"
+                            initial={{ scale: 0.95, opacity: 0, y: 40 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 40 }}
+                            transition={{ duration: 0.1, ease: "easeIn" }}
+                            className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-11/12 h-[90vh] flex flex-col border border-gray-300 dark:border-gray-700"
+                        >
+                            {/* Fixed Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                                <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                                    <ClipboardList className="text-[var(--primary)]" size={20} />
+                                    Barcode List
+                                </h1>
+                                <button
+                                    onClick={handleCloseForm}
+                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                                >
+                                    <IoMdClose className="text-2xl" />
+                                </button>
+                            </div>
 
-        {/* Scrollable Content — BarcodeDetailList handles its own internal scroll */}
-        <div className="flex-1 overflow-hidden">
-          <BarcodeDetailList onClose={handleCloseForm} />
-        </div>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                            {/* Scrollable Content — BarcodeDetailList handles its own internal scroll */}
+                            <div className="flex-1 overflow-hidden">
+                                <BarcodeDetailList onClose={handleCloseForm} />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
