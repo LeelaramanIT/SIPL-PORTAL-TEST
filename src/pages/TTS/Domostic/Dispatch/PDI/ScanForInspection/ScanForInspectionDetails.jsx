@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { getCustomerDetails, PDICheckBarcode, resetBarcodeDetails, SubmitInspection } from '../../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice'
+import { getCustomerDetails, getWorkorder, PDICheckBarcode, resetBarcodeDetails, SubmitInspection } from '../../../../../../Redux/Slices/PDIDispatchMaster/PDIScanForInspectionSlice'
 import { formatDateTime } from '../../../../../../utils/FormatDate'
 import { ArrowLeft, ClipboardList, Package, ScanLine, } from 'lucide-react'
 import { DynamicDataTable } from '../../../../../../components/DynamicDataTable'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AiOutlineBarcode, AiOutlineCalendar, AiOutlineUser } from 'react-icons/ai'
-import { FaClipboardList, FaList } from 'react-icons/fa'
+import { FaClipboardList, FaFileDownload, FaList } from 'react-icons/fa'
 import { FiPackage } from 'react-icons/fi'
 import SearchBar from '../../../../../../components/SearchBar'
 import toast from 'react-hot-toast'
@@ -108,6 +108,8 @@ const ScanForInspectionDetails = () => {
             }
         }
     };
+    console.log(InspectionDetails);
+    
 
     const scanedQty = InspectionDetails?.items?.reduce((total, item) => total + item.scannedQty, 0)
     const totalQty = InspectionDetails?.items?.reduce((total, item) => total + item.totalItemQty, 0)
@@ -140,6 +142,9 @@ const ScanForInspectionDetails = () => {
     const handleBarcodeOpen = () => {
         console.log("kaja");
         setShowDetailsForm(true);
+    }
+    const handleBarcodeDownload = () =>{
+        dispatch(getWorkorder(InspectionDetails?.custCode,InspectionDetails?.orderRefNo))
     }
 
     return (
@@ -205,10 +210,13 @@ const ScanForInspectionDetails = () => {
                             variants={fadeUp} initial="hidden" animate="show" transition={{ delay: 0.1 }}
                             className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
                         >
-                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[var(--primary)]/5">
+                            <div className="flex justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-[var(--primary)]/5">
                                 <h2 className="font-bold flex items-center gap-2 text-slate-700 dark:text-slate-200 text-sm">
                                     <AiOutlineUser className="text-[var(--primary)]" /> Customer Details
                                 </h2>
+                                <button onClick={handleBarcodeDownload} className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all">
+                                    <FaFileDownload className="w-3 h-3 mr-2" /> Download Work Order
+                                </button>
                             </div>
                             <div className="p-4 space-y-4">
                                 <DetailItem loading={loading} icon={<AiOutlineUser />} label="Full Name" value={InspectionDetails?.custFullName} />

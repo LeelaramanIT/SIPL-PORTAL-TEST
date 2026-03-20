@@ -35,7 +35,7 @@ function FitmentHeader() {
     {
       label: `${plant} Rim & Tyre Fitment Inspection`,
       permissionKey: `${plant} Rim & Tyre Fitment Inspection`,
-      path: `${basePath}/${plant}/${custType}`,
+      path: `${basePath}/${plant}/${custType}/List`,
       icon: <Search className="w-3.5 h-3.5" />
     },
     // {    

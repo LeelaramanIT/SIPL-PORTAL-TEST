@@ -121,6 +121,23 @@ const SideBar = () => {
 
                 },
                 {
+                   key: "/TTS/Domestic/Dispatch/PDI/RimAndTyreFitment",
+                  icon: <MdTireRepair />,
+                  label: "Rim & Tyre Fitment",
+                  children: [
+                    {
+                      key: "/TTS/Domestic/Dispatch/PDI/RimAndTyreFitment/MMN/Domestic",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "MMN Rim & Tyre Fitment",
+                    },
+                    {
+                      key: "/TTS/Domestic/Dispatch/PDI/RimAndTyreFitment/PDK/Domestic",
+                      icon: <MdOutlineQrCodeScanner />,
+                      label: "PDK Rim & Tyre Fitment",
+                    },
+                  ]
+                },
+                {
                   key: "/TTS/Domestic/Dispatch/Substution",
                   icon: <FcInspection />,
                   label: "PPC Substitution",

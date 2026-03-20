@@ -150,6 +150,21 @@ export const router = createBrowserRouter([
               },
               { path: "Dispatch/PPC/Substitution/:plant/:custType", element: <PPCMaster /> },
               { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
+              {
+                path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType",
+                element: <FitmentMaster />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="List" replace />
+                  },
+                  {
+                    path: "List",
+                    element: <FitmentList />
+                  },
+                ]
+              },
+              { path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType/Details", element: <TyreAndRimFitment /> },
             ],
           },
           {

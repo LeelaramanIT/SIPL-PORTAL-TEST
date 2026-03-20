@@ -190,5 +190,35 @@ export const getBarcodeWise = (payload) => async (dispatch) => {
     }
 }
 
+export const getWorkorder = (custCode, orderRefNo) => async () => {
+    try {
+       console.log(custCode,orderRefNo);
+       
+        const res = await api.get(`/PdfUpload/download-workorder`, {
+            params: {
+                custCode: custCode,
+                OrderrefNo: orderRefNo // Match the C# 'workorderno' parameter name
+            },
+            responseType: 'blob'
+        });
+
+        if (res.status === 200) {
+            const blob = new Blob([res.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.body.appendChild(document.createElement('a'));
+            link.href = url;
+            link.download = `${orderRefNo}.pdf`;
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        }
+    } catch (error) {
+        // If you get a 404 now on port 5300, it means the physical 
+        // file doesn't exist in the folder defined in your C# _config.
+        console.error("Download Error:", error);
+    }
+};
+
+
 export const { setListOfInspectionData, setSearch, resetAll, setInspectionDetails, restInspectionDetails, setBarcodeDetails, resetBarcodeDetails, setLoadingBarcode } = scanforinspectionSlice.actions;
 export default scanforinspectionSlice.reducer;
