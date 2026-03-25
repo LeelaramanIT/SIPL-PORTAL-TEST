@@ -190,14 +190,16 @@ export const getBarcodeWise = (payload) => async (dispatch) => {
     }
 }
 
-export const getWorkorder = (custCode, orderRefNo) => async () => {
+export const getWorkorder = (custCode, orderRefNo, Plant, custtype) => async () => {
     try {
        console.log(custCode,orderRefNo);
        
         const res = await api.get(`/PdfUpload/download-workorder`, {
             params: {
                 custCode: custCode,
-                OrderrefNo: orderRefNo // Match the C# 'workorderno' parameter name
+                OrderrefNo: orderRefNo,
+                Plant,
+                custtype
             },
             responseType: 'blob'
         });

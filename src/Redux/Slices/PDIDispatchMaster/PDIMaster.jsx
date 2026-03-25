@@ -4,6 +4,7 @@ const initialState = {
  mode: "scanforinspection",
  loading : false,
  search: "",
+ inspectionType:'NEW'
 };
 
 const  PDIDispatchMasterSlice= createSlice({
@@ -19,8 +20,11 @@ const  PDIDispatchMasterSlice= createSlice({
       setSearch: (state, action) => {
         state.search = action.payload;
       },
+      setInspectionType: (state, action) => {
+        state.inspectionType = action.payload
+      }
     },
 })
 
-export const { setMode, setLoading, setSearch } = PDIDispatchMasterSlice.actions;
+export const { setMode, setLoading, setSearch , setInspectionType } = PDIDispatchMasterSlice.actions;
 export default PDIDispatchMasterSlice.reducer;

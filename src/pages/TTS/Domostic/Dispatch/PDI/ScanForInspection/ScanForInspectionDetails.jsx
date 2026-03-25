@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getCustomerDetails,
@@ -78,12 +78,15 @@ const ScanForInspectionDetails = () => {
     );
   }, [localSearch, InspectionDetails]);
   console.log(items);
+  console.log(location);
+  
 
   useEffect(() => {
     if (location.state) {
-      dispatch(getCustomerDetails(location.state));
+      dispatch(getCustomerDetails(location.state.row));
     }
   }, [location.state, dispatch]);
+  
 
   const handleScan = (e) => {
     if (e.key === "Enter" && scanInput.trim()) {
@@ -186,9 +189,10 @@ const ScanForInspectionDetails = () => {
     console.log("kaja");
     setShowDetailsForm(true);
   };
+  const custtype = location.state.type === "International" ? "Export" : "Domestic"
   const handleBarcodeDownload = () => {
     dispatch(
-      getWorkorder(InspectionDetails?.custCode, InspectionDetails?.orderRefNo),
+      getWorkorder(InspectionDetails?.custCode, InspectionDetails?.orderRefNo,InspectionDetails?.plant, custtype ),
     );
   };
 

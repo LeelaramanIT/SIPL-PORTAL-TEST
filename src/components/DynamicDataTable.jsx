@@ -47,7 +47,7 @@ export function DynamicDataTable({
         <div className="min-w-[1000px] lg:min-w-full flex flex-col h-full">
           {/* FIXED HEADER */}
           <div
-            className={`${headerClassName} grid gap-4 px-6 py-4 border-b border-slate-200 dark:border-slate-700 backdrop-blur-md z-20 text-[0.7rem] font-bold uppercase tracking-wider sticky top-0 dark:bg-slate-800/80`}
+            className={`${headerClassName} grid gap-4 px-6 py-4 border-b border-slate-200 dark:border-slate-700 backdrop-blur-md z-20 text-[0.7rem] font-bold uppercase tracking-wider sticky top-0 dark:bg-slate-800/80 dark:text-slate-50`}
             style={{ gridTemplateColumns: gridTemplate }}
           >
             {columns.map((col, idx) => (

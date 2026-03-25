@@ -47,16 +47,15 @@ function App() {
       <PersistGate loading={null} persistor={persistor}>
         <Toaster
         
-          position="bottom-right"
+          position="top-right"
           reverseOrder={true}
-          
           toastOptions={{
             success: {
               style: {
                 background: "#314158",
                 color: "white",
               },
-            
+
             },
             error: {
               style: {
@@ -67,7 +66,6 @@ function App() {
           }}
         />
         <ThemedApp />
-        
       </PersistGate>
       
     </Provider>
