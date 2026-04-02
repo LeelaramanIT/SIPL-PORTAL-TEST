@@ -189,7 +189,7 @@ const SideBar = () => {
                   label: "Custom",
                 },
                 {
-                  key: "/TTS/International/Invoice/ProformaInvoice/List",
+                  key: "/TTS/International/ProformaInvoice/List",
                   icon: <MdOutlineReceipt />,
                   label: "Proforma",
                 },
@@ -464,7 +464,7 @@ const SideBar = () => {
           position: isMobile ? "fixed" : "relative",
           left: 0,
           top: 0,
-          zIndex: isMobile ? 1000 : 10,
+          zIndex: isMobile ? 100 : 10,
           transform: isMobile
             ? isSidebarOpen
               ? "translateX(0)"

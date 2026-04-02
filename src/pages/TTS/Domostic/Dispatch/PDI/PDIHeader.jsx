@@ -54,12 +54,6 @@ function PDIHeader() {
       icon: <Search className="w-3.5 h-3.5" />,
     },
     {
-      label: "Inspection In Complete",
-      permissionKey: "PDI Inspection Incomplete",
-      path: `${basePath}/InspectionInComplete`,
-      icon: <ClipboardCheck className="w-3.5 h-3.5" />,
-    },
-    {
       label: "Loading Check",
       permissionKey: "PDI Loading Check",
       path: `${basePath}/LoadingCheck`,

@@ -1,36 +1,229 @@
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import Button from "../../../../../../components/InputFields/Button";
 import Input from "../../../../../../components/InputFields/Input";
 import Select from "../../../../../../components/InputFields/Select";
 import TextArea from "../../../../../../components/InputFields/TextArea";
 import LoadingButton from "../../../../../../components/LoadingButton";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  resetCustomerAdditionalData,
-  setExportCustAdditionalInvoice,
-  setFinalCustomerData,
-  setShowSubmit,
-} from "../../../../../../Redux/Slices/InvoiceSlice";
 import toast from "react-hot-toast";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { MdOutlinePayments } from "react-icons/md";
 import { FaPaperPlane, FaMapMarkerAlt } from "react-icons/fa";
 import { IoMdNotificationsOutline } from "react-icons/io";
-import { setadditionalForm } from "../../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
+import { TbHttpDelete } from "react-icons/tb";
+import { RiStickyNoteAddLine, RiDiscountPercentLine } from "react-icons/ri";
+import { BsReceiptCutoff } from "react-icons/bs";
+import {
+  getMasterData,
+  setAdditionalForm,
+} from "../../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
 
+// ─── 1. ChargesRow ────────────────────────────────────────────────────────────
+const ChargesRow = ({
+  invoiceIndex,
+  register,
+  errors,
+  control,
+  setValue,
+  schemeName,
+  dbMaxTotal = 0,
+  isPrepared,
+}) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `additionalCharges.${invoiceIndex}.rows`,
+  });
+  const rows = useWatch({
+    control,
+    name: `additionalCharges.${invoiceIndex}.rows`,
+  });
+
+  const total = (rows || []).reduce(
+    (sum, r) => sum + (Number(r.value) || 0),
+    0,
+  );
+
+  useEffect(() => {
+    setValue(`additionalCharges.${invoiceIndex}.total`, total);
+  }, [total, invoiceIndex, setValue]);
+
+  const maxAllowed = isPrepared ? dbMaxTotal : Infinity;
+  const remaining = maxAllowed - total;
+  const exceeded = isPrepared && total > dbMaxTotal;
+
+  return (
+    <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
+      <h5 className="text-sm font-semibold mb-2 flex justify-between">
+        <span className="text-blue-700 dark:text-blue-400">
+          Additional Charges {schemeName ? `(${schemeName})` : ""}
+        </span>
+        <span className={exceeded ? "text-red-600" : "text-blue-600"}>
+          {total.toFixed(2)}
+          {isPrepared && ` / ${dbMaxTotal.toFixed(2)}`}
+        </span>
+      </h5>
+
+      <div className="space-y-2">
+        {fields.map((field, k) => (
+          <div key={field.id} className="flex gap-2 items-center">
+            <Input
+              {...register(`additionalCharges.${invoiceIndex}.rows.${k}.desc`)}
+              placeholder="Description"
+              className="w-full px-2 py-1 text-sm border rounded"
+            />
+            <Input
+              {...register(
+                `additionalCharges.${invoiceIndex}.rows.${k}.value`,
+                {
+                  validate: (val) => {
+                    const current = Number(val || 0);
+                    const otherTotal = total - (Number(rows?.[k]?.value) || 0);
+                    if (isPrepared && current + otherTotal > dbMaxTotal)
+                      return `Max allowed is ${dbMaxTotal}`;
+                    return true;
+                  },
+                },
+              )}
+              type="number"
+              placeholder="0.00"
+              className="w-24 px-2 py-1 text-sm border rounded"
+            />
+            {fields.length > 1 && (
+              <button
+                type="button"
+                onClick={() => remove(k)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <TbHttpDelete size={18} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer Info */}
+      <div className="text-xs mt-2">
+        {exceeded ? (
+          <p className="text-red-600 font-semibold">
+            ⚠ Total exceeds DB allowed limit ({dbMaxTotal})
+          </p>
+        ) : (
+          isPrepared && (
+            <p className="text-gray-500">
+              Remaining allowed: <b>{remaining.toFixed(2)}</b>
+            </p>
+          )
+        )}
+      </div>
+
+      {fields.length < 3 && (
+        <button
+          type="button"
+          onClick={() => append({ desc: "", value: "" })}
+          className="text-xs text-blue-600 mt-2 flex items-center gap-1 hover:underline"
+        >
+          <RiStickyNoteAddLine /> Add Charge
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ─── 2. DiscountRow ───────────────────────────────────────────────────────────
+const DiscountRow = ({
+  invoiceIndex,
+  register,
+  errors,
+  control,
+  setValue,
+  schemeName,
+  isPrepared,
+}) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `discountDetails.${invoiceIndex}.rows`,
+  });
+  const rows = useWatch({
+    control,
+    name: `discountDetails.${invoiceIndex}.rows`,
+  });
+
+  const total = (rows || []).reduce(
+    (sum, r) => sum + (Number(r.value) || 0),
+    0,
+  );
+
+  useEffect(() => {
+    setValue(`discountDetails.${invoiceIndex}.total`, total);
+  }, [total, invoiceIndex, setValue]);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 p-3 rounded border border-red-100 dark:border-red-900">
+      <h5 className="text-sm font-semibold mb-2 flex justify-between text-red-700 dark:text-red-400">
+        <span>Discounts {schemeName ? `(${schemeName})` : ""}</span>
+        <span>{total.toFixed(2)}</span>
+      </h5>
+
+      <div className="space-y-2">
+        {fields.map((field, k) => (
+          <div key={field.id} className="flex gap-2 items-center">
+            <Input
+              {...register(`discountDetails.${invoiceIndex}.rows.${k}.desc`)}
+              placeholder="Reason"
+              className="w-full px-2 py-1 text-sm border rounded"
+              readOnly={isPrepared}
+            />
+            <Input
+              {...register(`discountDetails.${invoiceIndex}.rows.${k}.value`)}
+              type="number"
+              placeholder="0.00"
+              className="w-24 px-2 py-1 text-sm border rounded"
+              readOnly={isPrepared}
+            />
+            {fields.length > 1 && !isPrepared && (
+              <button
+                type="button"
+                onClick={() => remove(k)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <TbHttpDelete size={18} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {!isPrepared && (
+        <button
+          type="button"
+          onClick={() => append({ desc: "", value: "" })}
+          className="text-xs text-red-600 mt-2 flex items-center gap-1 hover:underline"
+        >
+          <RiDiscountPercentLine /> Add Discount
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ─── 3. Main Form ─────────────────────────────────────────────────────────────
 const AdditionalCustDetailsForm = ({
   onClose,
-  handleCloseForm,
   invoiceDetails,
   setShowWarning,
 }) => {
   const dispatch = useDispatch();
 
   const savedFormData = useSelector(
-    (state) => state?.invoice?.proformaInvoice?.additionalForm,
+    (state) => state?.proformaInvoice?.additionalForm,
   );
+  const master = useSelector((state) => state?.proformaInvoice?.master);
 
-  // --- Helper: Format Payment Terms (HTML to Text) ---
+  useEffect(() => {
+    dispatch(getMasterData());
+  }, []);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
   const formatPaymentTerms = (htmlContent) => {
     if (!htmlContent) return "";
     const parser = new DOMParser();
@@ -39,28 +232,29 @@ const AdditionalCustDetailsForm = ({
     const numberedSections = decoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
     if (numberedSections?.length) {
       return numberedSections
-        .map((section) => section.replace(/~+/g, "\n").trim())
+        .map((s) => s.replace(/~+/g, "\n").trim())
         .join("\n");
     }
     return decoded.replace(/~+/g, "\n").trim();
   };
 
-  const formattedDescription = formatPaymentTerms(
-    savedFormData?.paymentTerms || invoiceDetails?.paymentTerms || "",
-  );
-
   const formatMultilineText = (text) => (text ? text.replace(/~/g, "\n") : "");
 
-  const handleResetToDatabase = () => {
-    dispatch(resetCustomerAdditionalData());
-    reset(defaultValues);
-    toast.success("Reset to database values", { icon: "🔄" });
-  };
+  const formattedAddress = formatMultilineText(
+    savedFormData?.exportAuthorisedAddress ||
+      invoiceDetails?.exportAuthorisedAddress ||
+      "",
+  );
 
-  // --- Default Values ---
-  const defaultValues = useMemo(() => {
-    return {
-      // --- Logistics ---
+  const matchedAddress = master?.exporterAddresses?.find(
+    (addr) => addr.exporterAddressFormatted === formattedAddress,
+  );
+
+  const authorisedSignature = matchedAddress?.authorisedSignature || "";
+  // ── Default values ─────────────────────────────────────────────────────────
+  const defaultValues = useMemo(
+    () => ({
+      // Logistics
       preCarriageBy:
         savedFormData?.preCarriageBy || invoiceDetails?.preCarriageBy || "",
       placeOfReceiptByPreCarrier:
@@ -81,12 +275,15 @@ const AdditionalCustDetailsForm = ({
         "",
       containerType:
         savedFormData?.containerType || invoiceDetails?.containerType || "",
-      // --- Address & References ---
+      packingMethod:
+        savedFormData?.packingMethod || invoiceDetails?.packingMethod || "",
+      // Address & References
       exportAuthorisedAddress: formatMultilineText(
         savedFormData?.exportAuthorisedAddress ||
-        invoiceDetails?.exportAuthorisedAddress ||
-        "",
+          invoiceDetails?.exportAuthorisedAddress ||
+          "",
       ),
+      authorisedSignature,
       countryOfOriginOfGoods:
         savedFormData?.countryOfOriginOfGoods ||
         invoiceDetails?.countryOfOriginOfGoods ||
@@ -94,7 +291,12 @@ const AdditionalCustDetailsForm = ({
       BuyersOrderNumber:
         savedFormData?.BuyersOrderNumber || invoiceDetails?.orderRefNo || "",
 
-      // --- Notify Party ---
+      revisionNumber:
+        savedFormData?.revisionNumber || invoiceDetails?.revisionNumber || "",
+      revisionDate:
+        savedFormData?.revisionDate || invoiceDetails?.revisionDate || "",
+
+      // Notify Party
       notifyPartyName:
         savedFormData?.notifyPartyName || invoiceDetails?.notifyPartyName || "",
       notifyPartyEmail:
@@ -119,52 +321,126 @@ const AdditionalCustDetailsForm = ({
         savedFormData?.notifyPartyAddress ||
         invoiceDetails?.notifyPartyAddress ||
         "",
+      notifyPartyZipcode:
+        savedFormData?.notifyPartyZipcode ||
+        invoiceDetails?.notifyPartyZipcode ||
+        "",
 
-      // --- Financials ---
+      // Financials
       incoterm: savedFormData?.incoterm || invoiceDetails?.incoterm || "",
       placeOfIncoterm:
         savedFormData?.placeOfIncoterm || invoiceDetails?.placeOfIncoterm || "",
       ExchangeCurrency:
         savedFormData?.ExchangeCurrency || invoiceDetails?.exchangeRate || "",
-      paymentTerms: formattedDescription,
-      rexNumber: savedFormData?.rexNumber || invoiceDetails?.rexNumber || "",
-      igstlut: savedFormData?.igstlut || invoiceDetails?.igstlut || "",
-      invoice_Details: savedFormData?.invoice_Details || "",
-      bankDetails: formatMultilineText(savedFormData?.bankDetails) || "",
+      paymentTerms: formatPaymentTerms(
+        savedFormData?.paymentTerms || invoiceDetails?.paymentTerms || "",
+      ),
+      bankDetails: formatMultilineText(
+        savedFormData?.bankDetails || invoiceDetails?.bankDetails || "",
+      ),
+      remark: formatMultilineText(
+        savedFormData?.remark || invoiceDetails?.remark || "",
+      ),
       leadTime: savedFormData?.leadTime || invoiceDetails?.leadTime || "",
-      validityDate: savedFormData?.validityDate || invoiceDetails?.validityDate || "",
-    };
-  }, [invoiceDetails, savedFormData, formattedDescription]);
+      validityDate:
+        savedFormData?.validityDate || invoiceDetails?.validityDate || "",
+
+      // Invoice Details
+      igstlut: savedFormData?.igstlut || invoiceDetails?.igstlut || "",
+      rexNumber: savedFormData?.rexNumber || invoiceDetails?.rexNumber || "",
+      invoice_Details:
+        savedFormData?.invoice_Details || invoiceDetails?.invoice_Details || "",
+
+      // ── NEW: Additional Charges & Discounts ──────────────────────────────
+      // Each invoice scheme can have its own row-group (index = 0 here for single-invoice).
+      // If you have multiple invoice schemes, map over them and seed one entry per scheme.
+      additionalCharges: savedFormData?.additionalCharges || [
+        { rows: [{ desc: "", value: "" }], total: 0 },
+      ],
+      discountDetails: savedFormData?.discountDetails || [
+        { rows: [{ desc: "", value: "" }], total: 0 },
+      ],
+    }),
+    [invoiceDetails, savedFormData],
+  );
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors, isSubmitting },
     reset,
   } = useForm({ defaultValues });
 
-  // Reset form when invoiceDetails changes
   useEffect(() => {
-    if (invoiceDetails || savedFormData) {
-      reset(defaultValues);
-    }
-  }, [defaultValues, reset, invoiceDetails, savedFormData]);
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
-  const onSubmit = async (data) => {
-    toast.success("Processing Proforma Invoice Details...");
-
-    const finalData = {
-      ...invoiceDetails,
-      ...data,
+  // ── Reset to DB ────────────────────────────────────────────────────────────
+  const handleResetToDatabase = () => {
+    const dbValues = {
+      preCarriageBy: invoiceDetails?.preCarriageBy || "",
+      placeOfReceiptByPreCarrier:
+        invoiceDetails?.placeOfReceiptByPreCarrier || "",
+      portOfLoading: invoiceDetails?.portOfLoading || "",
+      portOfDischarge: invoiceDetails?.portOfDischarge || "",
+      finalDestination: invoiceDetails?.finalDestination || "",
+      countryOfFinalDestination:
+        invoiceDetails?.countryOfFinalDestination || "",
+      containerType: invoiceDetails?.containerType || "",
+      packingMethod: invoiceDetails?.packingMethod || "",
+      exportAuthorisedAddress: formatMultilineText(
+        invoiceDetails?.exportAuthorisedAddress || "",
+      ),
+      revisionNumber: invoiceDetails?.revisionNumber || "",
+      revisionDate: invoiceDetails?.revisionDate || "",
+      countryOfOriginOfGoods: invoiceDetails?.countryOfOriginOfGoods || "",
+      BuyersOrderNumber: invoiceDetails?.orderRefNo || "",
+      notifyPartyName: invoiceDetails?.notifyPartyName || "",
+      notifyPartyEmail: invoiceDetails?.notifyPartyEmail || "",
+      notifyPartyPhone: invoiceDetails?.notifyPartyPhone || "",
+      notifyPartyCity: invoiceDetails?.notifyPartyCity || "",
+      notifyPartyState: invoiceDetails?.notifyPartyState || "",
+      notifyPartyCountry: invoiceDetails?.notifyPartyCountry || "",
+      notifyPartyAddress: invoiceDetails?.notifyPartyAddress || "",
+      incoterm: invoiceDetails?.incoterm || "",
+      placeOfIncoterm: invoiceDetails?.placeOfIncoterm || "",
+      ExchangeCurrency: invoiceDetails?.exchangeRate || "",
+      paymentTerms: formatPaymentTerms(invoiceDetails?.paymentTerms || ""),
+      remark: formatMultilineText(invoiceDetails?.remark || ""),
+      bankDetails: formatMultilineText(invoiceDetails?.bankDetails || ""),
+      leadTime: invoiceDetails?.leadTime || "",
+      validityDate: invoiceDetails?.validityDate || "",
+      igstlut: invoiceDetails?.igstlut || "",
+      rexNumber: invoiceDetails?.rexNumber || "",
+      invoice_Details: invoiceDetails?.invoice_Details || "",
+      // Reset charges/discounts to a single empty row
+      additionalCharges: [{ rows: [{ desc: "", value: "" }], total: 0 }],
+      discountDetails: [{ rows: [{ desc: "", value: "" }], total: 0 }],
     };
 
-    dispatch(setadditionalForm(finalData));
-    dispatch(setFinalCustomerData());
+    reset(dbValues);
+    dispatch(setAdditionalForm({}));
+    toast.success("Reset to database values", { icon: "🔄",duration:5000 });
+  };
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  const onSubmit = async (data) => {
+    dispatch(setAdditionalForm(data));
+    toast.success(
+  "Draft saved successfully. This is not a final submission.",
+  {
+    duration: 5000,
+  }
+);
     setShowWarning(true);
     onClose();
   };
+
+  // ── isPrepared flag (tweak the condition to match your business logic) ─────
+  const isPrepared = invoiceDetails?.status === "PREPARED";
 
   return (
     <div className="h-full flex flex-col dark:bg-gray-800">
@@ -172,21 +448,23 @@ const AdditionalCustDetailsForm = ({
       <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
         <div className="flex flex-wrap gap-4 justify-between items-center text-sm text-gray-800 dark:text-white">
           <div>
-            SHIPMENT:{" "}
+            INVOICE TYPE:{" "}
             <span className="font-bold text-[var(--primary)]">
-              {invoiceDetails?.shipmentType}
+              {invoiceDetails?.invoiceType === "PI"
+                ? "PROFORMA INVOICE"
+                : "DRAFT INVOICE"}
             </span>
           </div>
           <div>
-            WORK ORDER:{" "}
+            ORDER REFERENCES:{" "}
             <span className="font-bold text-[var(--primary)]">
-              {invoiceDetails?.workorderno}
+              {invoiceDetails?.orderRefNo}
             </span>
           </div>
           <div>
             CUSTOMER:{" "}
             <span className="font-bold text-[var(--primary)]">
-              {invoiceDetails?.custfullname}
+              {invoiceDetails?.custFullName}
             </span>
           </div>
         </div>
@@ -195,8 +473,7 @@ const AdditionalCustDetailsForm = ({
       {/* Scrollable Form Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
-          {/* --- 1. LOGISTICS --- */}
+          {/* ── 1. LOGISTICS ────────────────────────────────────────────────── */}
           <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg flex items-center gap-2 font-semibold mb-4 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
               1. Logistics <FaPaperPlane className="text-[var(--primary)]" />
@@ -207,30 +484,11 @@ const AdditionalCustDetailsForm = ({
                 name="preCarriageBy"
                 register={register}
                 errors={errors}
-                options={["SEA", "AIR", "ROAD"]}
+                options={
+                  master?.transportModes?.map((i) => i.modeCode) || ["", "", ""]
+                }
                 watch={watch}
                 setValue={setValue}
-              />
-              <SelectField
-                label="Place of Receipt"
-                name="placeOfReceiptByPreCarrier"
-                register={register}
-                errors={errors}
-                options={["CHENNAI", "SRI LANKA", "PUDUKKOTAI, INDIA"]}
-                watch={watch}
-                setValue={setValue}
-              />
-              <InputField
-                label="Port of Loading"
-                name="portOfLoading"
-                register={register}
-                errors={errors}
-              />
-              <InputField
-                label="Port of Discharge"
-                name="portOfDischarge"
-                register={register}
-                errors={errors}
               />
               <InputField
                 label="Final Destination"
@@ -238,50 +496,78 @@ const AdditionalCustDetailsForm = ({
                 register={register}
                 errors={errors}
               />
-              <InputField
-                label="Country of Final Destination"
-                name="countryOfFinalDestination"
-                register={register}
-                errors={errors}
-              />
               <SelectField
-                label="CONTAINER TYPE"
+                label="Container Type"
                 name="containerType"
                 register={register}
                 errors={errors}
-                options={["20'", "40'", "40 HC"]}
+                options={
+                  master?.containerTypes?.map((i) => i.containerType) || [
+                    "",
+                    "",
+                    "",
+                  ]
+                }
+                watch={watch}
+                setValue={setValue}
+              />
+              <SelectField
+                label="Packing Method"
+                name="packingMethod"
+                register={register}
+                errors={errors}
+                options={
+                  master?.packingMethods?.map((i) => i.packingmethod) || [
+                    "",
+                    "",
+                    "",
+                  ]
+                }
                 watch={watch}
                 setValue={setValue}
               />
             </div>
           </section>
 
-          {/* --- 2. ADDRESS & REFERENCES --- */}
+          {/* ── 2. ADDRESS & REFERENCES ─────────────────────────────────────── */}
           <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg flex items-center gap-2 font-semibold mb-4 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
               2. References <FaMapMarkerAlt className="text-[var(--primary)]" />
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextArea
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <SelectField
                 label="Exporter Address"
                 name="exportAuthorisedAddress"
                 register={register}
                 errors={errors}
-                rows={7}
+                options={
+                  master?.exporterAddresses?.map(
+                    (i) => i.exporterAddressFormatted,
+                  ) || ["", "", ""]
+                }
+                watch={watch}
+                setValue={setValue}
               />
-              <div className="grid grid-cols-2 gap-4">
-                <SelectField
-                  label="Country of Origin Goods"
-                  name="countryOfOriginOfGoods"
-                  register={register}
-                  errors={errors}
-                  options={["INDIA", "SRI LANKA", "INDIA & SRILANKA"]}
-                  watch={watch}
-                  setValue={setValue}
-                />
+              <div className="grid grid-cols-1 gap-4">
                 <InputField
                   label="Buyers Order No"
                   name="BuyersOrderNumber"
+                  register={register}
+                  errors={errors}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <InputField
+                  label="Revision Number"
+                  name="revisionNumber"
+                  register={register}
+                  errors={errors}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <DateField
+                  label="Revision Date"
+                  name="revisionDate"
                   register={register}
                   errors={errors}
                 />
@@ -332,6 +618,12 @@ const AdditionalCustDetailsForm = ({
                   register={register}
                   errors={errors}
                 />
+                <InputField
+                  label="Zip Code"
+                  name="notifyPartyZipcode"
+                  register={register}
+                  errors={errors}
+                />
               </div>
               <div className="mt-3">
                 <TextArea
@@ -344,7 +636,7 @@ const AdditionalCustDetailsForm = ({
             </div>
           </section>
 
-          {/* --- 3. FINANCIALS --- */}
+          {/* ── 3. FINANCIALS ───────────────────────────────────────────────── */}
           <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
               3. Financials{" "}
@@ -356,7 +648,9 @@ const AdditionalCustDetailsForm = ({
                 name="incoterm"
                 register={register}
                 errors={errors}
-                options={["FOB", "CIF", "DDU", "DDP", "C&F", "DAP", "EXW"]}
+                options={
+                  master?.incoterms?.map((i) => i.incoterm) || ["", "", ""]
+                }
                 watch={watch}
                 setValue={setValue}
               />
@@ -366,23 +660,30 @@ const AdditionalCustDetailsForm = ({
                 register={register}
                 errors={errors}
               />
-              <InputField
+              {/* <InputField
                 label="Exchange Rate"
                 name="ExchangeCurrency"
                 register={register}
                 errors={errors}
                 type="decimal"
-              />
+              /> */}
               <SelectField
-                label="LEAD TIME"
+                label="Lead Time"
                 name="leadTime"
                 register={register}
                 errors={errors}
-                options={["WITHIN 1 WEEK", "2 WEEKS", "3 TO 4 WEEKS", "5 TO 6 WEEKS", "ABOVE 8 WEEKS"]}
+                options={
+                  master?.leadtimemaster?.map((i) => i?.leadtimename) || [
+                    "WITHIN 1 WEEK",
+                    "2 WEEKS",
+                    "3 TO 4 WEEKS",
+                    "5 TO 6 WEEKS",
+                    "ABOVE 8 WEEKS",
+                  ]
+                }
                 watch={watch}
                 setValue={setValue}
               />
-              {/* Validity Date */}
               <DateField
                 label="Validity Date"
                 name="validityDate"
@@ -394,48 +695,65 @@ const AdditionalCustDetailsForm = ({
                   label="Payment Terms"
                   name="paymentTerms"
                   register={register}
-                  rows={4}
+                  rows={6}
                 />
                 <TextArea
+                  label="Remarks"
+                  name="remark"
+                  register={register}
+                  rows={6}
+                />
+                <SelectField
                   label="Bank Details"
                   name="bankDetails"
                   register={register}
-                  rows={4}
+                  errors={errors}
+                  options={master?.exporterBanks?.map(
+                    (i) => i.bankAddressFormatted,
+                  )}
+                  watch={watch}
+                  setValue={setValue}
                 />
               </div>
             </div>
           </section>
 
-          {/* --- 4. Invoice Details --- */}
+          {/* ── 4. OTHER CHARGES & DISCOUNTS ────────────────────────────────── */}
           <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
-              4. Invoice Details{" "}
-              <MdOutlinePayments className="text-[var(--primary)]" />
+              4. Other Charges &amp; Discounts{" "}
+              <BsReceiptCutoff className="text-[var(--primary)]" />
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-              <div className="lg:col-span-4 flex">
-                <InputField
-                  label="IGST LUT"
-                  name="igstlut"
-                  register={register}
-                  errors={errors}
-                />
-              </div>
-              <div className="lg:col-span-4 flex gap-2">
-                <TextArea
-                  label="Invoice Details"
-                  name="invoice_Details"
-                  register={register}
-                  rows={4}
-                />
-                <TextArea
-                  label="REX Number"
-                  name="rexNumber"
-                  register={register}
-                  rows={4}
-                />
-              </div>
+
+            {/*
+              If you have a single invoice (no scheme loop), invoiceIndex = 0.
+              If you need one ChargesRow per scheme, map over your schemes array
+              and pass the correct invoiceIndex and schemeName for each.
+            */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ChargesRow
+                invoiceIndex={0}
+                register={register}
+                errors={errors}
+                control={control}
+                setValue={setValue}
+                schemeName={invoiceDetails?.schemeName || ""}
+                dbMaxTotal={Number(invoiceDetails?.maxAdditionalCharges) || 0}
+                isPrepared={isPrepared}
+              />
+              <DiscountRow
+                invoiceIndex={0}
+                register={register}
+                errors={errors}
+                control={control}
+                setValue={setValue}
+                schemeName={invoiceDetails?.schemeName || ""}
+                isPrepared={isPrepared}
+              />
             </div>
+
+            {/* Summary strip */}
+            <ChargesSummary control={control} />
           </section>
 
           {/* Footer Actions */}
@@ -455,8 +773,8 @@ const AdditionalCustDetailsForm = ({
             ) : (
               <Button
                 type="submit"
-                text="Save Details"
-                className="bg-green-600 hover:bg-green-700 text-white px-8"
+                text="Back to Submit"
+                className="bg-green-600 hover:bg-yellow-700 text-white px-8"
               />
             )}
             <Button
@@ -472,7 +790,42 @@ const AdditionalCustDetailsForm = ({
   );
 };
 
-// --- GENERIC FIELDS ---
+// ─── 4. ChargesSummary (net total bar) ───────────────────────────────────────
+// Shows net = total charges − total discounts across all invoice groups.
+const ChargesSummary = ({ control }) => {
+  const charges = useWatch({ control, name: "additionalCharges" });
+  const discounts = useWatch({ control, name: "discountDetails" });
+
+  const totalCharges = (charges || []).reduce(
+    (s, g) => s + (Number(g?.total) || 0),
+    0,
+  );
+  const totalDiscounts = (discounts || []).reduce(
+    (s, g) => s + (Number(g?.total) || 0),
+    0,
+  );
+  const net = totalCharges - totalDiscounts;
+
+  return (
+    <div className="mt-4 flex items-center justify-end gap-6 text-sm border-t pt-3 border-gray-200 dark:border-gray-600">
+      <span className="text-blue-700 dark:text-blue-400">
+        Charges: <b>{totalCharges.toFixed(2)}</b>
+      </span>
+      <span className="text-red-600 dark:text-red-400">
+        Discounts: <b>−{totalDiscounts.toFixed(2)}</b>
+      </span>
+      <span
+        className={`font-semibold ${
+          net >= 0 ? "text-green-700 dark:text-green-400" : "text-red-600"
+        }`}
+      >
+        Net: {net.toFixed(2)}
+      </span>
+    </div>
+  );
+};
+
+// ─── Generic Fields ───────────────────────────────────────────────────────────
 const InputField = ({
   label,
   name,
@@ -511,7 +864,7 @@ const InputField = ({
 const DateField = ({ label, name, register, errors }) => (
   <div className="w-full">
     {label && (
-      <label className="text-[10px] uppercase font-bold text-gray-500 mb-1 flex items-center gap-1">
+      <label className="text-[10px] uppercase font-bold text-gray-500 mb-1">
         {label}
       </label>
     )}
@@ -519,9 +872,7 @@ const DateField = ({ label, name, register, errors }) => (
       type="date"
       {...register(name)}
       className={`w-full px-3 py-2 rounded border text-sm bg-white dark:bg-gray-800 dark:text-white ${
-        errors[name]
-          ? "border-red-500 focus:ring-red-200"
-          : "border-gray-300 focus:ring-blue-100"
+        errors[name] ? "border-red-500" : "border-gray-300"
       }`}
     />
     {errors[name] && (
@@ -529,6 +880,8 @@ const DateField = ({ label, name, register, errors }) => (
     )}
   </div>
 );
+
+// import { useState, useEffect } from "react";
 
 const SelectField = ({
   label,
@@ -539,26 +892,45 @@ const SelectField = ({
   setValue,
   watch,
 }) => {
-  const selectedValue = typeof watch === "function" ? watch(name) : "";
-  const isCustom = selectedValue === "__custom__";
+  const value = watch(name) || "";
+  const normalizedOptions = options.filter(Boolean).map((o) => String(o));
+
+  // ── Use explicit state instead of deriving from value ──────────────────────
+  const [isCustom, setIsCustom] = useState(
+    () => value !== "" && !normalizedOptions.includes(String(value)),
+  );
+
+  // Sync if parent resets the form (e.g. "Reset to DB")
+  useEffect(() => {
+    if (value === "" || normalizedOptions.includes(String(value))) {
+      setIsCustom(false);
+    }
+  }, [value, normalizedOptions.join(",")]);
 
   return (
     <div className="w-full">
       <label className="text-[10px] uppercase font-bold text-gray-500 mb-1">
         {label}
       </label>
+
       {!isCustom ? (
         <Select
           name={name}
           className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
           {...register(name)}
+          value={value}
           onChange={(e) => {
             const val = e.target.value;
-            setValue?.(name, val);
+            if (val === "__custom__") {
+              setIsCustom(true);          // flip the flag FIRST
+              setValue(name, "", { shouldDirty: true }); // clear value
+            } else {
+              setValue(name, val, { shouldDirty: true });
+            }
           }}
         >
           <option value="">Select...</option>
-          {options.map((opt) => (
+          {normalizedOptions.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
             </option>
@@ -566,16 +938,37 @@ const SelectField = ({
           <option value="__custom__">➕ Add New</option>
         </Select>
       ) : (
-        <Input
-          name={name}
-          type="text"
-          placeholder="Enter value..."
-          className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
-          onBlur={(e) => {
-            setValue?.(name, e.target.value || "");
-          }}
-          autoFocus
-        />
+        <div className="relative">
+          <Input
+            name={name}
+            type="text"
+            placeholder="Enter value..."
+            className="w-full px-3 py-2 rounded border border-blue-400 text-sm pr-8"
+            value={value}
+            onChange={(e) =>
+              setValue(name, e.target.value, { shouldDirty: true })
+            }
+            autoFocus
+          />
+          {/* ✕ button lets the user go back to the dropdown */}
+          <button
+            type="button"
+            title="Back to list"
+            onClick={() => {
+              setIsCustom(false);
+              setValue(name, "", { shouldDirty: true });
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {errors?.[name] && (
+        <p className="text-red-500 text-[10px] mt-0.5">
+          {errors[name].message}
+        </p>
       )}
     </div>
   );

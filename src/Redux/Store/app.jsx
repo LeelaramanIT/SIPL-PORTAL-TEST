@@ -17,6 +17,7 @@ import AssemblyProcessIDReducer from "../Slices/Master/PI_Master/AssemblyProcess
 import PDIFitmentMasterReducer from "../Slices/PDIFitmentMaster/PPCMaster";
 import PDIFitmentReducer from "../Slices/PDIFitmentMaster/PDIFitmentSlice";
 import { version } from "react";
+import PIMasterReducer from '../Slices/ProformaInvoice/PIMasterSlice'
 
 // Encryption config
 const encryptor = encryptTransform({
@@ -108,6 +109,12 @@ const PDIFitmentPersistConfig = {
   storage: storageSession,
 }
 
+const PIMasterConfig = {
+  key:'PIMaster',
+  version:1,
+  storage: storageSession
+}
+
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedProformaInvoiceReducer = persistReducer(proformaInvoiceConfig, proformaInvoice);
@@ -121,6 +128,7 @@ const persistedPPCSubstitutionDetailsReducer = persistReducer(PPCSubstitutionDet
 const persistedAssemblyProcessIDReducer = persistReducer(AssemblyProcessIDPersistConfig, AssemblyProcessIDReducer);
 const persistedPDIFitmentMasterReducer = persistReducer(PDIFitmentMasterPersistConfig, PDIFitmentMasterReducer);
 const persistedPDIFitmentReducer = persistReducer(PDIFitmentPersistConfig, PDIFitmentReducer);
+const persistedPIMaster = persistReducer(PIMasterConfig,PIMasterReducer)
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -137,6 +145,7 @@ const rootReducer = combineReducers({
   AssemblyProcessID: persistedAssemblyProcessIDReducer,
   PDIFitmentMaster: persistedPDIFitmentMasterReducer,
   PDIFitment: persistedPDIFitmentReducer,
+  PIMaster: persistedPIMaster
 });
 
 // Store setup

@@ -54,6 +54,7 @@ import TyreAndRimFitment from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitme
 import FitmentList from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentList";
 import FitmentMaster from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentMaster";
 import ProformaPrepare from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPrepare";
+import PIMaster from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/PIMaster";
 
 
 
@@ -179,16 +180,34 @@ export const router = createBrowserRouter([
               { path: "Invoice/Customer/BillPDF", element: <InvoicePDF /> },
               { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind /> },
               { path: "Invoice/Export/Sample", element: <SampleSplit /> },
-              { path: "Invoice/ProformaInvoice/List", element: <ProformaList /> },
+              { path: "ProformaInvoice/List",
+                element: <PIMaster />,
+                children:[
+                  {
+                    index:true,
+                    element:<Navigate to='PI' replace/>
+                  },
+                  {
+                    path:':invoiceType',
+                    element:<ProformaList/>
+                  },
+                  // {
+                  //   path:'Draft',
+                  //   element:<ProformaList/>
+                  // }
+                ]
+              },
               { path: "Invoice/ProformaInvoice/PDF", element: <ProformaPDFViewer /> },
-              { path: "Invoice/ProformaInvoice/Prepare", element: <ProformaPrepare /> },
+              { path: "ProformaInvoice/Prepare", element: <ProformaPrepare /> },
+              { path: "Invoice/ProformaInvoice/Draft/Prepare", element: <ProformaPrepare /> },
               {
                 path: "Dispatch/PDI/Inspection/:plant/:custType",
                 element: <PDIMaster />,
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="ScanForInspection" />
+                    element: <Navigate to="ScanForInspection" replace />
+                    
                   },
                   {
                     path: "ScanForInspection",

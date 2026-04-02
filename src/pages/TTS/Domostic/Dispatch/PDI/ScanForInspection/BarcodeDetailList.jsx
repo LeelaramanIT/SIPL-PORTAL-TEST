@@ -183,7 +183,11 @@ const BarcodeDetailList = () => {
   ];
 
   const processStencilList = barcodeDetails?.processStencilList;
+  console.log(processStencilList);
+  
   const stencilList = barcodeDetails?.concessionSummaryList;
+  console.log(stencilList);
+
   const items = InspectionDetails?.items;
 
   const platforms = [...new Set(processStencilList?.map((i) => i.platform))];

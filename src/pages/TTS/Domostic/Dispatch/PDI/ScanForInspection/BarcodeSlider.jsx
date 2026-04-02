@@ -99,14 +99,9 @@ export const VerificationSider = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              /* RESPONSIVE STRATEGY:
-                 - Mobile: Full width/height bottom sheet
-                 - Tablet/Laptop: Standard Modal
-                 - TV/4K: Max-width cap at 1800px to prevent extreme stretching
-              */
               className="pointer-events-auto w-full 
                          sm:max-w-2xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-[1350px] 3xl:max-w-[1800px]
-                         bg-white dark:bg-slate-900 
+                         bg-white dark:bg-slate-900  
                          sm:rounded-3xl rounded-t-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] 
                          border border-slate-200 dark:border-slate-800 
                          flex flex-col max-h-[100vh] sm:max-h-[90vh] overflow-hidden"
@@ -336,7 +331,17 @@ const ModernRadioGroup = ({ name, label, selectedValue, onChange }) => (
     "
     >
       {["pass", "fail"].map((status) => (
-        <label key={status} className="flex-1 cursor-pointer relative z-10">
+        <label
+          key={status}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectedValue === status ? onChange(null) : onChange(status);
+            }
+          }}
+          className="flex-1 cursor-pointer relative z-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg"
+        >
           <input
             type="radio"
             name={name}

@@ -382,7 +382,7 @@ const SupportChat = () => {
       touchAction: "none",
       pointerEvents: "auto",
     }}
-    className="z-[10000] select-none"
+    className="z-[99999999] select-none"
   >
 
     {/* Toggle Button (Click + Drag Allowed) */}
