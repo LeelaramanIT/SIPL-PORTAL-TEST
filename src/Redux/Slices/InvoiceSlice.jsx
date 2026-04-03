@@ -1479,7 +1479,6 @@ export const submitCustomerInvoice =
             discount3: mergedDiscounts[2]?.[0] || "",
             discountValue3: mergedDiscounts[2]?.[1] || 0,
             paymentermsId: 0,
-            paymentTerms: payload.paymentTerms || "",
             paymentDays: payload.paymentDays || 0,
             otsNo: payload.otsNo || 0,
             grandTotal: invoiceValue || 0,
