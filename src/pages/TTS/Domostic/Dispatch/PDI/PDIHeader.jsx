@@ -149,7 +149,6 @@ function PDIHeader() {
         <div className="flex gap-5 mt-3">
           {visibleTabs.map((tab) => {
             const isActive = location.pathname === tab.path;
-
             return (
               <button
                 key={tab.path}
