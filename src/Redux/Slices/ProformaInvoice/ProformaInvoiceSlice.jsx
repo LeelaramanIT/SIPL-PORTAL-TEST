@@ -3,6 +3,7 @@ import { api } from "../../../utils/axios";
 
 const initialState = {
   listOfProformaInvoice: [],
+  listOfDraftProforma: [],
   loading: false,
   proformaDetails: {}, // ← ONLY DB data
   additionalForm: null,
@@ -16,8 +17,13 @@ const proformaInvoice = createSlice({
   initialState,
   name: "proformaInvoice",
   reducers: {
+    // ✅ Fix — give the draft reducer its own unique name
     setListOfProformaInvoice: (state, action) => {
       state.listOfProformaInvoice = action.payload;
+    },
+    setListOfDraftProforma: (state, action) => {
+      // ← renamed
+      state.listOfDraftProforma = action.payload;
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -54,17 +60,41 @@ const proformaInvoice = createSlice({
     setMaster: (state, action) => {
       state.master = action.payload;
     },
+    resetListOfDraftPI: (state) => {
+      state.listOfDraftProforma = [];
+      state.listOfProformaInvoice = [];
+    },
   },
 });
 
-export const getListOfProformaInvoice = (payload) => async (dispatch) => {
+export const getListOfProformaInvoice = (payload, type) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
-    const res = await api.get(`/DraftPI/GettingDraftPIReadyOrders`, {
-      params: { DocumentType: payload },
-    });
-    if (res.status === 200) {
-      dispatch(setListOfProformaInvoice(res.data));
+
+    if (type === "DRAFT") {
+      console.log("draft");
+
+      dispatch(resetListOfDraftPI());
+
+      const res = await api.get(`/DraftPI/GettingDraftPIReadyOrders`, {
+        params: { DocumentType: payload },
+      });
+
+      if (res.status === 200) {
+        dispatch(setListOfDraftProforma(res.data));
+      }
+    } else {
+      console.log("PI");
+
+      dispatch(resetListOfDraftPI());
+
+      const res = await api.get(`/DraftPI/GettingPIReadyOrders`, {
+        params: { DocumentType: payload },
+      });
+
+      if (res.status === 200) {
+        dispatch(setListOfProformaInvoice(res.data));
+      }
     }
   } catch (error) {
     console.error(error);
@@ -90,7 +120,8 @@ export const getProformaInvoiceDetails = (payload) => async (dispatch) => {
   }
 };
 
-export const submitProformaInvoice = (invoiceType) => async (dispatch, getState) => {
+export const submitProformaInvoice =
+  (invoiceType) => async (dispatch, getState) => {
     try {
       dispatch(setSubmitLoading(true));
 
@@ -120,7 +151,6 @@ export const submitProformaInvoice = (invoiceType) => async (dispatch, getState)
       ];
 
       console.log(chargeAdjustmentmasters);
-      
 
       const selectedExporter = master?.exporterAddresses.find(
         (addr) =>
@@ -196,7 +226,7 @@ export const submitProformaInvoice = (invoiceType) => async (dispatch, getState)
 
         addressId: addressId || 0,
         companyId: companyId || 0,
-        addressttype: addressType || 'ho',
+        addressttype: addressType || "ho",
         exporterAddressFormatted: finalData.exportAuthorisedAddress,
         authorisedSignature: finalData.authorisedSignature || "",
 
@@ -238,15 +268,15 @@ export const submitProformaInvoice = (invoiceType) => async (dispatch, getState)
         // ✅ Items mapping
         items: finalData.items.map((item) => ({
           o_ID: item.o_ID || 0,
-          category: item.category || '',
+          category: item.category || "",
           platforms: item.platforms || "",
-          tyreSize: item.tyreSize || '',
-          tyreRim: item.tyreRim || '',
+          tyreSize: item.tyreSize || "",
+          tyreRim: item.tyreRim || "",
           tyreType: item.tyreType || "",
           brand: item.brand || "",
           basicPrice: item.basicPrice || 0,
           itemQty: item.itemQty || 0,
-          itemCode: item.itemCode || '',
+          itemCode: item.itemCode || "",
           typeDesc: item.typeDesc || "",
           hsnCode: item.hsnCode || "",
           assyRimStatus: item.assyRimstatus || false,
@@ -256,7 +286,7 @@ export const submitProformaInvoice = (invoiceType) => async (dispatch, getState)
           rimItemQty: item.rimItemQty || 0,
           rimUnitPrice: item.rimUnitPrice || 0,
           rimFinishedWt: item.rimfinishedwt || 0,
-          sidewall: item.sidewall || '',
+          sidewall: item.sidewall || "",
         })),
       };
 
@@ -308,6 +338,8 @@ export const {
   setAdditionalForm, // ← renamed to PascalCase for consistency
   resetProformaSubmit,
   setMaster,
+  resetListOfDraftPI,
+  setListOfDraftProforma
 } = proformaInvoice.actions;
 
 export default proformaInvoice.reducer;

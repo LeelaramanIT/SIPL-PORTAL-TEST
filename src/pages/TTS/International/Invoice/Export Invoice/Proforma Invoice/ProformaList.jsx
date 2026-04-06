@@ -25,7 +25,12 @@ const ProformaList = () => {
   const { invoiceType } = useParams();
   const { searchQuery } = useOutletContext();
   const [visibleRows, setVisibleRows] = useState(50);
-
+  const drafTtableData = useSelector(
+    (state) => state.proformaInvoice.listOfDraftProforma,
+  );
+  const PITableData = useSelector(
+    (state) => state.proformaInvoice.listOfProformaInvoice,
+  );
   const dispatch = useDispatch();
 
   const animateRef = useRef([]);
@@ -42,19 +47,18 @@ const ProformaList = () => {
     dispatch(resetMaster());
 
     if (invoiceType === "Draft") {
-      dispatch(getListOfProformaInvoice("DRAFT"));
+      dispatch(getListOfProformaInvoice("export", "DRAFT"));
     } else {
-      dispatch(getListOfProformaInvoice("EXPORT"));
+      dispatch(getListOfProformaInvoice("export", "PI"));
     }
-  }, [invoiceType]);
+  }, [invoiceType, dispatch]);
 
   useEffect(() => {
     setVisibleRows(50);
   }, [searchQuery]);
-
-  const tableData = useSelector(
-    (state) => state.proformaInvoice.listOfProformaInvoice,
-  );
+  const tableData = invoiceType === "Draft"
+  ? drafTtableData || []
+  : PITableData || [];
 
   const filteredData = useMemo(() => {
     if (
@@ -204,7 +208,11 @@ const ProformaList = () => {
               data={filteredData}
               headerClassName="bg-[var(--primary)]  text-[var(--text)] text-[10px] uppercase font-bold"
               visibleRows={visibleRows}
-              onLoadMore={() => setVisibleRows(prev => Math.min(prev + 50, filteredData.length))}
+              onLoadMore={() =>
+                setVisibleRows((prev) =>
+                  Math.min(prev + 50, filteredData.length),
+                )
+              }
             />
           </div>
         </div>
