@@ -33,18 +33,36 @@ const chunkItemsForPages = (items) => {
 //   unitWt(9%)                             → summaryBlankUnitWt
 //   totalWt(9%)                            → summaryBlankTotalWt
 //   totalPrice(14%)                        → summaryValue
-const getColWidths = (showEdc) => ({
-  srNo: "4%",
-  product: "8%",
-  sunPart: "8%",
-  description: showEdc ? "30%" : "36%",
-  edc: "6%",
-  qty: "6%",
-  unitPrice: "8%",
-  unitWt: "9%",
-  totalWt: "9%",
-  totalPrice: "14%",
-});
+const getColWidths = (showEdc, showItemCode, showPONumber) => {
+  let base = {
+    srNo: 4,
+    product: showItemCode ? 8 : 0,
+    sunPart: 8,
+    po: showPONumber ? 6 : 0,
+    description: showEdc ? 30 : 36,
+    edc: showEdc ? 6 : 0,
+    qty: 6,
+    unitPrice: 8,
+    unitWt: 9,
+    totalWt: 9,
+    totalPrice: 14,
+  };
+
+  // 👉 Calculate removed width
+  let removed = 0;
+  if (!showItemCode) removed += 8;
+  if (!showPONumber) removed += 6;
+  if (!showEdc) removed += 6;
+
+  // 👉 Distribute removed width smartly
+  const distributeCols = ["description", "sunPart"];
+  distributeCols.forEach((col) => {
+    base[col] += removed / distributeCols.length;
+  });
+
+  // 👉 Convert to %
+  return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, `${v}%`]));
+};
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   page: {
@@ -420,19 +438,23 @@ const AddressSection = ({ data }) => (
           </Text>
         </Text>
         <Text style={{ ...styles.bodyText, fontWeight: "bold" }}>
-          BANK DETAILS: <Text style={styles.text}>{(data?.bankDetails || "").toUpperCase().split("~")}</Text>
+          BANK DETAILS:{" "}
+          <Text style={styles.text}>
+            {(data?.bankDetails || "").toUpperCase().split("~")}
+          </Text>
         </Text>
       </View>
     </View>
   </View>
 );
 // ─── Table Header ─────────────────────────────────────────────────────────────
-const TableHeader = ({ data, showEdc }) => {
-  const w = getColWidths(showEdc);
+const TableHeader = ({ data, showEdc, showItemCode, showPONumber }) => {
+  const w = getColWidths(showEdc, showItemCode);
   const columns = [
     { label: "SR NO", width: w.srNo },
-    { label: "PRODUCT", width: w.product },
-    { label: "SUN PART", width: w.sunPart },
+    ...(showItemCode ? [{ label: "CUSTOMER PART #", width: w.product }] : []),
+    { label: "SUN PART #", width: w.sunPart },
+    ...(showPONumber ? [{ label: "PO #", width: w.po }] : []),
     { label: "ITEM DESCRIPTION", width: w.description },
     ...(showEdc ? [{ label: "EDC", width: w.edc }] : []),
     { label: "QTY", width: w.qty },
@@ -467,8 +489,14 @@ const TableHeader = ({ data, showEdc }) => {
   );
 };
 // ─── Table Rows ───────────────────────────────────────────────────────────────
-const TableRows = ({ items, showEdc, startIndex = 0 }) => {
-  const w = getColWidths(showEdc);
+const TableRows = ({
+  items,
+  showEdc,
+  showItemCode,
+  showPONumber,
+  startIndex = 0,
+}) => {
+  const w = getColWidths(showEdc, showItemCode);
   return (
     <>
       {items.map((item, index) => (
@@ -478,22 +506,24 @@ const TableRows = ({ items, showEdc, startIndex = 0 }) => {
               {item.srNo ?? startIndex + index + 1}
             </Text>
           </View>
-          <View
-            style={[
-              styles.bodyCell,
-              { width: w.product, alignItems: "center" },
-            ]}
-          >
-            <Text style={styles.bodyText}>{item.o_ID}</Text>
-          </View>
+          {showItemCode && (
+            <View style={[styles.bodyCell, { width: w.product }]}>
+              <Text style={styles.bodyText}>{item.product}</Text>
+            </View>
+          )}
           <View style={[styles.bodyCell, { width: w.sunPart }]}>
             <Text style={styles.bodyText}>{item.itemCode}</Text>
           </View>
+          {showPONumber && (
+            <View style={[styles.bodyCell, { width: w.po }]}>
+              <Text style={styles.bodyText}>{item.PONumber}</Text>
+            </View>
+          )}
           <View style={[styles.bodyCell, { width: w.description }]}>
             <Text style={styles.bodyText}>
-              {item.platforms} - {item.tyreSize} -{" "}
-              {item.tyreRim === "-" ? "0.00" : item.tyreRim} - {item.pattern} -{" "}
-              {item.brand} - {item.sidewall} - {item.tyreType}
+              {item.tyreSize} / {" "}
+              {item.tyreRim === "-" ? "0.00" : item.tyreRim} /{" "}
+              {item.brand} / {item.sidewall} / {item.tyreType}
             </Text>
           </View>
           {showEdc && (
@@ -542,11 +572,24 @@ const TableRows = ({ items, showEdc, startIndex = 0 }) => {
 const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
   const otherCharges = data?.additionalCharges?.[0]?.rows || [];
   const discounts = data?.discountDetails?.[0]?.rows || [];
-  const amountInWords = numberToWords(grandTotalDDP, (data?.userCurrency || ""));
+  const amountInWords = numberToWords(grandTotalDDP, data?.userCurrency || "");
   const totalQty = (data?.items || []).reduce(
     (s, it) => s + Number(it.itemQty || 0),
     0,
   );
+
+  const showEdc = data?.items?.some((i) => i?.assyRimstatus);
+  const showItemCode = data?.items?.some((i) => i?.product);
+  const showPONumber = data?.items?.some((i) => i?.PONumber);
+
+  const w = getColWidths(showEdc, showItemCode, showPONumber);
+
+  const summaryLabelWidth =
+    parseFloat(w.srNo) +
+    parseFloat(w.product || 0) +
+    parseFloat(w.sunPart) +
+    parseFloat(w.po || 0) +
+    parseFloat(w.description);
 
   // Reusable blank spacers matching unitPrice / unitWt / totalWt columns
   const BlankCells = ({ withTopBorder = false }) => (
@@ -576,7 +619,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
     <View wrap={false}>
       {/* 1. Sub Total */}
       <View style={styles.summaryRow}>
-        <View style={styles.summaryLabel}>
+        <View style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}>
           <Text style={{ fontSize: 7, fontWeight: "bold" }}>SUB TOTAL</Text>
         </View>
         <View style={styles.summaryQty}>
@@ -591,44 +634,56 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
       </View>
 
       {/* 2. Dynamic Other Charges */}
-      {otherCharges.map((charge, idx) => (
-        <View key={`charge-${idx}`} style={styles.summaryRow}>
-          <View style={styles.summaryLabel}>
-            <Text style={{ fontSize: 7, fontWeight: "bold" }}>
-              {charge.desc.toUpperCase()}
-            </Text>
+      {otherCharges
+        .filter((charge) => Number(charge?.value) > 0)
+        .map((charge, idx) => (
+          <View key={`charge-${idx}`} style={styles.summaryRow}>
+            <View style={styles.summaryLabel}>
+              <Text style={{ fontSize: 7, fontWeight: "bold" }}>
+                {charge.desc.toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.summaryQty} />
+            <BlankCells />
+            <View style={styles.summaryValue}>
+              <Text style={{ fontSize: 7, fontWeight: "bold" }}>
+                {Number(charge.value).toFixed(2)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.summaryQty} />
-          <BlankCells />
-          <View style={styles.summaryValue}>
-            <Text style={{ fontSize: 7, fontWeight: "bold" }}>
-              {Number(charge.value).toFixed(2)}
-            </Text>
-          </View>
-        </View>
-      ))}
+        ))}
 
       {/* 3. Dynamic Discounts */}
-      {discounts.map((disc, idx) => (
-        <View key={`disc-${idx}`} style={styles.summaryRow}>
-          <View style={styles.summaryLabel}>
-            <Text style={{ fontSize: 7, fontWeight: "bold" }}>
-              {disc.desc.toUpperCase()}
-            </Text>
+      {discounts
+        .filter((disc) => Number(disc?.value) > 0)
+        .map((disc, idx) => (
+          <View key={`disc-${idx}`} style={styles.summaryRow}>
+            <View style={styles.summaryLabel}>
+              <Text style={{ fontSize: 7, fontWeight: "bold" }}>
+                {disc.desc.toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.summaryQty} />
+            <BlankCells />
+            <View style={styles.summaryValue}>
+              <Text style={{ fontSize: 7, fontWeight: "bold" }}>
+                - {Number(disc.value).toFixed(2)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.summaryQty} />
-          <BlankCells />
-          <View style={styles.summaryValue}>
-            <Text style={{ fontSize: 7, fontWeight: "bold" }}>
-              - {Number(disc.value).toFixed(2)}
-            </Text>
-          </View>
-        </View>
-      ))}
+        ))}
 
       {/* 4. Grand Total */}
       <View style={styles.grandTotalRow}>
-        <View style={[styles.summaryLabel, { borderTopWidth: 0.5 }]}>
+        <View
+          style={[
+            styles.summaryLabel,
+            {
+              width: `${summaryLabelWidth}%`,
+              borderTopWidth: 0.5,
+            },
+          ]}
+        >
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>
             GRAND TOTAL {(data?.userCurrency || "USD").toUpperCase()}{" "}
             {(data?.incoterm || "").toUpperCase()}{" "}
@@ -732,6 +787,8 @@ const SignatureBlock = ({ data }) => (
 // ─── Main component ───────────────────────────────────────────────────────────
 const ProformaPDF = ({ data }) => {
   const showEdc = data?.items?.some((item) => item?.assyRimstatus === true);
+  const showItemCode = data?.items?.some((item) => item?.product);
+  const PONumber = data?.items?.some((item) => item?.PONumber);
   const itemChunks = chunkItemsForPages(data?.items);
   const subTotal = (data?.items || []).reduce(
     (s, it) =>
@@ -752,10 +809,17 @@ const ProformaPDF = ({ data }) => {
               <HeaderSection data={data} />
               <AddressSection data={data} />
               <View style={{ borderBottomWidth: 0.5, borderColor: "black" }}>
-                <TableHeader data={data} showEdc={showEdc} />
+                <TableHeader
+                  data={data}
+                  showEdc={showEdc}
+                  showItemCode={showItemCode}
+                  showPONumber={PONumber}
+                />
                 <TableRows
                   items={pageItems}
                   showEdc={showEdc}
+                  showItemCode={showItemCode}
+                  showPONumber={PONumber}
                   startIndex={pageIndex * ITEMS_PER_PAGE}
                 />
               </View>

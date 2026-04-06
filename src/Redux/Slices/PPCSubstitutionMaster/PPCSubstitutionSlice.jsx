@@ -97,7 +97,12 @@ export const getListOfSubstitutionData = (Plant, custType) => async (dispatch) =
     try {
         dispatch(setLoading(true))
         dispatch(resetAll())
-        const res = await api.get(`/Substution/GettingSusbstitutionReadyOrders/${Plant},${custType}`);
+        const res = await api.get(`/Substution/GettingSubstitutionReadyOrders`,{
+            params:{
+                Plant:Plant,
+                CustType:custType
+            }
+        });
         console.log(res.data)
         if (res.status === 200) {
             dispatch(setListOfSubstitutionData(res.data))
