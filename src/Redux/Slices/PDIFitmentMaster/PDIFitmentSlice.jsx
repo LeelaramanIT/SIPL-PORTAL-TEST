@@ -84,16 +84,6 @@ const PDIFitmentSlice = createSlice({
         state.scanSession.status = "PARTIAL"
       }
     },
-    // resetRimDetails: (state) => {
-    //   state.scanSession.rim = null
-
-    //   if (state.scanSession.tyre) {
-    //     state.scanSession.status = "PARTIAL"
-    //   } else {
-    //     state.scanSession.status = "WAITING"
-    //   }
-    // },
-
     resetScanSession: (state) => {
       state.scanSession = {
         tyre: null,
