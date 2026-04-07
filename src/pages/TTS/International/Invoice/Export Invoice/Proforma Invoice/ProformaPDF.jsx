@@ -521,9 +521,9 @@ const TableRows = ({
           )}
           <View style={[styles.bodyCell, { width: w.description }]}>
             <Text style={styles.bodyText}>
-              {item.tyreSize} / {" "}
-              {item.tyreRim === "-" ? "0.00" : item.tyreRim} /{" "}
-              {item.brand} / {item.sidewall} / {item.tyreType}
+              {item?.category === "SPLIT RIMS"
+                ? item.category
+                : `${item.tyreSize} / ${item.tyreRim === "-" ? "0.00" : item.tyreRim} / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${item?.assyRimstatus ? item?.edcNo : ""}`}
             </Text>
           </View>
           {showEdc && (
@@ -535,22 +535,22 @@ const TableRows = ({
           )}
           <View style={[styles.bodyCell, { width: w.qty }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {item.itemQty}
+              {(item.itemQty || 0)}
             </Text>
           </View>
           <View style={[styles.bodyCell, { width: w.unitPrice }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {item.basicPrice}
+              {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(2)}
             </Text>
           </View>
           <View style={[styles.bodyCell, { width: w.unitWt }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {item.finishedWt}
+              {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(3)}
             </Text>
           </View>
           <View style={[styles.bodyCell, { width: w.totalWt }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(item.finishedWt * item.itemQty).toFixed(3)}
+              {(((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) * (item?.itemQty || 0)).toFixed(3)}
             </Text>
           </View>
           <View
@@ -560,7 +560,7 @@ const TableRows = ({
             ]}
           >
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(item.basicPrice * item.itemQty).toFixed(2)}
+           {(((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) * (item?.itemQty || 0)).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -638,7 +638,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((charge) => Number(charge?.value) > 0)
         .map((charge, idx) => (
           <View key={`charge-${idx}`} style={styles.summaryRow}>
-            <View style={[styles.summaryLabel,{ width: `${summaryLabelWidth}%` }]}>
+            <View style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {charge.desc.toUpperCase()}
               </Text>
@@ -658,7 +658,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((disc) => Number(disc?.value) > 0)
         .map((disc, idx) => (
           <View key={`disc-${idx}`} style={styles.summaryRow}>
-            <View style={[styles.summaryLabel,{ width: `${summaryLabelWidth}%` }]}>
+            <View style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {disc.desc.toUpperCase()}
               </Text>
