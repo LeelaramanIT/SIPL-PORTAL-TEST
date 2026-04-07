@@ -100,7 +100,7 @@ const ProformaPrepare = () => {
     {
       header: "platform",
       accessor: "platforms",
-      width: "2fr",
+      width: "1fr",
       align: "center",
     },
     {
@@ -157,6 +157,15 @@ const ProformaPrepare = () => {
       width: "0.8fr",
       align: "center",
       render: (value, row) => (
+        <p>{(row.finishedWt + row.rimfinishedwt).toFixed(3)}</p>
+      ),
+    },
+    {
+      header: "total weight",
+      accessor: "totalweight",
+      width: "0.8fr",
+      align: "center",
+      render: (value, row) => (
         <p>{((row.finishedWt + row.rimfinishedwt) * row.itemQty).toFixed(3)}</p>
       ),
     },
@@ -165,6 +174,9 @@ const ProformaPrepare = () => {
       accessor: "basicPrice",
       width: "1fr",
       align: "center",
+      render: (value, row) => (
+        <p>{(row.basicPrice + row.rimUnitPrice).toFixed(2)}</p>
+      ),
     },
     {
       header: "Total Price",
@@ -179,7 +191,7 @@ const ProformaPrepare = () => {
   const subtotal = useMemo(() => {
     return (proformaDetails?.items || []).reduce((sum, item) => {
       // Ensure values are numbers to avoid string concatenation bugs
-      const price = Number(item?.basicPrice) || 0;
+      const price = Number((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) || 0;
       const qty = Number(item?.itemQty) || 0;
       return sum + price * qty;
     }, 0);
