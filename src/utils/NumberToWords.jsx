@@ -1,22 +1,22 @@
 export function numberToWords(num, currencyCode) {
   const currencyMap = {
-    AED: { subUnit: { singular: "fils", plural: "fils" } },
-    AUD: { subUnit: { singular: "cent", plural: "cents" } },
-    CAD: { subUnit: { singular: "cent", plural: "cents" } },
-    CNY: { subUnit: { singular: "jiao", plural: "jiao" } },
-    EUR: { subUnit: { singular: "cent", plural: "cents" } },
-    EURO: { subUnit: { singular: "cent", plural: "cents" } },
-    GBP: { subUnit: { singular: "pence", plural: "pence" } },
-    INR: { subUnit: { singular: "paisa", plural: "paise" } },
-    JPY: { subUnit: { singular: "", plural: "" } }, // no decimals normally
-    NZD: { subUnit: { singular: "cent", plural: "cents" } },
-    RUB: { subUnit: { singular: "kopeck", plural: "kopecks" } },
-    SGD: { subUnit: { singular: "cent", plural: "cents" } },
-    USD: { subUnit: { singular: "cent", plural: "cents" } },
-    ZAR: { subUnit: { singular: "cent", plural: "cents" } },
-    KRW: { subUnit: { singular: "", plural: "" } },
-    CHF: { subUnit: { singular: "rappen", plural: "rappen" } },
-    SAR: { subUnit: { singular: "halala", plural: "halalas" } },
+    AED: { mainUnit: { singular: "dirham", plural: "dirhams" }, subUnit: { singular: "fils", plural: "fils" } },
+    AUD: { mainUnit: { singular: "dollar", plural: "dollars" }, subUnit: { singular: "cent", plural: "cents" } },
+    CAD: { mainUnit: { singular: "dollar", plural: "dollars" }, subUnit: { singular: "cent", plural: "cents" } },
+    CNY: { mainUnit: { singular: "yuan", plural: "yuan" }, subUnit: { singular: "jiao", plural: "jiao" } },
+    EUR: { mainUnit: { singular: "euro", plural: "euros" }, subUnit: { singular: "cent", plural: "cents" } },
+    EURO: { mainUnit: { singular: "euro", plural: "euros" }, subUnit: { singular: "cent", plural: "cents" } },
+    GBP: { mainUnit: { singular: "pound", plural: "pounds" }, subUnit: { singular: "pence", plural: "pence" } },
+    INR: { mainUnit: { singular: "rupee", plural: "rupees" }, subUnit: { singular: "paisa", plural: "paise" } },
+    JPY: { mainUnit: { singular: "yen", plural: "yen" }, subUnit: { singular: "", plural: "" } },
+    NZD: { mainUnit: { singular: "dollar", plural: "dollars" }, subUnit: { singular: "cent", plural: "cents" } },
+    RUB: { mainUnit: { singular: "ruble", plural: "rubles" }, subUnit: { singular: "kopeck", plural: "kopecks" } },
+    SGD: { mainUnit: { singular: "dollar", plural: "dollars" }, subUnit: { singular: "cent", plural: "cents" } },
+    USD: { mainUnit: { singular: "dollar", plural: "dollars" }, subUnit: { singular: "cent", plural: "cents" } },
+    ZAR: { mainUnit: { singular: "rand", plural: "rand" }, subUnit: { singular: "cent", plural: "cents" } },
+    KRW: { mainUnit: { singular: "won", plural: "won" }, subUnit: { singular: "", plural: "" } },
+    CHF: { mainUnit: { singular: "franc", plural: "francs" }, subUnit: { singular: "rappen", plural: "rappen" } },
+    SAR: { mainUnit: { singular: "riyal", plural: "riyals" }, subUnit: { singular: "halala", plural: "halalas" } },
   };
 
   const safeCurrencyCode = currencyCode || "USD"; // fallback
@@ -107,13 +107,19 @@ export function numberToWords(num, currencyCode) {
   let result = currencyCode + " ";
   result += convert(mainNumber).trim().toUpperCase();
 
+  // ✅ Add main unit name (dollars, rupees, etc.)
+  result += " " + (mainNumber === 1
+    ? currency.mainUnit.singular
+    : currency.mainUnit.plural
+  ).toUpperCase();
+
   if (decimalNumber > 0 && currency.subUnit.singular) {
     result += " AND ";
     result += convert(decimalNumber).trim().toUpperCase() + " ";
-    result +=
-      decimalNumber === 1
-        ? currency.subUnit.singular.toUpperCase()
-        : currency.subUnit.plural.toUpperCase();
+    result += (decimalNumber === 1
+      ? currency.subUnit.singular
+      : currency.subUnit.plural
+    ).toUpperCase();
   }
 
   return result + " ONLY";
