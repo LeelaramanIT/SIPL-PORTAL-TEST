@@ -638,7 +638,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((charge) => Number(charge?.value) > 0)
         .map((charge, idx) => (
           <View key={`charge-${idx}`} style={styles.summaryRow}>
-            <View style={styles.summaryLabel}>
+            <View style={[styles.summaryLabel,{ width: `${summaryLabelWidth}%` }]}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {charge.desc.toUpperCase()}
               </Text>
@@ -658,7 +658,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((disc) => Number(disc?.value) > 0)
         .map((disc, idx) => (
           <View key={`disc-${idx}`} style={styles.summaryRow}>
-            <View style={styles.summaryLabel}>
+            <View style={[styles.summaryLabel,{ width: `${summaryLabelWidth}%` }]}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {disc.desc.toUpperCase()}
               </Text>
@@ -808,7 +808,7 @@ const ProformaPDF = ({ data }) => {
             <View style={styles.container}>
               <HeaderSection data={data} />
               <AddressSection data={data} />
-              <View style={{ borderBottomWidth: 0.5, borderColor: "black" }}>
+              <View style={{ borderColor: "black" }}>
                 <TableHeader
                   data={data}
                   showEdc={showEdc}
