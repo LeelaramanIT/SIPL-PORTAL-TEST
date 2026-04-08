@@ -98,6 +98,10 @@ export const router = createBrowserRouter([
                   {
                     path: "RIMProcessIDCreation",
                     element: <RIMProcessIDCreation />
+                  },
+                  {
+                    path: "CustomerProcessIDCreation",
+                    element: <RIMProcessIDCreation />
                   }
                 ]
               }

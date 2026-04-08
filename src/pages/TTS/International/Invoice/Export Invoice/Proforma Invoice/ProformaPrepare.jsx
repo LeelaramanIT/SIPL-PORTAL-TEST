@@ -23,6 +23,9 @@ import { useParams } from "react-router-dom";
 import {
   getProformaInvoiceDetails,
   resetProformaSubmit,
+  setPartNumber,
+  resetPartNumbers,
+  setShowPartNumber,
   submitProformaInvoice, // ← new
 } from "../../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice.jsx";
 
@@ -35,8 +38,6 @@ const ProformaPrepare = () => {
   const { state } = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // console.log(state);
 
   const getProformaDetails = async () => {
     await dispatch(getProformaInvoiceDetails(state.data));
@@ -64,6 +65,7 @@ const ProformaPrepare = () => {
     additionalForm,
     submitLoading,
     submitSuccess,
+    showPartNumber,
   } = useSelector((state) => state.proformaInvoice);
   // console.log(proformaDetails);
 
@@ -187,11 +189,40 @@ const ProformaPrepare = () => {
         <p>{((row.basicPrice + row.rimUnitPrice) * row.itemQty).toFixed(2)}</p>
       ),
     },
+    // ✅ Only inject column when toggle is ON
+    ...(showPartNumber
+      ? [
+          {
+            header: "Part Number",
+            accessor: "itemCode",
+            width: "1.4fr",
+            align: "center",
+            render: (value, row) => (
+              <input
+                type="text"
+                value={row.partNumber || ""}
+                onChange={(e) =>
+                  dispatch(
+                    setPartNumber({
+                      itemCode: row.itemCode,
+                      value: e.target.value,
+                      o_ItemID : row.o_ItemID
+                    }),
+                  )
+                }
+                placeholder="Enter part no."
+                className={`w-full px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 ${row.partNumber ? "focus:ring-indigo-400 placeholder:text-gray-300 bg-white" : "bg-red-300/10 focus:ring-red-400 placeholder:text-red-600"}  dark:placeholder:text-gray-600 text-center`}
+              />
+            ),
+          },
+        ]
+      : []),
   ];
   const subtotal = useMemo(() => {
     return (proformaDetails?.items || []).reduce((sum, item) => {
       // Ensure values are numbers to avoid string concatenation bugs
-      const price = Number((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) || 0;
+      const price =
+        Number((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) || 0;
       const qty = Number(item?.itemQty) || 0;
       return sum + price * qty;
     }, 0);
@@ -246,6 +277,8 @@ const ProformaPrepare = () => {
             onClick={() => {
               navigate(-1);
               dispatch(resetProformaSubmit());
+              dispatch(resetPartNumbers());
+              dispatch(setShowPartNumber(false));
             }}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 hover:text-indigo-600 transition-all shadow-sm shrink-0"
           >
@@ -346,15 +379,62 @@ const ProformaPrepare = () => {
             </p>
           </div>
 
-          <div className="relative w-full lg:w-72">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Filter by size, brand..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-            />
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            {/* Part Number Toggle */}
+            <button
+              onClick={() => {
+                if (showPartNumber) {
+                  // turning OFF → reset first
+                  dispatch(resetPartNumbers());
+                }
+                dispatch(setShowPartNumber(!showPartNumber));
+              }}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition-all whitespace-nowrap shadow-sm ${
+                showPartNumber
+                  ? "bg-indigo-600 border-indigo-600 text-white shadow-indigo-200 dark:shadow-indigo-900"
+                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-indigo-300"
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full transition-all ${showPartNumber ? "bg-white" : "bg-gray-300 dark:bg-gray-600"}`}
+              />
+              Part No.
+              <span
+                className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider transition-all ${
+                  showPartNumber
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-400"
+                }`}
+              >
+                {showPartNumber ? "ON" : "OFF"}
+              </span>
+            </button>
+
+            {/* ✅ Reset Button — only visible when Part No. is ON */}
+            {showPartNumber && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                onClick={() => dispatch(resetPartNumbers())}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-all whitespace-nowrap shadow-sm"
+              >
+                <IoMdClose className="text-sm" />
+                Reset
+              </motion.button>
+            )}
+
+            {/* Existing Search */}
+            <div className="relative w-full lg:w-72">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Filter by size, brand..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+              />
+            </div>
           </div>
         </div>
 

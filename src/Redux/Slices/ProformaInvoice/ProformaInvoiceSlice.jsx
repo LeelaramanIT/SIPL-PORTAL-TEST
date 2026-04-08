@@ -11,6 +11,7 @@ const initialState = {
   submitLoading: false,
   submitSuccess: false,
   master: {},
+  showPartNumber: false,
 };
 
 const proformaInvoice = createSlice({
@@ -38,18 +39,37 @@ const proformaInvoice = createSlice({
       state.listOfProformaInvoice = [];
     },
     setProformaInvoiceDetails: (state, action) => {
-      // ✅ ONLY DB data goes here — never mixed with user input
-      state.proformaDetails = action.payload;
+      // ✅ Preserve any partNumbers user already entered before re-fetch overwrites
+      const existingItems = state.proformaDetails?.items || [];
+
+      const incomingItems = (action.payload?.items || []).map((newItem) => {
+        const existing = existingItems.find(
+          (old) => old.itemCode === newItem.itemCode,
+        );
+        return {
+          ...newItem,
+          partNumber: existing?.partNumber || "", // ← carry over user input
+        };
+      });
+
+      state.proformaDetails = {
+        ...action.payload,
+        items: incomingItems,
+      };
     },
     setAdditionalForm: (state, action) => {
-      // ✅ If payload is empty object {}, store as null so fallbacks work cleanly
       state.additionalForm =
         action.payload && Object.keys(action.payload).length > 0
           ? action.payload
           : null;
+
+      // ✅ Preserve existing partNumbers already set in proformaDetails.items
+      const existingItems = state.proformaDetails.items || [];
+
       state.finalData = {
         ...state.proformaDetails,
         ...(state.additionalForm || {}),
+        items: existingItems, // ← keep items from proformaDetails (with partNumbers intact)
       };
     },
     resetProformaSubmit: (state) => {
@@ -63,6 +83,39 @@ const proformaInvoice = createSlice({
     resetListOfDraftPI: (state) => {
       state.listOfDraftProforma = [];
       state.listOfProformaInvoice = [];
+    },
+    setPartNumber: (state, action) => {
+      const { itemCode, value , o_ItemID} = action.payload;
+
+      // ✅ Update proformaDetails.items
+      const detailItem = state.proformaDetails.items?.find(
+        (i) => i.itemCode === itemCode && i.o_ItemID === o_ItemID,
+      );
+      if (detailItem) {
+        detailItem.partNumber = value;
+      }
+
+      // ✅ Also sync finalData.items so submit payload gets it too
+      const finalItem = state.finalData.items?.find(
+        (i) => i.itemCode === itemCode && i.o_ItemID === o_ItemID,
+      );
+      if (finalItem) {
+        finalItem.partNumber = value;
+      }
+    },
+    resetPartNumbers: (state) => {
+      // ✅ Clear from proformaDetails.items
+      state.proformaDetails.items = (state.proformaDetails.items || []).map(
+        (item) => ({ ...item, partNumber: "" }),
+      );
+      // ✅ Clear from finalData.items too
+      state.finalData.items = (state.finalData.items || []).map((item) => ({
+        ...item,
+        partNumber: "",
+      }));
+    },
+    setShowPartNumber: (state,action) => {
+      state.showPartNumber = action.payload; // ← toggle itself, no payload needed
     },
   },
 });
@@ -287,6 +340,7 @@ export const submitProformaInvoice =
           rimUnitPrice: item.rimUnitPrice || 0,
           rimFinishedWt: item.rimfinishedwt || 0,
           sidewall: item.sidewall || "",
+          PartNumber: item.partNumber || "",
         })),
       };
 
@@ -339,7 +393,10 @@ export const {
   resetProformaSubmit,
   setMaster,
   resetListOfDraftPI,
-  setListOfDraftProforma
+  setListOfDraftProforma,
+  setPartNumber,
+  resetPartNumbers,
+  setShowPartNumber,
 } = proformaInvoice.actions;
 
 export default proformaInvoice.reducer;

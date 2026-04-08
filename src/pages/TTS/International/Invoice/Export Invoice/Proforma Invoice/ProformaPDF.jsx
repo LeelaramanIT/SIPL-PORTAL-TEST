@@ -508,7 +508,7 @@ const TableRows = ({
           </View>
           {showItemCode && (
             <View style={[styles.bodyCell, { width: w.product }]}>
-              <Text style={styles.bodyText}>{item.product}</Text>
+              <Text style={styles.bodyText}>{item.partNumber}</Text>
             </View>
           )}
           <View style={[styles.bodyCell, { width: w.sunPart }]}>
@@ -787,7 +787,7 @@ const SignatureBlock = ({ data }) => (
 // ─── Main component ───────────────────────────────────────────────────────────
 const ProformaPDF = ({ data }) => {
   const showEdc = data?.items?.some((item) => item?.assyRimstatus === true);
-  const showItemCode = data?.items?.some((item) => item?.product);
+  const showItemCode = data?.items?.some((item) => item?.partNumber);
   const PONumber = data?.items?.some((item) => item?.PONumber);
   const itemChunks = chunkItemsForPages(data?.items);
   const subTotal = (data?.items || []).reduce(

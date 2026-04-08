@@ -56,6 +56,12 @@ function Header() {
       permissionKey: "RIM Process ID Creation",
       URL: "/Masters/ItemIDMaster/RIMProcessIDCreation",
       icon: <Disc className="w-3.5 h-3.5" />
+    },
+    {
+      label: "Customer Process ID",
+      permissionKey: "Customer Process ID Creation",
+      URL: "/Masters/ItemIDMaster/CustomerProcessIDCreation",
+      icon: <Disc className="w-3.5 h-3.5" />
     }
   ];
 
