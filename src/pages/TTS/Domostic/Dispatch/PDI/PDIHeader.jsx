@@ -77,6 +77,12 @@ function PDIHeader() {
       path: `${basePath}/FinalInspectionReport`,
       icon: <FileText className="w-3.5 h-3.5" />,
     },
+    {
+      label: "Approval For Inspection",
+      permissionKey: "PDI Approval For Inspection",
+      path: `${basePath}/ApprovalForInspection`,
+      icon: <FileText className="w-3.5 h-3.5" />,
+    },
   ];
 
   const visibleTabs = allTabs.filter((tab) => hasPermission(menus, tab.path));

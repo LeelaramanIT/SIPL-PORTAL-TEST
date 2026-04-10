@@ -305,7 +305,7 @@ export const submitProformaInvoice =
         revisionDate: finalData.revisionDate,
         validityDate: finalData.validityDate,
 
-        Remarks: finalData.remark,
+        Remarks: finalData.custInstruction,
 
         // ✅ Packing Methods
         packagemethods: [

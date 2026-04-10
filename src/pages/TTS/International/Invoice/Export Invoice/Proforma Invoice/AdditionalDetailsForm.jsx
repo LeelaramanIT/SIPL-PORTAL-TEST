@@ -28,6 +28,7 @@ const ChargesRow = ({
   schemeName,
   dbMaxTotal = 0,
   isPrepared,
+  baseAmount = 0,          // ← NEW: invoice total for % calculation
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -37,19 +38,15 @@ const ChargesRow = ({
     control,
     name: `additionalCharges.${invoiceIndex}.rows`,
   });
-
-  const total = (rows || []).reduce(
-    (sum, r) => sum + (Number(r.value) || 0),
-    0,
-  );
+  const total = (rows || []).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
 
   useEffect(() => {
     setValue(`additionalCharges.${invoiceIndex}.total`, total);
   }, [total, invoiceIndex, setValue]);
 
   const maxAllowed = isPrepared ? dbMaxTotal : Infinity;
-  const remaining = maxAllowed - total;
-  const exceeded = isPrepared && total > dbMaxTotal;
+  const remaining  = maxAllowed - total;
+  const exceeded   = isPrepared && total > dbMaxTotal;
 
   return (
     <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
@@ -63,36 +60,41 @@ const ChargesRow = ({
         </span>
       </h5>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {fields.map((field, k) => (
-          <div key={field.id} className="flex gap-2 items-center">
+          <div key={field.id} className="flex gap-2 items-start pt-4">
             <Input
               {...register(`additionalCharges.${invoiceIndex}.rows.${k}.desc`)}
               placeholder="Description"
               className="w-full px-2 py-1 text-sm border rounded"
             />
-            <Input
-              {...register(
-                `additionalCharges.${invoiceIndex}.rows.${k}.value`,
-                {
-                  validate: (val) => {
-                    const current = Number(val || 0);
-                    const otherTotal = total - (Number(rows?.[k]?.value) || 0);
-                    if (isPrepared && current + otherTotal > dbMaxTotal)
-                      return `Max allowed is ${dbMaxTotal}`;
-                    return true;
-                  },
-                },
-              )}
-              type="number"
-              placeholder="0.00"
-              className="w-24 px-2 py-1 text-sm border rounded"
+            <SmartValueInput
+              value={rows?.[k]?.value ?? ""}
+              baseAmount={baseAmount}
+              readOnly={false}
+              className={`w-28 px-2 py-1 text-sm border rounded ${
+                isPrepared && (Number(rows?.[k]?.value) + (total - (Number(rows?.[k]?.value) || 0))) > dbMaxTotal
+                  ? "border-red-400"
+                  : "border-gray-300"
+              }`}
+              onChange={(computed) => {
+                const otherTotal = total - (Number(rows?.[k]?.value) || 0);
+                if (isPrepared && computed + otherTotal > dbMaxTotal) {
+                  toast.error(`Max allowed is ${dbMaxTotal}`);
+                  return;
+                }
+                setValue(
+                  `additionalCharges.${invoiceIndex}.rows.${k}.value`,
+                  computed,
+                  { shouldDirty: true },
+                );
+              }}
             />
             {fields.length > 1 && (
               <button
                 type="button"
                 onClick={() => remove(k)}
-                className="text-red-500 hover:text-red-700"
+                className="text-red-500 hover:text-red-700 mt-1"
               >
                 <TbHttpDelete size={18} />
               </button>
@@ -101,7 +103,6 @@ const ChargesRow = ({
         ))}
       </div>
 
-      {/* Footer Info */}
       <div className="text-xs mt-2">
         {exceeded ? (
           <p className="text-red-600 font-semibold">
@@ -125,6 +126,11 @@ const ChargesRow = ({
           <RiStickyNoteAddLine /> Add Charge
         </button>
       )}
+
+      {/* Hint */}
+      <p className="text-[10px] text-gray-400 mt-2 italic">
+        💡 Enter a number (e.g. <b>500</b>) or a percentage (e.g. <b>2%</b>) — percentage is auto-calculated from the invoice total.
+      </p>
     </div>
   );
 };
@@ -138,6 +144,7 @@ const DiscountRow = ({
   setValue,
   schemeName,
   isPrepared,
+  baseAmount = 0,          // ← NEW
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -147,11 +154,7 @@ const DiscountRow = ({
     control,
     name: `discountDetails.${invoiceIndex}.rows`,
   });
-
-  const total = (rows || []).reduce(
-    (sum, r) => sum + (Number(r.value) || 0),
-    0,
-  );
+  const total = (rows || []).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
 
   useEffect(() => {
     setValue(`discountDetails.${invoiceIndex}.total`, total);
@@ -164,27 +167,33 @@ const DiscountRow = ({
         <span>{total.toFixed(2)}</span>
       </h5>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {fields.map((field, k) => (
-          <div key={field.id} className="flex gap-2 items-center">
+          <div key={field.id} className="flex gap-2 items-start pt-4">
             <Input
               {...register(`discountDetails.${invoiceIndex}.rows.${k}.desc`)}
               placeholder="Reason"
               className="w-full px-2 py-1 text-sm border rounded"
               readOnly={isPrepared}
             />
-            <Input
-              {...register(`discountDetails.${invoiceIndex}.rows.${k}.value`)}
-              type="number"
-              placeholder="0.00"
-              className="w-24 px-2 py-1 text-sm border rounded"
+            <SmartValueInput
+              value={rows?.[k]?.value ?? ""}
+              baseAmount={baseAmount}
               readOnly={isPrepared}
+              className="w-28 px-2 py-1 text-sm border rounded border-gray-300"
+              onChange={(computed) =>
+                setValue(
+                  `discountDetails.${invoiceIndex}.rows.${k}.value`,
+                  computed,
+                  { shouldDirty: true },
+                )
+              }
             />
             {fields.length > 1 && !isPrepared && (
               <button
                 type="button"
                 onClick={() => remove(k)}
-                className="text-red-500 hover:text-red-700"
+                className="text-red-500 hover:text-red-700 mt-1"
               >
                 <TbHttpDelete size={18} />
               </button>
@@ -194,13 +203,18 @@ const DiscountRow = ({
       </div>
 
       {!isPrepared && (
-        <button
-          type="button"
-          onClick={() => append({ desc: "", value: "" })}
-          className="text-xs text-red-600 mt-2 flex items-center gap-1 hover:underline"
-        >
-          <RiDiscountPercentLine /> Add Discount
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => append({ desc: "", value: "" })}
+            className="text-xs text-red-600 mt-2 flex items-center gap-1 hover:underline"
+          >
+            <RiDiscountPercentLine /> Add Discount
+          </button>
+          <p className="text-[10px] text-gray-400 mt-2 italic">
+            💡 Enter a number (e.g. <b>500</b>) or a percentage (e.g. <b>5%</b>) — auto-calculated from invoice total.
+          </p>
+        </>
       )}
     </div>
   );
@@ -335,12 +349,15 @@ const AdditionalCustDetailsForm = ({
       paymentTerms: formatPaymentTerms(
         savedFormData?.paymentTerms || invoiceDetails?.paymentTerms || "",
       ),
+      custInstruction: formatPaymentTerms(
+        savedFormData?.custInstruction || invoiceDetails?.custInstruction || "",
+      ),
       bankDetails: formatMultilineText(
         savedFormData?.bankDetails || invoiceDetails?.bankDetails || "",
       ),
-      remark: formatMultilineText(
-        savedFormData?.remark || invoiceDetails?.remark || "",
-      ),
+      // remark: formatMultilineText(
+      //   savedFormData?.remark || invoiceDetails?.remark || "",
+      // ),
       leadTime: savedFormData?.leadTime || invoiceDetails?.leadTime || "",
       validityDate:
         savedFormData?.validityDate || invoiceDetails?.validityDate || "",
@@ -363,6 +380,18 @@ const AdditionalCustDetailsForm = ({
     }),
     [invoiceDetails, savedFormData],
   );
+   const subtotal = useMemo(() => {
+      return (invoiceDetails?.items || []).reduce((sum, item) => {
+        // Ensure values are numbers to avoid string concatenation bugs
+        const price =
+          Number((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) || 0;
+        const qty = Number(item?.itemQty) || 0;
+        return sum + price * qty;
+      }, 0);
+    }, [invoiceDetails?.items]);
+
+    console.log(subtotal);
+    
 
   const {
     register,
@@ -409,7 +438,8 @@ const AdditionalCustDetailsForm = ({
       placeOfIncoterm: invoiceDetails?.placeOfIncoterm || "",
       ExchangeCurrency: invoiceDetails?.exchangeRate || "",
       paymentTerms: formatPaymentTerms(invoiceDetails?.paymentTerms || ""),
-      remark: formatMultilineText(invoiceDetails?.remark || ""),
+      custInstruction: formatPaymentTerms(invoiceDetails?.custInstruction || ""),
+      // remark: formatMultilineText(invoiceDetails?.remark || ""),
       bankDetails: formatMultilineText(invoiceDetails?.bankDetails || ""),
       leadTime: invoiceDetails?.leadTime || "",
       validityDate: invoiceDetails?.validityDate || "",
@@ -699,7 +729,7 @@ const AdditionalCustDetailsForm = ({
                 />
                 <TextArea
                   label="Remarks"
-                  name="remark"
+                  name="custInstruction"
                   register={register}
                   rows={6}
                 />
@@ -719,42 +749,43 @@ const AdditionalCustDetailsForm = ({
           </section>
 
           {/* ── 4. OTHER CHARGES & DISCOUNTS ────────────────────────────────── */}
-          <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-200 pb-2 dark:border-gray-600">
-              4. Other Charges &amp; Discounts{" "}
-              <BsReceiptCutoff className="text-[var(--primary)]" />
-            </h2>
+<section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+  <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
+  <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-200">
+    4. Other Charges &amp; Discounts
+    <BsReceiptCutoff className="text-[var(--primary)]" />
+  </h2>
+  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+    Subtotal: <span className="text-[var(--primary)] font-bold">{subtotal}</span>
+  </span>
+</div>
 
-            {/*
-              If you have a single invoice (no scheme loop), invoiceIndex = 0.
-              If you need one ChargesRow per scheme, map over your schemes array
-              and pass the correct invoiceIndex and schemeName for each.
-            */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ChargesRow
-                invoiceIndex={0}
-                register={register}
-                errors={errors}
-                control={control}
-                setValue={setValue}
-                schemeName={invoiceDetails?.schemeName || ""}
-                dbMaxTotal={Number(invoiceDetails?.maxAdditionalCharges) || 0}
-                isPrepared={isPrepared}
-              />
-              <DiscountRow
-                invoiceIndex={0}
-                register={register}
-                errors={errors}
-                control={control}
-                setValue={setValue}
-                schemeName={invoiceDetails?.schemeName || ""}
-                isPrepared={isPrepared}
-              />
-            </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <ChargesRow
+      invoiceIndex={0}
+      register={register}
+      errors={errors}
+      control={control}
+      setValue={setValue}
+      schemeName={invoiceDetails?.schemeName || ""}
+      dbMaxTotal={Number(invoiceDetails?.maxAdditionalCharges) || 0}
+      isPrepared={isPrepared}
+      baseAmount={Number(subtotal) || 0}   
+    />
+    <DiscountRow
+      invoiceIndex={0}
+      register={register}
+      errors={errors}
+      control={control}
+      setValue={setValue}
+      schemeName={invoiceDetails?.schemeName || ""}
+      isPrepared={isPrepared}
+      baseAmount={Number(subtotal) || 0}
+    />
+  </div>
 
-            {/* Summary strip */}
-            <ChargesSummary control={control} />
-          </section>
+  <ChargesSummary control={control} />
+</section>
 
           {/* Footer Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t dark:border-gray-700">
@@ -969,6 +1000,72 @@ const SelectField = ({
         <p className="text-red-500 text-[10px] mt-0.5">
           {errors[name].message}
         </p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * SmartValueInput
+ * - Plain number  → stored as-is           e.g. "10000"  → 10000
+ * - Ends with %   → computed from base     e.g. "2%"     → baseAmount * 0.02
+ * Shows a small pill when a % was resolved.
+ */
+const SmartValueInput = ({ value, onChange, baseAmount = 0, readOnly, placeholder = "0.00 or 2%", className }) => {
+  const [raw, setRaw] = useState(() => (value !== "" && value != null ? String(value) : ""));
+  const [resolvedFrom, setResolvedFrom] = useState(""); // e.g. "2% of 50000"
+
+  // Keep raw in sync when parent resets the form
+  useEffect(() => {
+    if (value === "" || value == null) {
+      setRaw("");
+      setResolvedFrom("");
+    } else if (!raw.endsWith("%")) {
+      // only sync if not mid-typing a percentage
+      setRaw(String(value));
+    }
+  }, [value]);
+
+  const resolve = (inputRaw) => {
+    const trimmed = inputRaw.trim();
+    const pctMatch = trimmed.match(/^(\d+(\.\d+)?)%$/);
+    if (pctMatch) {
+      const pct = parseFloat(pctMatch[1]);
+      const computed = parseFloat(((pct / 100) * baseAmount).toFixed(2));
+      setResolvedFrom(`${pct}% of ${baseAmount.toFixed(2)}`);
+      setRaw(String(computed));     // show resolved number in input
+      onChange(computed);
+    } else {
+      const num = parseFloat(trimmed) || 0;
+      setResolvedFrom("");
+      onChange(num);
+    }
+  };
+
+  return (
+    <div className="relative flex flex-col gap-0.5">
+      <Input
+        type="text"
+        value={raw}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        className={className}
+        onChange={(e) => {
+          setRaw(e.target.value);
+          setResolvedFrom("");        // clear pill while editing
+          // live-update if it's a plain number
+          const plain = parseFloat(e.target.value);
+          if (!e.target.value.trim().endsWith("%") && !isNaN(plain)) {
+            onChange(plain);
+          }
+        }}
+        onBlur={() => resolve(raw)}
+        onKeyDown={(e) => e.key === "Enter" && resolve(raw)}
+      />
+      {resolvedFrom && (
+        <span className="absolute -top-4 right-0 text-[9px] bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+          ={resolvedFrom}
+        </span>
       )}
     </div>
   );

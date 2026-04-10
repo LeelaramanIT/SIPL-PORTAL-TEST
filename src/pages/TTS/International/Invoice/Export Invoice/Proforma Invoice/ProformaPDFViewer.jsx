@@ -39,7 +39,7 @@ const ProformaPDFViewer = () => {
   // }, [dispatch]);
   const navigate = useNavigate();
 
-  if (!finalInvoiceData || Object.keys(finalInvoiceData).length === 0) {
+  if (!finalInvoiceData || Object.keys(finalInvoiceData.items).length === 0) {
   return (
     <div className="w-full min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-gray-100 p-6">
       

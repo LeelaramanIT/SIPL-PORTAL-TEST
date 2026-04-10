@@ -18,7 +18,6 @@ import ExportInvoiceBillPDF from "../pages/TTS/International/Invoice/Export Invo
 import ShippingSchemeSplitTailwind from "../pages/TTS/International/Invoice/Export Invoice/ShippingSchemeSplitTailwind";
 import Calendar from "../pages/Calendar/Calendar";
 import ReportsLayout from "../layout/ReportsLayout";
-import TTSReport from "../pages/Reports/TTSReports";
 import RimLayout from "../layout/RimLayout";
 import RimOverView from "../pages/TTS/Rim/RimOverView";
 import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
@@ -55,8 +54,9 @@ import FitmentList from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/Fit
 import FitmentMaster from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentMaster";
 import ProformaPrepare from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPrepare";
 import PIMaster from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/PIMaster";
-
-
+import ApprovalForInspection from "../pages/TTS/Domostic/Dispatch/PDI/ApprovalForInspection/ApprovalForInspection";
+import SaleRepostMaster from "../pages/Reports/SaleReports/SaleRepostMaster";
+import TTSPowerBIReports from "../pages/Reports/TTSPowerBIReports";
 
 export const router = createBrowserRouter([
   {
@@ -65,9 +65,11 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <>
-          <MainLayout />
-        </>, // This renders layout
+        element: (
+          <>
+            <MainLayout />
+          </>
+        ), // This renders layout
         children: [
           { index: true, element: <Home /> },
           { path: "Dashboard", element: <Dashboard /> },
@@ -85,29 +87,27 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="AssemblyProcessIDCreation" />
+                    element: <Navigate to="AssemblyProcessIDCreation" />,
                   },
                   {
                     path: "AssemblyProcessIDCreation",
-                    element: <AssemblyProcessIDCreation />
+                    element: <AssemblyProcessIDCreation />,
                   },
                   {
                     path: "TyreProcessIDCreation",
-                    element: <TyreProcessIDCreation />
+                    element: <TyreProcessIDCreation />,
                   },
                   {
                     path: "RIMProcessIDCreation",
-                    element: <RIMProcessIDCreation />
+                    element: <RIMProcessIDCreation />,
                   },
                   {
                     path: "CustomerProcessIDCreation",
-                    element: <RIMProcessIDCreation />
-                  }
-                ]
-              }
-
-
-            ]
+                    element: <RIMProcessIDCreation />,
+                  },
+                ],
+              },
+            ],
           },
           {
             path: "TTS/Domestic",
@@ -121,55 +121,68 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="ScanForInspection" />
+                    element: <Navigate to="ScanForInspection" />,
                   },
                   {
                     path: "ScanForInspection",
-                    element: <PDIScanForInspection />
+                    element: <PDIScanForInspection />,
                   },
                   {
                     path: "InspectionInComplete",
-                    element: <InspectionInComplete />
+                    element: <InspectionInComplete />,
                   },
                   {
                     path: "LoadingCheck",
-                    element: <LoadingCheck />
+                    element: <LoadingCheck />,
                   },
                   {
                     path: "BarcodeDelete",
-                    element: <BarcodeDelete />
+                    element: <BarcodeDelete />,
                   },
                   {
                     path: "ApprovalForLoading",
-                    element: <ApprovalForLoading />
+                    element: <ApprovalForLoading />,
                   },
                   {
                     path: "FinalInspectionReport",
-                    element: <FinalInspectionReport />
-                  }
-                ]
+                    element: <FinalInspectionReport />,
+                  },
+                  {
+                    path: "ApprovalForInspection",
+                    element: <FinalInspectionReport />,
+                  },
+                ],
               },
               {
                 path: "Dispatch/PDI/Inspection/ScanForInspection/Details",
-                element: <ScanForInspectionDetails />
+                element: <ScanForInspectionDetails />,
               },
-              { path: "Dispatch/PPC/Substitution/:plant/:custType", element: <PPCMaster /> },
-              { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
+              {
+                path: "Dispatch/PPC/Substitution/:plant/:custType",
+                element: <PPCMaster />,
+              },
+              {
+                path: "Dispatch/PPC/Substitution/Details",
+                element: <SubstitutionDetails />,
+              },
               {
                 path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType",
                 element: <FitmentMaster />,
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="List" replace />
+                    element: <Navigate to="List" replace />,
                   },
                   {
                     path: "List",
-                    element: <FitmentList />
+                    element: <FitmentList />,
                   },
-                ]
+                ],
               },
-              { path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType/Details", element: <TyreAndRimFitment /> },
+              {
+                path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType/Details",
+                element: <TyreAndRimFitment />,
+              },
             ],
           },
           {
@@ -178,134 +191,180 @@ export const router = createBrowserRouter([
             children: [
               { path: "Invoice/CustomerInvoice", element: <ExportInvoice /> },
               { path: "Invoice/CustomInvoice", element: <ExportInvoice /> },
-              { path: "Invoice/CustomerInvoice/Prepare", element: <ExportCustInvoicePrepare /> },
-              { path: "Invoice/CustomInvoice/Prepare", element: <ExportInvoicePrepare /> },
-              { path: "Invoice/Export/BillPDF", element: <ExportInvoiceBillPDF /> },
+              {
+                path: "Invoice/CustomerInvoice/Prepare",
+                element: <ExportCustInvoicePrepare />,
+              },
+              {
+                path: "Invoice/CustomInvoice/Prepare",
+                element: <ExportInvoicePrepare />,
+              },
+              {
+                path: "Invoice/Export/BillPDF",
+                element: <ExportInvoiceBillPDF />,
+              },
               { path: "Invoice/Customer/BillPDF", element: <InvoicePDF /> },
-              { path: "Invoice/Export/ShippingSchemeSplit", element: <ShippingSchemeSplitTailwind /> },
+              {
+                path: "Invoice/Export/ShippingSchemeSplit",
+                element: <ShippingSchemeSplitTailwind />,
+              },
               { path: "Invoice/Export/Sample", element: <SampleSplit /> },
-              { path: "ProformaInvoice/List",
+              {
+                path: "ProformaInvoice/List",
                 element: <PIMaster />,
-                children:[
+                children: [
                   {
-                    index:true,
-                    element:<Navigate to='PI' replace/>
+                    index: true,
+                    element: <Navigate to="PI" replace />,
                   },
                   {
-                    path:':invoiceType',
-                    element:<ProformaList/>
+                    path: ":invoiceType",
+                    element: <ProformaList />,
                   },
                   // {
                   //   path:'Draft',
                   //   element:<ProformaList/>
                   // }
-                ]
+                ],
               },
-              { path: "Invoice/ProformaInvoice/PDF", element: <ProformaPDFViewer /> },
+              {
+                path: "Invoice/ProformaInvoice/PDF",
+                element: <ProformaPDFViewer />,
+              },
               { path: "ProformaInvoice/Prepare", element: <ProformaPrepare /> },
-              { path: "Invoice/ProformaInvoice/Draft/Prepare", element: <ProformaPrepare /> },
+              {
+                path: "Invoice/ProformaInvoice/Draft/Prepare",
+                element: <ProformaPrepare />,
+              },
               {
                 path: "Dispatch/PDI/Inspection/:plant/:custType",
                 element: <PDIMaster />,
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="ScanForInspection" replace />
-                    
+                    element: <Navigate to="ScanForInspection" replace />,
                   },
                   {
                     path: "ScanForInspection",
-                    element: <PDIScanForInspection />
+                    element: <PDIScanForInspection />,
                   },
                   {
                     path: "InspectionInComplete",
-                    element: <InspectionInComplete />
+                    element: <InspectionInComplete />,
                   },
                   {
                     path: "LoadingCheck",
-                    element: <LoadingCheck />
+                    element: <LoadingCheck />,
                   },
                   {
                     path: "BarcodeDelete",
-                    element: <BarcodeDelete />
+                    element: <BarcodeDelete />,
                   },
                   {
                     path: "ApprovalForLoading",
-                    element: <ApprovalForLoading />
+                    element: <ApprovalForLoading />,
                   },
                   {
                     path: "FinalInspectionReport",
-                    element: <FinalInspectionReport />
-                  }
-                ]
+                    element: <FinalInspectionReport />,
+                  },
+                  {
+                    path: "ApprovalForInspection",
+                    element: <ApprovalForInspection />,
+                  },
+                ],
               },
               {
                 path: "Dispatch/PDI/Inspection/ScanForInspection/Details",
-                element: <ScanForInspectionDetails />
+                element: <ScanForInspectionDetails />,
               },
-              { path: "Dispatch/PPC/Substitution/:plant/:custType", element: <PPCMaster /> },
-              { path: "Dispatch/PPC/Substitution/Details", element: <SubstitutionDetails /> },
+              {
+                path: "Dispatch/PPC/Substitution/:plant/:custType",
+                element: <PPCMaster />,
+              },
+              {
+                path: "Dispatch/PPC/Substitution/Details",
+                element: <SubstitutionDetails />,
+              },
               {
                 path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType",
                 element: <FitmentMaster />,
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="List" replace />
+                    element: <Navigate to="List" replace />,
                   },
                   {
                     path: "List",
-                    element: <FitmentList />
+                    element: <FitmentList />,
                   },
-                ]
+                ],
               },
-              { path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType/Details", element: <TyreAndRimFitment /> },
+              {
+                path: "Dispatch/PDI/RimAndTyreFitment/:plant/:custType/Details",
+                element: <TyreAndRimFitment />,
+              },
             ],
           },
           {
-            path: 'TTS/Rim',
+            path: "TTS/Rim",
             element: <RimLayout />,
             children: [
               {
-                path: '/TTS/Rim/RimOverView', element: <RimOverView />,
+                path: "/TTS/Rim/RimOverView",
+                element: <RimOverView />,
               },
               {
-                path: 'DataWise', element: <RimWiseAndEDCWise />
+                path: "DataWise",
+                element: <RimWiseAndEDCWise />,
               },
               {
-                path: 'EDCNoWise', element: <RimWiseAndEDCWise />
+                path: "EDCNoWise",
+                element: <RimWiseAndEDCWise />,
               },
               {
-                path: 'rimstock', index: true, element: <RimStocks />
-              }
-            ]
+                path: "rimstock",
+                index: true,
+                element: <RimStocks />,
+              },
+            ],
           },
           {
-            path: '/Pages/Calendar', element: <Calendar />
+            path: "/Pages/Calendar",
+            element: <Calendar />,
           },
           {
-            path: 'Reports',
+            path: "Reports",
             element: <ReportsLayout />,
             children: [
-              { path: 'TTSReports/Production', element: <TTSReport /> },
-              { path: 'TTSReports/Sale', element: <TTSReport /> },
-              { path: 'TTSReports', element: <TTSReport /> },
-            ]
+              { path: "TTSReports/Production", element: <TTSPowerBIReports /> },
+              {
+                path: "TTSReports/Sale",
+                element: <SaleRepostMaster />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="SaleRepost" replace />,
+                  },
+                  { path: "PowerBIReport", element: <TTSPowerBIReports /> },
+                  { path: "SaleRepost", element: '' },
+                  
+                ],
+              },
+            ],
           },
           {
-            path: 'Task-Management',
+            path: "Task-Management",
             element: <TaskLayout />,
-            children: [
-              { path: 'Home', element: <TaskHomePage /> }
-            ]
+            children: [{ path: "Home", element: <TaskHomePage /> }],
           },
           {
             path: "Settings",
             element: <SettingsLayout />,
             children: [
               { index: true, element: <Settings /> },
-              { path: 'menuaccess', element: <MenuAccessManager /> }
-            ]
+              { path: "menuaccess", element: <MenuAccessManager /> },
+            ],
           },
         ],
       },

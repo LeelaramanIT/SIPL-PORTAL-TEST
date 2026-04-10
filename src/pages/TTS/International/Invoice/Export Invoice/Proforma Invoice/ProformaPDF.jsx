@@ -8,6 +8,7 @@ Font.register({
   family: "Roboto",
   src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
 });
+Font.registerHyphenationCallback((word) => [word]);
 // ─── Layout constants ─────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 25;
 const GRAND_TOTAL_ROW_HEIGHT = 18;
@@ -499,7 +500,10 @@ const TableRows = ({
   const w = getColWidths(showEdc, showItemCode);
   return (
     <>
-      {items.map((item, index) => (
+      {items.map((item, index) => {
+      
+      
+      return(
         <View key={index} style={styles.bodyRow}>
           <View style={[styles.bodyCell, { width: w.srNo }]}>
             <Text style={styles.bodyText}>
@@ -523,7 +527,7 @@ const TableRows = ({
             <Text style={styles.bodyText}>
               {item?.category === "SPLIT RIMS"
                 ? item.category
-                : `${item.tyreSize} / ${item.tyreRim === "-" ? "0.00" : item.tyreRim} / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${item?.assyRimstatus ? item?.edcNo : ""}`}
+                : `${item.tyreSize} / ${item.tyreRim === "-" ? "0.00" : item.tyreRim} / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${item?.assyRimstatus ? item?.edcNo : ""} / ${item?.color} ${item?.des}`}
             </Text>
           </View>
           {showEdc && (
@@ -535,7 +539,7 @@ const TableRows = ({
           )}
           <View style={[styles.bodyCell, { width: w.qty }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(item.itemQty || 0)}
+              {item.itemQty || 0}
             </Text>
           </View>
           <View style={[styles.bodyCell, { width: w.unitPrice }]}>
@@ -545,12 +549,17 @@ const TableRows = ({
           </View>
           <View style={[styles.bodyCell, { width: w.unitWt }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(3)}
+              {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(
+                3,
+              )}
             </Text>
           </View>
           <View style={[styles.bodyCell, { width: w.totalWt }]}>
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) * (item?.itemQty || 0)).toFixed(3)}
+              {(
+                ((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) *
+                (item?.itemQty || 0)
+              ).toFixed(3)}
             </Text>
           </View>
           <View
@@ -560,11 +569,14 @@ const TableRows = ({
             ]}
           >
             <Text style={[styles.bodyText, { textAlign: "right" }]}>
-           {(((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) * (item?.itemQty || 0)).toFixed(2)}
+              {(
+                ((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) *
+                (item?.itemQty || 0)
+              ).toFixed(2)}
             </Text>
           </View>
         </View>
-      ))}
+      )})}
     </>
   );
 };
@@ -638,7 +650,9 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((charge) => Number(charge?.value) > 0)
         .map((charge, idx) => (
           <View key={`charge-${idx}`} style={styles.summaryRow}>
-            <View style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}>
+            <View
+              style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}
+            >
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {charge.desc.toUpperCase()}
               </Text>
@@ -658,7 +672,9 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((disc) => Number(disc?.value) > 0)
         .map((disc, idx) => (
           <View key={`disc-${idx}`} style={styles.summaryRow}>
-            <View style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}>
+            <View
+              style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}
+            >
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {disc.desc.toUpperCase()}
               </Text>
@@ -724,34 +740,68 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
       </View>
 
       {/* Terms & Conditions */}
-      <View
-        style={{ padding: 4, borderBottomWidth: 0.5, borderColor: "black" }}
-      >
-        <Text
-          style={{
-            fontSize: 7,
-            fontWeight: "bold",
-            textAlign: "center",
-            marginBottom: 3,
-          }}
-        >
-          TERMS & CONDITIONS
-        </Text>
-        <Text style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-          1. THE ABOVE PRICES ARE {(data?.userCurrency || "").toUpperCase()},{" "}
-          {(data?.incoterm || "").toUpperCase()}{" "}
-          {(data?.placeOfIncoterm || "").toUpperCase()} (SHIPMENT BY{" "}
-          {data?.preCarriageBy})
-        </Text>
-        <Text style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-          2. PAYMENT: {data?.paymentTerms}
-        </Text>
-        {data?.remark && (
-          <Text style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-            {data.remark}
-          </Text>
-        )}
-      </View>
+<View style={{ padding: 4, borderBottomWidth: 0.5, borderColor: "black" }}>
+  <Text
+    style={{ fontSize: 7, fontWeight: "bold", textAlign: "center", marginBottom: 3 }}
+  >
+    TERMS & CONDITIONS
+  </Text>
+
+  {(() => {
+    // Build all lines into one array
+    const fixedLines = [
+      `1. THE ABOVE PRICES ARE ${(data?.userCurrency || "").toUpperCase()}, ${(data?.incoterm || "").toUpperCase()} ${(data?.placeOfIncoterm || "").toUpperCase()} (SHIPMENT BY ${data?.preCarriageBy})`,
+      `2. PAYMENT: ${data?.paymentTerms}`,
+    ];
+
+    const dynamicLines = data?.custInstruction
+      ? data.custInstruction
+          .replace(/~/g, "\n")
+          .split("\n")
+          .filter((l) => l.trim() !== "")
+          .map((l) => l.trim())
+      : [];
+
+    const allLines = [...fixedLines, ...dynamicLines];
+
+    // Split into 2 columns only if more than 4 lines
+    if (allLines.length > 4) {
+      const mid = Math.ceil(allLines.length / 2);
+      const leftLines = allLines.slice(0, mid);
+      const rightLines = allLines.slice(mid);
+
+      return (
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {/* Left Column */}
+          <View style={{ flex: 1 }}>
+            {leftLines.map((line, i) => (
+              <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
+                {line}
+              </Text>
+            ))}
+          </View>
+          {/* Divider */}
+          <View style={{ width: 0.5, backgroundColor: "black", marginHorizontal: 2 }} />
+          {/* Right Column */}
+          <View style={{ flex: 1 }}>
+            {rightLines.map((line, i) => (
+              <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
+                {line}
+              </Text>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    // Single column if 4 or fewer lines
+    return allLines.map((line, i) => (
+      <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
+        {line}
+      </Text>
+    ));
+  })()}
+</View>
     </View>
   );
 };
