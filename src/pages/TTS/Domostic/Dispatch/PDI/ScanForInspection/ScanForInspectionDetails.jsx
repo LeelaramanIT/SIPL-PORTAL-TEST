@@ -90,7 +90,7 @@ const ScanForInspectionDetails = () => {
 
   const handleScan = (e) => {
     if (e.key === "Enter" && scanInput.trim()) {
-      if (scanInput.trim().length === 19 && scanInput.trim().startsWith("P-")) {
+      if (scanInput.trim().length === 19 && scanInput.trim().startsWith("P")) {
         setScanInput("");
         const trimmedBarcode = scanInput.trim();
         const processID = trimmedBarcode.substring(0, 8);

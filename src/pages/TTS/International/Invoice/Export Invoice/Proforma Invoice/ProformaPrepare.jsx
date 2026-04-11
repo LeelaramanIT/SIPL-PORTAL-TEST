@@ -206,7 +206,7 @@ const ProformaPrepare = () => {
                     setPartNumber({
                       itemCode: row.itemCode,
                       value: e.target.value,
-                      o_ItemID : row.o_ItemID
+                      o_ItemID: row.o_ItemID,
                     }),
                   )
                 }
@@ -443,6 +443,7 @@ const ProformaPrepare = () => {
           {" "}
           {/* 3. flex-1 and overflow-auto are key */}
           <DynamicDataTable
+            loading={loading}
             data={filteredItems || []}
             columns={columns}
             // 4. Ensure the background color is solid (no transparency) so text doesn't bleed through while scrolling

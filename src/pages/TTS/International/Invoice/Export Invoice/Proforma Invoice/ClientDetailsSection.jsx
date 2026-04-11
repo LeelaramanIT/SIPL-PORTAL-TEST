@@ -219,13 +219,13 @@ const ClientDetailsSection = ({ invoiceDetails, additional }) => {
             {invoiceDetails?.shippingMobile && (
               <DetailRow label="Verified Phone" value={invoiceDetails.shippingMobile} />
             )}
-            {invoiceDetails?.specialRequset?.trim() && (
+            {invoiceDetails?.custInstruction?.trim() && (
               <div className="mt-5 p-4 rounded-lg bg-indigo-50/60 dark:bg-indigo-500/[0.06] border-l-2 border-indigo-400 dark:border-indigo-500">
                 <p className="text-[9px] font-black tracking-[0.18em] text-indigo-600 dark:text-indigo-400 uppercase mb-1">
                   Delivery Note
                 </p>
                 <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {invoiceDetails.specialRequset}
+                  {invoiceDetails.custInstruction}
                 </p>
               </div>
             )}
