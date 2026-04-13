@@ -79,14 +79,12 @@ const ScanForInspectionDetails = () => {
   }, [localSearch, InspectionDetails]);
   console.log(items);
   console.log(location);
-  
 
   useEffect(() => {
     if (location.state) {
       dispatch(getCustomerDetails(location.state.row));
     }
   }, [location.state, dispatch]);
-  
 
   const handleScan = (e) => {
     if (e.key === "Enter" && scanInput.trim()) {
@@ -101,7 +99,9 @@ const ScanForInspectionDetails = () => {
         );
 
         if (!matchedItem) {
-          toast.error("No item found for this Order");
+          toast.error("No item found for this Order", {
+            position: "top-center",
+          });
           return;
         }
 
@@ -120,7 +120,9 @@ const ScanForInspectionDetails = () => {
           'Invalid scanInput. Length must be 19 characters and start with "P-"',
         );
         setTimeout(() => setError(""), 2000);
-        toast.error("Invalid Barcode.");
+        toast.error("Invalid Barcode.", {
+          position: "top-center",
+        });
         setScanInput("");
       }
     }
@@ -165,7 +167,7 @@ const ScanForInspectionDetails = () => {
           {val || 0}
         </span>
       ),
-    },
+    },  
     {
       header: "SUB-QTY",
       accessor: "substitutionQty",
@@ -189,10 +191,16 @@ const ScanForInspectionDetails = () => {
     console.log("kaja");
     setShowDetailsForm(true);
   };
-  const custtype = location.state.type === "International" ? "Export" : "Domestic"
+  const custtype =
+    location.state.type === "International" ? "Export" : "Domestic";
   const handleBarcodeDownload = () => {
     dispatch(
-      getWorkorder(InspectionDetails?.custCode, InspectionDetails?.orderRefNo,InspectionDetails?.plant, custtype ),
+      getWorkorder(
+        InspectionDetails?.custCode,
+        InspectionDetails?.orderRefNo,
+        InspectionDetails?.plant,
+        custtype,
+      ),
     );
   };
 
@@ -428,8 +436,9 @@ const ScanForInspectionDetails = () => {
                 <DynamicDataTable
                   columns={columns}
                   data={items}
-                  headerClassName="bg-[var(--primary)] text-white dark:bg-slate-950 shadow-sm"
+                  headerClassName="bg-[var(--primary)] text-white text-[0.8rem] dark:bg-slate-950 shadow-sm"
                   loading={loading}
+                  cellClassName='text-[0.77rem] font-bold'
                 />
               </div>
             </div>

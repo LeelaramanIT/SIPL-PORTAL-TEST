@@ -31,6 +31,7 @@ const scanforinspectionSlice = createSlice({
         resetAll: (state) => {
             state.listOfInspectionData = [];
             state.search = "";
+            state.barcodeDetails = []
         },
         restInspectionDetails: (state) => {
             state.InspectionDetails = null;
@@ -49,6 +50,7 @@ export const getListOfInspectionData = (plant, custType) => async (dispatch) => 
     try {
         dispatch(setLoading(true))
         dispatch(resetAll())
+        dispatch
         console.log("called>>>>>>>>");
         const res = await api.get(`/PdiInspection/GetListOfPdiInspectOrders:${plant}:${custType}`);
         console.log(res.data)
@@ -59,7 +61,9 @@ export const getListOfInspectionData = (plant, custType) => async (dispatch) => 
     } catch (error) {
         dispatch(setLoading(false))
         console.log(error)
-        toast.error(error.message)
+        toast.error(error.message,{
+            position: "top-center",
+          })
     }
 }
 
@@ -159,7 +163,9 @@ export const SubmitInspection = (payload) => async (dispatch, getState) => {
                 ...InspectionDetails,
                 items: updatedItems
             }));
-            toast.success("Scan Successful!")
+            toast.success("Scan Successful!",{
+            position: "top-center",
+          })
         }
 
     } catch (error) {
@@ -174,6 +180,7 @@ export const getBarcodeWise = (payload) => async (dispatch) => {
 
     console.log(PID);
     try {
+        dispatch(resetBarcodeDetails())
         dispatch(setLoadingBarcode(true))
         const res = await api.get(`/PdiInspection/GetScannedBarcodeInfo:${PID}:${'scanned'}:${payload.plant}`);
         dispatch(setLoadingBarcode(false))

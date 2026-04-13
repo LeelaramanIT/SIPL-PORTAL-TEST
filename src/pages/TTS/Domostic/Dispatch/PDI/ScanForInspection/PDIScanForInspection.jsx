@@ -227,7 +227,8 @@ const PDIScanForInspection = ({ sheetMode }) => {
                   Math.min(prev + 50, filteredInspectionData.length),
                 )
               }
-              headerClassName="bg-[var(--primary)]/85 text-[var(--text)] dark:bg-slate-900 sticky top-0 z-10"
+              headerClassName="bg-[var(--primary)]/85 text-[var(--text)] sm:text-[0.8rem] dark:bg-slate-900 sticky top-0 z-10"
+              cellClassName='text-[0.8rem]'
             />
           </div>
         </div>

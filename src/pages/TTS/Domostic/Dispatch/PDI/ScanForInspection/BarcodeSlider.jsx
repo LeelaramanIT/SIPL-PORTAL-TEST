@@ -11,7 +11,6 @@ import {
 
 import React, { useState } from "react";
 
-import toast from "react-hot-toast";
 
 export const VerificationSider = ({
   isOpen = true,
@@ -58,16 +57,16 @@ export const VerificationSider = ({
     const payload = {
       pid: data.pid,
       barcode: data.barcode,
-      metalDetector: selections.detector === "pass",
+      metalDetector: selections.detector === "ok",
       o_ID: data.o_Id || 0,
       o_ItemID: data.o_ItemID || 0,
       substitutionStatus: data.substitutionStatus || false,
-      idGauge: selections.idGauge === "pass",
+      idGauge: selections.idGauge === "ok",
       earmarkStatus: data.earmarkStatus || false,
       concessionType: data.concessionType || "",
-      beadType: selections.beadType === "pass" ? "YES" : "NO",
-      qualityTest: selections.bestQuality === "pass" ? "OK" : "NOT OK",
-      physical: selections.physicalBarcode === "pass" ? "YES" : "NO",
+      beadType: selections.beadType === "ok" ? "YES" : "NO",
+      qualityTest: selections.bestQuality === "ok" ? "OK" : "NOT OK",
+      physical: selections.physicalBarcode === "ok" ? "YES" : "NO",
       remarks: selections.remarks || "",
       pdiPlant: data.pdiPlant || "",
       custcode: data.custcode || "",
@@ -330,7 +329,7 @@ const ModernRadioGroup = ({ name, label, selectedValue, onChange }) => (
       3xl:w-[380px]          /* TV Screen */
     "
     >
-      {["pass", "fail"].map((status) => (
+      {["ok", "not ok"].map((status) => (
         <label
           key={status}
           tabIndex={0}
@@ -376,12 +375,12 @@ const ModernRadioGroup = ({ name, label, selectedValue, onChange }) => (
           <motion.div
             layoutId={`pill-${name}`}
             className={`absolute inset-y-1 rounded-lg z-0 ${
-              selectedValue === "pass" ? "bg-emerald-500" : "bg-red-500"
+              selectedValue === "ok" ? "bg-emerald-500" : "bg-red-500"
             }`}
             transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
             style={{
               width: "calc(50% - 4px)",
-              left: selectedValue === "pass" ? "4px" : "50%",
+              left: selectedValue === "ok" ? "4px" : "50%",
             }}
           />
         )}

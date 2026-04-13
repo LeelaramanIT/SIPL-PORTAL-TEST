@@ -94,7 +94,7 @@ export function DynamicDataTable({
                         return (
                           <div
                             key={colIndex}
-                            className={`text-[0.7rem] text-slate-700 dark:text-slate-300 font-medium break-all ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
+                            className={`${cellClassName} text-[0.7rem] text-slate-700 dark:text-slate-300 font-medium break-all ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
                               }`}
                           >
                             {col.render ? col.render(value, row) : value ?? "-"}
