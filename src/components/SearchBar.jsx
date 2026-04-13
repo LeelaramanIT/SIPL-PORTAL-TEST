@@ -1,9 +1,9 @@
 import React from "react";
 import { IoMdSearch } from "react-icons/io";
 
-const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange }) => {
+const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange ,className}) => {
   return (
-    <div className="relative w-full flex items-center">
+    <div className={`relative flex items-center ${className}`}>
       <input
         onKeyDown={(e) => {
           if (e.key === "Enter") onSearch?.();
