@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Layout, Menu } from "antd";
-import {
-  IoHome,
-  IoSettingsOutline,
-  IoPieChartSharp,
-} from "react-icons/io5";
-import {
-  GoSidebarCollapse,
-  GoSidebarExpand,
-} from "react-icons/go";
+import { IoHome, IoSettingsOutline, IoPieChartSharp } from "react-icons/io5";
+import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
 import { RxDashboard } from "react-icons/rx";
-import { MdOutlineManageAccounts, MdOutlineReceipt, MdTireRepair } from "react-icons/md";
+import {
+  MdOutlineAssignmentTurnedIn,
+  MdOutlineManageAccounts,
+  MdOutlineReceipt,
+  MdOutlineTimeline,
+  MdTireRepair,
+} from "react-icons/md";
 import { SiAwsorganizations, SiGoogledocs } from "react-icons/si";
 import {
   BsFillClipboard2DataFill,
@@ -23,6 +22,8 @@ import {
   FaFileInvoiceDollar,
   FaTruck,
   FaExchangeAlt,
+  FaProjectDiagram,
+  FaClipboardList,
 } from "react-icons/fa";
 import { TfiBarChartAlt } from "react-icons/tfi";
 import { VscCalendar, VscGraphLine } from "react-icons/vsc";
@@ -41,7 +42,19 @@ import { MdOutlinePriceChange } from "react-icons/md";
 import { MdOutlineQrCodeScanner } from "react-icons/md";
 import { FcInspection } from "react-icons/fc";
 import { CiBarcode } from "react-icons/ci";
-
+import {
+  HiOutlineViewGrid,        // Dashboard
+  HiOutlineFolder,          // Projects
+  HiOutlineClock,           // Sprints
+  HiOutlineClipboardList,   // Tasks
+  HiOutlineDocumentText,    // Daily Log
+  HiOutlineUsers,           // Team
+  HiOutlineChartBar,        // Reports
+  HiOutlineCog,
+  HiOutlineViewBoards,
+  HiOutlineTemplate,
+  HiOutlineClipboardCheck,             // Masters
+} from "react-icons/hi";
 
 const { Sider } = Layout;
 
@@ -70,7 +83,9 @@ const SideBar = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const customIcon = (<img className="w-5 h-5" src={assets.CustomIcons} alt="Custom" />);
+  const customIcon = (
+    <img className="w-5 h-5" src={assets.CustomIcons} alt="Custom" />
+  );
 
   // ✅ Define all possible menu items
   const menuItems = [
@@ -116,12 +131,11 @@ const SideBar = () => {
                       key: "/TTS/Domestic/Dispatch/PDI/Inspection/SLTL/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PDI Inspection",
-                    }
-                  ]
-
+                    },
+                  ],
                 },
                 {
-                   key: "/TTS/Domestic/Dispatch/PDI/RimAndTyreFitment",
+                  key: "/TTS/Domestic/Dispatch/PDI/RimAndTyreFitment",
                   icon: <MdTireRepair />,
                   label: "Rim & Tyre Fitment",
                   children: [
@@ -135,7 +149,7 @@ const SideBar = () => {
                       icon: <MdOutlineQrCodeScanner />,
                       label: "PDK Rim & Tyre Fitment",
                     },
-                  ]
+                  ],
                 },
                 {
                   key: "/TTS/Domestic/Dispatch/Substution",
@@ -161,8 +175,8 @@ const SideBar = () => {
                       key: "/TTS/Domestic/Dispatch/PPC/Substitution/SLTL/Domestic",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PPC Substitution",
-                    }
-                  ]
+                    },
+                  ],
                 },
               ],
             },
@@ -224,12 +238,11 @@ const SideBar = () => {
                       key: "/TTS/International/Dispatch/PDI/Inspection/SLTL/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PDI Inspection",
-                    }
-                  ]
-
+                    },
+                  ],
                 },
                 {
-                   key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment",
+                  key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment",
                   icon: <MdTireRepair />,
                   label: "Rim & Tyre Fitment",
                   children: [
@@ -252,13 +265,13 @@ const SideBar = () => {
                       key: "/TTS/International/Dispatch/PDI/RimAndTyreFitment/SLTL/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL Rim & Tyre Fitment",
-                    }
-                  ]
+                    },
+                  ],
                 },
-              
+
                 {
                   key: "/TTS/International/Dispatch/Substution",
-                  icon: <FaExchangeAlt  />,
+                  icon: <FaExchangeAlt />,
                   label: "PPC Substitution",
                   children: [
                     {
@@ -280,8 +293,8 @@ const SideBar = () => {
                       key: "/TTS/International/Dispatch/PPC/Substitution/SLTL/Export",
                       icon: <MdOutlineQrCodeScanner />,
                       label: "SLTL PPC Substitution",
-                    }
-                  ]
+                    },
+                  ],
                 },
               ],
             },
@@ -316,7 +329,7 @@ const SideBar = () => {
           key: "/Masters/ItemIDMaster",
           label: "Item Master Creation",
           icon: <MdOutlinePriceChange />,
-        }
+        },
       ],
     },
     {
@@ -353,17 +366,60 @@ const SideBar = () => {
     },
     {
       key: "Task-Management",
-      icon: <FaTasks />,
+      icon: <HiOutlineClipboardCheck     />,
       label: "Task Management",
       children: [
-        { key: "/Task-Management/Home", icon: <FaHome />, label: "Home" },
-        { key: "/Task-Management/Projects", icon: <FaFolderOpen />, label: "Projects" },
-        { key: "/Task-Management/Team", icon: <RiTeamFill />, label: "Team" },
-        { key: "/Task-Management/Reports", icon: <TfiBarChartAlt />, label: "Reports" },
+        {
+          key: "/Task-Management/Dashboard",
+          icon: <HiOutlineViewGrid  />,
+          label: "Dashboard",
+        },
+
+        {
+          key: "/Task-Management/Projects",
+          icon: <HiOutlineFolder  />,
+          label: "Projects",
+        },
+
+        {
+          key: "/Task-Management/Sprints",
+          icon: <HiOutlineClock  />,
+          label: "Sprints",
+        },
+
+        {
+          key: "/Task-Management/Tasks",
+          icon: <HiOutlineClipboardList  />,
+          label: "Tasks",
+        },
+
+        {
+          key: "/Task-Management/DailyLog",
+          icon: <HiOutlineDocumentText  />,
+          label: "Daily Log",
+        },
+
+        { key: "/Task-Management/Team", icon: <HiOutlineUsers  />, label: "Team" },
+
+        {
+          key: "/Task-Management/Reports",
+          icon: <HiOutlineChartBar  />,
+          label: "Reports",
+        },
+
+        {
+          key: "/Task-Management/Masters",
+          icon: <HiOutlineCog  />,
+          label: "Masters",
+        },
       ],
     },
     { key: "/Settings", icon: <IoSettingsOutline />, label: "Settings" },
-    { key: "/Settings/Menuaccess", icon: <MdOutlineContactEmergency />, label: "Menu Access" },
+    {
+      key: "/Settings/Menuaccess",
+      icon: <MdOutlineContactEmergency />,
+      label: "Menu Access",
+    },
   ];
 
   function extractMenuData(items) {
@@ -421,14 +477,20 @@ const SideBar = () => {
     let state = null;
 
     // Determine state
-    if (key === "/TTS/International/Invoice/CustomInvoice" || key === "/TTS/Domestic/Invoice/Custom") {
+    if (
+      key === "/TTS/International/Invoice/CustomInvoice" ||
+      key === "/TTS/Domestic/Invoice/Custom"
+    ) {
       state = { type: "Custom" };
-    } else if (key === "/TTS/International/Invoice/CustomerInvoice" || key === "/TTS/Domestic/Invoice/Customer") {
+    } else if (
+      key === "/TTS/International/Invoice/CustomerInvoice" ||
+      key === "/TTS/Domestic/Invoice/Customer"
+    ) {
       state = { type: "Customer" };
     }
 
     // 🚀 NAVIGATE IMMEDIATELY
-    // Do not toggle sidebar here. 
+    // Do not toggle sidebar here.
     // This allows the page to change while the sidebar stays open.
     navigate(key, { state });
   };
@@ -437,7 +499,7 @@ const SideBar = () => {
     localStorage.clear();
     navigate("/login");
     dispatch(userLogout(navigate));
-    dispatch(logout())
+    dispatch(logout());
     await persistor.purge();
   };
 
@@ -451,7 +513,6 @@ const SideBar = () => {
           onClick={() => dispatch(toggleSidebar())} // Clicking background still closes it
         />
       )}
-
 
       <Sider
         theme={isDark ? "dark" : "light"}
@@ -479,16 +540,18 @@ const SideBar = () => {
       >
         {/* Logo & Toggle */}
         <div
-          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${collapsed ? "justify-center" : "justify-between"
-            }`}
+          className={`flex items-center h-16 p-1 dark:bg-gray-900 ${
+            collapsed ? "justify-center" : "justify-between"
+          }`}
           style={{
             transition: "all 0.3s ease",
           }}
         >
           {/* Full Logo */}
           <div
-            className={`transition-all duration-300 cursor-pointer ease-in-out ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
-              } overflow-hidden`}
+            className={`transition-all duration-300 cursor-pointer ease-in-out ${
+              collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+            } overflow-hidden`}
             onClick={() => dispatch(toggleSidebar())}
           >
             <img
@@ -500,8 +563,9 @@ const SideBar = () => {
 
           {/* Collapsed Logo */}
           <div
-            className={`transition-all duration-300 ease-in-out ${collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"
-              }`}
+            className={`transition-all duration-300 ease-in-out ${
+              collapsed ? "opacity-100 scale-100" : "opacity-0 scale-90"
+            }`}
           >
             <img
               src={assets.TVS}
@@ -542,8 +606,9 @@ const SideBar = () => {
 
         {/* Logout */}
         <div
-          className={`text-center cursor-pointer mb-2 transition-all duration-300 ${collapsed ? "opacity-0 scale-95" : "opacity-100 scale-100"
-            }`}
+          className={`text-center cursor-pointer mb-2 transition-all duration-300 ${
+            collapsed ? "opacity-0 scale-95" : "opacity-100 scale-100"
+          }`}
           onClick={handleLogout}
           style={{ color: isDark ? "#fff" : "#000" }}
         >
@@ -555,7 +620,6 @@ const SideBar = () => {
           <ThemeSwitcher />
         </div>
       </Sider>
-
     </>
   );
 };

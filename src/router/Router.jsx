@@ -53,10 +53,16 @@ import TyreAndRimFitment from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitme
 import FitmentList from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentList";
 import FitmentMaster from "../pages/TTS/Domostic/Dispatch/Tyre And Rim Fitment/FitmentMaster";
 import ProformaPrepare from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/ProformaPrepare";
-import PIMaster from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/PIMaster";
-import ApprovalForInspection from "../pages/TTS/Domostic/Dispatch/PDI/ApprovalForInspection/ApprovalForInspection";
-import SaleRepostMaster from "../pages/Reports/SaleReports/SaleRepostMaster";
-import TTSPowerBIReports from "../pages/Reports/TTSPowerBIReports";
+import TaskDashboard from "../pages/Task Managment/Dashboard/TaskDashboard";
+import Projects from "../pages/Task Managment/Projects/Projects";
+import Sprints from "../pages/Task Managment/Sprints/Sprints";
+import Tasks from "../pages/Task Managment/Tasks/Tasks";
+import DailyLog from "../pages/Task Managment/DailyLog/DailyLog";
+import Team from "../pages/Task Managment/Team/Team";
+import Reports from "../pages/Task Managment/Reports/Reports";
+import Masters from "../pages/Task Managment/Masters/Masters";
+
+
 
 export const router = createBrowserRouter([
   {
@@ -356,7 +362,17 @@ export const router = createBrowserRouter([
           {
             path: "Task-Management",
             element: <TaskLayout />,
-            children: [{ path: "Home", element: <TaskHomePage /> }],
+            children: [
+              { path: 'Home', element: <TaskHomePage /> },
+              { path: 'Dashboard', element: <TaskDashboard /> },
+              { path: 'Projects', element: <Projects /> },
+              { path: 'Sprints', element: <Sprints /> },
+              { path: 'Tasks', element: <Tasks /> },
+              { path: 'DailyLog', element: <DailyLog /> },
+              { path: 'Team', element: <Team /> },
+              { path: 'Reports', element: <Reports /> },
+              { path: 'Masters', element: <Masters /> },
+            ]
           },
           {
             path: "Settings",

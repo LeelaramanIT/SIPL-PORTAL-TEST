@@ -1,15 +1,20 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
+import React from "react";
+import { Outlet } from "react-router-dom";
+import assets from "../assets/assets";
+
 
 const TaskLayout = () => {
   return (
-    <div className="w-full bg-[#ECECEC] dark:bg-gray-900 p-2 flex flex-col shadow-2xl overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-md">
-          Navbar
-      </div>  
-      <Outlet />
+    <div
+      className="w-full h-full flex flex-col overflow-hidden bg-gradient-to-br from-[#f8fafc] via-[#eef2f7] to-[#e2e8f0] dark:from-[#0f172a] dark:via-[#111827] dark:to-[#020617]"
+    >
+      <div className="flex-1 min-h-0 overflow-y-auto "
+      style={{backgroundImage: `url(${assets.Geminisvg})`, backgroundSize: 'cover'}}
+        >
+        <Outlet />
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default TaskLayout
+export default TaskLayout;

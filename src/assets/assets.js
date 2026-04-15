@@ -8,6 +8,7 @@ import LoadingAnimation from "./img/LoadingAnimation.svg";
 import SUN_TWS from "./img/SUN-TWS.png";
 import TVS from "./img/TVSFavIcon.png";
 import CustomIcons from './img/CustomIcons.svg'
+import Geminisvg from './img/gemini-svg.svg';
 
 const assets = {
   TVSLOGO,
@@ -19,7 +20,8 @@ const assets = {
   SUN_TWS,
   IceMountain,
   TVS,
-  CustomIcons
+  CustomIcons,
+  Geminisvg
 };
 
 export default assets;
