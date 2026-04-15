@@ -61,6 +61,10 @@ import DailyLog from "../pages/Task Managment/DailyLog/DailyLog";
 import Team from "../pages/Task Managment/Team/Team";
 import Reports from "../pages/Task Managment/Reports/Reports";
 import Masters from "../pages/Task Managment/Masters/Masters";
+import PIMaster from "../pages/TTS/International/Invoice/Export Invoice/Proforma Invoice/PIMaster";
+import ApprovalForInspection from "../pages/TTS/Domostic/Dispatch/PDI/ApprovalForInspection/ApprovalForInspection";
+import TTSPowerBIReports from "../pages/Reports/TTSPowerBIReports";
+import SaleRepostMaster from "../pages/Reports/SaleReports/SaleRepostMaster";
 
 
 
