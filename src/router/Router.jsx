@@ -3,7 +3,7 @@ import Home from "../pages/Home/Home";
 import MainLayout from "../layout/MainLayout";
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
-import UserCreate from "../pages/Masters/UserCreate";
+import UserCreate from "../pages/Masters/UserMaster/UserCreate";
 import Settings from "../pages/Settings/Settings";
 import NotFoundPage from "../pages/NotFound/NotFoundPage";
 import CustomerInvoice from "../pages/TTS/Domostic/Invoice/CustomerInvoice";
@@ -22,7 +22,7 @@ import RimLayout from "../layout/RimLayout";
 import RimOverView from "../pages/TTS/Rim/RimOverView";
 import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
 import RimStocks from "../pages/TTS/Rim/RimStocks";
-import AllUSers from "../pages/Masters/AllUsers";
+import AllUSers from "../pages/Masters/UserMaster/AllUsers";
 import SampleSplit from "../pages/TTS/International/Invoice/Export Invoice/SampleSplit";
 import TaskLayout from "../layout/TaskLayout";
 import TaskHomePage from "../pages/Task Managment/Home/TaskHomePage";
@@ -93,6 +93,58 @@ export const router = createBrowserRouter([
               { path: "/Masters/PriceMaster", element: <PriceMaster /> },
               {
                 path: "ItemIDMaster",
+                element: <ItemIDMaster />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="AssemblyProcessIDCreation" />,
+                  },
+                  {
+                    path: "AssemblyProcessIDCreation",
+                    element: <AssemblyProcessIDCreation />,
+                  },
+                  {
+                    path: "TyreProcessIDCreation",
+                    element: <TyreProcessIDCreation />,
+                  },
+                  {
+                    path: "RIMProcessIDCreation",
+                    element: <RIMProcessIDCreation />,
+                  },
+                  {
+                    path: "CustomerProcessIDCreation",
+                    element: <RIMProcessIDCreation />,
+                  },
+                ],
+              },
+              {
+                path: "UserMaster",
+                element: <ItemIDMaster />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="AssemblyProcessIDCreation" />,
+                  },
+                  {
+                    path: "AssemblyProcessIDCreation",
+                    element: <AssemblyProcessIDCreation />,
+                  },
+                  {
+                    path: "TyreProcessIDCreation",
+                    element: <TyreProcessIDCreation />,
+                  },
+                  {
+                    path: "RIMProcessIDCreation",
+                    element: <RIMProcessIDCreation />,
+                  },
+                  {
+                    path: "CustomerProcessIDCreation",
+                    element: <RIMProcessIDCreation />,
+                  },
+                ],
+              },
+              {
+                path: "UserMaster",
                 element: <ItemIDMaster />,
                 children: [
                   {
@@ -368,6 +420,14 @@ export const router = createBrowserRouter([
             element: <TaskLayout />,
             children: [
               { path: 'Home', element: <TaskHomePage /> },
+              { path: 'Dashboard', element: <TaskDashboard /> },
+              { path: 'Projects', element: <Projects /> },
+              { path: 'Sprints', element: <Sprints /> },
+              { path: 'Tasks', element: <Tasks /> },
+              { path: 'DailyLog', element: <DailyLog /> },
+              { path: 'Team', element: <Team /> },
+              { path: 'Reports', element: <Reports /> },
+              { path: 'Masters', element: <Masters /> },
               { path: 'Dashboard', element: <TaskDashboard /> },
               { path: 'Projects', element: <Projects /> },
               { path: 'Sprints', element: <Sprints /> },
