@@ -326,7 +326,7 @@ const AddressSection = ({ data }) => (
           <Text style={styles.text}>{data?.BuyersOrderNumber}</Text>
         </Text>
         <Text style={styles.bodyText}>
-          Rev no: <Text style={styles.text}>{data?.revisionNumber}</Text>
+          Date: <Text style={styles.text}>{formatDateTime(data?.Date)}</Text>
         </Text>
       </View>
       {/* Rev date */}
@@ -340,6 +340,7 @@ const AddressSection = ({ data }) => (
         }}
       >
         <Text style={styles.bodyText}>
+          Rev no: <Text style={styles.text}>{data?.revisionNumber}</Text>
           Rev Date:{" "}
           <Text style={styles.text}>{formatDateTime(data?.revisionDate)}</Text>
         </Text>
@@ -501,82 +502,87 @@ const TableRows = ({
   return (
     <>
       {items.map((item, index) => {
-      
-      
-      return(
-        <View key={index} style={styles.bodyRow}>
-          <View style={[styles.bodyCell, { width: w.srNo }]}>
-            <Text style={styles.bodyText}>
-              {item.srNo ?? startIndex + index + 1}
-            </Text>
-          </View>
-          {showItemCode && (
-            <View style={[styles.bodyCell, { width: w.product }]}>
-              <Text style={styles.bodyText}>{item.partNumber}</Text>
-            </View>
-          )}
-          <View style={[styles.bodyCell, { width: w.sunPart }]}>
-            <Text style={styles.bodyText}>{item.itemCode}</Text>
-          </View>
-          {showPONumber && (
-            <View style={[styles.bodyCell, { width: w.po }]}>
-              <Text style={styles.bodyText}>{item.PONumber}</Text>
-            </View>
-          )}
-          <View style={[styles.bodyCell, { width: w.description }]}>
-            <Text style={styles.bodyText}>
-              {item?.category === "SPLIT RIMS"
-                ? item.category
-                : `${item.tyreSize} / ${item.tyreRim === "-" ? "0.00" : item.tyreRim} / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${item?.assyRimstatus ? item?.edcNo : ""} / ${item?.color} ${item?.des}`}
-            </Text>
-          </View>
-          {showEdc && (
-            <View style={[styles.bodyCell, { width: w.edc }]}>
-              <Text style={[styles.bodyText, { textAlign: "right" }]}>
-                {item.edcNo}
+        return (
+          <View key={index} style={styles.bodyRow}>
+            <View style={[styles.bodyCell, { width: w.srNo }]}>
+              <Text style={styles.bodyText}>
+                {item.srNo ?? startIndex + index + 1}
               </Text>
             </View>
-          )}
-          <View style={[styles.bodyCell, { width: w.qty }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {item.itemQty || 0}
-            </Text>
+            {showItemCode && (
+              <View style={[styles.bodyCell, { width: w.product }]}>
+                <Text style={styles.bodyText}>{item.partNumber}</Text>
+              </View>
+            )}
+            <View style={[styles.bodyCell, { width: w.sunPart }]}>
+              <Text style={styles.bodyText}>{item.itemCode}</Text>
+            </View>
+            {showPONumber && (
+              <View style={[styles.bodyCell, { width: w.po }]}>
+                <Text style={styles.bodyText}>{item.PONumber}</Text>
+              </View>
+            )}
+            <View style={[styles.bodyCell, { width: w.description }]}>
+              <Text style={styles.bodyText}>
+                {item?.category === "SPLIT RIMS"
+                  ? item.category
+                  : `${item.tyreSize} / ${
+                      item.tyreRim === "-" ? "0.00" : item.tyreRim
+                    } / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${
+                      item?.assyRimstatus ? item?.edcNo : ""
+                    } ${item?.color ? `${item.color} ${item.des || ""}` : ""}`}
+              </Text>
+            </View>
+            {showEdc && (
+              <View style={[styles.bodyCell, { width: w.edc }]}>
+                <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                  {item.edcNo}
+                </Text>
+              </View>
+            )}
+            <View style={[styles.bodyCell, { width: w.qty }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {item.itemQty || 0}
+              </Text>
+            </View>
+            <View style={[styles.bodyCell, { width: w.unitPrice }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(
+                  2,
+                )}
+              </Text>
+            </View>
+            <View style={[styles.bodyCell, { width: w.unitWt }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(
+                  3,
+                )}
+              </Text>
+            </View>
+            <View style={[styles.bodyCell, { width: w.totalWt }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {(
+                  ((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) *
+                  (item?.itemQty || 0)
+                ).toFixed(3)}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.bodyCell,
+                { width: w.totalPrice, borderRightWidth: 0 },
+              ]}
+            >
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {(
+                  ((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) *
+                  (item?.itemQty || 0)
+                ).toFixed(2)}
+              </Text>
+            </View>
           </View>
-          <View style={[styles.bodyCell, { width: w.unitPrice }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(2)}
-            </Text>
-          </View>
-          <View style={[styles.bodyCell, { width: w.unitWt }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(
-                3,
-              )}
-            </Text>
-          </View>
-          <View style={[styles.bodyCell, { width: w.totalWt }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(
-                ((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) *
-                (item?.itemQty || 0)
-              ).toFixed(3)}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.bodyCell,
-              { width: w.totalPrice, borderRightWidth: 0 },
-            ]}
-          >
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(
-                ((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) *
-                (item?.itemQty || 0)
-              ).toFixed(2)}
-            </Text>
-          </View>
-        </View>
-      )})}
+        );
+      })}
     </>
   );
 };
@@ -740,68 +746,90 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
       </View>
 
       {/* Terms & Conditions */}
-<View style={{ padding: 4, borderBottomWidth: 0.5, borderColor: "black" }}>
-  <Text
-    style={{ fontSize: 7, fontWeight: "bold", textAlign: "center", marginBottom: 3 }}
-  >
-    TERMS & CONDITIONS
-  </Text>
+      <View
+        style={{ padding: 4, borderBottomWidth: 0.5, borderColor: "black" }}
+      >
+        <Text
+          style={{
+            fontSize: 7,
+            fontWeight: "bold",
+            textAlign: "center",
+            marginBottom: 3,
+          }}
+        >
+          TERMS & CONDITIONS
+        </Text>
 
-  {(() => {
-    // Build all lines into one array
-    const fixedLines = [
-      `1. THE ABOVE PRICES ARE ${(data?.userCurrency || "").toUpperCase()}, ${(data?.incoterm || "").toUpperCase()} ${(data?.placeOfIncoterm || "").toUpperCase()} (SHIPMENT BY ${data?.preCarriageBy})`,
-      `2. PAYMENT: ${data?.paymentTerms}`,
-    ];
+        {(() => {
+          // Build all lines into one array
+          const fixedLines = [
+            `1. THE ABOVE PRICES ARE ${(data?.userCurrency || "").toUpperCase()}, ${(data?.incoterm || "").toUpperCase()} ${(data?.placeOfIncoterm || "").toUpperCase()} (SHIPMENT BY ${data?.preCarriageBy})`,
+            `2. PAYMENT: ${data?.paymentTerms}`,
+          ];
 
-    const dynamicLines = data?.custInstruction
-      ? data.custInstruction
-          .replace(/~/g, "\n")
-          .split("\n")
-          .filter((l) => l.trim() !== "")
-          .map((l) => l.trim())
-      : [];
+          const dynamicLines = data?.custInstruction
+            ? data.custInstruction
+                .replace(/~/g, "\n")
+                .split("\n")
+                .filter((l) => l.trim() !== "")
+                .map((l) => l.trim())
+            : [];
 
-    const allLines = [...fixedLines, ...dynamicLines];
+          const allLines = [...fixedLines, ...dynamicLines];
 
-    // Split into 2 columns only if more than 4 lines
-    if (allLines.length > 4) {
-      const mid = Math.ceil(allLines.length / 2);
-      const leftLines = allLines.slice(0, mid);
-      const rightLines = allLines.slice(mid);
+          // Split into 2 columns only if more than 4 lines
+          if (allLines.length > 4) {
+            const mid = Math.ceil(allLines.length / 2);
+            const leftLines = allLines.slice(0, mid);
+            const rightLines = allLines.slice(mid);
 
-      return (
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {/* Left Column */}
-          <View style={{ flex: 1 }}>
-            {leftLines.map((line, i) => (
-              <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-                {line}
-              </Text>
-            ))}
-          </View>
-          {/* Divider */}
-          <View style={{ width: 0.5, backgroundColor: "black", marginHorizontal: 2 }} />
-          {/* Right Column */}
-          <View style={{ flex: 1 }}>
-            {rightLines.map((line, i) => (
-              <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-                {line}
-              </Text>
-            ))}
-          </View>
-        </View>
-      );
-    }
+            return (
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {/* Left Column */}
+                <View style={{ flex: 1 }}>
+                  {leftLines.map((line, i) => (
+                    <Text
+                      key={i}
+                      style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}
+                    >
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+                {/* Divider */}
+                <View
+                  style={{
+                    width: 0.5,
+                    backgroundColor: "black",
+                    marginHorizontal: 2,
+                  }}
+                />
+                {/* Right Column */}
+                <View style={{ flex: 1 }}>
+                  {rightLines.map((line, i) => (
+                    <Text
+                      key={i}
+                      style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}
+                    >
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            );
+          }
 
-    // Single column if 4 or fewer lines
-    return allLines.map((line, i) => (
-      <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-        {line}
-      </Text>
-    ));
-  })()}
-</View>
+          // Single column if 4 or fewer lines
+          return allLines.map((line, i) => (
+            <Text
+              key={i}
+              style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}
+            >
+              {line}
+            </Text>
+          ));
+        })()}
+      </View>
     </View>
   );
 };

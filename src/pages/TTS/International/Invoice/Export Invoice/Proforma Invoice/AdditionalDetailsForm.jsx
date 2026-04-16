@@ -304,6 +304,8 @@ const AdditionalCustDetailsForm = ({
         "",
       BuyersOrderNumber:
         savedFormData?.BuyersOrderNumber || invoiceDetails?.orderRefNo || "",
+      Date:
+      savedFormData?.Date || invoiceDetails?.Date || "",
 
       revisionNumber:
         savedFormData?.revisionNumber || invoiceDetails?.revisionNumber || "",
@@ -582,6 +584,14 @@ const AdditionalCustDetailsForm = ({
                 <InputField
                   label="Buyers Order No"
                   name="BuyersOrderNumber"
+                  register={register}
+                  errors={errors}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <DateField
+                  label="Date"
+                  name="Date"
                   register={register}
                   errors={errors}
                 />
@@ -962,7 +972,7 @@ const SelectField = ({
         >
           <option value="">Select...</option>
           {normalizedOptions.map((opt) => (
-            <option key={opt} value={opt}>
+            <option key={opt} value={opt} title={opt}>
               {opt}
             </option>
           ))}
