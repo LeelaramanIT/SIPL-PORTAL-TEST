@@ -229,7 +229,8 @@ export const getAssyDetails = (payload) => async (dispatch) => {
       return {
         assemblyBarcode: res.data.assemblyBarcode,
         status: res.data.status,
-        message: res.data.message
+        message: res.data.message,
+        o_ItemID:res.data.o_ItemID
       };
     }
   } catch (error) {

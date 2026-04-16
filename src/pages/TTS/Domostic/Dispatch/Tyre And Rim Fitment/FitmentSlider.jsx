@@ -19,9 +19,11 @@ export const FitmrntSlider = ({
   isValid,
   onVerify,
   setIsValid,
+  setMessage
 }) => {
   const { tyre, rim } = data;
   const [direction, setDirection] = useState("");
+  const [o_ItemID,seto_ItemID] = useState(0)
   const [barcode, setBarcode] = useState("");
   const [error, setError] = useState("");
   const [isAllow, setIsAllow] = useState(true);
@@ -56,14 +58,19 @@ export const FitmrntSlider = ({
     const data = await dispatch(getAssyDetails(payload));
     if (data.status) {
       setBarcode(data.assemblyBarcode);
+      seto_ItemID(data.o_ItemID)
       setIsAllow(true);
       setError("");
+      setMessage(data.message)
     } else {
       setError(data.message);
       setIsAllow(false);
       setBarcode("");
+      setMessage(data.message)
     }
   };
+  console.log(direction);
+  
 const AssemblyProcessID = barcode?.substring(0,8)
   // console.log(tyre,rim,FitmentDetails);
   const handleConfirmation = () => {
@@ -73,7 +80,7 @@ const AssemblyProcessID = barcode?.substring(0,8)
       rimBarcode: rim?.rimBarcode,
       assemblyBarcode: barcode,
       AssemblyProcessID,
-      o_ItemID: rim?.o_ItemID || 0,
+      o_ItemID: o_ItemID || 0,
       edcNo: rim?.edcNo,
       machineId: 0,
       operatorId: 0,
@@ -88,6 +95,7 @@ const AssemblyProcessID = barcode?.substring(0,8)
       dispatchQty: FitmentDetails?.assemblyQty,
       rimPlant: FitmentDetails?.plant,
       inspectedby: "string",
+      Directional:direction
     });
   };
 

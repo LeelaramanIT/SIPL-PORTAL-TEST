@@ -410,6 +410,7 @@ console.log(FitmentDetails);
                                         isValid={isValid}
                                         setIsValid={setIsValid}
                                         onSubmit={handleConfirmation}
+                                        setMessage={setMessage}
                                     />
                                 )}
 
