@@ -4,15 +4,18 @@ import { Font } from "@react-pdf/renderer";
 import LOGO from "../../../../../../assets/img/SUN-TWS.png";
 import { numberToWords } from "../../../../../../utils/NumberToWords";
 import { formatDateTime } from "../../../../../../utils/FormatDate";
+
 Font.register({
   family: "Roboto",
   src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
 });
 Font.registerHyphenationCallback((word) => [word]);
+
 // ─── Layout constants ─────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE = 25;
 const GRAND_TOTAL_ROW_HEIGHT = 18;
 const ITEM_ROW_HEIGHT = 16;
+
 // ─── Simple fixed chunker (25 items per page) ─────────────────────────────────
 const chunkItemsForPages = (items) => {
   const chunks = [];
@@ -22,48 +25,41 @@ const chunkItemsForPages = (items) => {
   if (chunks?.length === 0) chunks?.push([]);
   return chunks;
 };
+
 // ─── Column widths ────────────────────────────────────────────────────────────
-// Without EDC: srNo(4)+product(8)+sunPart(8)+description(36)+qty(6)+unitPrice(8)+unitWt(9)+totalWt(9)+totalPrice(14) = 102%
-// With    EDC: srNo(4)+product(8)+sunPart(8)+description(30)+edc(6)+qty(6)+unitPrice(8)+unitWt(9)+totalWt(9)+totalPrice(14) = 102%
-//
-// Summary alignment — both EDC and non-EDC cases produce label = 56%:
-//   Without EDC: 4+8+8+36           = 56%  → summaryLabel
-//   With    EDC: 4+8+8+30+6         = 56%  → summaryLabel
-//   qty(6%)                                → summaryQty
-//   unitPrice(8%)                          → summaryBlankUnitPrice
-//   unitWt(9%)                             → summaryBlankUnitWt
-//   totalWt(9%)                            → summaryBlankTotalWt
-//   totalPrice(14%)                        → summaryValue
+// Column order: srNo | product | sunPart | po | description | edc | qty | unitWt | totalWt | unitPrice | totalPrice
+// EDC width increased from 6 → 8, totalPrice reduced from 14 → 12 (same total budget)
 const getColWidths = (showEdc, showItemCode, showPONumber) => {
   let base = {
     srNo: 4,
     product: showItemCode ? 8 : 0,
     sunPart: 8,
     po: showPONumber ? 6 : 0,
-    description: showEdc ? 30 : 36,
-    edc: showEdc ? 6 : 0,
+    description: showEdc ? 28 : 36,
+    edc: showEdc ? 8 : 0,   // ← increased from 6 to 8
     qty: 6,
-    unitPrice: 8,
-    unitWt: 9,
-    totalWt: 9,
-    totalPrice: 14,
+    unitWt: 9,               // ← reordered: now comes before unitPrice
+    totalWt: 9,              // ← reordered: now comes before unitPrice
+    unitPrice: 8,            // ← moved after totalWt
+    totalPrice: 12,          // ← reduced from 14 to 12
   };
 
-  // 👉 Calculate removed width
+  // Calculate removed width from optional columns
   let removed = 0;
   if (!showItemCode) removed += 8;
   if (!showPONumber) removed += 6;
-  if (!showEdc) removed += 6;
+  if (!showEdc) removed += 8; // match the increased edc budget
 
-  // 👉 Distribute removed width smartly
+  // Distribute removed width across description and sunPart
   const distributeCols = ["description", "sunPart"];
   distributeCols.forEach((col) => {
     base[col] += removed / distributeCols.length;
   });
 
-  // 👉 Convert to %
+  // Convert to %
   return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, `${v}%`]));
 };
+
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   page: {
@@ -126,53 +122,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     wordBreak: "break-all",
   },
-  // ─── Summary styles — each width mirrors the matching table column(s) ───────
   summaryRow: {
     flexDirection: "row",
     height: 16,
     borderColor: "#000",
-  },
-  summaryLabel: {
-    // srNo(4)+product(8)+sunPart(8)+description(30|36)[+edc(6)] = 56%
-    width: "56%",
-    borderRightWidth: 0.5,
-    borderColor: "#000",
-    justifyContent: "center",
-    alignItems: "flex-end",
-    paddingRight: 6,
-  },
-  summaryQty: {
-    // qty (6%)
-    width: "6%",
-    borderRightWidth: 0.5,
-    borderColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  summaryBlankUnitPrice: {
-    // unitPrice (8%)
-    width: "8%",
-    borderRightWidth: 0.5,
-    borderColor: "#000",
-  },
-  summaryBlankUnitWt: {
-    // unitWt (9%)
-    width: "9%",
-    borderRightWidth: 0.5,
-    borderColor: "#000",
-  },
-  summaryBlankTotalWt: {
-    // totalWt (9%)
-    width: "9%",
-    borderRightWidth: 0.5,
-    borderColor: "#000",
-  },
-  summaryValue: {
-    // totalPrice (14%) — no right border (last column)
-    width: "14%",
-    justifyContent: "center",
-    alignItems: "flex-end",
-    paddingRight: 2,
   },
   grandTotalRow: {
     flexDirection: "row",
@@ -189,6 +142,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 });
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 const HeaderSection = ({ data }) => (
   <View
@@ -216,6 +170,7 @@ const HeaderSection = ({ data }) => (
     <View style={{ width: "20%" }} />
   </View>
 );
+
 const AddressSection = ({ data }) => (
   <View style={{ flexDirection: "row", height: 170 }}>
     {/* LEFT */}
@@ -232,7 +187,6 @@ const AddressSection = ({ data }) => (
         <Text style={{ ...styles.bodyText, fontWeight: "bold" }}>
           EXPORTER :
         </Text>
-
         {(data?.exportAuthorisedAddress
           ? data.exportAuthorisedAddress.toUpperCase().split("~")
           : []
@@ -326,7 +280,8 @@ const AddressSection = ({ data }) => (
           <Text style={styles.text}>{data?.BuyersOrderNumber}</Text>
         </Text>
         <Text style={styles.bodyText}>
-          Rev no: <Text style={styles.text}>{data?.revisionNumber}</Text>
+          Order Date:{" "}
+          <Text style={styles.text}>{formatDateTime(data?.Date)}</Text>
         </Text>
       </View>
       {/* Rev date */}
@@ -339,17 +294,27 @@ const AddressSection = ({ data }) => (
           justifyContent: "space-between",
         }}
       >
-        <Text style={styles.bodyText}>
-          Rev Date:{" "}
-          <Text style={styles.text}>{formatDateTime(data?.revisionDate)}</Text>
-        </Text>
-        <Text style={styles.bodyText}>
-          Other Reference(s):{" "}
-          <Text style={styles.text}>
-            EMAIL REF {data?.completedDate} / {data?.orderRefNo} / CONTAINER
-            NO{" "}
+        {data?.revisionNumber && (
+          <Text style={styles.bodyText}>
+            Rev no: <Text style={styles.text}>{data?.revisionNumber}</Text> Rev
+            Date:{" "}
+            <Text style={styles.text}>
+              {formatDateTime(data?.revisionDate)}
+            </Text>
           </Text>
-        </Text>
+        )}
+        <View style={{ flexDirection: "row" }}>
+          <Text style={styles.bodyText}>Other Reference(s): </Text>
+          <Text style={styles.text}>
+            {data?.EmailDate && `EMAIL REF :${data.EmailDate} / `}
+          </Text>
+          <Text style={styles.text}>
+            {data?.orderRefNo && `${data.orderRefNo}`}
+          </Text>
+          <Text style={styles.text}>
+            {data?.containerNo && `/ CONTAINER NO ${data.containerNo}`}
+          </Text>
+        </View>
       </View>
       {/* Ship-to + Notify Party */}
       <View
@@ -448,9 +413,13 @@ const AddressSection = ({ data }) => (
     </View>
   </View>
 );
+
 // ─── Table Header ─────────────────────────────────────────────────────────────
 const TableHeader = ({ data, showEdc, showItemCode, showPONumber }) => {
-  const w = getColWidths(showEdc, showItemCode);
+  // ✅ Fixed: pass all three flags so widths match TableRows exactly
+  const w = getColWidths(showEdc, showItemCode, showPONumber);
+
+  // ✅ Column order: ... qty | unitWt | totalWt | unitPrice | totalPrice
   const columns = [
     { label: "SR NO", width: w.srNo },
     ...(showItemCode ? [{ label: "CUSTOMER PART #", width: w.product }] : []),
@@ -459,15 +428,16 @@ const TableHeader = ({ data, showEdc, showItemCode, showPONumber }) => {
     { label: "ITEM DESCRIPTION", width: w.description },
     ...(showEdc ? [{ label: "EDC", width: w.edc }] : []),
     { label: "QTY", width: w.qty },
-    { label: `UNIT PRICE\n${data?.userCurrency ?? "USD"}`, width: w.unitPrice },
-    { label: "UNIT WT\nKGS", width: w.unitWt },
-    { label: "TOTAL WT\nKGS", width: w.totalWt },
+    { label: "UNIT WT\nKGS", width: w.unitWt },       // ← moved before unitPrice
+    { label: "TOTAL WT\nKGS", width: w.totalWt },      // ← moved before unitPrice
+    { label: `UNIT PRICE\n${data?.userCurrency ?? "USD"}`, width: w.unitPrice }, // ← moved after totalWt
     {
       label: `TOTAL PRICE\n${data?.userCurrency ?? "USD"}`,
       width: w.totalPrice,
       last: true,
     },
   ];
+
   return (
     <View style={styles.tableHeaderRow}>
       {columns.map(({ label, width, last }, i) => (
@@ -489,6 +459,7 @@ const TableHeader = ({ data, showEdc, showItemCode, showPONumber }) => {
     </View>
   );
 };
+
 // ─── Table Rows ───────────────────────────────────────────────────────────────
 const TableRows = ({
   items,
@@ -497,148 +468,193 @@ const TableRows = ({
   showPONumber,
   startIndex = 0,
 }) => {
-  const w = getColWidths(showEdc, showItemCode);
+  const w = getColWidths(showEdc, showItemCode, showPONumber);
+
   return (
     <>
       {items.map((item, index) => {
-      
-      
-      return(
-        <View key={index} style={styles.bodyRow}>
-          <View style={[styles.bodyCell, { width: w.srNo }]}>
-            <Text style={styles.bodyText}>
-              {item.srNo ?? startIndex + index + 1}
-            </Text>
-          </View>
-          {showItemCode && (
-            <View style={[styles.bodyCell, { width: w.product }]}>
-              <Text style={styles.bodyText}>{item.partNumber}</Text>
-            </View>
-          )}
-          <View style={[styles.bodyCell, { width: w.sunPart }]}>
-            <Text style={styles.bodyText}>{item.itemCode}</Text>
-          </View>
-          {showPONumber && (
-            <View style={[styles.bodyCell, { width: w.po }]}>
-              <Text style={styles.bodyText}>{item.PONumber}</Text>
-            </View>
-          )}
-          <View style={[styles.bodyCell, { width: w.description }]}>
-            <Text style={styles.bodyText}>
-              {item?.category === "SPLIT RIMS"
-                ? item.category
-                : `${item.tyreSize} / ${item.tyreRim === "-" ? "0.00" : item.tyreRim} / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${item?.assyRimstatus ? item?.edcNo : ""} / ${item?.color} ${item?.des}`}
-            </Text>
-          </View>
-          {showEdc && (
-            <View style={[styles.bodyCell, { width: w.edc }]}>
-              <Text style={[styles.bodyText, { textAlign: "right" }]}>
-                {item.edcNo}
+        return (
+          <View key={index} style={styles.bodyRow}>
+            <View style={[styles.bodyCell, { width: w.srNo }]}>
+              <Text style={styles.bodyText}>
+                {item.srNo ?? startIndex + index + 1}
               </Text>
             </View>
-          )}
-          <View style={[styles.bodyCell, { width: w.qty }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {item.itemQty || 0}
-            </Text>
+            {showItemCode && (
+              <View style={[styles.bodyCell, { width: w.product }]}>
+                <Text style={styles.bodyText}>{item.partNumber}</Text>
+              </View>
+            )}
+            <View style={[styles.bodyCell, { width: w.sunPart }]}>
+              <Text style={styles.bodyText}>{item.itemCode}</Text>
+            </View>
+            {showPONumber && (
+              <View style={[styles.bodyCell, { width: w.po }]}>
+                <Text style={styles.bodyText}>{item.PONumber}</Text>
+              </View>
+            )}
+            <View style={[styles.bodyCell, { width: w.description }]}>
+              <Text style={styles.bodyText}>
+                {item?.category === "SPLIT RIMS"
+                  ? item.category
+                  : `${item.tyreSize} / ${
+                      item.tyreRim === "-" ? "0.00" : item.tyreRim
+                    } / ${item.brand} / ${item.sidewall} / ${item.tyreType} ${
+                      item?.assyRimstatus ? item?.edcNo : ""
+                    } ${item?.color ? `${item.color} ${item.des || ""}` : ""}`}
+              </Text>
+            </View>
+            {showEdc && (
+              <View style={[styles.bodyCell, { width: w.edc }]}>
+                <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                  {item.edcNo}
+                </Text>
+              </View>
+            )}
+            <View style={[styles.bodyCell, { width: w.qty }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {item.itemQty || 0}
+              </Text>
+            </View>
+            {/* ✅ unitWt now before unitPrice */}
+            <View style={[styles.bodyCell, { width: w.unitWt }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(3)}
+              </Text>
+            </View>
+            {/* ✅ totalWt now before unitPrice */}
+            <View style={[styles.bodyCell, { width: w.totalWt }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {(
+                  ((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) *
+                  (item?.itemQty || 0)
+                ).toFixed(3)}
+              </Text>
+            </View>
+            {/* ✅ unitPrice now after weight columns */}
+            <View style={[styles.bodyCell, { width: w.unitPrice }]}>
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(2)}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.bodyCell,
+                { width: w.totalPrice, borderRightWidth: 0 },
+              ]}
+            >
+              <Text style={[styles.bodyText, { textAlign: "right" }]}>
+                {(
+                  ((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) *
+                  (item?.itemQty || 0)
+                ).toFixed(2)}
+              </Text>
+            </View>
           </View>
-          <View style={[styles.bodyCell, { width: w.unitPrice }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(2)}
-            </Text>
-          </View>
-          <View style={[styles.bodyCell, { width: w.unitWt }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(
-                3,
-              )}
-            </Text>
-          </View>
-          <View style={[styles.bodyCell, { width: w.totalWt }]}>
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(
-                ((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) *
-                (item?.itemQty || 0)
-              ).toFixed(3)}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.bodyCell,
-              { width: w.totalPrice, borderRightWidth: 0 },
-            ]}
-          >
-            <Text style={[styles.bodyText, { textAlign: "right" }]}>
-              {(
-                ((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) *
-                (item?.itemQty || 0)
-              ).toFixed(2)}
-            </Text>
-          </View>
-        </View>
-      )})}
+        );
+      })}
     </>
   );
 };
+
 // ─── Summary + T&C ────────────────────────────────────────────────────────────
 const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
   const otherCharges = data?.additionalCharges?.[0]?.rows || [];
   const discounts = data?.discountDetails?.[0]?.rows || [];
   const amountInWords = numberToWords(grandTotalDDP, data?.userCurrency || "");
+
   const totalQty = (data?.items || []).reduce(
     (s, it) => s + Number(it.itemQty || 0),
     0,
   );
 
   const showEdc = data?.items?.some((i) => i?.assyRimstatus);
-  const showItemCode = data?.items?.some((i) => i?.product);
+  const showItemCode = data?.items?.some((i) => i?.partNumber);
   const showPONumber = data?.items?.some((i) => i?.PONumber);
 
+  // ✅ Use the same getColWidths so every pixel matches the table above
   const w = getColWidths(showEdc, showItemCode, showPONumber);
 
+  // Compute label width as the sum of all columns before qty
   const summaryLabelWidth =
     parseFloat(w.srNo) +
     parseFloat(w.product || 0) +
     parseFloat(w.sunPart) +
     parseFloat(w.po || 0) +
-    parseFloat(w.description);
+    parseFloat(w.description) +
+    parseFloat(w.edc || 0);
 
-  // Reusable blank spacers matching unitPrice / unitWt / totalWt columns
+  // ✅ BlankCells now uses computed widths — borders will always align with header/rows
+  // Order matches new column sequence: unitWt | totalWt | unitPrice
   const BlankCells = ({ withTopBorder = false }) => (
     <>
       <View
-        style={[
-          styles.summaryBlankUnitPrice,
-          withTopBorder && { borderTopWidth: 0.5 },
-        ]}
+        style={{
+          width: w.unitWt,
+          borderRightWidth: 0.5,
+          borderColor: "#000",
+          ...(withTopBorder ? { borderTopWidth: 0.5 } : {}),
+        }}
       />
       <View
-        style={[
-          styles.summaryBlankUnitWt,
-          withTopBorder && { borderTopWidth: 0.5 },
-        ]}
+        style={{
+          width: w.totalWt,
+          borderRightWidth: 0.5,
+          borderColor: "#000",
+          ...(withTopBorder ? { borderTopWidth: 0.5 } : {}),
+        }}
       />
       <View
-        style={[
-          styles.summaryBlankTotalWt,
-          withTopBorder && { borderTopWidth: 0.5 },
-        ]}
+        style={{
+          width: w.unitPrice,
+          borderRightWidth: 0.5,
+          borderColor: "#000",
+          ...(withTopBorder ? { borderTopWidth: 0.5 } : {}),
+        }}
       />
     </>
   );
+
+  // Shared inline style builders to avoid repeating literals
+  const labelStyle = (extra = {}) => ({
+    width: `${summaryLabelWidth}%`,
+    borderRightWidth: 0.5,
+    borderColor: "#000",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    paddingRight: 6,
+    ...extra,
+  });
+
+  const qtyStyle = (extra = {}) => ({
+    width: w.qty,
+    borderRightWidth: 0.5,
+    borderColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    ...extra,
+  });
+
+  const valueStyle = (extra = {}) => ({
+    width: w.totalPrice,
+    justifyContent: "center",
+    alignItems: "flex-end",
+    paddingRight: 2,
+    ...extra,
+  });
 
   return (
     <View wrap={false}>
       {/* 1. Sub Total */}
       <View style={styles.summaryRow}>
-        <View style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}>
+        <View style={labelStyle()}>
           <Text style={{ fontSize: 7, fontWeight: "bold" }}>SUB TOTAL</Text>
         </View>
-        <View style={styles.summaryQty}>
+        <View style={qtyStyle()}>
           <Text style={{ fontSize: 7, fontWeight: "bold" }}>{totalQty}</Text>
         </View>
         <BlankCells />
-        <View style={styles.summaryValue}>
+        <View style={valueStyle()}>
           <Text style={{ fontSize: 7, fontWeight: "bold" }}>
             {subTotal.toFixed(2)}
           </Text>
@@ -650,16 +666,14 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((charge) => Number(charge?.value) > 0)
         .map((charge, idx) => (
           <View key={`charge-${idx}`} style={styles.summaryRow}>
-            <View
-              style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}
-            >
+            <View style={labelStyle()}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {charge.desc.toUpperCase()}
               </Text>
             </View>
-            <View style={styles.summaryQty} />
+            <View style={qtyStyle()} />
             <BlankCells />
-            <View style={styles.summaryValue}>
+            <View style={valueStyle()}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {Number(charge.value).toFixed(2)}
               </Text>
@@ -672,16 +686,14 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         .filter((disc) => Number(disc?.value) > 0)
         .map((disc, idx) => (
           <View key={`disc-${idx}`} style={styles.summaryRow}>
-            <View
-              style={[styles.summaryLabel, { width: `${summaryLabelWidth}%` }]}
-            >
+            <View style={labelStyle()}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 {disc.desc.toUpperCase()}
               </Text>
             </View>
-            <View style={styles.summaryQty} />
+            <View style={qtyStyle()} />
             <BlankCells />
-            <View style={styles.summaryValue}>
+            <View style={valueStyle()}>
               <Text style={{ fontSize: 7, fontWeight: "bold" }}>
                 - {Number(disc.value).toFixed(2)}
               </Text>
@@ -691,15 +703,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
 
       {/* 4. Grand Total */}
       <View style={styles.grandTotalRow}>
-        <View
-          style={[
-            styles.summaryLabel,
-            {
-              width: `${summaryLabelWidth}%`,
-              borderTopWidth: 0.5,
-            },
-          ]}
-        >
+        <View style={labelStyle({ borderTopWidth: 0.5 })}>
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>
             GRAND TOTAL {(data?.userCurrency || "USD").toUpperCase()}{" "}
             {(data?.incoterm || "").toUpperCase()}{" "}
@@ -707,25 +711,11 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
             {(data?.preCarriageBy || "").toUpperCase()}
           </Text>
         </View>
-        <View
-          style={[
-            styles.summaryQty,
-            {
-              borderTopWidth: 0.5,
-              justifyContent: "center",
-              alignItems: "center",
-            },
-          ]}
-        >
+        <View style={qtyStyle({ borderTopWidth: 0.5 })}>
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>{totalQty}</Text>
         </View>
         <BlankCells withTopBorder />
-        <View
-          style={[
-            styles.summaryValue,
-            { borderTopWidth: 0.5, justifyContent: "center" },
-          ]}
-        >
+        <View style={valueStyle({ borderTopWidth: 0.5 })}>
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>
             {(grandTotalDDP || 0).toFixed(2)}
           </Text>
@@ -740,71 +730,84 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
       </View>
 
       {/* Terms & Conditions */}
-<View style={{ padding: 4, borderBottomWidth: 0.5, borderColor: "black" }}>
-  <Text
-    style={{ fontSize: 7, fontWeight: "bold", textAlign: "center", marginBottom: 3 }}
-  >
-    TERMS & CONDITIONS
-  </Text>
+      <View
+        style={{ padding: 4, borderBottomWidth: 0.5, borderColor: "black" }}
+      >
+        <Text
+          style={{
+            fontSize: 7,
+            fontWeight: "bold",
+            textAlign: "center",
+            marginBottom: 3,
+          }}
+        >
+          TERMS & CONDITIONS
+        </Text>
+        {(() => {
+          const fixedLines = [
+            `1. THE ABOVE PRICES ARE ${(data?.userCurrency || "").toUpperCase()}, ${(data?.incoterm || "").toUpperCase()} ${(data?.placeOfIncoterm || "").toUpperCase()} (SHIPMENT BY ${data?.preCarriageBy})`,
+            `2. PAYMENT: ${data?.paymentTerms}`,
+          ];
+          const dynamicLines = data?.custInstruction
+            ? data.custInstruction
+                .replace(/~/g, "\n")
+                .split("\n")
+                .filter((l) => l.trim() !== "")
+                .map((l) => l.trim())
+            : [];
+          const allLines = [...fixedLines, ...dynamicLines];
 
-  {(() => {
-    // Build all lines into one array
-    const fixedLines = [
-      `1. THE ABOVE PRICES ARE ${(data?.userCurrency || "").toUpperCase()}, ${(data?.incoterm || "").toUpperCase()} ${(data?.placeOfIncoterm || "").toUpperCase()} (SHIPMENT BY ${data?.preCarriageBy})`,
-      `2. PAYMENT: ${data?.paymentTerms}`,
-    ];
+          if (allLines.length > 4) {
+            const mid = Math.ceil(allLines.length / 2);
+            const leftLines = allLines.slice(0, mid);
+            const rightLines = allLines.slice(mid);
+            return (
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  {leftLines.map((line, i) => (
+                    <Text
+                      key={i}
+                      style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}
+                    >
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+                <View
+                  style={{
+                    width: 0.5,
+                    backgroundColor: "black",
+                    marginHorizontal: 2,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  {rightLines.map((line, i) => (
+                    <Text
+                      key={i}
+                      style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}
+                    >
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            );
+          }
 
-    const dynamicLines = data?.custInstruction
-      ? data.custInstruction
-          .replace(/~/g, "\n")
-          .split("\n")
-          .filter((l) => l.trim() !== "")
-          .map((l) => l.trim())
-      : [];
-
-    const allLines = [...fixedLines, ...dynamicLines];
-
-    // Split into 2 columns only if more than 4 lines
-    if (allLines.length > 4) {
-      const mid = Math.ceil(allLines.length / 2);
-      const leftLines = allLines.slice(0, mid);
-      const rightLines = allLines.slice(mid);
-
-      return (
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {/* Left Column */}
-          <View style={{ flex: 1 }}>
-            {leftLines.map((line, i) => (
-              <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-                {line}
-              </Text>
-            ))}
-          </View>
-          {/* Divider */}
-          <View style={{ width: 0.5, backgroundColor: "black", marginHorizontal: 2 }} />
-          {/* Right Column */}
-          <View style={{ flex: 1 }}>
-            {rightLines.map((line, i) => (
-              <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-                {line}
-              </Text>
-            ))}
-          </View>
-        </View>
-      );
-    }
-
-    // Single column if 4 or fewer lines
-    return allLines.map((line, i) => (
-      <Text key={i} style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}>
-        {line}
-      </Text>
-    ));
-  })()}
-</View>
+          return allLines.map((line, i) => (
+            <Text
+              key={i}
+              style={{ fontSize: 7, fontWeight: "bold", marginTop: 3 }}
+            >
+              {line}
+            </Text>
+          ));
+        })()}
+      </View>
     </View>
   );
 };
+
 // ─── Signature block ──────────────────────────────────────────────────────────
 const SignatureBlock = ({ data }) => (
   <View
@@ -834,12 +837,14 @@ const SignatureBlock = ({ data }) => (
     </View>
   </View>
 );
+
 // ─── Main component ───────────────────────────────────────────────────────────
 const ProformaPDF = ({ data }) => {
   const showEdc = data?.items?.some((item) => item?.assyRimstatus === true);
   const showItemCode = data?.items?.some((item) => item?.partNumber);
   const PONumber = data?.items?.some((item) => item?.PONumber);
   const itemChunks = chunkItemsForPages(data?.items);
+
   const subTotal = (data?.items || []).reduce(
     (s, it) =>
       s + Number((it?.basicPrice + it?.rimUnitPrice) * it?.itemQty || 0),
@@ -849,6 +854,7 @@ const ProformaPDF = ({ data }) => {
   const totalDiscounts = data?.discountDetails?.[0]?.total || 0;
   const grandTotalDDP =
     subTotal + Number(totalCharges) - Number(totalDiscounts);
+
   return (
     <>
       {itemChunks.map((pageItems, pageIndex) => {
@@ -895,4 +901,5 @@ const ProformaPDF = ({ data }) => {
     </>
   );
 };
+
 export default ProformaPDF;
