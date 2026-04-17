@@ -428,14 +428,6 @@ export const router = createBrowserRouter([
               { path: 'Team', element: <Team /> },
               { path: 'Reports', element: <Reports /> },
               { path: 'Masters', element: <Masters /> },
-              { path: 'Dashboard', element: <TaskDashboard /> },
-              { path: 'Projects', element: <Projects /> },
-              { path: 'Sprints', element: <Sprints /> },
-              { path: 'Tasks', element: <Tasks /> },
-              { path: 'DailyLog', element: <DailyLog /> },
-              { path: 'Team', element: <Team /> },
-              { path: 'Reports', element: <Reports /> },
-              { path: 'Masters', element: <Masters /> },
             ]
           },
           {

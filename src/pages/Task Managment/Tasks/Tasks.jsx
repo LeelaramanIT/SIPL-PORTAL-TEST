@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { USERS, TASKS_DATA } from '../data';
 import { Card, Badge, PriBadge, Avatar, ProgressBar } from '../components';
+import { useDispatch } from 'react-redux';
+import { createTask } from '../../../Redux/Slices/Task_Master/TaskSlice/TaskSlice';
 
 const STATUSES = ['ALL', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'TESTING', 'DONE', 'BLOCKED'];
 
@@ -8,12 +10,53 @@ const Tasks = () => {
   const [filter, setFilter] = useState('ALL');
   const [assignFilter, setAssign] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+  taskCode: "",
+  title: "",
+  description: "",
+  assignedTo: 0,
+  estHours: 0,
+});
 
   const filtered = TASKS_DATA.filter(t => {
     const statusOk = filter === 'ALL' || t.status === filter;
     const assignOk = assignFilter === 0 || t.assignedTo === assignFilter;
     return statusOk && assignOk;
   });
+
+  const dispatch = useDispatch();
+  const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+const handleSubmit = async () => {
+  const payload = {
+    projectID: 1,
+    moduleID: 1,
+    sprintID: 1,
+    taskCode: formData.taskCode,
+    title: formData.title,
+    description: formData.description || "",
+    taskTypeID: 1,
+    priorityID: 1,
+    statusID: 1,
+    assignedTo: Number(formData.assignedTo),
+    estHours: Number(formData.estHours),
+    storyPoints: 0,
+    dueDate: new Date().toISOString(),
+    createdBy: 1,
+  };
+
+  const res = await dispatch(createTask(payload));
+
+  if (res === "SUCCESS") {
+    setShowForm(false);
+  }
+};
 
   return (
     <div className="p-4 md:p-6 h-full overflow-y-auto w-full custom-scrollbar">
@@ -75,15 +118,15 @@ const Tasks = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             <div>
               <label className="text-[11px] text-[#475569] block mb-1">Title</label>
-              <input placeholder="e.g. Build earmark API" className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]" />
+              <input onChange={handleChange} placeholder="e.g. Build earmark API" className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]" />
             </div>
             <div>
               <label className="text-[11px] text-[#475569] block mb-1">Task code</label>
-              <input placeholder="e.g. TTS-008" className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]" />
+              <input onChange={handleChange} placeholder="e.g. TTS-008" className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]" />
             </div>
             <div>
               <label className="text-[11px] text-[#475569] block mb-1">Assign to</label>
-              <select className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]">
+              <select  value={formData.assignedTo} onChange={handleChange} className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]">
                 {USERS.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
               </select>
             </div>
@@ -91,13 +134,13 @@ const Tasks = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {['Priority', 'Type', 'Sprint', 'Est. hours'].map(label => (
               <div key={label}>
-                <label className="text-[11px] text-[#475569] block mb-1">{label}</label>
-                <input placeholder={label} className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]" />
+                <label onChange={handleChange} className="text-[11px] text-[#475569] block mb-1">{label}</label>
+                <input onChange={handleChange} placeholder={label} className="w-full bg-[#0F172A] border border-[#1E293B] rounded p-2 text-xs text-[#CBD5E1] outline-none focus:border-[#2563EB]" />
               </div>
             ))}
           </div>
           <div className="flex gap-2">
-            <button className="bg-[#3B82F6] text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-[#2563EB]">Create task</button>
+            <button  onClick={handleSubmit} className="bg-[#3B82F6] text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-[#2563EB]">Create task</button>
             <button onClick={() => setShowForm(false)} className="text-[#475569] px-4 py-1.5 rounded text-xs font-medium hover:bg-[#1E293B]">Cancel</button>
           </div>
         </Card>

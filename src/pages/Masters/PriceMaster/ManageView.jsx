@@ -627,10 +627,24 @@ export default function ManageView({ }) {
 
             </div>
           </div>
-          <ModernSelect value={currentSheet?.id} onChange={(e) => dispatch(setSelectedSheet(e.target.value))} label={'Price Sheet'} className="w-40">
-            {Array.isArray(sheetOptions) && sheetOptions.map((sheet, index) => (
-              <option className="bg-white text-black dark:bg-slate-900 dark:text-slate-100" key={index} value={sheet.id}>{`${sheet.priceSheetRefNo} - ${sheet.activeStatus === true ? "Active" : "Inactive"} `}</option>
-            ))}
+          <ModernSelect
+            value={currentSheet?.id}
+            onChange={(e) => dispatch(setSelectedSheet(e.target.value))}
+            label={'Price Sheet'}
+            className="w-40"
+          >
+            {Array.isArray(sheetOptions) &&
+              sheetOptions
+                .filter((sheet) => sheet.activeStatus === true) // ✅ only active
+                .map((sheet, index) => (
+                  <option
+                    className="bg-white text-black dark:bg-slate-900 dark:text-slate-100"
+                    key={index}
+                    value={sheet.id}
+                  >
+                    {`${sheet.priceSheetRefNo} - Active`}
+                  </option>
+                ))}
           </ModernSelect>
           <ModernSelect
             label={'Filter By Customer'}

@@ -32,6 +32,12 @@ export const Badge = ({ text, status }) => (
   </span>
 );
 
+export const Owners = ({ text, className }) => (
+  <div className={className}>
+    <p>{text}</p>
+  </div>
+);
+
 /* Priority Badge */
 export const PriBadge = ({ priority }) => (
   <span
@@ -109,19 +115,23 @@ export const KpiCard = ({ label, value, sub, color = "#3B82F6" }) => (
 /* Inputs */
 export const inputStyle =
   "w-full px-[10px] py-[7px] rounded-md text-[13px] box-border font-inherit " +
-  "bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 " +
-  "dark:bg-[#0D1117] dark:border-[#1E293B] dark:text-gray-100 dark:placeholder:text-gray-500";
-
+  "bg-white border border-[var(--border)] text-gray-900 placeholder:text-gray-400 " +
+  "focus:outline-none focus:ring-[0.2px] focus:ring-[var(--primary)] focus:border-[var(--primary)] " +
+  "transition-all duration-150 " +
+  "dark:bg-[#0D1117] dark:border-[#1E293B] dark:text-gray-100 dark:placeholder:text-gray-500 " +
+  "dark:focus:ring-[var(--primary)] dark:focus:border-[var(--primary)]";
 /* Select */
 export const selectStyle =
   "w-full px-[10px] py-[7px] rounded-md text-[13px] font-inherit " +
-  "bg-white border border-gray-300 text-gray-900 " +
-  "dark:bg-[#0D1117] dark:border-[#1E293B] dark:text-[#F1F5F9]";
-
+  "bg-white border border-[var(--border)] text-gray-900 " +
+  "focus:outline-none focus:ring-[0.2px] focus:ring-[var(--primary)] focus:border-[var(--primary)] " +
+  "transition-all duration-150 " +
+  "dark:bg-[#0D1117] dark:border-[#1E293B] dark:text-[#F1F5F9] " +
+  "dark:focus:ring-[var(--primary)] dark:focus:border-[var(--primary)]";
 /* Buttons */
 export const btnPrimary =
   "px-4 py-2 rounded-md text-[13px] cursor-pointer font-inherit " +
-  "bg-[var(--primary)]/5 border border-[var(--border)] text-[var(--primary)] " +
+  "bg-[var(--primary)]/10 border border-[var(--border)] text-[var(--primary)] " +
   "dark:bg-[#1E3A5F] dark:border-[#2563EB] dark:text-blue-300";
 
 export const btnGhost =

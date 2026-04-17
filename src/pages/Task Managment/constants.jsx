@@ -12,6 +12,7 @@ export const STATUS_BG = {
   ON_HOLD:"#451A03", CANCELLED:"#450A0A",
 };
 
+
 export const PRIORITY_COLOR = {
   CRITICAL:"#EF4444", HIGH:"#F59E0B", MEDIUM:"#3B82F6", LOW:"#64748B",
 };
