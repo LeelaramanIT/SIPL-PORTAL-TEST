@@ -45,6 +45,7 @@ export const FitmrntSlider = ({
       getAssemblyBarcode();
     }
   }, [isValid, direction]);
+  console.log(FitmentDetails, "from..... ass");
 
   const getAssemblyBarcode = async () => {
     const payload = {
@@ -52,9 +53,9 @@ export const FitmrntSlider = ({
       EdcNo: rim.edcNo,
       Direction: direction,
       StencilGrade: tyre?.barcode?.substring(8, 19) || "",
+      o_ID:FitmentDetails?.id
     };
-    // console.log(payload, "from..... ass");
-
+    
     const data = await dispatch(getAssyDetails(payload));
     if (data.status) {
       setBarcode(data.assemblyBarcode);
@@ -69,7 +70,7 @@ export const FitmrntSlider = ({
       setMessage(data.message)
     }
   };
-  console.log(direction);
+  console.log(FitmentDetails?.id);
   
 const AssemblyProcessID = barcode?.substring(0,8)
   // console.log(tyre,rim,FitmentDetails);
