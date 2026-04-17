@@ -306,6 +306,7 @@ const AdditionalCustDetailsForm = ({
         savedFormData?.BuyersOrderNumber || invoiceDetails?.orderRefNo || "",
       Date:
       savedFormData?.Date || invoiceDetails?.Date || "",
+      EmailDate: savedFormData?.EmailDate || invoiceDetails?.EmailDate,
 
       revisionNumber:
         savedFormData?.revisionNumber || invoiceDetails?.revisionNumber || "",
@@ -590,8 +591,16 @@ const AdditionalCustDetailsForm = ({
               </div>
               <div className="grid grid-cols-1 gap-4">
                 <DateField
-                  label="Date"
+                  label="Order Date"
                   name="Date"
+                  register={register}
+                  errors={errors}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <DateField
+                  label="Email Date"
+                  name="EmailDate"
                   register={register}
                   errors={errors}
                 />
