@@ -89,6 +89,7 @@ const priceMasterSlice = createSlice({
             state.selectedUpdateCustomer = action.payload
         },
         setSelectedSheet: (state, action) => {
+            console.log(action.payload);
             state.selectedSheet = action.payload
             state.selectedCustomer = "All Customers"
         },
