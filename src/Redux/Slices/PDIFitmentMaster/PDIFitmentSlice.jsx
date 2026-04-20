@@ -224,7 +224,7 @@ export const verifyFitment = (payload) => async (dispatch) => {
 
 export const getAssyDetails = (payload) => async (dispatch) => {
   try {
-    const res = await api.get(`/WheelAssemblies/GenerateAssemblyBarcode:${payload.StencilGrade}:${payload.ProcessID}:${payload.EdcNo}:${payload.Direction}`)
+    const res = await api.get(`/WheelAssemblies/GenerateAssemblyBarcode:${payload.StencilGrade}:${payload.ProcessID}:${payload.EdcNo}:${payload.Direction}:${payload.o_ID}`)
     if (res.status === 200) {
       return {
         assemblyBarcode: res.data.assemblyBarcode,
