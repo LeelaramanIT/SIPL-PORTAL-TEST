@@ -153,7 +153,7 @@ export const insertUpdateSubstitution = (payload) => async (dispatch) => {
         if (res.status === 200) {
             console.log("Substitution saved successfully:", res.data)
             // 1.update 
-            dispatch(updateSubstitutionDetails(res.data))
+            dispatch(updateSubstitutionDetails(res.data.data))
             // 2.print
             // res.data.forEach(item => {
             //     if (item.zpldata) {
