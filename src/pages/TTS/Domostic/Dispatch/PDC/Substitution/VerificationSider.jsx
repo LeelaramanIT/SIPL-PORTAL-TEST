@@ -35,7 +35,7 @@ const VerificationSider = ({ isOpen,setOpen, onClose, item, onConfirm }) => {
             newProcessId: original.processID,
             substitutedBy: 1,
             plant: substitution.plant,
-            scannedBarcode:scannedBarcode
+            scannedBarcode:reconstructedBarcode
         }
         console.log(payload);
 
