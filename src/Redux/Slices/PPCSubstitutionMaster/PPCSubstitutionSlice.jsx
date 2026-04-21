@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { setLoading } from "../PPCSubstitutionMaster/PPCMaster";
 import ZplRenderer from "react-zpl-renderer";
 import axios from "axios";
+import { printLabel } from "../../../utils/BarcodePrint";
 
 const initialState = {
     listOfSubstitutionData: [],
@@ -14,21 +15,6 @@ const initialState = {
     selectedData: null,
 };
 
-const printLabel = (zpl) => {
-
-  window.BrowserPrint.getDefaultDevice("printer", function(printer){
-
-    printer.send(zpl, function(){
-      console.log("Label Printed");
-    }, function(error){
-      console.error(error);
-    });
-
-  }, function(error){
-    console.error(error);
-  });
-
-};
 
 const substitutionSlice = createSlice({
     name: 'PPCSubstitution',
@@ -154,13 +140,9 @@ export const insertUpdateSubstitution = (payload) => async (dispatch) => {
             console.log("Substitution saved successfully:", res.data)
             // 1.update 
             dispatch(updateSubstitutionDetails(res.data.data))
-            // 2.print
-            // res.data.forEach(item => {
-            //     if (item.zpldata) {
-            //         printLabel(item.zpldata);
-            //     }
-            // });
             toast.success("Substitution saved successfully")
+            // 2.print barcode
+            await printLabel(payload?.scannedBarcode)
         }
 
         dispatch(setLoading(false))
