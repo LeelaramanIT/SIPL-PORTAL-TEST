@@ -36,12 +36,12 @@ const getColWidths = (showEdc, showItemCode, showPONumber) => {
     sunPart: 8,
     po: showPONumber ? 6 : 0,
     description: showEdc ? 28 : 36,
-    edc: showEdc ? 8 : 0,   // ← increased from 6 to 8
+    edc: showEdc ? 8 : 0, // ← increased from 6 to 8
     qty: 6,
-    unitWt: 9,               // ← reordered: now comes before unitPrice
-    totalWt: 9,              // ← reordered: now comes before unitPrice
-    unitPrice: 8,            // ← moved after totalWt
-    totalPrice: 12,          // ← reduced from 14 to 12
+    unitWt: 9, // ← reordered: now comes before unitPrice
+    totalWt: 9, // ← reordered: now comes before unitPrice
+    unitPrice: 8, // ← moved after totalWt
+    totalPrice: 12, // ← reduced from 14 to 12
   };
 
   // Calculate removed width from optional columns
@@ -428,8 +428,8 @@ const TableHeader = ({ data, showEdc, showItemCode, showPONumber }) => {
     { label: "ITEM DESCRIPTION", width: w.description },
     ...(showEdc ? [{ label: "EDC", width: w.edc }] : []),
     { label: "QTY", width: w.qty },
-    { label: "UNIT WT\nKGS", width: w.unitWt },       // ← moved before unitPrice
-    { label: "TOTAL WT\nKGS", width: w.totalWt },      // ← moved before unitPrice
+    { label: "UNIT WT\nKGS", width: w.unitWt }, // ← moved before unitPrice
+    { label: "TOTAL WT\nKGS", width: w.totalWt }, // ← moved before unitPrice
     { label: `UNIT PRICE\n${data?.userCurrency ?? "USD"}`, width: w.unitPrice }, // ← moved after totalWt
     {
       label: `TOTAL PRICE\n${data?.userCurrency ?? "USD"}`,
@@ -519,7 +519,9 @@ const TableRows = ({
             {/* ✅ unitWt now before unitPrice */}
             <View style={[styles.bodyCell, { width: w.unitWt }]}>
               <Text style={[styles.bodyText, { textAlign: "right" }]}>
-                {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(3)}
+                {((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)).toFixed(
+                  3,
+                )}
               </Text>
             </View>
             {/* ✅ totalWt now before unitPrice */}
@@ -534,7 +536,9 @@ const TableRows = ({
             {/* ✅ unitPrice now after weight columns */}
             <View style={[styles.bodyCell, { width: w.unitPrice }]}>
               <Text style={[styles.bodyText, { textAlign: "right" }]}>
-                {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(2)}
+                {((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)).toFixed(
+                  2,
+                )}
               </Text>
             </View>
             <View
@@ -565,6 +569,13 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
 
   const totalQty = (data?.items || []).reduce(
     (s, it) => s + Number(it.itemQty || 0),
+    0,
+  );
+  const grandTotalWeight = (data?.items || []).reduce(
+    (sum, item) =>
+      sum +
+      ((item?.finishedWt || 0) + (item?.rimfinishedwt || 0)) *
+        (item?.itemQty || 0),
     0,
   );
 
@@ -714,7 +725,39 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
         <View style={qtyStyle({ borderTopWidth: 0.5 })}>
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>{totalQty}</Text>
         </View>
-        <BlankCells withTopBorder />
+        <View
+          style={{
+            width: w.unitWt,
+            borderRightWidth: 0.5,
+            borderColor: "#000",
+            borderTopWidth: 0.5,
+          }}
+        />
+
+        <View
+          style={{
+            width: w.totalWt,
+            borderRightWidth: 0.5,
+            borderColor: "#000",
+            borderTopWidth: 0.5,
+            justifyContent: "center",
+            alignItems: "flex-end",
+            paddingRight: 2,
+          }}
+        >
+          <Text style={{ fontSize: 8, fontWeight: "bold" }}>
+            {grandTotalWeight.toFixed(3)}
+          </Text>
+        </View>
+
+        <View
+          style={{
+            width: w.unitPrice,
+            borderRightWidth: 0.5,
+            borderColor: "#000",
+            borderTopWidth: 0.5,
+          }}
+        />
         <View style={valueStyle({ borderTopWidth: 0.5 })}>
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>
             {(grandTotalDDP || 0).toFixed(2)}
