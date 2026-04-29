@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { setMode } from '../../../Redux/Slices/PDIDispatchMaster/PDIMaster'
+// import { setMode } from '../../../Redux/Slices/PDIDispatchMaster/PDIMaster'
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef } from "react";
 import SaleReportHeader from './SaleReportHeader'
@@ -11,9 +11,10 @@ const SaleRepostMaster = () => {
     "PowerBIReport",
     "SaleOrder"
   ];
+  const [mode, setMode] = useState('SaleOrder')
 
   const { plant } = useParams();
-  const { mode } = useSelector(state => state.PDIDispatchMaster);
+  // const { mode } = useSelector(state => state.PDIDispatchMaster);
   const prevModeRef = useRef(mode);
   const currentIndex = modeOrder.indexOf(mode);
   const prevIndex = modeOrder.indexOf(prevModeRef.current);
@@ -42,7 +43,7 @@ const SaleRepostMaster = () => {
 
   console.log(plant)  
   return (
-  <div className="w-full h-full flex flex-col overflow-hidden">
+  <div className="w-full h-full flex flex-col overflow-scroll">
 
     {/* HEADER */}
     <div className="shrink-0">
@@ -56,7 +57,7 @@ const SaleRepostMaster = () => {
     </div>
 
     {/* CONTENT */}
-    <div className="flex-1 min-h-0 relative overflow-hidden">
+    <div className="flex-1 min-h-0 relative overflow-y-auto">
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={mode}

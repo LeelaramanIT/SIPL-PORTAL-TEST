@@ -6,6 +6,7 @@ import { RxDashboard } from "react-icons/rx";
 import {
   MdOutlineAssignmentTurnedIn,
   MdOutlineManageAccounts,
+  MdOutlineQrCode,
   MdOutlineReceipt,
   MdOutlineTimeline,
   MdTireRepair,
@@ -43,18 +44,21 @@ import { MdOutlineQrCodeScanner } from "react-icons/md";
 import { FcInspection } from "react-icons/fc";
 import { CiBarcode } from "react-icons/ci";
 import {
-  HiOutlineViewGrid,        // Dashboard
-  HiOutlineFolder,          // Projects
-  HiOutlineClock,           // Sprints
-  HiOutlineClipboardList,   // Tasks
-  HiOutlineDocumentText,    // Daily Log
-  HiOutlineUsers,           // Team
-  HiOutlineChartBar,        // Reports
+  HiOutlineViewGrid, // Dashboard
+  HiOutlineFolder, // Projects
+  HiOutlineClock, // Sprints
+  HiOutlineClipboardList, // Tasks
+  HiOutlineDocumentText, // Daily Log
+  HiOutlineUsers, // Team
+  HiOutlineChartBar, // Reports
   HiOutlineCog,
   HiOutlineViewBoards,
   HiOutlineTemplate,
-  HiOutlineClipboardCheck,             // Masters
+  HiOutlineClipboardCheck,
+  HiOutlineUserGroup,
+  HiOutlineCube, // Masters
 } from "react-icons/hi";
+import { HiOutlineArchiveBox } from "react-icons/hi2";
 
 const { Sider } = Layout;
 
@@ -366,59 +370,75 @@ const SideBar = () => {
     },
     {
       key: "Task-Management",
-      icon: <HiOutlineClipboardCheck     />,
+      icon: <HiOutlineClipboardCheck />,
       label: "Task Management",
       children: [
         {
           key: "/Task-Management/Dashboard",
-          icon: <HiOutlineViewGrid  />,
+          icon: <HiOutlineViewGrid />,
           label: "Dashboard",
         },
 
         {
           key: "/Task-Management/Projects",
-          icon: <HiOutlineFolder  />,
+          icon: <HiOutlineFolder />,
           label: "Projects",
         },
 
         {
           key: "/Task-Management/Sprints",
-          icon: <HiOutlineClock  />,
+          icon: <HiOutlineClock />,
           label: "Sprints",
         },
 
         {
           key: "/Task-Management/Tasks",
-          icon: <HiOutlineClipboardList  />,
+          icon: <HiOutlineClipboardList />,
           label: "Tasks",
         },
 
         {
           key: "/Task-Management/DailyLog",
-          icon: <HiOutlineDocumentText  />,
+          icon: <HiOutlineDocumentText />,
           label: "Daily Log",
         },
 
-        { key: "/Task-Management/Team", icon: <HiOutlineUsers  />, label: "Team" },
+        {
+          key: "/Task-Management/Team",
+          icon: <HiOutlineUsers />,
+          label: "Team",
+        },
 
         {
           key: "/Task-Management/Reports",
-          icon: <HiOutlineChartBar  />,
+          icon: <HiOutlineChartBar />,
           label: "Reports",
         },
 
         {
           key: "/Task-Management/Masters",
-          icon: <HiOutlineCog  />,
+          icon: <HiOutlineCog />,
           label: "Masters",
+        },
+      ],
+    },
+    {
+      key: "customer-item-management",
+      icon: <HiOutlineCube />,
+      label: "Customer Item Management",
+      children: [
+        {
+          key: "customer-item-management/barcode-print",
+          icon: <MdOutlineQrCode />,
+          label: "Barcode Printing",
         },
       ],
     },
     { key: "/Settings", icon: <IoSettingsOutline />, label: "Settings" },
     {
-      key: "/Settings/Menuaccess",
+      key: "/UserMaster/user-list",
       icon: <MdOutlineContactEmergency />,
-      label: "Menu Access",
+      label: "User Master",
     },
   ];
 

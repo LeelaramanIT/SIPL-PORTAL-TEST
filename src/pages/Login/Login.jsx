@@ -13,14 +13,16 @@ const options = [assets.SKY, assets.IceMountain, assets.Mountain];
 const randomIndex = Math.floor(Math.random() * options.length);
 const videoOption = options[randomIndex];
 
-
 const Login = () => {
   const username = useRef();
   const password = useRef();
+  const oldPasswordRef = useRef();
+  const newPasswordRef = useRef();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error, loggedIn } = useSelector((state) => state.auth);
+  const [isResetMode, setIsResetMode] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +31,7 @@ const Login = () => {
         userLogin({
           username: username.current.value,
           password: password.current.value,
-        })
+        }),
       );
     } catch (error) {
       console.log(error.message);
@@ -48,6 +50,28 @@ const Login = () => {
       toast.error(error); // ✅ Show login error
     }
   }, [error]);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+
+    const usernameValue = username.current.value;
+
+    if (!usernameValue) {
+      toast.error("Please enter username");
+      return;
+    }
+
+    try {
+      // call your API here
+      // await dispatch(resetPassword({ username: usernameValue }))
+
+      toast.success("Reset link sent / password reset successful");
+
+      setIsResetMode(false); // go back to login
+    } catch (err) {
+      toast.error("Failed to reset password");
+    }
+  };
 
   const div1 = useRef([]);
   const div2 = useRef([]);
@@ -75,7 +99,7 @@ const Login = () => {
         duration: 0.3,
         stagger: 0.1,
         ease: "power2.out",
-      }
+      },
     );
   }, []);
 
@@ -93,12 +117,12 @@ const Login = () => {
         src={assets.TVSLOGO}
         className="absolute z-10 top-3 left-3 sm:top-5 sm:left-5 w-[8rem] sm:w-[12rem] lg:w-[15rem]"
       />
-      
+
       {/* Theme Switcher for Login Page */}
       <div className="absolute z-20 top-3 right-3 sm:top-5 sm:right-5">
         <ThemeSwitcher variant="navbar" />
       </div>
-      
+
       {/* Background Video */}
       {videoOption && (
         <video
@@ -121,12 +145,19 @@ const Login = () => {
         <h1
           ref={div3}
           className={`text-lg sm:text-xl lg:text-2xl xl:text-[1.8rem] font-bold text-center font-heading ${
-            randomIndex === 1 ? "text-slate-900" : randomIndex === 2 ? "text-white" : "text-slate-900"
+            randomIndex === 1
+              ? "text-slate-900"
+              : randomIndex === 2
+                ? "text-white"
+                : "text-slate-900"
           } mb-6 sm:mb-8 lg:mb-10 select-none`}
         >
           Sundaram Industries Pvt Ltd
         </h1>
-        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="space-y-4 sm:space-y-6"
+          onSubmit={isResetMode ? handleResetPassword : handleSubmit}
+        >
           {/* Username Field */}
           <div ref={div4} className="relative">
             <input
@@ -183,38 +214,50 @@ const Login = () => {
               } text-slate-900/70`}
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <FiEye size={16} className="sm:w-[18px] sm:h-[18px]" /> : <FiEyeOff size={16} className="sm:w-[18px] sm:h-[18px]" />}
+              {showPassword ? (
+                <FiEye size={16} className="sm:w-[18px] sm:h-[18px]" />
+              ) : (
+                <FiEyeOff size={16} className="sm:w-[18px] sm:h-[18px]" />
+              )}
             </div>
           </div>
 
           {/* Forgot Password */}
-          <div ref={div6} className="text-xs sm:text-sm flex justify-between ">
-            <NavLink
-              to={""}
-              className={`${
-                randomIndex === 1 ? "text-gray-950" : "text-gray-50"
-              } hover:text-gray-700 hover:underline transition duration-150 select-none`}
-            >
-              Create Account?
-            </NavLink>
-            <NavLink
-              to={""}
-              className="text-red-500 hover:text-red-600 hover:underline transition duration-150 select-none"
-            >
-              Forgot Password?
-            </NavLink>
+          <div ref={div6} className="text-xs sm:text-sm flex justify-between">
+            {!isResetMode ? (
+              <>
+                <NavLink className="...">Create Account?</NavLink>
+
+                <span
+                  onClick={() => setIsResetMode(true)}
+                  className="text-red-500 cursor-pointer hover:underline"
+                >
+                  Forgot Password?
+                </span>
+              </>
+            ) : (
+              <span
+                onClick={() => setIsResetMode(false)}
+                className="text-blue-500 cursor-pointer hover:underline"
+              >
+                ← Back to Login
+              </span>
+            )}
           </div>
 
           {/* Login Button */}
           {loading ? (
-            <LoadingButton text={'Loading...'} className='w-full py-2 px-4 bg-slate-900 hover:bg-slate-800' />
+            <LoadingButton
+              text={"Loading..."}
+              className="w-full py-2 px-4 bg-slate-900 hover:bg-slate-800"
+            />
           ) : (
             <button
               ref={div7}
               type="submit"
               className="w-full flex justify-center items-center select-none py-2 px-4 bg-slate-900 hover:bg-slate-800 rounded-md text-white text-sm sm:text-base"
             >
-              Login
+              {isResetMode ? "Reset Password" : "Login"}
             </button>
           )}
         </form>

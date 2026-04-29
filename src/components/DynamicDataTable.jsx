@@ -14,6 +14,7 @@ export function DynamicDataTable({
 }) {
   const listRef = useRef(null);
   const gridTemplate = columns.map((col) => col.width || "1fr").join(" ");
+  const safeData = Array.isArray(data) ? data : [];
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -75,7 +76,7 @@ export function DynamicDataTable({
             ) : (
               <>
                 <AnimatePresence initial={false}>
-                  {data.slice(0, visibleRows).map((row, rowIndex) => (
+                  {safeData.slice(0, visibleRows).map((row, rowIndex) => (
                     <motion.div
                       key={row.productKey || rowIndex}
                       layout
@@ -104,7 +105,7 @@ export function DynamicDataTable({
                     </motion.div>
                   ))}
                 </AnimatePresence>
-                {data.length === 0 && (
+                {safeData.length === 0 && (
                   <div className="py-20 text-center text-slate-400 text-[0.8rem]">No records found.</div>
                 )}
               </>
@@ -127,7 +128,7 @@ export function DynamicDataTable({
         ) : (
           <>
             <AnimatePresence mode="popLayout">
-              {data.slice(0, visibleRows).map((row, rowIndex) => (
+              {safeData.slice(0, visibleRows).map((row, rowIndex) => (
                 <motion.div
                   key={row.productKey || rowIndex}
                   variants={rowVariants}
@@ -172,12 +173,12 @@ export function DynamicDataTable({
               ))}
             </AnimatePresence>
 
-            {data.length === 0 && (
+            {safeData.length === 0 && (
               <div className="py-20 text-center text-slate-400 text-sm">No records found.</div>
             )}
 
             {/* LOAD MORE INDICATOR */}
-            {visibleRows < data.length && (
+            {visibleRows < safeData.length && (
               <div className="py-4 text-center">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">
                   Loading more...

@@ -17,7 +17,22 @@ import {
   getMasterData,
   setAdditionalForm,
 } from "../../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
+const getGstPercent = (manual, igst, cgst, sgst) => {
+  const manualVal = Number(manual);
 
+  // 1. User input priority
+  if (manual && !isNaN(manualVal) && manualVal > 0) {
+    return manualVal;
+  }
+
+  // 2. Backend IGST
+  if (igst && igst > 0) {
+    return igst;
+  }
+
+  // 3. Backend CGST + SGST
+  return (cgst || 0) + (sgst || 0);
+};
 // ─── 1. ChargesRow ────────────────────────────────────────────────────────────
 const ChargesRow = ({
   invoiceIndex,
@@ -28,8 +43,10 @@ const ChargesRow = ({
   schemeName,
   dbMaxTotal = 0,
   isPrepared,
-  baseAmount = 0,          // ← NEW: invoice total for % calculation
+  baseAmount = 0, // ← NEW: invoice total for % calculation
 }) => {
+  const [gstType, setGstType] = useState("");
+  const [customGst, setCustomGst] = useState("");
   const { fields, append, remove } = useFieldArray({
     control,
     name: `additionalCharges.${invoiceIndex}.rows`,
@@ -38,15 +55,39 @@ const ChargesRow = ({
     control,
     name: `additionalCharges.${invoiceIndex}.rows`,
   });
-  const total = (rows || []).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
+  const total = (rows || []).reduce(
+    (sum, r) => sum + (Number(r.value) || 0),
+    0,
+  );
+
+  const gstAmount = useMemo(() => {
+    if (!baseAmount) return 0;
+
+    if (gstType === "IGST_18") {
+      return (baseAmount * 18) / 100;
+    }
+
+    if (gstType === "SGST_CGST") {
+      return (baseAmount * 18) / 100; // total same, just split visually
+    }
+
+    if (gstType === "CUSTOM_IGST") {
+      const pct = parseFloat(customGst) || 0;
+      return (baseAmount * pct) / 100;
+    }
+
+    return 0;
+  }, [gstType, customGst, baseAmount]);
+
+  const finalTotal = total + gstAmount;
 
   useEffect(() => {
     setValue(`additionalCharges.${invoiceIndex}.total`, total);
   }, [total, invoiceIndex, setValue]);
 
   const maxAllowed = isPrepared ? dbMaxTotal : Infinity;
-  const remaining  = maxAllowed - total;
-  const exceeded   = isPrepared && total > dbMaxTotal;
+  const remaining = maxAllowed - total;
+  const exceeded = isPrepared && total > dbMaxTotal;
 
   return (
     <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
@@ -73,7 +114,10 @@ const ChargesRow = ({
               baseAmount={baseAmount}
               readOnly={false}
               className={`w-28 px-2 py-1 text-sm border rounded ${
-                isPrepared && (Number(rows?.[k]?.value) + (total - (Number(rows?.[k]?.value) || 0))) > dbMaxTotal
+                isPrepared &&
+                Number(rows?.[k]?.value) +
+                  (total - (Number(rows?.[k]?.value) || 0)) >
+                  dbMaxTotal
                   ? "border-red-400"
                   : "border-gray-300"
               }`}
@@ -129,7 +173,8 @@ const ChargesRow = ({
 
       {/* Hint */}
       <p className="text-[10px] text-gray-400 mt-2 italic">
-        💡 Enter a number (e.g. <b>500</b>) or a percentage (e.g. <b>2%</b>) — percentage is auto-calculated from the invoice total.
+        💡 Enter a number (e.g. <b>500</b>) or a percentage (e.g. <b>2%</b>) —
+        percentage is auto-calculated from the invoice total.
       </p>
     </div>
   );
@@ -144,7 +189,7 @@ const DiscountRow = ({
   setValue,
   schemeName,
   isPrepared,
-  baseAmount = 0,          // ← NEW
+  baseAmount = 0, // ← NEW
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -154,7 +199,10 @@ const DiscountRow = ({
     control,
     name: `discountDetails.${invoiceIndex}.rows`,
   });
-  const total = (rows || []).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
+  const total = (rows || []).reduce(
+    (sum, r) => sum + (Number(r.value) || 0),
+    0,
+  );
 
   useEffect(() => {
     setValue(`discountDetails.${invoiceIndex}.total`, total);
@@ -212,7 +260,8 @@ const DiscountRow = ({
             <RiDiscountPercentLine /> Add Discount
           </button>
           <p className="text-[10px] text-gray-400 mt-2 italic">
-            💡 Enter a number (e.g. <b>500</b>) or a percentage (e.g. <b>5%</b>) — auto-calculated from invoice total.
+            💡 Enter a number (e.g. <b>500</b>) or a percentage (e.g. <b>5%</b>)
+            — auto-calculated from invoice total.
           </p>
         </>
       )}
@@ -304,8 +353,7 @@ const AdditionalCustDetailsForm = ({
         "",
       BuyersOrderNumber:
         savedFormData?.BuyersOrderNumber || invoiceDetails?.orderRefNo || "",
-      Date:
-      savedFormData?.Date || invoiceDetails?.Date || "",
+      Date: savedFormData?.Date || invoiceDetails?.Date || "",
       EmailDate: savedFormData?.EmailDate || invoiceDetails?.EmailDate,
 
       revisionNumber:
@@ -380,21 +428,28 @@ const AdditionalCustDetailsForm = ({
       discountDetails: savedFormData?.discountDetails || [
         { rows: [{ desc: "", value: "" }], total: 0 },
       ],
+      gstCharges: {
+        type: savedFormData?.gstCharges?.type || "BACKEND",
+        igst: savedFormData?.gstCharges?.igst || "",
+        cgst: savedFormData?.gstCharges?.cgst || "",
+        sgst: savedFormData?.gstCharges?.sgst || "",
+        percentage: savedFormData?.gstCharges?.percentage || "",
+        amount: savedFormData?.gstCharges?.amount || 0,
+      },
     }),
     [invoiceDetails, savedFormData],
   );
-   const subtotal = useMemo(() => {
-      return (invoiceDetails?.items || []).reduce((sum, item) => {
-        // Ensure values are numbers to avoid string concatenation bugs
-        const price =
-          Number((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) || 0;
-        const qty = Number(item?.itemQty) || 0;
-        return sum + price * qty;
-      }, 0);
-    }, [invoiceDetails?.items]);
+  const subtotal = useMemo(() => {
+    return (invoiceDetails?.items || []).reduce((sum, item) => {
+      // Ensure values are numbers to avoid string concatenation bugs
+      const price =
+        Number((item?.basicPrice || 0) + (item?.rimUnitPrice || 0)) || 0;
+      const qty = Number(item?.itemQty) || 0;
+      return sum + price * qty;
+    }, 0);
+  }, [invoiceDetails?.items]);
 
-    console.log(subtotal);
-    
+  console.log(subtotal);
 
   const {
     register,
@@ -441,7 +496,9 @@ const AdditionalCustDetailsForm = ({
       placeOfIncoterm: invoiceDetails?.placeOfIncoterm || "",
       ExchangeCurrency: invoiceDetails?.exchangeRate || "",
       paymentTerms: formatPaymentTerms(invoiceDetails?.paymentTerms || ""),
-      custInstruction: formatPaymentTerms(invoiceDetails?.custInstruction || ""),
+      custInstruction: formatPaymentTerms(
+        invoiceDetails?.custInstruction || "",
+      ),
       // remark: formatMultilineText(invoiceDetails?.remark || ""),
       bankDetails: formatMultilineText(invoiceDetails?.bankDetails || ""),
       leadTime: invoiceDetails?.leadTime || "",
@@ -456,24 +513,114 @@ const AdditionalCustDetailsForm = ({
 
     reset(dbValues);
     dispatch(setAdditionalForm({}));
-    toast.success("Reset to database values", { icon: "🔄",duration:5000 });
+    toast.success("Reset to database values", { icon: "🔄", duration: 5000 });
   };
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   const onSubmit = async (data) => {
-    dispatch(setAdditionalForm(data));
-    toast.success(
-  "Draft saved successfully. This is not a final submission.",
-  {
-    duration: 5000,
-  }
-);
+    const charges = data.additionalCharges || [];
+    const discounts = data.discountDetails || [];
+
+    const totalCharges = charges.reduce(
+      (s, g) => s + (Number(g?.total) || 0),
+      0,
+    );
+
+    const totalDiscounts = discounts.reduce(
+      (s, g) => s + (Number(g?.total) || 0),
+      0,
+    );
+
+    const taxable = subtotal + totalCharges - totalDiscounts;
+
+    // Backend GST
+    const backendIgst = Number(invoiceDetails?.igst || 0);
+    const backendCgst = Number(invoiceDetails?.cgst || 0);
+    const backendSgst = Number(invoiceDetails?.sgst || 0);
+
+    const gstType = data.gstCharges?.type || "BACKEND";
+
+    // ✅ FINAL GST PAYLOAD (single source of truth)
+    let gstPayload = {
+      type: gstType,
+      igst: 0,
+      cgst: 0,
+      sgst: 0,
+    };
+
+    if (gstType === "IGST") {
+      gstPayload.igst = Number(data.gstCharges?.igst || 0);
+    } else if (gstType === "CGST_SGST") {
+      gstPayload.cgst = Number(data.gstCharges?.cgst || 0);
+      gstPayload.sgst = Number(data.gstCharges?.sgst || 0);
+    } else {
+      // BACKEND
+      gstPayload.igst = backendIgst;
+      gstPayload.cgst = backendCgst;
+      gstPayload.sgst = backendSgst;
+    }
+
+    // ✅ GST %
+    const gstPercent =
+      gstPayload.igst > 0 ? gstPayload.igst : gstPayload.cgst + gstPayload.sgst;
+
+    // ✅ GST Amount
+    const gstAmount =
+      taxable > 0 ? parseFloat(((taxable * gstPercent) / 100).toFixed(2)) : 0;
+
+    const finalTotal = taxable + gstAmount;
+
+    // ✅ FINAL PAYLOAD
+    const finalPayload = {
+      ...data,
+
+      gstCharges: {
+        ...gstPayload,
+        percentage: gstPercent,
+        amount: gstAmount,
+        isManual: gstType !== "BACKEND",
+      },
+
+      summary: {
+        subtotal,
+        totalCharges,
+        totalDiscounts,
+        taxable,
+        gstAmount,
+        finalTotal,
+      },
+    };
+
+    // ✅ SAVE
+    dispatch(setAdditionalForm(finalPayload));
+
+    toast.success("Draft saved successfully", { duration: 5000 });
+
     setShowWarning(true);
     onClose();
   };
 
   // ── isPrepared flag (tweak the condition to match your business logic) ─────
   const isPrepared = invoiceDetails?.status === "PREPARED";
+
+  const charges = useWatch({ control, name: "additionalCharges" });
+  const discounts = useWatch({ control, name: "discountDetails" });
+  const totalCharges = (charges || []).reduce(
+    (s, g) => s + (Number(g?.total) || 0),
+    0,
+  );
+
+  const totalDiscounts = (discounts || []).reduce(
+    (s, g) => s + (Number(g?.total) || 0),
+    0,
+  );
+  const taxableAmount =
+    (subtotal || 0) + (totalCharges || 0) - (totalDiscounts || 0);
+
+  console.log("subtotal", subtotal);
+  console.log("totalCharges", totalCharges);
+  console.log("totalDiscounts", totalDiscounts);
+  console.log("taxableAmount", taxableAmount);
 
   return (
     <div className="h-full flex flex-col dark:bg-gray-800">
@@ -522,12 +669,14 @@ const AdditionalCustDetailsForm = ({
                 }
                 watch={watch}
                 setValue={setValue}
+                required={true}
               />
               <InputField
                 label="Final Destination"
                 name="finalDestination"
                 register={register}
                 errors={errors}
+                required={true}
               />
               <SelectField
                 label="Container Type"
@@ -543,6 +692,7 @@ const AdditionalCustDetailsForm = ({
                 }
                 watch={watch}
                 setValue={setValue}
+                required={true}
               />
               <SelectField
                 label="Packing Method"
@@ -580,6 +730,7 @@ const AdditionalCustDetailsForm = ({
                 }
                 watch={watch}
                 setValue={setValue}
+                required={true}
               />
               <div className="grid grid-cols-1 gap-4">
                 <InputField
@@ -587,6 +738,7 @@ const AdditionalCustDetailsForm = ({
                   name="BuyersOrderNumber"
                   register={register}
                   errors={errors}
+                  required={true}
                 />
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -595,6 +747,7 @@ const AdditionalCustDetailsForm = ({
                   name="Date"
                   register={register}
                   errors={errors}
+                  required={true}
                 />
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -603,6 +756,7 @@ const AdditionalCustDetailsForm = ({
                   name="EmailDate"
                   register={register}
                   errors={errors}
+                  required={true}
                 />
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -611,6 +765,7 @@ const AdditionalCustDetailsForm = ({
                   name="revisionNumber"
                   register={register}
                   errors={errors}
+                  // required
                 />
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -619,6 +774,7 @@ const AdditionalCustDetailsForm = ({
                   name="revisionDate"
                   register={register}
                   errors={errors}
+                  // required={true}
                 />
               </div>
             </div>
@@ -680,6 +836,7 @@ const AdditionalCustDetailsForm = ({
                   name="notifyPartyAddress"
                   register={register}
                   rows={2}
+                  // required={true}
                 />
               </div>
             </div>
@@ -702,12 +859,14 @@ const AdditionalCustDetailsForm = ({
                 }
                 watch={watch}
                 setValue={setValue}
+                required={true}
               />
               <InputField
                 label="Place of Incoterm"
                 name="placeOfIncoterm"
                 register={register}
                 errors={errors}
+                required={true}
               />
               {/* <InputField
                 label="Exchange Rate"
@@ -732,12 +891,14 @@ const AdditionalCustDetailsForm = ({
                 }
                 watch={watch}
                 setValue={setValue}
+                required={true}
               />
               <DateField
                 label="Validity Date"
                 name="validityDate"
                 register={register}
                 errors={errors}
+                required={true}
               />
               <div className="lg:col-span-4 gap-2 flex">
                 <TextArea
@@ -745,6 +906,7 @@ const AdditionalCustDetailsForm = ({
                   name="paymentTerms"
                   register={register}
                   rows={6}
+                  required={true}
                 />
                 <TextArea
                   label="Remarks"
@@ -762,49 +924,66 @@ const AdditionalCustDetailsForm = ({
                   )}
                   watch={watch}
                   setValue={setValue}
+                  required={true}
                 />
               </div>
             </div>
           </section>
 
           {/* ── 4. OTHER CHARGES & DISCOUNTS ────────────────────────────────── */}
-<section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-  <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
-  <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-200">
-    4. Other Charges &amp; Discounts
-    <BsReceiptCutoff className="text-[var(--primary)]" />
-  </h2>
-  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
-    Subtotal: <span className="text-[var(--primary)] font-bold">{subtotal}</span>
-  </span>
-</div>
+          <section className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                4. Other Charges &amp; Discounts
+                <BsReceiptCutoff className="text-[var(--primary)]" />
+              </h2>
+              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                Subtotal:{" "}
+                <span className="text-[var(--primary)] font-bold">
+                  {(subtotal || 0).toFixed(2)}
+                </span>
+              </span>
+            </div>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <ChargesRow
-      invoiceIndex={0}
-      register={register}
-      errors={errors}
-      control={control}
-      setValue={setValue}
-      schemeName={invoiceDetails?.schemeName || ""}
-      dbMaxTotal={Number(invoiceDetails?.maxAdditionalCharges) || 0}
-      isPrepared={isPrepared}
-      baseAmount={Number(subtotal) || 0}   
-    />
-    <DiscountRow
-      invoiceIndex={0}
-      register={register}
-      errors={errors}
-      control={control}
-      setValue={setValue}
-      schemeName={invoiceDetails?.schemeName || ""}
-      isPrepared={isPrepared}
-      baseAmount={Number(subtotal) || 0}
-    />
-  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ChargesRow
+                invoiceIndex={0}
+                register={register}
+                errors={errors}
+                control={control}
+                setValue={setValue}
+                schemeName={invoiceDetails?.schemeName || ""}
+                dbMaxTotal={Number(invoiceDetails?.maxAdditionalCharges) || 0}
+                isPrepared={isPrepared}
+                baseAmount={Number(subtotal) || 0}
+              />
+              <DiscountRow
+                invoiceIndex={0}
+                register={register}
+                errors={errors}
+                control={control}
+                setValue={setValue}
+                schemeName={invoiceDetails?.schemeName || ""}
+                isPrepared={isPrepared}
+                baseAmount={Number(subtotal) || 0}
+              />
+            </div>
+            <GstCharges
+              control={control}
+              invoiceDetails={invoiceDetails}
+              taxableAmount={Number(taxableAmount)}
+              register={register} // ← REQUIRED
+              errors={errors} // ← REQUIRED
+              setValue={setValue} // ← REQUIRED
+              watch={watch} // ← REQUIRED
+            />
 
-  <ChargesSummary control={control} />
-</section>
+            <ChargesSummary
+              control={control}
+              baseAmount={Number(subtotal)}
+              invoiceDetails={invoiceDetails}
+            />
+          </section>
 
           {/* Footer Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t dark:border-gray-700">
@@ -842,34 +1021,70 @@ const AdditionalCustDetailsForm = ({
 
 // ─── 4. ChargesSummary (net total bar) ───────────────────────────────────────
 // Shows net = total charges − total discounts across all invoice groups.
-const ChargesSummary = ({ control }) => {
+const ChargesSummary = ({ control, baseAmount = 0, invoiceDetails }) => {
   const charges = useWatch({ control, name: "additionalCharges" });
   const discounts = useWatch({ control, name: "discountDetails" });
 
+  const gstType = useWatch({ control, name: "gstCharges.type" });
+
+  const igstInput = Number(useWatch({ control, name: "gstCharges.igst" }) || 0);
+  const cgstInput = Number(useWatch({ control, name: "gstCharges.cgst" }) || 0);
+  const sgstInput = Number(useWatch({ control, name: "gstCharges.sgst" }) || 0);
+
+  // Backend GST
+  const igstBackend = Number(invoiceDetails?.igst || 0);
+  const cgstBackend = Number(invoiceDetails?.cgst || 0);
+  const sgstBackend = Number(invoiceDetails?.sgst || 0);
+
+  // Totals
   const totalCharges = (charges || []).reduce(
     (s, g) => s + (Number(g?.total) || 0),
     0,
   );
+
   const totalDiscounts = (discounts || []).reduce(
     (s, g) => s + (Number(g?.total) || 0),
     0,
   );
-  const net = totalCharges - totalDiscounts;
+
+  const taxable = baseAmount + totalCharges - totalDiscounts;
+
+  // ✅ GST % (same logic as onSubmit)
+  let gstPercent = 0;
+
+  if (gstType === "IGST") {
+    gstPercent = igstInput;
+  } else if (gstType === "CGST_SGST") {
+    gstPercent = cgstInput + sgstInput;
+  } else {
+    gstPercent = igstBackend > 0 ? igstBackend : cgstBackend + sgstBackend;
+  }
+
+  // ✅ GST Amount
+  const gst =
+    taxable > 0 ? parseFloat(((taxable * gstPercent) / 100).toFixed(2)) : 0;
+
+  const finalTotal = taxable + gst;
 
   return (
-    <div className="mt-4 flex items-center justify-end gap-6 text-sm border-t pt-3 border-gray-200 dark:border-gray-600">
-      <span className="text-blue-700 dark:text-blue-400">
+    <div className="mt-4 flex items-center justify-end gap-6 text-sm border-t pt-3 border-gray-200 dark:border-gray-600 flex-wrap">
+      <span>
+        Subtotal: <b>{baseAmount.toFixed(2)}</b>
+      </span>
+      <span>
         Charges: <b>{totalCharges.toFixed(2)}</b>
       </span>
-      <span className="text-red-600 dark:text-red-400">
-        Discounts: <b>−{totalDiscounts.toFixed(2)}</b>
+      <span>
+        Discounts: <b>-{totalDiscounts.toFixed(2)}</b>
       </span>
-      <span
-        className={`font-semibold ${
-          net >= 0 ? "text-green-700 dark:text-green-400" : "text-red-600"
-        }`}
-      >
-        Net: {net.toFixed(2)}
+      <span>
+        Taxable: <b>{taxable.toFixed(2)}</b>
+      </span>
+      <span>
+        GST ({gstPercent}%): <b>{gst.toFixed(2)}</b>
+      </span>
+      <span className="font-bold text-lg text-green-600 dark:text-green-400">
+        Final: {finalTotal.toFixed(2)}
       </span>
     </div>
   );
@@ -885,12 +1100,13 @@ const InputField = ({
   placeholder,
   readOnly,
   validate,
+  required = false,
   icon: Icon,
 }) => (
   <div className="w-full">
     {label && (
       <label className="text-[10px] uppercase font-bold text-gray-500 mb-1 flex items-center gap-1">
-        {Icon && <Icon size={12} />} {label}
+        {Icon && <Icon size={12} />} {label} {required && "*"}
       </label>
     )}
     <Input
@@ -903,7 +1119,10 @@ const InputField = ({
           ? "border-red-500 focus:ring-red-200"
           : "border-gray-300 focus:ring-blue-100"
       }`}
-      {...register(name, { validate })}
+      {...register(name, {
+        required: required ? `${label} is required` : false,
+        validate,
+      })}
     />
     {errors[name] && (
       <p className="text-red-500 text-[10px] mt-0.5">{errors[name].message}</p>
@@ -911,16 +1130,18 @@ const InputField = ({
   </div>
 );
 
-const DateField = ({ label, name, register, errors }) => (
+const DateField = ({ label, name, register, errors, required = false }) => (
   <div className="w-full">
     {label && (
       <label className="text-[10px] uppercase font-bold text-gray-500 mb-1">
-        {label}
+        {label} {required && "*"}
       </label>
     )}
     <input
       type="date"
-      {...register(name)}
+      {...register(name, {
+        required: required ? `${label} is required` : false,
+      })}
       className={`w-full px-3 py-2 rounded border text-sm bg-white dark:bg-gray-800 dark:text-white ${
         errors[name] ? "border-red-500" : "border-gray-300"
       }`}
@@ -941,16 +1162,15 @@ const SelectField = ({
   options = [],
   setValue,
   watch,
+  required = false,
 }) => {
   const value = watch(name) || "";
   const normalizedOptions = options.filter(Boolean).map((o) => String(o));
 
-  // ── Use explicit state instead of deriving from value ──────────────────────
   const [isCustom, setIsCustom] = useState(
     () => value !== "" && !normalizedOptions.includes(String(value)),
   );
 
-  // Sync if parent resets the form (e.g. "Reset to DB")
   useEffect(() => {
     if (value === "" || normalizedOptions.includes(String(value))) {
       setIsCustom(false);
@@ -960,20 +1180,25 @@ const SelectField = ({
   return (
     <div className="w-full">
       <label className="text-[10px] uppercase font-bold text-gray-500 mb-1">
-        {label}
+        {label} {required && "*"}
       </label>
 
       {!isCustom ? (
         <Select
           name={name}
-          className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
-          {...register(name)}
+          className={`w-full px-3 py-2 rounded border text-sm ${
+            errors?.[name] ? "border-red-500" : "border-gray-300"
+          }`}
+          {...register(name, {
+            required: required ? `${label} is required` : false,
+          })}
           value={value}
           onChange={(e) => {
             const val = e.target.value;
+
             if (val === "__custom__") {
-              setIsCustom(true);          // flip the flag FIRST
-              setValue(name, "", { shouldDirty: true }); // clear value
+              setIsCustom(true);
+              setValue(name, "", { shouldDirty: true });
             } else {
               setValue(name, val, { shouldDirty: true });
             }
@@ -981,7 +1206,7 @@ const SelectField = ({
         >
           <option value="">Select...</option>
           {normalizedOptions.map((opt) => (
-            <option key={opt} value={opt} title={opt}>
+            <option key={opt} value={opt}>
               {opt}
             </option>
           ))}
@@ -993,14 +1218,19 @@ const SelectField = ({
             name={name}
             type="text"
             placeholder="Enter value..."
-            className="w-full px-3 py-2 rounded border border-blue-400 text-sm pr-8"
+            className={`w-full px-3 py-2 rounded border text-sm pr-8 ${
+              errors?.[name] ? "border-red-500" : "border-blue-400"
+            }`}
+            {...register(name, {
+              required: required ? `${label} is required` : false,
+            })} // ✅ FIX HERE
             value={value}
             onChange={(e) =>
               setValue(name, e.target.value, { shouldDirty: true })
             }
             autoFocus
           />
-          {/* ✕ button lets the user go back to the dropdown */}
+
           <button
             type="button"
             title="Back to list"
@@ -1023,15 +1253,23 @@ const SelectField = ({
     </div>
   );
 };
-
 /**
  * SmartValueInput
  * - Plain number  → stored as-is           e.g. "10000"  → 10000
  * - Ends with %   → computed from base     e.g. "2%"     → baseAmount * 0.02
  * Shows a small pill when a % was resolved.
  */
-const SmartValueInput = ({ value, onChange, baseAmount = 0, readOnly, placeholder = "0.00 or 2%", className }) => {
-  const [raw, setRaw] = useState(() => (value !== "" && value != null ? String(value) : ""));
+const SmartValueInput = ({
+  value,
+  onChange,
+  baseAmount = 0,
+  readOnly,
+  placeholder = "0.00 or 2%",
+  className,
+}) => {
+  const [raw, setRaw] = useState(() =>
+    value !== "" && value != null ? String(value) : "",
+  );
   const [resolvedFrom, setResolvedFrom] = useState(""); // e.g. "2% of 50000"
 
   // Keep raw in sync when parent resets the form
@@ -1052,7 +1290,7 @@ const SmartValueInput = ({ value, onChange, baseAmount = 0, readOnly, placeholde
       const pct = parseFloat(pctMatch[1]);
       const computed = parseFloat(((pct / 100) * baseAmount).toFixed(2));
       setResolvedFrom(`${pct}% of ${baseAmount.toFixed(2)}`);
-      setRaw(String(computed));     // show resolved number in input
+      setRaw(String(computed)); // show resolved number in input
       onChange(computed);
     } else {
       const num = parseFloat(trimmed) || 0;
@@ -1071,7 +1309,7 @@ const SmartValueInput = ({ value, onChange, baseAmount = 0, readOnly, placeholde
         className={className}
         onChange={(e) => {
           setRaw(e.target.value);
-          setResolvedFrom("");        // clear pill while editing
+          setResolvedFrom(""); // clear pill while editing
           // live-update if it's a plain number
           const plain = parseFloat(e.target.value);
           if (!e.target.value.trim().endsWith("%") && !isNaN(plain)) {
@@ -1085,6 +1323,193 @@ const SmartValueInput = ({ value, onChange, baseAmount = 0, readOnly, placeholde
         <span className="absolute -top-4 right-0 text-[9px] bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded-full whitespace-nowrap">
           ={resolvedFrom}
         </span>
+      )}
+    </div>
+  );
+};
+
+const GstCharges = ({
+  control,
+  invoiceDetails,
+  taxableAmount,
+  register,
+  errors,
+  setValue,
+  watch,
+}) => {
+  const igstBackend = Number(invoiceDetails?.igst || 0);
+  const cgstBackend = Number(invoiceDetails?.cgst || 0);
+  const sgstBackend = Number(invoiceDetails?.sgst || 0);
+
+  // GST Type (default BACKEND)
+  const gstType = watch("gstCharges.type") || "BACKEND";
+
+  // User Inputs
+  const igstInput = Number(watch("gstCharges.igst") || 0);
+  const cgstInput = Number(watch("gstCharges.cgst") || 0);
+  const sgstInput = Number(watch("gstCharges.sgst") || 0);
+
+  // ✅ Decide GST %
+  let activeGstPercent = 0;
+
+  if (gstType === "IGST") {
+    activeGstPercent = igstInput;
+  } else if (gstType === "CGST_SGST") {
+    activeGstPercent = cgstInput + sgstInput;
+  } else {
+    activeGstPercent =
+      igstBackend > 0 ? igstBackend : cgstBackend + sgstBackend;
+  }
+
+  // ✅ GST Amount
+  const gstAmount = useMemo(() => {
+    if (!taxableAmount || !activeGstPercent) return 0;
+    return parseFloat(((taxableAmount * activeGstPercent) / 100).toFixed(2));
+  }, [taxableAmount, activeGstPercent]);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 p-4 rounded border border-green-200 dark:border-green-900">
+      <h5 className="text-sm font-semibold mb-4 text-green-700 dark:text-green-400">
+        GST Charges
+      </h5>
+
+      {/* ✅ GST TYPE SELECT */}
+      <div className="mb-4">
+        <label className="text-[10px] font-bold text-gray-500 block mb-1">
+          GST Type
+        </label>
+
+        <select
+          {...register("gstCharges.type")}
+          className="px-3 py-2 border rounded text-sm w-full"
+        >
+          <option value="BACKEND">Use Backend GST</option>
+          <option value="IGST">IGST</option>
+          <option value="CGST_SGST">CGST + SGST</option>
+        </select>
+      </div>
+
+      {/* ✅ IGST INPUT */}
+      {gstType === "IGST" && (
+        <div className="mb-4">
+          <label className="text-[10px] font-bold text-gray-500 block mb-1">
+            IGST %
+          </label>
+
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="100"
+            placeholder="Enter IGST %"
+            {...register("gstCharges.igst", {
+              required: "IGST is required",
+              min: { value: 0, message: "Min 0%" },
+              max: { value: 100, message: "Max 100%" },
+            })}
+            className={`w-full px-3 py-2 border rounded text-sm ${
+              errors?.gstCharges?.igst ? "border-red-400" : "border-gray-300"
+            }`}
+          />
+
+          {errors?.gstCharges?.igst && (
+            <p className="text-red-500 text-[10px] mt-1">
+              {errors.gstCharges.igst.message}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ✅ CGST + SGST INPUT */}
+      {gstType === "CGST_SGST" && (
+        <div className="mb-4 flex gap-3">
+          <div className="w-full">
+            <label className="text-[10px] font-bold text-gray-500 block mb-1">
+              CGST %
+            </label>
+
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              placeholder="CGST %"
+              {...register("gstCharges.cgst", {
+                required: "CGST required",
+                min: { value: 0, message: "Min 0%" },
+                max: { value: 100, message: "Max 100%" },
+              })}
+              className={`w-full px-3 py-2 border rounded text-sm ${
+                errors?.gstCharges?.cgst ? "border-red-400" : "border-gray-300"
+              }`}
+            />
+
+            {errors?.gstCharges?.cgst && (
+              <p className="text-red-500 text-[10px] mt-1">
+                {errors.gstCharges.cgst.message}
+              </p>
+            )}
+          </div>
+
+          <div className="w-full">
+            <label className="text-[10px] font-bold text-gray-500 block mb-1">
+              SGST %
+            </label>
+
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              placeholder="SGST %"
+              {...register("gstCharges.sgst", {
+                required: "SGST required",
+                min: { value: 0, message: "Min 0%" },
+                max: { value: 100, message: "Max 100%" },
+              })}
+              className={`w-full px-3 py-2 border rounded text-sm ${
+                errors?.gstCharges?.sgst ? "border-red-400" : "border-gray-300"
+              }`}
+            />
+
+            {errors?.gstCharges?.sgst && (
+              <p className="text-red-500 text-[10px] mt-1">
+                {errors.gstCharges.sgst.message}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ✅ BACKEND INFO */}
+      {gstType === "BACKEND" && (
+        <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-100 rounded">
+          📌 Backend GST:{" "}
+          {igstBackend > 0
+            ? `IGST ${igstBackend}%`
+            : `CGST ${cgstBackend}% + SGST ${sgstBackend}%`}
+        </div>
+      )}
+
+      {/* ✅ TAXABLE */}
+      <div className="text-xs text-gray-500 mb-2">
+        Taxable Amount: <b>{taxableAmount.toFixed(2)}</b>
+      </div>
+
+      {/* ✅ GST AMOUNT */}
+      <div className="text-sm p-2 bg-green-50 rounded border border-green-200">
+        <div className="font-semibold text-green-700">
+          GST ({activeGstPercent}%):{" "}
+          <span className="text-lg">{gstAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* ✅ SPLIT DISPLAY */}
+      {gstType === "CGST_SGST" && (
+        <div className="text-xs mt-2 text-gray-500">
+          CGST: {(gstAmount / 2).toFixed(2)} | SGST:{" "}
+          {(gstAmount / 2).toFixed(2)}
+        </div>
       )}
     </div>
   );

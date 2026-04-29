@@ -85,7 +85,7 @@ const proformaInvoice = createSlice({
       state.listOfProformaInvoice = [];
     },
     setPartNumber: (state, action) => {
-      const { itemCode, value , o_ItemID} = action.payload;
+      const { itemCode, value, o_ItemID } = action.payload;
 
       // ✅ Update proformaDetails.items
       const detailItem = state.proformaDetails.items?.find(
@@ -114,7 +114,7 @@ const proformaInvoice = createSlice({
         partNumber: "",
       }));
     },
-    setShowPartNumber: (state,action) => {
+    setShowPartNumber: (state, action) => {
       state.showPartNumber = action.payload; // ← toggle itself, no payload needed
     },
   },
@@ -256,6 +256,9 @@ export const submitProformaInvoice =
 
       console.log(finalData);
       console.log(master);
+      const formatDate = (date) => {
+        return date ? new Date(date).toISOString() : null;
+      };
 
       const payload = {
         draftPI_Id: 0,
@@ -302,8 +305,8 @@ export const submitProformaInvoice =
         orderRefNo: finalData.orderRefNo,
 
         revisionNumber: Number(finalData.revisionNumber),
-        revisionDate: finalData.revisionDate,
-        validityDate: finalData.validityDate,
+        RevisionDate: formatDate(finalData.revisionDate),
+        validityDate: formatDate(finalData.validityDate),
 
         Remarks: finalData.custInstruction,
 

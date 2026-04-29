@@ -16,6 +16,7 @@ const ITEMS_PER_PAGE = 25;
 const GRAND_TOTAL_ROW_HEIGHT = 18;
 const ITEM_ROW_HEIGHT = 16;
 
+
 // ─── Simple fixed chunker (25 items per page) ─────────────────────────────────
 const chunkItemsForPages = (items) => {
   const chunks = [];
@@ -43,6 +44,7 @@ const getColWidths = (showEdc, showItemCode, showPONumber) => {
     unitPrice: 8, // ← moved after totalWt
     totalPrice: 12, // ← reduced from 14 to 12
   };
+ 
 
   // Calculate removed width from optional columns
   let removed = 0;
@@ -256,7 +258,7 @@ const AddressSection = ({ data }) => (
           PACKING METHOD: <Text style={styles.text}>{data?.packingMethod}</Text>
         </Text>
         <Text style={styles.bodyText}>
-          CONTAINER TYPE: <Text style={styles.text}>{data?.containerType}</Text>
+          CONTAINER / CARGO TYPE: <Text style={styles.text}>{data?.containerType}</Text>
         </Text>
         <Text style={styles.bodyText}>
           LEAD TIME: <Text style={styles.text}>{data?.leadTime}</Text>
@@ -327,7 +329,7 @@ const AddressSection = ({ data }) => (
       >
         <View style={{ flex: 1, padding: 2, gap: 2 }}>
           <Text style={[styles.bodyText, { fontWeight: "bold" }]}>
-            Buyer If Other Than Consignee:
+            {"Buyer If Other Than Consignee (Delivery address):"}
           </Text>
           <Text style={{ fontWeight: "bold", fontSize: 6 }}>
             {data?.shippingCompanyName ?? ""}
@@ -562,10 +564,14 @@ const TableRows = ({
 };
 
 // ─── Summary + T&C ────────────────────────────────────────────────────────────
-const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
+const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, gstAmount, gstPercent, }) => {
+  const gstData = data?.gstCharges || {};
   const otherCharges = data?.additionalCharges?.[0]?.rows || [];
   const discounts = data?.discountDetails?.[0]?.rows || [];
   const amountInWords = numberToWords(grandTotalDDP, data?.userCurrency || "");
+  const igst = Number(data?.igst || 0);
+    const gstType = gstData.type || "BACKEND";
+ 
 
   const totalQty = (data?.items || []).reduce(
     (s, it) => s + Number(it.itemQty || 0),
@@ -654,6 +660,15 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
     ...extra,
   });
 
+  const gstLabel =
+  gstType === "IGST"
+    ? `IGST (${gstPercent}%)`
+    : gstType === "CGST_SGST"
+    ? `CGST + SGST (${gstPercent}%)`
+    : gstData.cgst > 0 || gstData.sgst > 0
+    ? `CGST + SGST (${gstPercent}%)`
+    : `IGST (${gstPercent}%)`;
+
   return (
     <View wrap={false}>
       {/* 1. Sub Total */}
@@ -711,6 +726,24 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0 }) => {
             </View>
           </View>
         ))}
+
+      {/* 4. GST */}
+      {gstPercent > 0 && (
+        <View style={styles.summaryRow}>
+          <View style={labelStyle()}>
+            <Text style={{ fontSize: 7, fontWeight: "bold" }}>
+              {gstLabel}
+            </Text>
+          </View>
+          <View style={qtyStyle()} />
+          <BlankCells />
+          <View style={valueStyle()}>
+            <Text style={{ fontSize: 7, fontWeight: "bold" }}>
+              {gstAmount.toFixed(2)}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* 4. Grand Total */}
       <View style={styles.grandTotalRow}>
@@ -895,8 +928,46 @@ const ProformaPDF = ({ data }) => {
   );
   const totalCharges = data?.additionalCharges?.[0]?.total || 0;
   const totalDiscounts = data?.discountDetails?.[0]?.total || 0;
-  const grandTotalDDP =
-    subTotal + Number(totalCharges) - Number(totalDiscounts);
+  // ✅ TAXABLE
+  const taxable = subTotal + Number(totalCharges) - Number(totalDiscounts);
+  // ✅ GST FROM BACKEND
+  const gstData = data?.gstCharges || {};
+
+const gstType = gstData.type || "BACKEND";
+
+// Backend fallback
+const backendIgst = Number(data?.igst || 0);
+const backendCgst = Number(data?.cgst || 0);
+const backendSgst = Number(data?.sgst || 0);
+
+let gstPercent = 0;
+
+// ✅ 1. Use percentage first (IMPORTANT FIX)
+if (gstData.percentage && Number(gstData.percentage) > 0) {
+  gstPercent = Number(gstData.percentage);
+}
+
+// ✅ 2. Type-based fallback
+else if (gstData.type === "IGST") {
+  gstPercent = Number(gstData.igst || backendIgst || 0);
+} else if (gstData.type === "CGST_SGST") {
+  gstPercent =
+    Number(gstData.cgst || backendCgst || 0) +
+    Number(gstData.sgst || backendSgst || 0);
+}
+
+// ✅ 3. Final fallback
+else {
+  gstPercent =
+    backendIgst > 0 ? backendIgst : backendCgst + backendSgst;
+}
+  // ✅ GST AMOUNT
+  const gstAmount =
+  taxable > 0
+    ? parseFloat(((taxable * gstPercent) / 100).toFixed(2))
+    : 0;
+  // ✅ FINAL TOTAL
+  const grandTotalDDP = taxable + gstAmount;
 
   return (
     <>
@@ -927,6 +998,9 @@ const ProformaPDF = ({ data }) => {
                   data={data}
                   subTotal={subTotal}
                   grandTotalDDP={grandTotalDDP}
+                  gstAmount={gstAmount}
+                  gstPercent={gstPercent}
+                  
                 />
               )}
               {isLastPage && <SignatureBlock data={data} />}

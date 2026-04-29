@@ -43,36 +43,45 @@ const FitmentList = ({sheetMode}) => {
         return value;
     };
 
-    const filteredInspectionData = useMemo(() => {
-        const safe = (v) => String(v ?? "").toLowerCase();
-        let data = listOfFitmentData;
+   const filteredInspectionData = useMemo(() => {
+  const safe = (v) => String(v ?? "").toLowerCase();
 
-        if (sheetMode) {
-            data = data.filter(item => {
-                const type = safe(item.processType);
-                if (sheetMode === "tyres") return type === "order" || type === "ORDER"
-                if (sheetMode === "splitRims") return type === "splitrim" || type === "rim";
-                if (sheetMode === "claims") return type === "claim";
-                return true;
-            });
-        }
+  // ✅ normalize to array
+  let data = Array.isArray(listOfFitmentData)
+    ? listOfFitmentData
+    : Array.isArray(listOfFitmentData?.data)
+    ? listOfFitmentData.data
+    : [];
 
-        if (!search.trim()) return data;
-        const term = search.toLowerCase();
+  if (sheetMode) {
+    data = data.filter((item) => {
+      const type = safe(item.processType);
 
-        return data.filter(item => {
-            return (
-                safe(item.customerName).includes(term) ||
-                safe(item.orderRefNo).includes(term) ||
-                safe(item.workorderno).includes(term) ||
-                safe(item.plant).includes(term) ||
-                safe(formatDateTime(item.orderDate)).includes(term) ||
-                safe(formatDateTime(item.revisedDate)).includes(term) ||
-                safe(formatDateTime(item.desiredShipDate)).includes(term) ||
-                safe(item.itemQty).includes(term)
-            );
-        });
-    }, [listOfFitmentData, search, sheetMode]);
+      if (sheetMode === "tyres") return type === "order";
+      if (sheetMode === "splitRims") return type === "splitrim" || type === "rim";
+      if (sheetMode === "claims") return type === "claim";
+
+      return true;
+    });
+  }
+
+  if (!search.trim()) return data;
+
+  const term = search.toLowerCase();
+
+  return data.filter((item) => {
+    return (
+      safe(item.customerName).includes(term) ||
+      safe(item.orderRefNo).includes(term) ||
+      safe(item.workorderno).includes(term) ||
+      safe(item.plant).includes(term) ||
+      safe(formatDateTime(item.orderDate)).includes(term) ||
+      safe(formatDateTime(item.revisedDate)).includes(term) ||
+      safe(formatDateTime(item.desiredShipDate)).includes(term) ||
+      safe(item.itemQty).includes(term)
+    );
+  });
+}, [listOfFitmentData, search, sheetMode]);
 
     const uploadColumns = [
         { header: "CUSTOMER NAME", accessor: "customerName", width: "2fr", align: "center" },

@@ -118,6 +118,32 @@ export const userLogout = (navigate) => async (dispatch) => {
     dispatch(loginFailure({ message }));
   }
 };
+
+export const resetPassword = (payload) => async (dispatch) => {
+  try {
+    dispatch(logout());
+    const res = await api.post("/Auth/logout");
+
+    if (res.status === 200) {
+      navigate("/login");
+      if (res?.data?.message) {
+        toast.success(res?.data?.message);
+      } else {
+        toast.success("LOGOUT SUCCESSFULL")
+      }
+    }     
+  } catch (error) {
+    let message = "Logout failed";
+
+    if (error.response?.data?.message) {
+      message = error.response.data.message;
+    } else if (error.message) {
+      message = error.message;
+    }
+
+    dispatch(loginFailure({ message }));
+  }
+};
 export const { loginSuccess, logout, loginStart, loginFailure } =
   authSlice.actions;
 

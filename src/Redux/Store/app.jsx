@@ -3,6 +3,7 @@ import globalReducer from "../Slices/GlobalSlice";
 import invoiceSlice from "../Slices/InvoiceSlice";
 import proformaInvoice from "../Slices/ProformaInvoice/ProformaInvoiceSlice";
 import authReducer from "../Slices/AuthSlice";
+import UserMasterReducer from "../Slices/Master/UserMaster.jsx/UserCreationSlice";
 import rimApplication from '../Slices/RimApplicationSlice'
 import priceMasterSliceReducer from "../Slices/PriceMasterSlice";
 import storage from "redux-persist/lib/storage";
@@ -20,6 +21,9 @@ import { version } from "react";
 import PIMasterReducer from '../Slices/ProformaInvoice/PIMasterSlice'
 // task application
 import ProjectReducer from '../Slices/Task_Master/Projects/ProjectSlice'
+import SprintReducer from '../Slices/Task_Master/Sprint/SprintSlice'
+import CIMMasterReducer from '../Slices/Customer_Item_Management/CIMMasterSlice'
+import CIMBarcodeReducer from '../Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice'
 
 // Encryption config
 const encryptor = encryptTransform({
@@ -31,6 +35,12 @@ const encryptor = encryptTransform({
 
 const authPersistConfig = {
   key: "auth",
+  version: 1,
+  storage,
+  transforms: [encryptor],
+};
+const UserMastertConfig = {
+  key: "UserMaster",
   version: 1,
   storage,
   transforms: [encryptor],
@@ -122,6 +132,21 @@ const ProjectReducerConfig = {
   version:1,
   storage: storageSession
 }
+const CIMMasterReducerConfig = {
+  key:'CIMMaster',
+  version:1,
+  storage: storageSession
+}
+const CIMBarcodeReducerConfig = {
+  key:'CIMMaster',
+  version:1,
+  storage: storageSession
+}
+const SprintReducerConfig = {
+  key:'Sprint',
+  version:1,
+  storage: storageSession
+}
 
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
@@ -138,6 +163,11 @@ const persistedPDIFitmentMasterReducer = persistReducer(PDIFitmentMasterPersistC
 const persistedPDIFitmentReducer = persistReducer(PDIFitmentPersistConfig, PDIFitmentReducer);
 const persistedPIMaster = persistReducer(PIMasterConfig,PIMasterReducer);
 const persistedProjectReducer = persistReducer(ProjectReducerConfig,ProjectReducer)
+const persistedCIMMasterReducer = persistReducer(CIMMasterReducerConfig,CIMMasterReducer)
+const persistedCIMBarcodeReducer = persistReducer(CIMBarcodeReducerConfig,CIMBarcodeReducer)
+const persistedSprintReducer = persistReducer(SprintReducerConfig,SprintReducer)
+const presistedUserMasterReducer = persistReducer(UserMastertConfig,UserMasterReducer)
+
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -145,6 +175,7 @@ const rootReducer = combineReducers({
   invoice: persistedInvoiceReducer,
   proformaInvoice: persistedProformaInvoiceReducer,
   auth: persistedAuthReducer,
+  UserMaster:presistedUserMasterReducer,
   rimApplication: rimApplication,
   priceMaster: persistedPriceMasterReducer,
   scanforinspection: persistedScanforlinspectionReducer,
@@ -156,6 +187,9 @@ const rootReducer = combineReducers({
   PDIFitment: persistedPDIFitmentReducer,
   PIMaster: persistedPIMaster,
   Project:persistedProjectReducer,
+  CIMMaster:persistedCIMMasterReducer,
+  CIMBarcode:persistedCIMBarcodeReducer,
+  Sprint:persistedSprintReducer,
 });
 
 // Store setup

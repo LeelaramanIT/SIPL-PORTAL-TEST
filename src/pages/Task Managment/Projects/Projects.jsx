@@ -83,6 +83,20 @@ const Projects = () => {
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
   const handleSubmit = async () => {
+      if (!form.code || !form.name) {
+    alert("Project code and name are required");
+    return;
+  }
+
+  if (form.code.length > 3) {
+    alert("Project code must be max 4 characters");
+    return;
+  }
+
+  if (form.start && form.end && new Date(form.start) > new Date(form.end)) {
+    alert("End date must be after start date");
+    return;
+  }
     const payload = {
       projectCode: form.code,
       projectName: form.name,
@@ -292,7 +306,7 @@ const Projects = () => {
 
       {/* Project List */}
       <div className="flex flex-col gap-3">
-        {listOfProject.map((p) => (
+        {listOfProject?.map((p) => (
           <Card key={p.projectID}>
             <div className="flex items-start gap-4 flex-wrap">
               {/* Code Box */}

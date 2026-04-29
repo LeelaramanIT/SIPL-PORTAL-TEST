@@ -65,8 +65,13 @@ import PIMaster from "../pages/TTS/International/Invoice/Export Invoice/Proforma
 import ApprovalForInspection from "../pages/TTS/Domostic/Dispatch/PDI/ApprovalForInspection/ApprovalForInspection";
 import TTSPowerBIReports from "../pages/Reports/TTSPowerBIReports";
 import SaleRepostMaster from "../pages/Reports/SaleReports/SaleRepostMaster";
-
-
+import CPMMaster from "../pages/Customer Product Mapping/CPMMaster";
+import TyreBarcodeGenerator from "../pages/Customer Product Mapping/BarcodePrint/BarcodePrint";
+import TyreSalesDashboard from "../pages/Reports/SaleReports/SaleReports";
+import UserCreation from "../pages/MenuAccess/UserMaster/UserCreation";
+import ProductionDashboard from "../pages/Reports/ProductionReports/Production";
+import UserList from "../pages/MenuAccess/UserMaster/UserList";
+import UserMasterLayout from "../layout/UserMasterLayout";
 
 export const router = createBrowserRouter([
   {
@@ -409,8 +414,8 @@ export const router = createBrowserRouter([
                     element: <Navigate to="SaleRepost" replace />,
                   },
                   { path: "PowerBIReport", element: <TTSPowerBIReports /> },
-                  { path: "SaleRepost", element: '' },
-                  
+                  { path: "SaleRepost", element: <TyreSalesDashboard/> },
+                  { path: "ProductionRepost", element: <ProductionDashboard /> },
                 ],
               },
             ],
@@ -419,22 +424,53 @@ export const router = createBrowserRouter([
             path: "Task-Management",
             element: <TaskLayout />,
             children: [
-              { path: 'Home', element: <TaskHomePage /> },
-              { path: 'Dashboard', element: <TaskDashboard /> },
-              { path: 'Projects', element: <Projects /> },
-              { path: 'Sprints', element: <Sprints /> },
-              { path: 'Tasks', element: <Tasks /> },
-              { path: 'DailyLog', element: <DailyLog /> },
-              { path: 'Team', element: <Team /> },
-              { path: 'Reports', element: <Reports /> },
-              { path: 'Masters', element: <Masters /> },
-            ]
+              { path: "Home", element: <TaskHomePage /> },
+              { path: "Dashboard", element: <TaskDashboard /> },
+              { path: "Projects", element: <Projects /> },
+              { path: "Sprints", element: <Sprints /> },
+              { path: "Tasks", element: <Tasks /> },
+              { path: "DailyLog", element: <DailyLog /> },
+              { path: "Team", element: <Team /> },
+              { path: "Reports", element: <Reports /> },
+              { path: "Masters", element: <Masters /> },
+            ],
+          },
+          {
+            path: "customer-item-management",
+            element:<CPMMaster/>,
+            children: [
+              {
+                index: true, // ✅ default route
+                element: <Navigate to="barcode-print"/>, // 👈 choose your default page
+              },
+              // {
+              //   path: "bulk-upload",
+              //   // element: <BulkUpload />,
+              // },
+              // {
+              //   path: "customer-barcode",
+              //   // element: <CustomerBarcode />,
+              // },
+              {
+                path: "barcode-print",
+                element: <TyreBarcodeGenerator />,
+              },
+            ],
           },
           {
             path: "Settings",
             element: <SettingsLayout />,
             children: [
               { index: true, element: <Settings /> },
+            ],
+          },
+          {
+            path: "UserMaster",
+            element: <UserMasterLayout />,
+            children: [
+              { index: true, element: <UserList /> },
+              { path: "user-list", element: <UserList /> },
+              { path: "user-creation", element: <UserCreation /> },
               { path: "menuaccess", element: <MenuAccessManager /> },
             ],
           },

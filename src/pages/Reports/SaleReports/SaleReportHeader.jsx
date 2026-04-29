@@ -8,6 +8,7 @@ import {
   Barcode,
   ThumbsUp,
   FileText,
+  Activity,
 } from "lucide-react";
 import SearchBar from "../../../components/SearchBar";
 import {
@@ -16,12 +17,12 @@ import {
 } from "../../../Redux/Slices/PDIDispatchMaster/PDIMaster";
 import { useState } from "react";
 
-function SaleReportHeader() {
+function SaleReportHeader({mode}) {
   const navigate = useNavigate();
   const location = useLocation();
   const diapatch = useDispatch();
   const { plant, custType } = useParams();
-  const [mode, setMode] = useState("NEW");
+  // const [mode, setMode] = useState("NEW");
 
   const { menus, roles } = useSelector((state) => state.auth);
 
@@ -59,14 +60,22 @@ function SaleReportHeader() {
       path: `${basePath}/SaleRepost`,
       icon: <Search className="w-3.5 h-3.5" />,
     },
+    {
+      label: "Production Report",
+      permissionKey: "ProductionRepost",
+      path: `${basePath}/ProductionRepost`,
+      icon: <Search className="w-3.5 h-3.5" />,
+    },
   ];
 
   const visibleTabs = allTabs.filter((tab) => hasPermission(menus, tab.path));
+  console.log(mode);
+  
 
   return (
     <div className="px-5 pt-3 border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 transition-all">
       {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {mode === 'PowerBI' && <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         {/* LEFT SIDE */}
         <div>
           <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">
@@ -90,7 +99,27 @@ function SaleReportHeader() {
             />
           </div>
         </div>
-      </div>
+      </div>}
+
+      {mode === 'SaleOrder' &&<div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:24 }}>
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+              <div style={{ width:32, height:32, borderRadius:10, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <Activity size={16} style={{ color:"#fff" }} />
+              </div>
+              <h1 style={{ fontSize:20, fontWeight:800, color:"var(--tp)", margin:0, letterSpacing:"-0.02em" }}>Sales Dashboard</h1>
+            </div>
+            <p style={{ fontSize:12, color:"var(--ts)", margin:0 }}>
+              {new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}
+            </p>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 12px", borderRadius:20, background:"#10b98118", border:"1px solid #10b98130" }}>
+            <div style={{ width:7, height:7, borderRadius:"50%", background:"#10b981", animation:"pulse 2s infinite" }} />
+            <span style={{ fontSize:12, fontWeight:600, color:"#10b981" }}>Live Data</span>
+          </div>
+        </div>}
+      
+
 
       {/* Tabs */}
       {visibleTabs.length > 0 && (

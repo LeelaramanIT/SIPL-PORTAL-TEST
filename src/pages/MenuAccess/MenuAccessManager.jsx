@@ -42,11 +42,6 @@ const initialUserData = [
   { id: 5, name: "Ethan Hunt", email: "ethan@corp.com", permissions: ALL_MENUS }, // Full Access
 ];
 
-
-/**
- * MenuAccessManager Component
- * Manages menu permissions for individual users, grouping menus for clarity.
- */
 const MenuAccessManager = () => {
   const [users, setUsers] = useState(initialUserData);
   const [selectedUserId, setSelectedUserId] = useState(initialUserData[0].id);
