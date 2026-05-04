@@ -185,41 +185,84 @@ const Login = () => {
           </div>
 
           {/* Password Field */}
+          {/* Password / Reset Fields */}
           <div ref={div5} className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              ref={password}
-              required
-              placeholder=" "
-              className={`block px-2.5 pb-2.5 pt-4 w-full text-sm ${
-                randomIndex === 1
-                  ? "text-slate-900 border-gray-800/40"
-                  : "text-white focus:border-gray-50 border-gray-100"
-              } bg-transparent rounded-lg border  appearance-none focus:outline-none focus:ring-0 peer`}
-            />
-            <label
-              htmlFor="password"
-              className={`absolute text-sm duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2
-  ${randomIndex === 1 ? "text-slate-900" : "text-white"}
-  peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 
-  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6.5 
-  peer-valid:top-2 peer-valid:scale-75 peer-valid:-translate-y-6.5`}
-            >
-              Password
-            </label>
-            <div
-              className={`absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer ${
-                randomIndex === 1 ? "text-slate-900" : "text-white"
-              } text-slate-900/70`}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <FiEye size={16} className="sm:w-[18px] sm:h-[18px]" />
-              ) : (
-                <FiEyeOff size={16} className="sm:w-[18px] sm:h-[18px]" />
-              )}
-            </div>
+            {!isResetMode ? (
+              <>
+                {/* Login Password */}
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  ref={password}
+                  required
+                  placeholder=" "
+                  className={`block px-2.5 pb-2.5 pt-4 w-full text-sm ${
+                    randomIndex === 1
+                      ? "text-slate-900 border-gray-800/40"
+                      : "text-white focus:border-gray-50 border-gray-100"
+                  } bg-transparent rounded-lg border appearance-none focus:outline-none focus:ring-0 peer`}
+                />
+                <label
+                  htmlFor="password"
+                  className={`absolute text-sm duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2
+        ${randomIndex === 1 ? "text-slate-900" : "text-white"}
+        peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 
+        peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-6.5 
+        peer-valid:top-2 peer-valid:scale-75 peer-valid:-translate-y-6.5`}
+                >
+                  Password
+                </label>
+
+                <div
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer ${
+                    randomIndex === 1 ? "text-slate-900" : "text-white"
+                  }`}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEye size={16} /> : <FiEyeOff size={16} />}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Old Password */}
+                <input
+                  type="password"
+                  ref={oldPasswordRef}
+                  required
+                  placeholder=" "
+                  className={`block px-2.5 pb-2.5 pt-4 w-full text-sm ${
+                    randomIndex === 1
+                      ? "text-slate-900 border-gray-800/40"
+                      : "text-white border-gray-100"
+                  } bg-transparent rounded-lg border appearance-none focus:outline-none focus:ring-0 peer mb-6`}
+                />
+                <label
+                  className={`absolute text-sm duration-300 transform -translate-y-4 scale-75 top-2 z-10 px-2
+        ${randomIndex === 1 ? "text-slate-900" : "text-white"}`}
+                >
+                  Old Password
+                </label>
+
+                {/* New Password */}
+                <input
+                  type="password"
+                  ref={newPasswordRef}
+                  required
+                  placeholder=" "
+                  className={`block px-2.5 pb-2.5 pt-4 w-full text-sm ${
+                    randomIndex === 1
+                      ? "text-slate-900 border-gray-800/40"
+                      : "text-white border-gray-100"
+                  } bg-transparent rounded-lg border appearance-none focus:outline-none focus:ring-0 peer mt-6`}
+                />
+                <label
+                  className={`absolute text-sm duration-300 transform -translate-y-4 scale-75 top-[70px] z-10 px-2
+        ${randomIndex === 1 ? "text-slate-900" : "text-white"}`}
+                >
+                  New Password
+                </label>
+              </>
+            )}
           </div>
 
           {/* Forgot Password */}

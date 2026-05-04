@@ -20,6 +20,8 @@ import {
   resetAll,
 } from "../../../../../Redux/Slices/PDIFitmentMaster/PDIFitmentSlice";
 import { FitmrntSlider } from "./FitmentSlider";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const TyreAndRimFitment = () => {
   const location = useLocation();
@@ -36,6 +38,7 @@ const TyreAndRimFitment = () => {
   const [viewMode, setViewMode] = useState("inventory");
   const [isValid, setIsValid] = useState(false);
   const [message, setMessage] = useState("");
+  const clean = (val) => String(val ?? "").trim();
 
   const fadeUp = {
     hidden: { opacity: 0, y: 15 },
@@ -45,11 +48,184 @@ const TyreAndRimFitment = () => {
     inputRef.current?.focus();
   }, []);
 
-//   const scannedItems = useMemo(() => {
-//     if (!FitmentDetails?.items) return [];
-//     return FitmentDetails.items.filter((item) => item.scannedQty > 0);
-//   }, [FitmentDetails]);
+const handleDownloadExcel = async () => {
+  if (!items || items.length === 0) {
+    toast.error("No data available to download");
+    return;
+  }
 
+  const clean = (val) => String(val ?? "").trim();
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Fitment Report");
+
+  // 🔥 PAGE SETUP (A4 Landscape)
+  worksheet.pageSetup = {
+    paperSize: 9,
+    orientation: "landscape",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 1,
+  };
+
+  // 🔥 COLUMN WIDTH
+  worksheet.columns = [
+    { width: 18 }, { width: 18 }, { width: 20 }, { width: 10 },
+    { width: 12 }, { width: 18 }, { width: 16 },
+    { width: 14 }, { width: 14 }, { width: 14 },
+    { width: 12 }, { width: 14 }
+  ];
+
+  // 🔥 LOAD LOGO (from public folder)
+  const getBase64 = async (url) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(",")[1]);
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const logoBase64 = await getBase64("/SUN-TWS.png"); // 👉 place logo in public folder
+
+  const imageId = workbook.addImage({
+    base64: logoBase64,
+    extension: "png",
+  });
+
+  // 🔥 ADD LOGO
+  worksheet.addImage(imageId, {
+    tl: { col: 0, row: 0 },
+    ext: { width: 140, height: 60 },
+  });
+
+  // 🔥 TITLE
+  worksheet.mergeCells("A3:L3");
+  const titleCell = worksheet.getCell("A3");
+  titleCell.value = "FITMENT WORKORDER";
+  titleCell.font = { bold: true, size: 18, color: { argb: "1F4E79" } };
+  titleCell.alignment = { horizontal: "center" };
+
+  // 🔥 DETAILS SECTION
+  const details = [
+    ["Full Name", clean(FitmentDetails?.customerName)],
+    ["Order RefNo", clean(FitmentDetails?.orderRefNo)],
+    ["Work Order", clean(FitmentDetails?.workorderno)],
+    ["Order Date", clean(formatDateTime(FitmentDetails?.orderDate))],
+    ["Ship Date", clean(formatDateTime(FitmentDetails?.DesiredShipDate))]
+  ];
+
+  let rowStart = 5;
+
+  details.forEach(([label, value], i) => {
+    const row = worksheet.getRow(rowStart + i);
+
+    row.getCell(1).value = label;
+    row.getCell(2).value = ":";
+    row.getCell(3).value = value;
+
+    row.getCell(1).font = { bold: true };
+    row.getCell(1).alignment = { horizontal: "left" };
+    row.getCell(3).alignment = { horizontal: "left" };
+  });
+
+  // 🔥 TABLE HEADER
+  const headers = [
+    "Category", "Platform", "Tyre Size", "Rim",
+    "Type", "Brand", "Sidewall",
+    "ProcessID", "EDC_NO", "Directional",
+    "Total Qty", "Scanned Qty"
+  ];
+
+  const headerRowIndex = rowStart + details.length + 2;
+  const headerRow = worksheet.getRow(headerRowIndex);
+
+  headers.forEach((h, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = h;
+
+    cell.font = { bold: true, color: { argb: "FFFFFF" } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1F4E79" }
+    };
+
+    cell.alignment = { horizontal: "center" };
+
+    cell.border = {
+      top: { style: "thin" },
+      bottom: { style: "thin" }
+    };
+  });
+
+  // 🔥 TABLE DATA
+  let totalQty = 0;
+  let scannedQty = 0;
+
+  let dataRowStart = headerRowIndex + 1;
+
+  items.forEach((item, idx) => {
+    const row = worksheet.getRow(dataRowStart + idx);
+
+    totalQty += item.itemQty || 0;
+    scannedQty += item.scannedQty || 0;
+
+    const rowData = [
+      clean(item.category),
+      clean(item.config),
+      clean(item.tyreSize),
+      clean(item.rimSize),
+      clean(item.tyreType),
+      clean(item.brand),
+      clean(item.sideWall),
+      clean(item.processId),
+      clean(item.edcNo),
+      clean(item.directional),
+      item.itemQty || 0,
+      item.scannedQty || 0,
+    ];
+
+    rowData.forEach((val, i) => {
+      const cell = row.getCell(i + 1);
+      cell.value = val;
+      cell.alignment = { horizontal: "center" };
+
+      // Only bottom border (clean look)
+      cell.border = {
+        bottom: { style: "thin" }
+      };
+    });
+  });
+
+  // 🔥 TOTAL ROW
+  const totalRow = worksheet.getRow(dataRowStart + items.length);
+
+  totalRow.getCell(1).value = "TOTAL";
+
+  totalRow.getCell(11).value = totalQty;
+  totalRow.getCell(12).value = scannedQty;
+
+  totalRow.font = { bold: true };
+
+  totalRow.eachCell((cell) => {
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "EAF4FF" }
+    };
+    cell.alignment = { horizontal: "center" };
+  });
+
+  // 🔥 DOWNLOAD
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(
+    new Blob([buffer]),
+    `Fitment_Report_${new Date().toISOString().slice(0, 10)}.xlsx`
+  );
+};
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
@@ -115,28 +291,30 @@ const TyreAndRimFitment = () => {
     }
 
     // i want to validate for respective line items
-
-    const processID = barcode.substring(0, 8);
-    const isValid = FitmentDetails.items.some((v)=>
-        v.processId === processID || v.edcNo === processID
-    )
+const cleanedBarcode = clean(barcode);
+const processID = cleanedBarcode.substring(0, 8);
+    const isValid = FitmentDetails.items.some((v) =>
+  clean(v.processId) === processID ||
+  clean(v.edcNo) === processID
+);
     if (!isValid) {
         toast.error('Please scan valid barcode')
         return
     }
-    const O_ItemID = FitmentDetails.items.find(
-      (item) => item.processId === processID || item.edcNo === processID,
-    )?.o_ItemID;
+    const O_ItemID = FitmentDetails.items.find((item) =>
+  clean(item.processId) === processID ||
+  clean(item.edcNo) === processID
+)?.o_ItemID;
 
     const res = await dispatch(
-      PIDFitmentCheckBarcode({
-        barcode,
-        PID: processID,
-        O_ID: FitmentDetails?.id,
-        O_ItemID: O_ItemID || 0,
-        plant: FitmentDetails?.plant,
-      }),
-    );
+  PIDFitmentCheckBarcode({
+    barcode: cleanedBarcode,
+    PID: processID,
+    O_ID: FitmentDetails?.id,
+    O_ItemID: O_ItemID || 0,
+    plant: clean(FitmentDetails?.plant),
+  })
+);
     setViewMode("scan");
     setScanInput("");
     handleVerify();
@@ -404,7 +582,7 @@ const TyreAndRimFitment = () => {
                     type="text"
                     maxLength={19}
                     value={scanInput}
-                    onChange={(e) => setScanInput(e.target.value)}
+                    onChange={(e) => setScanInput(e.target.value.trimStart())}
                     onKeyDown={handleScan}
                     placeholder="Scan barcode..."
                     className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
@@ -487,7 +665,7 @@ const TyreAndRimFitment = () => {
                       <button
                         className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
                         type="button"
-                        onClick={""}
+                        onClick={handleDownloadExcel}
                       >
                         <FaDownload className="w-5 h-5 mr-2" />
                         Download

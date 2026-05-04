@@ -28,6 +28,7 @@ export const FitmrntSlider = ({
   const [error, setError] = useState("");
   const [isAllow, setIsAllow] = useState(true);
   const { FitmentDetails } = useSelector((state) => state.PDIFitment);
+  const clean = (val) => String(val ?? "").trim();
 
   useEffect(() => {
     if (tyre && rim) {
@@ -48,57 +49,58 @@ export const FitmrntSlider = ({
   console.log(FitmentDetails, "from..... ass");
 
   const getAssemblyBarcode = async () => {
-    const payload = {
-      ProcessID: tyre.processID,
-      EdcNo: rim.edcNo,
-      Direction: direction,
-      StencilGrade: tyre?.barcode?.substring(8, 19) || "",
-      o_ID:FitmentDetails?.id
-    };
-    
-    const data = await dispatch(getAssyDetails(payload));
-    if (data.status) {
-      setBarcode(data.assemblyBarcode);
-      seto_ItemID(data.o_ItemID)
-      setIsAllow(true);
-      setError("");
-      setMessage(data.message)
-    } else {
-      setError(data.message);
-      setIsAllow(false);
-      setBarcode("");
-      setMessage(data.message)
-    }
+  const payload = {
+    ProcessID: clean(tyre?.processID),
+    EdcNo: clean(rim?.edcNo),
+    Direction: clean(direction),
+    StencilGrade: clean(tyre?.barcode).substring(8, 19),
+    o_ID: FitmentDetails?.id
   };
+
+  const data = await dispatch(getAssyDetails(payload));
+
+  if (data.status) {
+    setBarcode(clean(data.assemblyBarcode));
+    seto_ItemID(data.o_ItemID);
+    setIsAllow(true);
+    setError("");
+    setMessage(data.message);
+  } else {
+    setError(clean(data.message));
+    setIsAllow(false);
+    setBarcode("");
+    setMessage(data.message);
+  }
+};
   console.log(FitmentDetails?.id);
   
-const AssemblyProcessID = barcode?.substring(0,8)
+const AssemblyProcessID = clean(barcode).substring(0, 8);
   // console.log(tyre,rim,FitmentDetails);
   const handleConfirmation = () => {
-    onSubmit({
-      o_ID: FitmentDetails?.id,
-      tyreBarcode: tyre?.barcode,
-      rimBarcode: rim?.rimBarcode,
-      assemblyBarcode: barcode,
-      AssemblyProcessID,
-      o_ItemID: o_ItemID || 0,
-      edcNo: rim?.edcNo,
-      machineId: 0,
-      operatorId: 0,
-      pressPressure: 0,
-      temperature: 0,
-      plant: FitmentDetails?.plant,
-      status: "string",
-      stencilNo: tyre?.barcode.substring(8, 18),
-      processID: tyre?.processID,
-      custCode: FitmentDetails?.custCode,
-      workorderno: FitmentDetails?.workorderno,
-      dispatchQty: FitmentDetails?.assemblyQty,
-      rimPlant: FitmentDetails?.plant,
-      inspectedby: "string",
-      Directional:direction
-    });
-  };
+  onSubmit({
+    o_ID: FitmentDetails?.id,
+    tyreBarcode: clean(tyre?.barcode),
+    rimBarcode: clean(rim?.rimBarcode),
+    assemblyBarcode: clean(barcode),
+    AssemblyProcessID,
+    o_ItemID: o_ItemID || 0,
+    edcNo: clean(rim?.edcNo),
+    stencilNo: clean(tyre?.barcode).substring(8, 18),
+    processID: clean(tyre?.processID),
+    Directional: clean(direction),
+    plant: FitmentDetails?.plant,
+    custCode: FitmentDetails?.custCode,
+    workorderno: FitmentDetails?.workorderno,
+    dispatchQty: FitmentDetails?.assemblyQty,
+    rimPlant: FitmentDetails?.plant,
+    machineId: 0,
+    operatorId: 0,
+    pressPressure: 0,
+    temperature: 0,
+    status: "string",
+    inspectedby: "string"
+  });
+};
 
   return (
     <div className="flex flex-col h-[100dvh] sm:h-full w-full overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl">
@@ -195,7 +197,7 @@ const AssemblyProcessID = barcode?.substring(0,8)
 
                 <select
                   value={direction}
-                  onChange={(e) => setDirection(e.target.value)}
+                  onChange={(e) => setDirection(e.target.value.trim())}
                   className="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 focus:ring-2 focus:ring-[var(--primary)]"
                 >
                   <option value="">Select Direction</option>

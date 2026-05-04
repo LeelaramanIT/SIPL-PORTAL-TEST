@@ -15,6 +15,7 @@ import PDIDispatchMasterReducer from "../Slices/PDIDispatchMaster/PDIMaster";
 import PPCMasterReducer from "../Slices/PPCSubstitutionMaster/PPCMaster";
 import PPCSubstitutionReducer from "../Slices/PPCSubstitutionMaster/PPCSubstitutionSlice";
 import AssemblyProcessIDReducer from "../Slices/Master/PI_Master/AssemblyProcessIDSlice";
+import TyreProcessIDReducer from "../Slices/Master/PI_Master/TyreProcessIDSlice";
 import PDIFitmentMasterReducer from "../Slices/PDIFitmentMaster/PPCMaster";
 import PDIFitmentReducer from "../Slices/PDIFitmentMaster/PDIFitmentSlice";
 import { version } from "react";
@@ -109,6 +110,13 @@ const AssemblyProcessIDPersistConfig = {
   transforms: [encryptor],
 };
 
+const TyreProcessIDPersistConfig = {
+  key: "TyreProcessID",
+  version: 1,
+  storage: storageSession,
+  transforms: [encryptor],
+}
+
 const PDIFitmentMasterPersistConfig = {
   key: "PDIFitmentMaster",
   version: 1,
@@ -159,6 +167,7 @@ const persistedScanforlinspectionReducer = persistReducer(scanforlinspectionPers
 const persistedPPCMasterReducer = persistReducer(PPCMasterPersistConfig, PPCMasterReducer);
 const persistedPPCSubstitutionDetailsReducer = persistReducer(PPCSubstitutionDetailsPersistConfig, PPCSubstitutionReducer );
 const persistedAssemblyProcessIDReducer = persistReducer(AssemblyProcessIDPersistConfig, AssemblyProcessIDReducer);
+const persistedTyreProcessIDReducer = persistReducer(TyreProcessIDPersistConfig, TyreProcessIDReducer);
 const persistedPDIFitmentMasterReducer = persistReducer(PDIFitmentMasterPersistConfig, PDIFitmentMasterReducer);
 const persistedPDIFitmentReducer = persistReducer(PDIFitmentPersistConfig, PDIFitmentReducer);
 const persistedPIMaster = persistReducer(PIMasterConfig,PIMasterReducer);
@@ -183,6 +192,7 @@ const rootReducer = combineReducers({
   PPCMaster: persistedPPCMasterReducer,
   PPCSubstitution: persistedPPCSubstitutionDetailsReducer,
   AssemblyProcessID: persistedAssemblyProcessIDReducer,
+  TyreProcessID: persistedTyreProcessIDReducer,
   PDIFitmentMaster: persistedPDIFitmentMasterReducer,
   PDIFitment: persistedPDIFitmentReducer,
   PIMaster: persistedPIMaster,

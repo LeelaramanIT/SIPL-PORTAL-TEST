@@ -44,18 +44,18 @@ const AssemblyProcessIDCreation = () => {
   const [search, setSearch] = useState("");
 
   const finalTableData = useMemo(() => {
-    const filtered = tableData.filter((row) => {
-      if (!search.trim()) return true;
+  const filtered = tableData.filter((row) => {
+    if (!search.trim()) return true;
 
-      return Object.values(row).some((value) =>
-        String(value).toLowerCase().includes(search.toLowerCase())
-      );
-    });
-
-    return filtered.sort((a, b) =>
-      (a.category ?? "").localeCompare(b.category ?? "")
+    return Object.values(row).some((value) =>
+      String(value).trim().toLowerCase().includes(search.trim().toLowerCase())
     );
-  }, [tableData, search]);
+  });
+
+  return filtered.sort((a, b) =>
+    (a.category ?? "").localeCompare(b.category ?? "")
+  );
+}, [tableData, search]);
 
   useEffect(() => {
     dispatch(getProcessIDMaster())
@@ -210,21 +210,22 @@ const AssemblyProcessIDCreation = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
-    setFilters((prev) => {
-      if (prev[name] !== value) {
-        setProcessID("");
-      }
+  const trimmedValue = value.trimStart(); // 👈 keeps typing natural (no jump issue)
 
-      return {
-        ...prev,
-        [name]: value
-      };
-    });
-  };
+  setFilters((prev) => {
+    if (prev[name] !== trimmedValue) {
+      setProcessID("");
+    }
 
+    return {
+      ...prev,
+      [name]: trimmedValue
+    };
+  });
+};
   const handleDownloadExcel = () => {
     if (finalTableData.length === 0) {
       alert("No data available to download.");
@@ -260,7 +261,8 @@ const AssemblyProcessIDCreation = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const sortList = (list) => list?.slice().sort((a, b) => a.localeCompare(b));
+  const sortList = (list) =>
+  list?.map(item => item.trim()).sort((a, b) => a.localeCompare(b));
 
   const dropdownOptions = {
     category: sortList(ProcessIDMaster?.categoryLists),

@@ -25,22 +25,44 @@ const  CIMBarcodeSlice= createSlice({
 })
 
 export const printSingleBarcode = (barcode) => async (dispatch) => {
-    try {
-  
-      const res = await api.get(`/CustomBarcode/GetMetcoBarcodeLable?barcode=${barcode}`);
-  
-      if (res.status === 200) {
-        await printSingleBarcodeLabel(res.data.zplCode)
-        return res.data;
-      } else {
-        throw new Error("Unexpected response status: " + res.status);
+  dispatch(setLoading(true));
+
+  try {
+    const res = await api.get(
+      `/CustomBarcode/GetMetcoBarcodeLable?barcode=${barcode}`
+    );
+
+    if (res.status === 200 && res.data) {
+      if (res.data.zplCode) {
+        await printSingleBarcodeLabel(res.data.zplCode);
       }
-  
-    } catch (error) {
-      console.error("Failed to fetch Rim Size:", error);
-    //   dispatch(setRimError(error?.response?.data?.message || error.message || String(error)));
+
+      return {
+        success: true,
+        data: res.data,
+        message: "Barcode processed successfully",
+      };
     }
-  };
+
+    return {
+      success: false,
+      message: "Invalid response from server",
+    };
+
+  } catch (error) {
+    console.error("❌ Barcode API Error:", error);
+
+    return {
+      success: false,
+      message:
+        error?.response?.data?.message ||
+        error.message ||
+        "Something went wrong",
+    };
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
 
 export const { setMode, setLoading, setSearch } = CIMBarcodeSlice.actions;
 export default CIMBarcodeSlice.reducer;

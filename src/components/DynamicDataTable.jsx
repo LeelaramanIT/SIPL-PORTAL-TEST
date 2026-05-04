@@ -15,6 +15,7 @@ export function DynamicDataTable({
   const listRef = useRef(null);
   const gridTemplate = columns.map((col) => col.width || "1fr").join(" ");
   const safeData = Array.isArray(data) ? data : [];
+  const disableAnimation = safeData.length > 300;
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -35,14 +36,16 @@ export function DynamicDataTable({
       style={{ gridTemplateColumns: gridTemplate }}
     >
       {columns.map((_, idx) => (
-        <div key={idx} className="h-3 bg-slate-200 dark:bg-slate-700 rounded shadow-sm" />
+        <div
+          key={idx}
+          className="h-3 bg-slate-200 dark:bg-slate-700 rounded shadow-sm"
+        />
       ))}
     </div>
   );
 
   return (
     <div className="flex flex-col w-full h-full min-h-[400px] border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 shadow-sm overflow-hidden">
-
       {/* --- DESKTOP TABLE VIEW --- */}
       <div className="hidden md:flex flex-1 overflow-x-auto custom-scrollbar">
         <div className="min-w-[1000px] lg:min-w-full flex flex-col h-full">
@@ -55,8 +58,13 @@ export function DynamicDataTable({
               <div
                 key={idx}
                 title={col.title || col.header}
-                className={`whitespace-normal break-words leading-tight ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                  }`}
+                className={`whitespace-normal break-words leading-tight ${
+                  col.align === "right"
+                    ? "text-right"
+                    : col.align === "center"
+                      ? "text-center"
+                      : "text-left"
+                }`}
               >
                 {col.header}
               </div>
@@ -71,22 +79,20 @@ export function DynamicDataTable({
           >
             {loading ? (
               <div className="space-y-2">
-                {[...Array(10)].map((_, i) => <SkeletonRow key={i} />)}
+                {[...Array(10)].map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))}
               </div>
             ) : (
               <>
-                <AnimatePresence initial={false}>
-                  {safeData.slice(0, visibleRows).map((row, rowIndex) => (
-                    <motion.div
+                {disableAnimation ? (
+                  safeData.slice(0, visibleRows).map((row, rowIndex) => (
+                    <div
                       key={row.productKey || rowIndex}
-                      layout
-                      variants={rowVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      transition={{ duration: 0.2 }}
-                      whileHover={{ y: -1, scale: 1.001 }}
-                      className={`grid gap-4 px-4 py-3 items-center rounded-lg border transition-all shadow-sm hover:shadow-md ${rowClassName ? rowClassName(row) : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900"
+                      className={`grid gap-4 px-4 py-3 items-center rounded-lg border transition-all shadow-sm hover:shadow-md ${
+                          rowClassName
+                            ? rowClassName(row)
+                            : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900"
                         }`}
                       style={{ gridTemplateColumns: gridTemplate }}
                     >
@@ -95,18 +101,62 @@ export function DynamicDataTable({
                         return (
                           <div
                             key={colIndex}
-                            className={`${cellClassName} text-[0.7rem] text-slate-700 dark:text-slate-300 font-medium break-all ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
-                              }`}
+                            className="truncate text-[0.7rem]"
                           >
-                            {col.render ? col.render(value, row) : value ?? "-"}
+                            {col.render
+                              ? col.render(value, row)
+                              : (value ?? "-")}
                           </div>
                         );
                       })}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                    </div>
+                  ))
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {safeData.slice(0, visibleRows).map((row, rowIndex) => (
+                      <motion.div
+                        key={row.productKey || rowIndex}
+                        layout
+                        variants={rowVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        transition={{ duration: 0.2 }}
+                        whileHover={{ y: -1, scale: 1.001 }}
+                        className={`grid gap-4 px-4 py-3 items-center rounded-lg border transition-all shadow-sm hover:shadow-md ${
+                          rowClassName
+                            ? rowClassName(row)
+                            : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900"
+                        }`}
+                        style={{ gridTemplateColumns: gridTemplate }}
+                      >
+                        {columns.map((col, colIndex) => {
+                          const value = row[col.accessor];
+                          return (
+                            <div
+                              key={colIndex}
+                              className={`${cellClassName} text-[0.7rem] text-slate-700 dark:text-slate-300 font-medium break-all ${
+                                col.align === "right"
+                                  ? "text-right"
+                                  : col.align === "center"
+                                    ? "text-center"
+                                    : ""
+                              }`}
+                            >
+                              {col.render
+                                ? col.render(value, row)
+                                : (value ?? "-")}
+                            </div>
+                          );
+                        })}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
                 {safeData.length === 0 && (
-                  <div className="py-20 text-center text-slate-400 text-[0.8rem]">No records found.</div>
+                  <div className="py-20 text-center text-slate-400 text-[0.8rem]">
+                    No records found.
+                  </div>
                 )}
               </>
             )}
@@ -122,7 +172,10 @@ export function DynamicDataTable({
         {loading ? (
           <div className="space-y-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 w-full bg-slate-200 dark:bg-slate-800 animate-pulse rounded-2xl" />
+              <div
+                key={i}
+                className="h-32 w-full bg-slate-200 dark:bg-slate-800 animate-pulse rounded-2xl"
+              />
             ))}
           </div>
         ) : (
@@ -147,7 +200,7 @@ export function DynamicDataTable({
                       <div className="text-base font-semibold text-slate-900 dark:text-white leading-tight">
                         {columns[0]?.render
                           ? columns[0].render(row[columns[0].accessor], row)
-                          : row[columns[0].accessor] ?? "-"}
+                          : (row[columns[0].accessor] ?? "-")}
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-300" />
@@ -163,7 +216,9 @@ export function DynamicDataTable({
                             {col.header}
                           </span>
                           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            {col.render ? col.render(value, row) : value ?? "—"}
+                            {col.render
+                              ? col.render(value, row)
+                              : (value ?? "—")}
                           </span>
                         </div>
                       );
@@ -174,7 +229,9 @@ export function DynamicDataTable({
             </AnimatePresence>
 
             {safeData.length === 0 && (
-              <div className="py-20 text-center text-slate-400 text-sm">No records found.</div>
+              <div className="py-20 text-center text-slate-400 text-sm">
+                No records found.
+              </div>
             )}
 
             {/* LOAD MORE INDICATOR */}

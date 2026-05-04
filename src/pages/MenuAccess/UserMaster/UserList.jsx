@@ -819,6 +819,13 @@ const UserModal = ({ open, mode, user, onClose, onSave, toast }) => {
         onClose={onClose}
         width={640}
         closable={false}
+        className="bg-white dark:bg-slate-900"
+        bodyStyle={{
+          height: "100vh",
+          overflow: "hidden", // ❌ disables scroll
+          display: "flex",
+          flexDirection: "column",
+        }}
         footer={
           isEdit ? (
             <div className="flex gap-3 p-2">
@@ -844,7 +851,7 @@ const UserModal = ({ open, mode, user, onClose, onSave, toast }) => {
         }
       >
         {/* --- HEADER --- */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 ">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white m-0">
               {isCreate
@@ -870,7 +877,7 @@ const UserModal = ({ open, mode, user, onClose, onSave, toast }) => {
             onCancel={onClose}
           />
         ) : (
-          <div className="space-y-6">
+          <div className="flex-1 overflow-hidden">
             {/* AVATAR HEADER */}
             <div className="p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl flex items-center gap-6 border border-slate-100 dark:border-slate-800">
               <Avatar

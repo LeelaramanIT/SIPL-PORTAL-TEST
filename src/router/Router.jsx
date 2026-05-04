@@ -443,14 +443,6 @@ export const router = createBrowserRouter([
                 index: true, // ✅ default route
                 element: <Navigate to="barcode-print"/>, // 👈 choose your default page
               },
-              // {
-              //   path: "bulk-upload",
-              //   // element: <BulkUpload />,
-              // },
-              // {
-              //   path: "customer-barcode",
-              //   // element: <CustomerBarcode />,
-              // },
               {
                 path: "barcode-print",
                 element: <TyreBarcodeGenerator />,

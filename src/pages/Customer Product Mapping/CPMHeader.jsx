@@ -103,7 +103,7 @@ function CPMHeader() {
   // );
 
   return (
-    <div className="border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 transition-all">
+    <div className="border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 transition-all bg">
       <div className="px-3 sm:px-5 pt-3 flex flex-col gap-2.5">
 
         {/* ── DESKTOP ROW (md+): Title — Toggle — SearchBar all in one line ── */}
