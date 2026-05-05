@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState, memo } from "react";
+import { motion } from "framer-motion";
 import {
   Settings,
   Layers,
@@ -10,7 +10,6 @@ import {
   FileText,
   Download,
   RefreshCcw,
-  Search,
 } from "lucide-react";
 import { DynamicDataTable } from "../../../../components/DynamicDataTable";
 import {
@@ -22,187 +21,16 @@ import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import SearchBar from "../../../../components/SearchBar";
 import InfoTooltip from "../../../../components/InfoTooltip";
-import { Select } from "antd";
-const { Option } = Select;
 
-const TyreProcessIDCreation = () => {
-  const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(false);
-  const [visibleRows, setVisibleRows] = useState(100);
-  const { ProcessIDMaster, ProcessIDList } = useSelector(
-    (state) => state.TyreProcessID,
-  );
-  const handleLoadMore = () => {
-    setVisibleRows((prev) => Math.min(prev + 100, filteredData.length));
-  };
-  const initialFilters = {
-    category: "",
-    platform: "",
-    tyreSize: "",
-    tyreRim: "",
-    tyreType: "",
-    brand: "",
-    sidewall: "",
-    directional: "",
-  };
-
-  const [filters, setFilters] = useState(initialFilters);
-
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300); // delay
-
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    dispatch(getProcessIDMaster());
-    dispatch(getAllProcessIDDetailsList());
-  }, [dispatch]);
-
-  useEffect(() => {
-    setVisibleRows(100);
-  }, [filters, search]);
-  console.log(ProcessIDList);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300); // delay
-
-    return () => clearTimeout(timer);
-  }, [search]);
-  const sortedData = useMemo(() => {
-    if (!Array.isArray(ProcessIDList)) return [];
-
-    return [...ProcessIDList].sort((a, b) =>
-      (a.category ?? "").localeCompare(b.category ?? ""),
-    );
-  }, [ProcessIDList]);
-
-  // 2. Logic: Filter the loaded table data based on Dropdowns + Search Bar
-  const filteredData = useMemo(() => {
-    if (!Array.isArray(ProcessIDList)) return [];
-
-    const lowerSearch = debouncedSearch.toLowerCase();
-    // ✅ ADD THIS HERE
-    if (!lowerSearch && Object.values(filters).every((v) => !v)) {
-      return sortedData;
-    }
-
-    return sortedData.filter((item) => {
-      // Dropdown filtering
-      if (
-        (filters.category && item.category !== filters.category) ||
-        (filters.platform && item.config !== filters.platform) ||
-        (filters.tyreSize && item.tyreSize !== filters.tyreSize) ||
-        (filters.tyreRim && item.rimSize !== filters.tyreRim) ||
-        (filters.tyreType && item.tyreType !== filters.tyreType) ||
-        (filters.brand && item.brand !== filters.brand) ||
-        (filters.sidewall && item.sidewall !== filters.sidewall) ||
-        (filters.directional && item.directional !== filters.directional)
-      ) {
-        return false;
-      }
-
-      // Search optimization (only key fields instead of Object.values)
-      if (lowerSearch) {
-        return (
-          item.tyreSize?.toLowerCase().includes(lowerSearch) ||
-          item.processID?.toLowerCase().includes(lowerSearch) ||
-          item.brand?.toLowerCase().includes(lowerSearch)
-        );
-      }
-
-      return true;
-    });
-  }, [ProcessIDList, filters, debouncedSearch]);
-
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleDownloadExcel = useCallback(() => {
-    if (!filteredData.length) {
-      return toast.error("No data to download");
-    }
-
-    const excelData = filteredData.map((row) => {
-      const obj = {};
-      uploadColumns.forEach(
-        (col) => (obj[col.header] = row[col.accessor] || ""),
-      );
-      return obj;
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Records");
-
-    XLSX.writeFile(
-      workbook,
-      `Process_Records_${new Date().toISOString().slice(0, 10)}.xlsx`,
-    );
-  }, [filteredData]);
-
-  const sortList = (list) => list?.slice().sort((a, b) => a.localeCompare(b));
-
-  const dropdownOptions = useMemo(() => {
-    const sortList = (list) => list?.slice().sort((a, b) => a.localeCompare(b));
-
-    return {
-      category: sortList(ProcessIDMaster?.categoryLists),
-      platform: sortList(ProcessIDMaster?.configLists),
-      tyreSize: sortList(ProcessIDMaster?.tyreSizeLists),
-      tyreRim: sortList(ProcessIDMaster?.tyreRimLists),
-      tyreType: sortList(ProcessIDMaster?.tyreTypeLists),
-      brand: sortList(ProcessIDMaster?.brandLists),
-      sidewall: sortList(ProcessIDMaster?.sidewallLists),
-      directional: sortList(ProcessIDMaster?.directional),
-    };
-  }, [ProcessIDMaster]);
-
-  const fieldIcons = {
-    category: <Settings className="w-3.5 h-3.5" />,
-    platform: <Layers className="w-3.5 h-3.5" />,
-    tyreSize: <Maximize className="w-3.5 h-3.5" />,
-    tyreRim: <Disc className="w-3.5 h-3.5" />,
-    tyreType: <Type className="w-3.5 h-3.5" />,
-    brand: <Tag className="w-3.5 h-3.5" />,
-    sidewall: <FileText className="w-3.5 h-3.5" />,
-  };
-
-  const uploadColumns = [
-    { header: "Category", accessor: "category", width: "0.5fr" },
-    { header: "Platform", accessor: "config", width: "0.5fr" },
-    { header: "Tyre Size", accessor: "tyreSize", width: "1.2fr" },
-    { header: "Rim", accessor: "tyreRim", width: "0.5fr" }, // ✅ fixed
-    { header: "Type", accessor: "tyreType", width: "0.5fr" },
-    { header: "Brand", accessor: "brand", width: "0.9fr" },
-    { header: "Sidewall", accessor: "sidewall", width: "0.9fr" },
-    { header: "Process ID", accessor: "processID", width: "1fr" }, // ✅ fixed
-    { header: "Finished Wt", accessor: "finishedWt", width: "0.8fr" }, // ✅ added
-    // ✅ NEW COLUMN
-    {
-      header: "Info",
-      accessor: "info",
-      width: "0.4fr",
-      align: "center",
-      render: (_, row) => (
+// ✅ Memoized InfoCell component to prevent re-renders
+const InfoCell = memo(({ row }) => (
+  
   <InfoTooltip
-    content={
+      content={
       <div className="min-w-[180px] space-y-2 text-left">
-        {/* Header */}
         <div className="text-[11px] font-semibold text-blue-400 border-b border-slate-600 pb-1">
           Process Info
         </div>
-
-        {/* Info Grid */}
         <div className="space-y-1 text-[11px]">
           <div className="flex justify-between gap-2">
             <span className="text-slate-400">Created By</span>
@@ -210,7 +38,6 @@ const TyreProcessIDCreation = () => {
               {row.createdBy || "-"}
             </span>
           </div>
-
           <div className="flex justify-between gap-2">
             <span className="text-slate-400">Date</span>
             <span className="font-medium text-white">
@@ -218,17 +45,13 @@ const TyreProcessIDCreation = () => {
             </span>
           </div>
         </div>
-
-        {/* Divider */}
         <div className="border-t border-slate-600 my-1" />
-
-        {/* Status Badges */}
         <div className="flex flex-wrap gap-1">
           {[
-            { label: "MMN", value: row.mmn },
-            { label: "PDK", value: row.pdk },
-            { label: "SLTL", value: row.sltl },
-            { label: "SITL", value: row.sitl },
+            { label: "MMN", value: row.plants.mmn },
+            { label: "PDK", value: row.plants.pdk },
+            { label: "SLTL", value: row.plants.sltl },
+            { label: "SITL", value: row.plants.sitl },
           ].map((item) => (
             <span
               key={item.label}
@@ -245,9 +68,234 @@ const TyreProcessIDCreation = () => {
       </div>
     }
   />
-)
-    },
-  ];
+));
+
+InfoCell.displayName = "InfoCell";
+
+// ✅ Memoized FilterSelect component
+const FilterSelect = memo(({ label, name, value, options, onChange, icon }) => (
+  <div className="space-y-1">
+    <label className="text-[10px] font-bold uppercase tracking-tight text-slate-400 flex items-center gap-1.5">
+      {icon} {label}
+    </label>
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full bg-slate-50/50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] text-slate-600 outline-none hover:bg-white transition-all"
+    >
+      <option value="">All...</option>
+      {options?.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+));
+
+FilterSelect.displayName = "FilterSelect";
+
+const TyreProcessIDCreation = () => {
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [visibleRows, setVisibleRows] = useState(50); // ✅ Reduced initial load
+  const { ProcessIDMaster, ProcessIDList } = useSelector(
+    (state) => state.TyreProcessID
+  );
+
+  const initialFilters = useMemo(
+    () => ({
+      category: "",
+      platform: "",
+      tyreSize: "",
+      tyreRim: "",
+      tyreType: "",
+      brand: "",
+      sidewall: "",
+      directional: "",
+    }),
+    []
+  );
+
+  const [filters, setFilters] = useState(initialFilters);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // ✅ Single debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // ✅ Load data only once
+  useEffect(() => {
+    dispatch(getProcessIDMaster());
+    dispatch(getAllProcessIDDetailsList());
+  }, [dispatch]);
+
+  // ✅ Reset visible rows when filters change
+  useEffect(() => {
+    setVisibleRows(50);
+  }, [filters, debouncedSearch]);
+
+  // ✅ Define field icons once
+  const fieldIcons = useMemo(
+    () => ({
+      category: <Settings className="w-3.5 h-3.5" />,
+      platform: <Layers className="w-3.5 h-3.5" />,
+      tyreSize: <Maximize className="w-3.5 h-3.5" />,
+      tyreRim: <Disc className="w-3.5 h-3.5" />,
+      tyreType: <Type className="w-3.5 h-3.5" />,
+      brand: <Tag className="w-3.5 h-3.5" />,
+      sidewall: <FileText className="w-3.5 h-3.5" />,
+    }),
+    []
+  );
+
+  // ✅ Memoized and sorted dropdown options
+  const dropdownOptions = useMemo(() => {
+    if (!ProcessIDMaster) return {};
+
+    const sortList = (list) =>
+      list ? [...new Set(list)].sort((a, b) => a.localeCompare(b)) : [];
+
+    return {
+      category: sortList(ProcessIDMaster.categoryLists),
+      platform: sortList(ProcessIDMaster.configLists),
+      tyreSize: sortList(ProcessIDMaster.tyreSizeLists),
+      tyreRim: sortList(ProcessIDMaster.tyreRimLists),
+      tyreType: sortList(ProcessIDMaster.tyreTypeLists),
+      brand: sortList(ProcessIDMaster.brandLists),
+      sidewall: sortList(ProcessIDMaster.sidewallLists),
+      directional: sortList(ProcessIDMaster.directional),
+    };
+  }, [ProcessIDMaster]);
+
+  // ✅ Optimized filtering logic - single pass through data
+  const filteredData = useMemo(() => {
+    if (!Array.isArray(ProcessIDList) || ProcessIDList.length === 0) return [];
+
+    const lowerSearch = debouncedSearch.toLowerCase().trim();
+    const hasFilters = Object.values(filters).some((v) => v);
+
+    // If no search and no filters, return sorted original data
+    if (!lowerSearch && !hasFilters) {
+      return [...ProcessIDList].sort((a, b) =>
+        (a.category ?? "").localeCompare(b.category ?? "")
+      );
+    }
+
+    // Single-pass filter and sort
+    const filtered = ProcessIDList.filter((item) => {
+      // Apply filters
+      if (hasFilters) {
+        if (filters.category && item.category !== filters.category) return false;
+        if (filters.platform && item.config !== filters.platform) return false;
+        if (filters.tyreSize && item.tyreSize !== filters.tyreSize) return false;
+        if (filters.tyreRim && item.rimSize !== filters.tyreRim) return false;
+        if (filters.tyreType && item.tyreType !== filters.tyreType) return false;
+        if (filters.brand && item.brand !== filters.brand) return false;
+        if (filters.sidewall && item.sidewall !== filters.sidewall) return false;
+        if (filters.directional && item.directional !== filters.directional)
+          return false;
+      }
+
+      // Apply search (only on key fields)
+      if (lowerSearch) {
+        const searchableText = `${item.tyreSize || ""} ${item.processID || ""} ${item.brand || ""}`.toLowerCase();
+        return searchableText.includes(lowerSearch);
+      }
+
+      return true;
+    });
+
+    // Sort once at the end
+    return filtered.sort((a, b) =>
+      (a.category ?? "").localeCompare(b.category ?? "")
+    );
+  }, [ProcessIDList, filters, debouncedSearch]);
+
+  // ✅ Memoized column definitions
+  const uploadColumns = useMemo(
+    () => [
+      { header: "Category", accessor: "category", width: "0.5fr" },
+      { header: "Platform", accessor: "config", width: "0.5fr" },
+      { header: "Tyre Size", accessor: "tyreSize", width: "1.2fr" },
+      { header: "Rim", accessor: "tyreRim", width: "0.5fr" },
+      { header: "Type", accessor: "tyreType", width: "0.5fr" },
+      { header: "Brand", accessor: "brand", width: "0.9fr" },
+      { header: "Sidewall", accessor: "sidewall", width: "0.9fr" },
+      { header: "Process ID", accessor: "processID", width: "1fr" },
+      { header: "Finished Wt", accessor: "finishedWt", width: "0.8fr" },
+      {
+        header: "Info",
+        accessor: "info",
+        width: "0.4fr",
+        align: "center",
+        render: (_, row) => <InfoCell row={row} />,
+      },
+    ],
+    []
+  );
+
+  // ✅ Memoized handlers
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    setVisibleRows((prev) => Math.min(prev + 50, filteredData.length));
+  }, [filteredData.length]);
+
+  const handleDownloadExcel = useCallback(() => {
+    if (!filteredData.length) {
+      return toast.error("No data to download");
+    }
+
+    const excelData = filteredData.map((row) => {
+      const obj = {};
+      uploadColumns.forEach((col) => {
+        if (col.accessor !== "info") {
+          obj[col.header] = row[col.accessor] || "";
+        }
+      });
+      return obj;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Records");
+    XLSX.writeFile(
+      workbook,
+      `Process_Records_${new Date().toISOString().slice(0, 10)}.xlsx`
+    );
+  }, [filteredData, uploadColumns]);
+
+  const handleReset = useCallback(() => {
+    setFilters(initialFilters);
+    setSearch("");
+  }, [initialFilters]);
+
+  const handleSearchChange = useCallback((e) => {
+    setSearch(e.target.value);
+  }, []);
+
+  const filterFields = useMemo(
+    () => [
+      { name: "category", label: "Category" },
+      { name: "platform", label: "Platform" },
+      { name: "tyreSize", label: "Tyre Size" },
+      { name: "tyreRim", label: "Tyre Rim" },
+      { name: "tyreType", label: "Tyre Type" },
+      { name: "brand", label: "Brand" },
+      { name: "sidewall", label: "Sidewall" },
+    ],
+    []
+  );
 
   return (
     <div className="p-2 bg-slate-50 h-[calc(100vh-62px)] font-sans">
@@ -259,53 +307,24 @@ const TyreProcessIDCreation = () => {
         {/* Filter Section */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-2">
-            {[
-              "category",
-              "platform",
-              "tyreSize",
-              "tyreRim",
-              "tyreType",
-              "brand",
-              "sidewall",
-            ].map((field) => (
-              <div key={field} className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-tight text-slate-400 flex items-center gap-1.5">
-                  {fieldIcons[field]} {field.replace(/([A-Z])/g, " $1")}
-                </label>
-                <select
-                  name={field}
-                  value={filters[field]}
-                  onChange={handleChange}
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] text-slate-600 outline-none hover:bg-white transition-all"
-                >
-                  <option value="">All...</option>
-                  {dropdownOptions[field]?.map((opt, i) => (
-                    <option key={i} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400">
-                Directional
-              </label>
-              <select
-                name="directional"
-                value={filters.directional}
+            {filterFields.map((field) => (
+              <FilterSelect
+                key={field.name}
+                name={field.name}
+                label={field.label}
+                value={filters[field.name]}
+                options={dropdownOptions[field.name]}
                 onChange={handleChange}
-                className="w-full bg-slate-50/50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px]"
-              >
-                <option value="">All...</option>
-                {dropdownOptions.directional?.map((opt, i) => (
-                  <option key={i} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
+                icon={fieldIcons[field.name]}
+              />
+            ))}
+            <FilterSelect
+              name="directional"
+              label="Directional"
+              value={filters.directional}
+              options={dropdownOptions.directional}
+              onChange={handleChange}
+            />
           </div>
 
           {/* Action Bar */}
@@ -317,22 +336,17 @@ const TyreProcessIDCreation = () => {
             >
               <Download className="w-4 h-4" /> Download
             </motion.button>
-
             <motion.button
               whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                setFilters(initialFilters);
-                setSearch("");
-              }}
+              onClick={handleReset}
               className="flex items-center gap-1.5 px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
             >
               <RefreshCcw className="w-4 h-4" /> Reset
             </motion.button>
-
             <div className="ml-auto">
               <SearchBar
-                placeholder="Search by Tyre Size / PID..."
-                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by Tyre Size / PID / Brand..."
+                onChange={handleSearchChange}
                 value={search}
               />
             </div>
@@ -365,4 +379,4 @@ const TyreProcessIDCreation = () => {
   );
 };
 
-export default TyreProcessIDCreation;
+export default memo(TyreProcessIDCreation);

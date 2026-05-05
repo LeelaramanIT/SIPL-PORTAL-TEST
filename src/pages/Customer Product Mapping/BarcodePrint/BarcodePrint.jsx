@@ -16,8 +16,18 @@ import {
 } from "lucide-react";
 import { Select, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { printSingleBarcode } from "../../../Redux/Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice"; // Update path
-import { customers, workOrders, itemsByWorkOrder } from "../data/mockData";
+import {
+  getCusWorkOrder,
+  getItemsByWorkOrder,
+  printBulkBarcode,
+  printSingleBarcode,
+} from "../../../Redux/Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice"; // Update path
+import {
+  customers,
+  workOrders,
+  itemsByWorkOrder,
+  plant,
+} from "../data/mockData";
 import { BsQrCodeScan } from "react-icons/bs";
 import { useRef } from "react";
 const emptyFilters = {
@@ -43,11 +53,15 @@ const itemVariants = {
 
 export default function TyreBarcodeGenerator() {
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.CIMBarcode);
+  const { custWorkOrder, loading, itemsByWorkOrder } = useSelector(
+    (state) => state.CIMBarcode,
+  );
+  // const {plant} = useSelector((state) => state.auth);
   const [messageApi, contextHolder] = message.useMessage();
   const [errorMsg, setErrorMsg] = useState("");
 
   const [mode, setMode] = useState("bulk");
+  const [selectedPlant, setSelectedPlant] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [workOrder, setWorkOrder] = useState(null);
   const [filters, setFilters] = useState(emptyFilters);
@@ -58,6 +72,16 @@ export default function TyreBarcodeGenerator() {
   const [quantity, setQuantity] = useState(1);
   const [barcodeData, setBarcodeData] = useState(null);
   const inputRef = useRef(null);
+
+  const customersList = useMemo(() => {
+    return (
+      custWorkOrder?.map((item) => ({
+        id: item.customerCode.custcode,
+        name: item.customerCode.custfullname,
+        workOrders: item.customerCode.workOrderIDs,
+      })) || []
+    );
+  }, [custWorkOrder]);
 
   useEffect(() => {
     setCustomer(null);
@@ -70,6 +94,12 @@ export default function TyreBarcodeGenerator() {
   }, [mode]);
 
   useEffect(() => {
+    if (selectedPlant) {
+      dispatch(getCusWorkOrder(selectedPlant));
+    }
+  }, [selectedPlant]);
+
+  useEffect(() => {
     setWorkOrder(null);
     setBulkSelected([]);
   }, [customer]);
@@ -79,23 +109,49 @@ export default function TyreBarcodeGenerator() {
     setBulkSelected([]);
   }, [workOrder]);
 
-  const rawItems = useMemo(
-    () => (workOrder ? itemsByWorkOrder[workOrder] || [] : []),
-    [workOrder],
-  );
+  const rawItems = useMemo(() => {
+    return itemsByWorkOrder || [];
+  }, [itemsByWorkOrder]);
+  useEffect(() => {
+    if (workOrder) {
+      dispatch(getItemsByWorkOrder(workOrder));
+    }
+  }, [workOrder]);
+
+  const normalizedItems = useMemo(() => {
+    return rawItems.map((item, index) => ({
+      id: item.o_ItemID ?? `${item.processId}-${index}`, // ✅ safe id
+      tyreSize: item.tyreSize,
+      rimSize: item.rimSize,
+      platform: item.category,
+      brand: item.brand,
+      sidewall: item.sideWall,
+      stock: 1,
+      processId: item.processId,
+      tyreType: item.tyreType,
+      config: item.config,
+    }));
+  }, [rawItems]);
 
   const filteredItems = useMemo(() => {
-    return rawItems.filter((item) =>
+    return normalizedItems.filter((item) =>
       Object.entries(filters).every(([k, v]) => !v || item[k] === v),
     );
-  }, [rawItems, filters]);
+  }, [normalizedItems, filters]);
 
-  const availableWorkOrders = customer ? workOrders[customer] || [] : [];
+  const availableWorkOrders = useMemo(() => {
+    const selectedCustomer = customersList.find((c) => c.id === customer);
+
+    return selectedCustomer
+      ? selectedCustomer.workOrders.map((w) => ({
+          id: w.o_ID,
+          name: w.workorderno,
+        }))
+      : [];
+  }, [customer, customersList]);
 
   const handleBulkSelect = (id) => {
-    setBulkSelected((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
+    setBulkSelected((prev) => (prev.includes(id) ? [] : [id]));
   };
   useEffect(() => {
     if (mode === "input" && barcodeInput.length === 19) {
@@ -140,15 +196,36 @@ export default function TyreBarcodeGenerator() {
     }
   };
 
-  const handlePrint = () => {
-    if (mode === "bulk") {
-      const selectedItems = filteredItems.filter((i) =>
-        bulkSelected.includes(i.id),
+  const handlePrint = async () => {
+    if (mode !== "bulk") return;
+
+    if (bulkSelected.length === 0) {
+      messageApi.warning("Please select an item");
+      return;
+    }
+
+    const selectedItem = filteredItems.find((i) => bulkSelected.includes(i.id));
+    console.log(selectedItem);
+    
+
+    if (!selectedItem) {
+      messageApi.error("Invalid selection");
+      return;
+    }
+
+    try {
+      const result = await dispatch(
+        printBulkBarcode(selectedItem.id), // OR item.id based on backend
       );
-      console.log("🖨️ Bulk Print:", selectedItems);
-      alert(
-        `Printing ${selectedItems.length} items (total ${selectedItems.reduce((s, i) => s + i.stock, 0)} barcodes)`,
-      );
+
+      if (result?.success) {
+        messageApi.success("Printing started");
+      } else {
+        messageApi.error(result?.message || "Print failed");
+      }
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Unexpected error");
     }
   };
 
@@ -163,7 +240,7 @@ export default function TyreBarcodeGenerator() {
   };
 
   return (
-    <div className="flex flex-col w-full h-cals(100vh-2rem)] bg-slate-50 dark:bg-slate-950 font-sans">
+    <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 font-sans">
       {/* Header */}
       <header className="shrink-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-screen-2xl mx-auto px-6 py-3">
@@ -201,8 +278,8 @@ export default function TyreBarcodeGenerator() {
       </header>
 
       {/* Main Content - Using calc() for height */}
-      <main className="flex-1 min-h-0 overflow-hidden w-full">
-        <div className="h-full max-w-screen-2xl mx-auto w-full p-4 md:p-6">
+      <main className="flex-1 min-h-0 w-full">
+        <div className="h-full max-w-screen-2xl mx-auto w-full p-2 md:p-3">
           <AnimatePresence mode="wait">
             <motion.div
               key={mode}
@@ -210,13 +287,13 @@ export default function TyreBarcodeGenerator() {
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="h-full flex flex-col gap-4 overflow-hidden"
+              className="h-full flex flex-col gap-4"
             >
               {/* INPUT MODE - Side by Side Layout */}
               {mode === "input" && (
                 <motion.div
                   variants={itemVariants}
-                  className="h-full grid grid-cols-5 gap-4 min-h-0"
+                  className="h-full grid grid-cols-5 gap-4"
                 >
                   {/* LEFT COLUMN - Barcode Input (col-span-2) */}
                   <div className="col-span-2 flex flex-col gap-4 h-full overflow-hidden min-h-0">
@@ -436,11 +513,16 @@ export default function TyreBarcodeGenerator() {
                   {/* Top Selectors */}
                   <motion.div
                     variants={itemVariants}
-                    className="shrink-0 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5"
+                    className="shrink-0 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-3"
                   >
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-6 md:grid-cols-3">
+                      <PlantSelector
+                        plant={plant} // list
+                        value={selectedPlant}
+                        onChange={setSelectedPlant}
+                      />
                       <CustomerSelector
-                        customers={customers}
+                        customers={customersList}
                         value={customer}
                         onChange={setCustomer}
                       />
@@ -455,15 +537,15 @@ export default function TyreBarcodeGenerator() {
 
                   {/* Bulk Mode Split View */}
                   {workOrder && (
-                    <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 overflow-hidden">
+                    <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6">
                       {/* Left Side: Filters & Table */}
-                      <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-hidden">
+                      <div className="flex-1 min-h-0 flex flex-col gap-4">
                         <motion.div
                           variants={itemVariants}
                           className="shrink-0"
                         >
                           <Filters
-                            items={rawItems}
+                            items={normalizedItems}
                             filters={filters}
                             onChange={(k, v) =>
                               setFilters((f) => ({ ...f, [k]: v || "" }))
@@ -473,26 +555,46 @@ export default function TyreBarcodeGenerator() {
                         </motion.div>
 
                         <motion.div
-  variants={itemVariants}
-  className="flex-1 min-h-0 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden"
->
+                          variants={itemVariants}
+                          className="flex-1 min-h-0 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col"
+                        >
                           <ItemsTable
                             items={filteredItems}
                             selected={bulkSelected}
                             onSelect={handleBulkSelect}
                           />
                         </motion.div>
+                        <motion.div
+                          variants={itemVariants}
+                          className="shrink-0 flex justify-end gap-3 pt-2"
+                        >
+                          <button
+                            onClick={handlePrint}
+                            disabled={bulkSelected.length === 0}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all
+      ${
+        bulkSelected.length === 0
+          ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+          : "bg-[var(--primary)] text-white hover:opacity-90"
+      }`}
+                          >
+                            <Printer size={16} />
+                            Print Label
+                          </button>
+                        </motion.div>
                       </div>
 
                       {/* Right Side: Preview */}
                       <motion.div
                         variants={itemVariants}
-                        className="w-full lg:w-[340px] min-h-0 shrink-0 hidden lg:flex flex-col overflow-hidden"
+                        className="w-full lg:w-[340px] shrink-0 hidden lg:block"
                       >
-                        <BulkPreview
-                          items={filteredItems}
-                          selected={bulkSelected}
-                        />
+                        <div className="sticky top-0">
+                          <BulkPreview
+                            items={filteredItems}
+                            selected={bulkSelected}
+                          />
+                        </div>
                       </motion.div>
                     </div>
                   )}
@@ -501,7 +603,7 @@ export default function TyreBarcodeGenerator() {
                   {!workOrder && (
                     <motion.div
                       variants={itemVariants}
-                      className="flex-1 h-full min-h-0 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800"
+                      className="flex-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800"
                     >
                       <Barcode
                         size={48}
@@ -574,7 +676,7 @@ const BulkPreview = ({ items, selected }) => {
 
   if (selectedItems.length === 0) {
     return (
-      <div className="h-full border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center p-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+      <div className="h-[400px] lg:h-[600px] border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center p-6 text-center text-slate-400 dark:text-slate-500 text-sm bg-white dark:bg-slate-900">
         Select items to preview
       </div>
     );
@@ -583,12 +685,12 @@ const BulkPreview = ({ items, selected }) => {
   const item = selectedItems[0];
 
   return (
-    <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-xl flex-1 min-h-0 flex flex-col overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 h-[400px] lg:h-[600px] flex flex-col">
       <div className="w-full flex items-center justify-between mb-4 shrink-0">
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
           Preview
         </span>
-        <span className="text-xs bg-slate-300 dark:bg-slate-700 px-2 py-1 rounded">
+        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
           4" x 6"
         </span>
       </div>
@@ -597,29 +699,33 @@ const BulkPreview = ({ items, selected }) => {
         key={item.id}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full flex-1 min-h-0 aspect-[2/3] bg-white border border-slate-300 shadow-sm p-5 flex flex-col font-mono text-black rounded-lg flex-shrink-0"
+        className="flex-1 flex items-center justify-center"
       >
-        <div className="text-center font-bold text-lg border-b-2 border-black pb-2 mb-3">
-          Item Label
-        </div>
-        <div className="grid grid-cols-2 gap-2 flex-1 text-[11px]">
-          <div>
-            <span className="font-bold text-gray-600">SIZE:</span>{" "}
-            {item.tyreSize}
+        <div className="w-full max-w-[280px] aspect-[2/3] bg-white border-2 border-slate-300 dark:border-slate-600 shadow-lg p-5 flex flex-col font-mono text-black rounded-lg">
+          <div className="text-center font-bold text-lg border-b-2 border-black pb-2 mb-3">
+            Item Label
           </div>
-          <div>
-            <span className="font-bold text-gray-600">RIM:</span> {item.rimSize}
+          <div className="grid grid-cols-2 gap-2 flex-1 text-[11px]">
+            <div>
+              <span className="font-bold text-gray-600">SIZE:</span>{" "}
+              {item.tyreSize}
+            </div>
+            <div>
+              <span className="font-bold text-gray-600">RIM:</span>{" "}
+              {item.rimSize}
+            </div>
+            <div>
+              <span className="font-bold text-gray-600">PLATFORM:</span>{" "}
+              {item.platform}
+            </div>
+            <div>
+              <span className="font-bold text-gray-600">BRAND:</span>{" "}
+              {item.brand}
+            </div>
           </div>
-          <div>
-            <span className="font-bold text-gray-600">PLATFORM:</span>{" "}
-            {item.platform}
+          <div className="mt-auto pt-2 border-t-2 border-black text-center text-xs">
+            {item.id}
           </div>
-          <div>
-            <span className="font-bold text-gray-600">BRAND:</span> {item.brand}
-          </div>
-        </div>
-        <div className="mt-auto pt-2 border-t-2 border-black text-center text-xs">
-          {item.id}
         </div>
       </motion.div>
 
@@ -628,6 +734,26 @@ const BulkPreview = ({ items, selected }) => {
           {selectedItems.length} items selected
         </div>
       )}
+    </div>
+  );
+};
+
+// ============ Customer Selector ============
+const PlantSelector = ({ plant, value, onChange }) => {
+  return (
+    <div>
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+        <User size={14} /> Plant
+      </label>
+      <Select
+        showSearch
+        placeholder="Select a Plant..."
+        value={value}
+        onChange={onChange}
+        className="w-full"
+        options={plant.map((c) => ({ value: c.value, label: c.name }))}
+        optionFilterProp="label"
+      />
     </div>
   );
 };
@@ -776,7 +902,7 @@ const ItemsTable = ({ items, selected, onSelect }) => {
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto pb-6">
+    <div className="flex-1 min-h-0 overflow-auto">
       <table className="w-full text-sm">
         <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 z-10">
           <tr>

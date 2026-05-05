@@ -181,6 +181,21 @@ export const submitProformaInvoice =
       const type = invoiceType === "PI" ? "PROFORMA INVOICE" : "DRAFT PROFORMA";
 
       const { finalData, master } = getState().proformaInvoice;
+      const gst = finalData.gstCharges || {};
+      let IGST = 0;
+      let CGST = 0;
+      let SGST = 0;
+      if (gst.type === "IGST") {
+        IGST = Number(gst.igst) || 0;
+      } else if (gst.type === "CGST_SGST") {
+        CGST = Number(gst.cgst) || 0;
+        SGST = Number(gst.sgst) || 0;
+      } else {
+        // BACKEND → fallback to already calculated values
+        IGST = Number(gst.igst) || 0;
+        CGST = Number(gst.cgst) || 0;
+        SGST = Number(gst.sgst) || 0;
+      }
 
       const chargeAdjustmentmasters = [
         // ✅ Charges
@@ -320,6 +335,9 @@ export const submitProformaInvoice =
 
         // ✅ Charges
         chargeAdjustmentmasters: chargeAdjustmentmasters,
+        IGST,
+        CGST,
+        SGST,
 
         // ✅ Items mapping
         items: finalData.items.map((item) => ({

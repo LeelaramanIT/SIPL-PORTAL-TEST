@@ -53,7 +53,7 @@ const CPMMaster = () => {
 
       {/* CONTENT AREA */}
  
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-y-auto overflow-x-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={mode}
@@ -64,7 +64,7 @@ const CPMMaster = () => {
             exit="exit"
             transition={{ duration: 0.2, ease: "easeInOut" }}
             /* 5. h-full ensures the motion div covers the scrollable area */
-            className="min-h-0 w-full overflow-y-auto overflow-x-hidden lg:p-2"
+            className="min-h-0 w-full lg:p-2"
           >
             <Outlet context={{ sheetMode }} />
           </motion.div>

@@ -52,19 +52,19 @@ const barcodeColumns = [
     width: "1fr",
     align: "center",
   },
-  {
-    header: "CONCESSION TYPE",
-    accessor: "concessionType",
-    width: "1fr",
-    align: "center",
-  },
-  { header: "RE-BRAND", accessor: "reBrand", width: "1fr", align: "center" },
-  {
-    header: "RE-SIDEWALL",
-    accessor: "reSidewall",
-    width: "1fr",
-    align: "center",
-  },
+  // {
+  //   header: "CONCESSION TYPE",
+  //   accessor: "concessionType",
+  //   width: "1fr",
+  //   align: "center",
+  // },
+  // { header: "RE-BRAND", accessor: "reBrand", width: "1fr", align: "center" },
+  // {
+  //   header: "RE-SIDEWALL",
+  //   accessor: "reSidewall",
+  //   width: "1fr",
+  //   align: "center",
+  // },
   { header: "BEAD TYPE", accessor: "beadType", width: "1fr", align: "center" },
   { header: "REMARKS", accessor: "remarks", width: "1fr", align: "center" },
 ];

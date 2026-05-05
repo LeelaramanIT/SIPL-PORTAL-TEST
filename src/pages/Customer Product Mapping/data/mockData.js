@@ -22,6 +22,30 @@ export const customers = [
   },
 ];
 
+export const plant = [
+  {
+    id: "1",
+    name: "MMN",
+    value: "MMN",
+  },
+  {
+    id: "2",
+    name: "PKD",
+    value: "PKD",
+  },
+  {
+    id: "3",
+    name: "SITL",
+    value: "SITL",
+  },
+  {
+    id: "4",
+    name: "SLTL",
+    value: "SLTL",
+  
+  },
+]
+
 // ============ WORK ORDERS ============
 export const workOrders = {
   "1": [
