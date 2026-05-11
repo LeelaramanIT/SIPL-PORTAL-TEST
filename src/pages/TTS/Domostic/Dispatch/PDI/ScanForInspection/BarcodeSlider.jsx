@@ -82,7 +82,7 @@ export const VerificationSider = ({
   const handleclose = () => {
     onClose();
     resetForm();
-  }
+  };
 
   return (
     <AnimatePresence>
@@ -181,7 +181,7 @@ export const VerificationSider = ({
                       value={data.stencilNo}
                       highlight
                     />
-                    <SpecTile label="Grade" value={grade} />
+                    <SpecTile label="Grade" value={grade} grade={grade} />
                   </div>
                 </section>
 
@@ -458,22 +458,29 @@ const SectionHeader = ({ icon, title }) => (
   </div>
 );
 
-const SpecTile = ({ label, value, highlight }) => (
-  <div
-    className={`p-1 sm:p-2 3xl:p-8 rounded-2xl border flex flex-col justify-center items-center text-center transition-all ${
-      highlight
-        ? "bg-indigo-50 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20 ring-1 ring-indigo-200 dark:ring-indigo-500/30"
-        : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 shadow-sm"
-    }`}
-  >
-    <p className="text-[8px] sm:text-[10px] 3xl:text-sm font-bold text-slate-500 uppercase tracking-[0.15em] mb-1 sm:mb-2">
-      {label}
-    </p>
-    <p className="text-xs sm:text-sm lg:text-base 3xl:text-2xl font-black text-slate-900 dark:text-slate-100 leading-tight break-all">
-      {value || "—"}
-    </p>
-  </div>
-);
+const SpecTile = ({ label, value, highlight, grade }) => {
+  const isGradeA = grade === "A";
+  return (
+    <div
+      className={`p-1 sm:p-2 3xl:p-8 rounded-2xl border flex flex-col justify-center items-center text-center transition-all ${
+        grade
+          ? isGradeA
+            ? "bg-green-100 border-green-300 dark:bg-green-900/30 dark:border-green-700"
+            : "bg-yellow-100 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700"
+          : highlight
+            ? "bg-indigo-50 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20 ring-1 ring-indigo-200 dark:ring-indigo-500/30"
+            : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 shadow-sm"
+      }`}
+    >
+      <p className="text-[8px] sm:text-[10px] 3xl:text-sm font-bold text-slate-500 uppercase tracking-[0.15em] mb-1 sm:mb-2">
+        {label}
+      </p>
+      <p className="text-xs sm:text-sm lg:text-base 3xl:text-2xl font-black text-slate-900 dark:text-slate-100 leading-tight break-all">
+        {value || "—"}
+      </p>
+    </div>
+  );
+};
 
 const MetricInput = ({ label, value, onChange }) => (
   <div className="space-y-2 sm:space-y-3">

@@ -14,7 +14,7 @@ const { Option } = Select;
 const MODES = [
   { key: "barcode", label: "Barcode Wise" },
   { key: "itemQty", label: "Item Qty Wise" },
-  { key: "assignQty", label: "Assign Qty Wise" },
+  // { key: "assignQty", label: "Assign Qty Wise" },
 ];
 
 /* ─── column sets ─────────────────────────────────────────────────────── */
@@ -96,8 +96,9 @@ const itemsColumns = [
   { header: "TYPE", accessor: "tyreType", width: "1fr", align: "center" },
   { header: "BRAND", accessor: "brand", width: "1fr", align: "left" },
   { header: "SIDEWALL", accessor: "sidewall", width: "1fr", align: "center" },
+  { header: "GRADE", accessor: "grade", width: "1fr", align: "center" },
   { header: "PROCESSID", accessor: "processID", width: "1fr", align: "center" },
-  { header: "QTY", accessor: "orderQty", width: "1fr", align: "center" },
+  { header: "Scanned QTY", accessor: "orderQty", width: "1fr", align: "center" },
 ];
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -117,6 +118,10 @@ const BarcodeDetailList = () => {
     brand: "",
     sidewall: "",
   });
+  const [visibleRows, setVisibleRows] = useState(50);
+  const handleLoadMore = () => {
+    setVisibleRows((prev) => prev + 50);
+  };
 
   const { InspectionDetails, barcodeDetails, loadingBarcode } = useSelector(
     (s) => s.scanforinspection,
@@ -194,7 +199,42 @@ const BarcodeDetailList = () => {
         .filter((item) => matchesSearch(item, q));
     if (mode === "assignQty")
       return stencilList.filter((i) => matchesSearch(i, q));
-    if (mode === "itemQty") return items.filter((i) => matchesSearch(i, q));
+    if (mode === "itemQty") {
+      const grouped = Object.values(
+        processStencilList.reduce((acc, item) => {
+          const key = [
+            item.platform,
+            item.tyreSize,
+            item.rim,
+            item.type,
+            item.brand,
+            item.sidewall,
+            item.grade,
+            item.processId,
+          ].join("_");
+
+          if (!acc[key]) {
+            acc[key] = {
+              config: item.platform,
+              tyreSize: item.tyreSize,
+              rimSize: item.rim,
+              tyreType: item.type,
+              brand: item.brand,
+              sidewall: item.sidewall,
+              grade: item.grade,
+              processID: item.processId,
+              orderQty: 0,
+            };
+          }
+
+          acc[key].orderQty += 1;
+
+          return acc;
+        }, {}),
+      );
+
+      return grouped.filter((i) => matchesSearch(i, q));
+    }
     return [];
   }, [mode, processStencilList, stencilList, items, filters, localSearch]);
 
@@ -436,7 +476,9 @@ const BarcodeDetailList = () => {
             columns={activeColumns}
             headerClassName="bg-[var(--primary)] text-white dark:bg-slate-950 shadow-sm"
             data={filteredData}
+            visibleRows={visibleRows}
             loading={mode === "barcode" ? loadingBarcode : false}
+            onLoadMore={handleLoadMore}
           />
         </div>
       </div>

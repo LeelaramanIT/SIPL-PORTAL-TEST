@@ -28,7 +28,7 @@ import { HiOutlineViewList } from "react-icons/hi";
 import { IoMdClose } from "react-icons/io";
 import BarcodeDetailList from "./BarcodeDetailList";
 import InfoTooltip from "../../../../../../components/InfoTooltip";
-
+import { Tooltip } from "antd";
 const ScanForInspectionDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,6 +44,7 @@ const ScanForInspectionDetails = () => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef(null);
   const [showDetailsForm, setShowDetailsForm] = useState(false);
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
 
   const fadeUp = {
     hidden: { opacity: 0, y: 15 },
@@ -87,6 +88,11 @@ const ScanForInspectionDetails = () => {
 
   const handleScan = (e) => {
     if (e.key === "Enter" && scanInput.trim()) {
+      if (isProcessingScan || open) {
+        toast.error("Previous tyre verification pending");
+
+        return;
+      }
       if (scanInput.trim().length === 19 && scanInput.trim().startsWith("P")) {
         const trimmedBarcode = scanInput.trim();
 
@@ -126,7 +132,7 @@ const ScanForInspectionDetails = () => {
           barcode: trimmedBarcode,
           o_ItemID: matchedItem.o_ItemID,
         };
-
+        setIsProcessingScan(true);
         dispatch(resetBarcodeDetails());
         dispatch(PDICheckBarcode(payload));
         setOpen(true);
@@ -145,6 +151,7 @@ const ScanForInspectionDetails = () => {
       }
     }
   };
+  const successAudio = useMemo(() => new Audio("/sounds/ok.mp3"), []);
 
   const scanedQty = InspectionDetails?.items?.reduce(
     (total, item) => total + item.scannedQty,
@@ -181,7 +188,7 @@ const ScanForInspectionDetails = () => {
       align: "center",
       render: (val) => (
         <span className="font-bold text-blue-600 dark:text-blue-400">
-          {val || 0}
+          <Tooltip title={val}>{val || 0}</Tooltip>
         </span>
       ),
     },
@@ -202,7 +209,10 @@ const ScanForInspectionDetails = () => {
   const handleConfirmation = async (payload) => {
     const res = await dispatch(SubmitInspection(payload));
     if (res) {
+      successAudio.currentTime = 0;
+      successAudio.play();
       setOpen(false);
+      setIsProcessingScan(false);
     }
     // setOpen(false);
   };
@@ -272,7 +282,7 @@ const ScanForInspectionDetails = () => {
                 <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--primary)]">
                   Scan Progress
                 </p>
-                <p className="text-sm font-semibold">
+                <p className="smt:text-xs md:text-xl font-bold">
                   {scanedQty || 0} / {totalQty || 0} Units
                 </p>
               </div>
@@ -386,6 +396,7 @@ const ScanForInspectionDetails = () => {
                     ref={inputRef}
                     type="text"
                     maxLength={19}
+                    disabled={isProcessingScan || open}
                     value={scanInput}
                     onChange={(e) => setScanInput(e.target.value)}
                     onKeyDown={handleScan}
@@ -393,16 +404,20 @@ const ScanForInspectionDetails = () => {
                     className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
                   />
                 </div>
-                <p className="text-[10px] text-white/70 mt-3 flex items-center gap-1.5 italic">
+                <div className="mt-3">
                   {error ? (
-                    <span className="text-red-200">{error}</span>
+                    <span className="text-red-200 text-[10px]">{error}</span>
+                  ) : isProcessingScan ? (
+                    <span className="text-yellow-300 text-xs animate-pulse">
+                      Waiting for verification...
+                    </span>
                   ) : (
-                    <>
+                    <div className="flex items-center gap-1.5 italic text-[10px] text-white/70">
                       <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
                       Ready for scanner input
-                    </>
+                    </div>
                   )}
-                </p>
+                </div>
               </div>
             </motion.section>
           </div>
@@ -513,7 +528,10 @@ const ScanForInspectionDetails = () => {
 
       <VerificationSider
         isOpen={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          setIsProcessingScan(false);
+        }}
         data={barcodeDetails}
         onConfirm={handleConfirmation}
         loading={loading}
