@@ -66,6 +66,12 @@ function SaleReportHeader({mode}) {
       path: `${basePath}/ProductionRepost`,
       icon: <Search className="w-3.5 h-3.5" />,
     },
+    {
+      label: " Master Report Generate",
+      permissionKey: "MasterRepost",
+      path: `${basePath}/MasterReportGeneration`,
+      icon: <Search className="w-3.5 h-3.5" />,
+    },
   ];
 
   const visibleTabs = allTabs.filter((tab) => hasPermission(menus, tab.path));

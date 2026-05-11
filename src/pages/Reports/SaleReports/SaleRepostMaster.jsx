@@ -57,7 +57,7 @@ const SaleRepostMaster = () => {
     </div>
 
     {/* CONTENT */}
-    <div className="flex-1 min-h-0 relative overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto">
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={mode}

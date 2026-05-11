@@ -10,6 +10,7 @@ import { persistor } from "../Redux/Store/app.jsx";
 import CustomBreadcrumbs from "./StyledBreadcrumb.jsx";
 import { toggleSidebar } from "../Redux/Slices/GlobalSlice";
 import { resetUploadState } from "../Redux/Slices/PriceMasterSlice.jsx";
+import FullscreenComponent from "./FullscreenComponent/FullScreenComponent.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -58,6 +59,9 @@ const Navbar = () => {
       {/* ── RIGHT: Actions ── */}
       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-2">
         {/* Dark mode toggle */}
+        <div className="flex-shrink-0">
+          <FullscreenComponent />
+        </div>
         <div className="flex-shrink-0">
           <DarkModeToggle />
         </div>

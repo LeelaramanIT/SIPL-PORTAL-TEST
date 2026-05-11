@@ -19,15 +19,15 @@ export const FitmrntSlider = ({
   isValid,
   onVerify,
   setIsValid,
-  setMessage
+  setMessage,
 }) => {
   const { tyre, rim } = data;
   const [direction, setDirection] = useState("");
-  const [o_ItemID,seto_ItemID] = useState(0)
+  const [o_ItemID, seto_ItemID] = useState(0);
   const [barcode, setBarcode] = useState("");
   const [error, setError] = useState("");
   const [isAllow, setIsAllow] = useState(true);
-  const { FitmentDetails } = useSelector((state) => state.PDIFitment);
+  const { FitmentDetails, loading } = useSelector((state) => state.PDIFitment);
   const clean = (val) => String(val ?? "").trim();
 
   useEffect(() => {
@@ -49,58 +49,58 @@ export const FitmrntSlider = ({
   console.log(FitmentDetails, "from..... ass");
 
   const getAssemblyBarcode = async () => {
-  const payload = {
-    ProcessID: clean(tyre?.processID),
-    EdcNo: clean(rim?.edcNo),
-    Direction: clean(direction),
-    StencilGrade: clean(tyre?.barcode).substring(8, 19),
-    o_ID: FitmentDetails?.id
+    const payload = {
+      ProcessID: clean(tyre?.processID),
+      EdcNo: clean(rim?.edcNo),
+      Direction: clean(direction),
+      StencilGrade: clean(tyre?.barcode).substring(8, 19),
+      o_ID: FitmentDetails?.id,
+    };
+
+    const data = await dispatch(getAssyDetails(payload));
+
+    if (data.status) {
+      setBarcode(clean(data.assemblyBarcode));
+      seto_ItemID(data.o_ItemID);
+      setIsAllow(true);
+      setError("");
+      setMessage(data.message);
+    } else {
+      setError(clean(data.message));
+      setIsAllow(false);
+      setBarcode("");
+      setMessage(data.message);
+    }
   };
-
-  const data = await dispatch(getAssyDetails(payload));
-
-  if (data.status) {
-    setBarcode(clean(data.assemblyBarcode));
-    seto_ItemID(data.o_ItemID);
-    setIsAllow(true);
-    setError("");
-    setMessage(data.message);
-  } else {
-    setError(clean(data.message));
-    setIsAllow(false);
-    setBarcode("");
-    setMessage(data.message);
-  }
-};
   console.log(FitmentDetails?.id);
-  
-const AssemblyProcessID = clean(barcode).substring(0, 8);
+
+  const AssemblyProcessID = clean(barcode).substring(0, 8);
   // console.log(tyre,rim,FitmentDetails);
   const handleConfirmation = () => {
-  onSubmit({
-    o_ID: FitmentDetails?.id,
-    tyreBarcode: clean(tyre?.barcode),
-    rimBarcode: clean(rim?.rimBarcode),
-    assemblyBarcode: clean(barcode),
-    AssemblyProcessID,
-    o_ItemID: o_ItemID || 0,
-    edcNo: clean(rim?.edcNo),
-    stencilNo: clean(tyre?.barcode).substring(8, 18),
-    processID: clean(tyre?.processID),
-    Directional: clean(direction),
-    plant: FitmentDetails?.plant,
-    custCode: FitmentDetails?.custCode,
-    workorderno: FitmentDetails?.workorderno,
-    dispatchQty: FitmentDetails?.assemblyQty,
-    rimPlant: FitmentDetails?.plant,
-    machineId: 0,
-    operatorId: 0,
-    pressPressure: 0,
-    temperature: 0,
-    status: "string",
-    inspectedby: "string"
-  });
-};
+    onSubmit({
+      o_ID: FitmentDetails?.id,
+      tyreBarcode: clean(tyre?.barcode),
+      rimBarcode: clean(rim?.rimBarcode),
+      assemblyBarcode: clean(barcode),
+      AssemblyProcessID,
+      o_ItemID: o_ItemID || 0,
+      edcNo: clean(rim?.edcNo),
+      stencilNo: clean(tyre?.barcode).substring(8, 18),
+      processID: clean(tyre?.processID),
+      Directional: clean(direction),
+      plant: FitmentDetails?.plant,
+      custCode: FitmentDetails?.custCode,
+      workorderno: FitmentDetails?.workorderno,
+      dispatchQty: FitmentDetails?.assemblyQty,
+      rimPlant: FitmentDetails?.plant,
+      machineId: 0,
+      operatorId: 0,
+      pressPressure: 0,
+      temperature: 0,
+      status: "string",
+      inspectedby: "string",
+    });
+  };
 
   return (
     <div className="flex flex-col h-[100dvh] sm:h-full w-full overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl">
@@ -224,10 +224,36 @@ const AssemblyProcessID = clean(barcode).substring(0, 8);
               <div className="flex justify-end">
                 <button
                   onClick={handleConfirmation}
-                  disabled={!isValid || !direction || !isAllow}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-xl text-white font-bold transition-all ${isValid && direction && isAllow ? "bg-indigo-600 hover:bg-indigo-500" : "bg-red-400 cursor-not-allowed"} shadow-[0_0_20px_rgba(79,70,229,0.3)] active:scale-[0.98] `}
+                  // Disable if loading is active
+                  disabled={!isValid || !direction || !isAllow || loading}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-xl text-white font-bold transition-all 
+      ${
+        isValid && direction && isAllow && !loading
+          ? "bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
+          : "bg-slate-400 cursor-not-allowed"
+      } 
+      active:scale-[0.98]`}
                 >
-                  <CheckCircle2 size={18} /> Generate Assembly Barcode{" "}
+                  {loading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          ease: "linear",
+                        }}
+                      >
+                        <RotateCcw size={18} />
+                      </motion.div>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={18} />
+                      <span>Generate Assembly Barcode</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -26,6 +26,11 @@ import SprintReducer from '../Slices/Task_Master/Sprint/SprintSlice'
 import CIMMasterReducer from '../Slices/Customer_Item_Management/CIMMasterSlice'
 import CIMBarcodeReducer from '../Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice'
 
+
+// warehouse
+import WarehouseReducer from "../Slices/Warehouse/WarehouseSlice";
+
+
 // Encryption config
 const encryptor = encryptTransform({
   secretKey: import.meta.env.VITE_REDUX_SECRET_KEY,
@@ -156,6 +161,13 @@ const SprintReducerConfig = {
   storage: storageSession
 }
 
+const WarehouseReducerConfig = {
+  key:'Warehouse',
+  version:1,
+  storage: storageSession
+}
+
+
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedProformaInvoiceReducer = persistReducer(proformaInvoiceConfig, proformaInvoice);
@@ -176,6 +188,8 @@ const persistedCIMMasterReducer = persistReducer(CIMMasterReducerConfig,CIMMaste
 const persistedCIMBarcodeReducer = persistReducer(CIMBarcodeReducerConfig,CIMBarcodeReducer)
 const persistedSprintReducer = persistReducer(SprintReducerConfig,SprintReducer)
 const presistedUserMasterReducer = persistReducer(UserMastertConfig,UserMasterReducer)
+const persistedWarehouseReducer = persistReducer(WarehouseReducerConfig,WarehouseReducer)
+
 
 
 // Root reducer
@@ -200,6 +214,7 @@ const rootReducer = combineReducers({
   CIMMaster:persistedCIMMasterReducer,
   CIMBarcode:persistedCIMBarcodeReducer,
   Sprint:persistedSprintReducer,
+  Warehouse:persistedWarehouseReducer
 });
 
 // Store setup

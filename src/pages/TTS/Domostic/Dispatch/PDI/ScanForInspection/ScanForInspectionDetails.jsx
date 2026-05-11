@@ -27,6 +27,7 @@ import { BsUpcScan } from "react-icons/bs";
 import { HiOutlineViewList } from "react-icons/hi";
 import { IoMdClose } from "react-icons/io";
 import BarcodeDetailList from "./BarcodeDetailList";
+import InfoTooltip from "../../../../../../components/InfoTooltip";
 
 const ScanForInspectionDetails = () => {
   const location = useLocation();
@@ -77,8 +78,6 @@ const ScanForInspectionDetails = () => {
         item.o_ItemID?.toString().includes(term),
     );
   }, [localSearch, InspectionDetails]);
-  console.log(items);
-  console.log(location);
 
   useEffect(() => {
     if (location.state) {
@@ -89,14 +88,18 @@ const ScanForInspectionDetails = () => {
   const handleScan = (e) => {
     if (e.key === "Enter" && scanInput.trim()) {
       if (scanInput.trim().length === 19 && scanInput.trim().startsWith("P")) {
-        setScanInput("");
         const trimmedBarcode = scanInput.trim();
+
+        setScanInput("");
+
         const processID = trimmedBarcode.substring(0, 8);
         const stencilNo = trimmedBarcode.substring(8, 18);
 
         const matchedItem = InspectionDetails.items.find(
           (item) => item.processID === processID,
         );
+
+        console.log(matchedItem);
 
         if (!matchedItem) {
           toast.error("No item found for this Order", {
@@ -105,29 +108,43 @@ const ScanForInspectionDetails = () => {
           return;
         }
 
+        // ✅ Prevent extra scanning
+        if (matchedItem.scannedQty >= matchedItem.orderQty) {
+          toast.error(
+            `Scanning limit exceeded. Allowed Qty: ${matchedItem.orderQty}`,
+            {
+              position: "top-center",
+            },
+          );
+          return;
+        }
+
         const payload = {
           ...InspectionDetails,
           processID,
           stencilNo,
-          barcode: scanInput,
+          barcode: trimmedBarcode,
           o_ItemID: matchedItem.o_ItemID,
         };
+
         dispatch(resetBarcodeDetails());
         dispatch(PDICheckBarcode(payload));
         setOpen(true);
       } else {
         setError(
-          'Invalid scanInput. Length must be 19 characters and start with "P-"',
+          'Invalid Barcode. Length must be 19 characters and start with "P"',
         );
+
         setTimeout(() => setError(""), 2000);
+
         toast.error("Invalid Barcode.", {
           position: "top-center",
         });
+
         setScanInput("");
       }
     }
   };
-  console.log(InspectionDetails);
 
   const scanedQty = InspectionDetails?.items?.reduce(
     (total, item) => total + item.scannedQty,
@@ -167,7 +184,7 @@ const ScanForInspectionDetails = () => {
           {val || 0}
         </span>
       ),
-    },  
+    },
     {
       header: "SUB-QTY",
       accessor: "substitutionQty",
@@ -182,13 +199,15 @@ const ScanForInspectionDetails = () => {
     },
   ];
 
-  const handleConfirmation = (payload) => {
-    dispatch(SubmitInspection(payload));
-    setOpen(false);
+  const handleConfirmation = async (payload) => {
+    const res = await dispatch(SubmitInspection(payload));
+    if (res) {
+      setOpen(false);
+    }
+    // setOpen(false);
   };
 
   const handleBarcodeOpen = () => {
-    console.log("kaja");
     setShowDetailsForm(true);
   };
   const custtype =
@@ -400,16 +419,48 @@ const ScanForInspectionDetails = () => {
               {/* Search and Title Area */}
               <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]">
+                  <div className="p-2 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] dark:text-white">
                     <Package size={20} />
                   </div>
                   <div>
                     <h2 className="text-md sm:text-lg font-bold flex items-center gap-2">
                       Items List
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--primary)]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[var(--primary)] dark:text-white">
                         {items.length} Items
                       </span>
                     </h2>
+                  </div>
+                  <div className="flex items-center">
+                    <InfoTooltip
+                      content={
+                        <div className="flex flex-col gap-1 text-left min-w-[220px]">
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-300">🟢</span>
+                            <span className="font-medium">Green</span>
+                            <span className="text-slate-300">
+                              - Completed Scan
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-yellow-300">🟡</span>
+                            <span className="font-medium">Yellow</span>
+                            <span className="text-slate-300">
+                              - Partially Scanned
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-300">⚪</span>
+                            <span className="font-medium">Gray</span>
+                            <span className="text-slate-300">
+                              - Pending Scan
+                            </span>
+                          </div>
+                        </div>
+                      }
+                      className="text-[var(--primary)] dark:text-white"
+                    />
                   </div>
                 </div>
 
@@ -438,7 +489,21 @@ const ScanForInspectionDetails = () => {
                   data={items}
                   headerClassName="bg-[var(--primary)] text-white text-[0.8rem] dark:bg-slate-950 shadow-sm"
                   loading={loading}
-                  cellClassName='text-[0.77rem] font-bold'
+                  cellClassName="text-[0.77rem] font-bold"
+                  rowClassName={(row) => {
+                    // FULLY SCANNED
+                    if (row.scannedQty >= row.totalItemQty) {
+                      return "bg-green-100 dark:bg-green-900/30 border-green-500";
+                    }
+
+                    // PARTIALLY SCANNED
+                    if (row.scannedQty > 0) {
+                      return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400";
+                    }
+
+                    // NOT SCANNED
+                    return "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700";
+                  }}
                 />
               </div>
             </div>
@@ -451,6 +516,7 @@ const ScanForInspectionDetails = () => {
         onClose={() => setOpen(false)}
         data={barcodeDetails}
         onConfirm={handleConfirmation}
+        loading={loading}
       />
 
       {/* Fix: Remove overflow-y-auto from modal wrapper, use flex-col + fixed height instead */}

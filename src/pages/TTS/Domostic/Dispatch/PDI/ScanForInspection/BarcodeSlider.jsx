@@ -11,12 +11,12 @@ import {
 
 import React, { useState } from "react";
 
-
 export const VerificationSider = ({
   isOpen = true,
   onClose,
   data,
   onConfirm,
+  loading,
 }) => {
   const [selections, setSelections] = useState({
     detector: null,
@@ -44,7 +44,7 @@ export const VerificationSider = ({
       hardnessBase: "",
       remarks: "",
     });
-    onClose();
+    // onClose();
   };
 
   const grade = data?.barcode?.slice(-1) || "";
@@ -79,6 +79,10 @@ export const VerificationSider = ({
     onConfirm(payload);
     resetForm();
   };
+  const handleclose = () => {
+    onClose();
+    resetForm();
+  }
 
   return (
     <AnimatePresence>
@@ -150,7 +154,7 @@ export const VerificationSider = ({
                 </div>
 
                 <button
-                  onClick={resetForm}
+                  onClick={handleclose}
                   className="ml-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
                 >
                   <X size={24} className="text-slate-400" />
@@ -274,18 +278,68 @@ export const VerificationSider = ({
               <div className="p-2 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                 <div className="flex flex-col sm:flex-row gap-4 max-w-5xl mx-auto">
                   <motion.button
-                    whileHover={!isAlreadyProcessed ? { scale: 1.01 } : {}}
-                    whileTap={!isAlreadyProcessed ? { scale: 0.98 } : {}}
+                    whileHover={
+                      !isAlreadyProcessed && !loading ? { scale: 1.01 } : {}
+                    }
+                    whileTap={
+                      !isAlreadyProcessed && !loading ? { scale: 0.98 } : {}
+                    }
                     onClick={handleSubmit}
-                    disabled={isAlreadyProcessed}
-                    className={`flex-[2] py-3 rounded-2xl font-black text-xs sm:text-sm lg:text-base uppercase tracking-widest flex items-center justify-center gap-3 transition-all
-                      ${isAlreadyProcessed ? "bg-slate-100 text-slate-400" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30"}`}
+                    disabled={isAlreadyProcessed || loading}
+                    className={`flex-[2] py-3 rounded-2xl font-black text-xs sm:text-sm lg:text-base uppercase tracking-widest flex items-center justify-center gap-3 transition-all relative overflow-hidden
+    ${isAlreadyProcessed ? "bg-slate-100 text-slate-400" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30"}
+    ${loading ? "cursor-wait opacity-90" : ""}`}
                   >
-                    <CheckCircle2 />{" "}
-                    {isAlreadyProcessed ? "Processed" : "Complete Inspection"}
+                    <AnimatePresence mode="wait">
+                      {loading ? (
+                        <motion.div
+                          key="loader"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex items-center gap-3"
+                        >
+                          {/* Modern Spinner */}
+                          <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          <span>Processing...</span>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="label"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex items-center gap-3"
+                        >
+                          <CheckCircle2 size={20} />
+                          {isAlreadyProcessed
+                            ? "Processed"
+                            : "Complete Inspection"}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.button>
                   <button
-                    onClick={resetForm}
+                    onClick={handleclose}
                     className="flex-1 py-3 rounded-2xl text-xs sm:text-sm font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 transition-all"
                   >
                     Cancel

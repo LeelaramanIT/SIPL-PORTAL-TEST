@@ -19,7 +19,7 @@ import ShippingSchemeSplitTailwind from "../pages/TTS/International/Invoice/Expo
 import Calendar from "../pages/Calendar/Calendar";
 import ReportsLayout from "../layout/ReportsLayout";
 import RimLayout from "../layout/RimLayout";
-import RimOverView from "../pages/TTS/Rim/RimOverView";
+import RimOverView from "../pages/TTS/Rim/TyreStockTransfer";
 import RimWiseAndEDCWise from "../pages/TTS/Rim/RimAndEDCWiseData";
 import RimStocks from "../pages/TTS/Rim/RimStocks";
 import AllUSers from "../pages/Masters/UserMaster/AllUsers";
@@ -72,6 +72,8 @@ import UserCreation from "../pages/MenuAccess/UserMaster/UserCreation";
 import ProductionDashboard from "../pages/Reports/ProductionReports/Production";
 import UserList from "../pages/MenuAccess/UserMaster/UserList";
 import UserMasterLayout from "../layout/UserMasterLayout";
+import MasterReportGenerationPage from "../pages/Reports/SP_Reports/MasterReportGenerationPage";
+import TyreStockTransfer from "../pages/TTS/Rim/TyreStockTransfer";
 
 export const router = createBrowserRouter([
   {
@@ -374,12 +376,16 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            path: "TTS/Rim",
+            path: "TTS/Warehouse",
             element: <RimLayout />,
             children: [
               {
-                path: "/TTS/Rim/RimOverView",
-                element: <RimOverView />,
+                index: true, // ✅ default route
+                element: <Navigate to="factory"/>, // 👈 choose your default page
+              },
+              {
+                path: "/TTS/Warehouse/factory",
+                element: <TyreStockTransfer />,
               },
               {
                 path: "DataWise",
@@ -416,6 +422,7 @@ export const router = createBrowserRouter([
                   { path: "PowerBIReport", element: <TTSPowerBIReports /> },
                   { path: "SaleRepost", element: <TyreSalesDashboard/> },
                   { path: "ProductionRepost", element: <ProductionDashboard /> },
+                  { path: "MasterReportGeneration", element: <MasterReportGenerationPage /> },
                 ],
               },
             ],

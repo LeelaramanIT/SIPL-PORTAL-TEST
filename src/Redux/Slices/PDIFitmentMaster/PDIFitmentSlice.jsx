@@ -259,8 +259,10 @@ export const getAssyDetails = (payload) => async (dispatch) => {
 export const SubmitFitmentInspection = (payload, setViewMode) => async (dispatch,getState) => {
 
   try {
+    dispatch(setLoading(true))
     const res = await api.post("/WheelAssemblies/SaveFitmentItem", payload)
     if (res.status === 200) {
+      dispatch(setLoading(false))
       console.log(res.data);
       const { FitmentDetails } = getState().PDIFitment;
       if (!FitmentDetails) return;
@@ -283,7 +285,9 @@ export const SubmitFitmentInspection = (payload, setViewMode) => async (dispatch
       dispatch(resetTyreDetails())
       dispatch(resetRimDetails())
     }
+    dispatch(setLoading(false))
   } catch (error) {
+    dispatch(setLoading(false))
     console.log(error);
   }
 }

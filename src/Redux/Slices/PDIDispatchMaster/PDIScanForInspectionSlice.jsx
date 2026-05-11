@@ -51,9 +51,9 @@ export const getListOfInspectionData = (plant, custType) => async (dispatch) => 
         dispatch(setLoading(true))
         dispatch(resetAll())
         dispatch
-        console.log("called>>>>>>>>");
+        
         const res = await api.get(`/PdiInspection/GetListOfPdiInspectOrders:${plant}:${custType}`);
-        console.log(res.data)
+       
         if (res.status === 200) {
             dispatch(setListOfInspectionData(res.data))
         }
@@ -74,7 +74,7 @@ export const getCustomerDetails = (payload) => async (dispatch) => {
         o_ID: typeof payload.id === 'string' ? payload.id.trim() : payload.id,
         pdiPlant: typeof payload.plant === 'string' ? payload.plant.trim() : payload.plant
     };
-    console.log(payload)
+    
     try {
         dispatch(
             setLoading(true))
@@ -85,7 +85,7 @@ export const getCustomerDetails = (payload) => async (dispatch) => {
             dispatch(setInspectionDetails({ ...payload, items: res.data }))
         }
         dispatch(setLoading(false))
-        console.log(res.data);
+        
 
     } catch (error) {
         dispatch(setLoading(false))
@@ -115,9 +115,9 @@ export const PDICheckBarcode = (payload) => async (dispatch) => {
             orderQty: payload.itemQty,
             orderrefno: payload.orderRefNo,
         }
-        console.log("From Barcode", data)
+       
         const res = await api.post('/PdiInspection/BarcodeChecker', data);
-        console.log("DB Data", res.data);
+        
         if (res.status === 200) {
             dispatch(setBarcodeDetails({ ...res.data, ...data }))
         }
@@ -130,10 +130,11 @@ export const PDICheckBarcode = (payload) => async (dispatch) => {
 
 export const SubmitInspection = (payload) => async (dispatch, getState) => {
     try {
-
+        dispatch(setLoading(true))
         const res = await api.post('/PdiInspection/PDI_SaveItem', payload);
 
         if (res.status === 200) {
+             dispatch(setLoading(false))
 
             const response = res.data;
 
@@ -166,27 +167,26 @@ export const SubmitInspection = (payload) => async (dispatch, getState) => {
             toast.success("Scan Successful!",{
             position: "top-center",
           })
+          return true;
         }
+         dispatch(setLoading(false))
 
     } catch (error) {
+         dispatch(setLoading(false))
         console.log(error);
     }
 };
 
 export const getBarcodeWise = (payload) => async (dispatch) => {
-    console.log(payload);
-
     const PID = payload?.items?.find(item => item.pid !== 0)?.pid || 0;
-
-    console.log(PID);
     try {
         dispatch(resetBarcodeDetails())
         dispatch(setLoadingBarcode(true))
         const res = await api.get(`/PdiInspection/GetScannedBarcodeInfo:${PID}:${'scanned'}:${payload.plant}`);
         dispatch(setLoadingBarcode(false))
-        // console.log(res.data)
+
         if (res.status === 200) {
-            console.log(res.data)
+          
             dispatch(setBarcodeDetails(res.data))
             dispatch(setLoadingBarcode(false))
         }
@@ -199,7 +199,7 @@ export const getBarcodeWise = (payload) => async (dispatch) => {
 
 export const getWorkorder = (custCode, orderRefNo, Plant, custtype) => async () => {
     try {
-       console.log(custCode,orderRefNo);
+      
        
         const res = await api.get(`/PdfUpload/download-workorder`, {
             params: {

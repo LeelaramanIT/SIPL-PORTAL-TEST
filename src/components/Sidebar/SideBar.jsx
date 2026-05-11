@@ -305,9 +305,9 @@ const SideBar = () => {
           ],
         },
         {
-          key: "/TTS/Rim/RimOverView",
+          key: "/TTS/Warehouse",
           icon: <GiCarWheel />,
-          label: "RIM Application",
+          label: "Warehouse Management",
         },
       ],
     },

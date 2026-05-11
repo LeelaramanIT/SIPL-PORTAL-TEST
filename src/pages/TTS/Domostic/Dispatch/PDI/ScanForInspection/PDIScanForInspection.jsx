@@ -86,8 +86,6 @@ const PDIScanForInspection = ({ sheetMode }) => {
     );
   }, [listOfInspectionData, search, sheetMode, inspectionType]);
 
-  console.log(filteredInspectionData.length);
-  console.log(filteredInspectionData);
 
   const uploadColumns = useMemo(() => {
     const baseColumns = [

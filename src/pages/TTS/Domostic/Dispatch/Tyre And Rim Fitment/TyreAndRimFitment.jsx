@@ -31,7 +31,7 @@ const TyreAndRimFitment = () => {
   const { FitmentDetails, scanSession } = useSelector(
     (state) => state.PDIFitment,
   );
-  const { loading } = useSelector((state) => state.PDIDispatchMaster);
+  const { loading } = useSelector((state) => state.PDIFitment);
   const [scanInput, setScanInput] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef(null);
@@ -339,7 +339,7 @@ const processID = cleanedBarcode.substring(0, 8);
       try {
         const res = await dispatch(verifyFitment(payload));
 
-        console.log("verify response", res);
+        // console.log("verify response", res);
 
         setIsValid(res?.status);
         setMessage(res?.message);
@@ -350,12 +350,12 @@ const processID = cleanedBarcode.substring(0, 8);
       }
     }
   };
-  console.log(FitmentDetails);
+  // console.log(FitmentDetails);
 
   const safeItems = Array.isArray(FitmentDetails?.items)
   ? FitmentDetails.items
   : [];
-  console.log(safeItems);
+  // console.log(safeItems);
   
 
   const scanedQty = safeItems?.reduce(
