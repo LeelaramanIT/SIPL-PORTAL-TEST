@@ -223,7 +223,7 @@ const handleDownloadExcel = async () => {
   const buffer = await workbook.xlsx.writeBuffer();
   saveAs(
     new Blob([buffer]),
-    `Fitment_Report_${new Date().toISOString().slice(0, 10)}.xlsx`
+    `RIM_Fitment_${FitmentDetails?.workorderno}_${new Date().toISOString().slice(0, 10)}.xlsx`
   );
 };
   useEffect(() => {

@@ -7,6 +7,9 @@ import { getBarcodeWise } from "../../../../../../Redux/Slices/PDIDispatchMaster
 import { IoFilterSharp } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FaFileDownload } from "react-icons/fa";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const { Option } = Select;
 
@@ -14,7 +17,7 @@ const { Option } = Select;
 const MODES = [
   { key: "barcode", label: "Barcode Wise" },
   { key: "itemQty", label: "Item Qty Wise" },
-  // { key: "assignQty", label: "Assign Qty Wise" },
+  // { key: "assignQty", label: "Assign Qty Wise" }, 
 ];
 
 /* ─── column sets ─────────────────────────────────────────────────────── */
@@ -245,6 +248,350 @@ const BarcodeDetailList = () => {
         ? assignColumns
         : itemsColumns;
 
+  const handleDownloadExcel = async () => {
+    if (!processStencilList || processStencilList.length === 0) {
+      toast.error("No data available to download");
+      return;
+    }
+
+    const clean = (val) => String(val ?? "").trim();
+
+    const workbook = new ExcelJS.Workbook();
+
+    // =========================================================
+    // COMMON FUNCTION
+    // =========================================================
+    const setupWorksheet = async (worksheet, title) => {
+      worksheet.pageSetup = {
+        paperSize: 9,
+        orientation: "landscape",
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 0,
+      };
+
+      worksheet.columns = [
+        { width: 16 },
+        { width: 18 },
+        { width: 20 },
+        { width: 10 },
+        { width: 12 },
+        { width: 18 },
+        { width: 16 },
+        { width: 16 },
+        { width: 16 },
+        { width: 14 },
+        { width: 16 },
+        { width: 16 },
+        { width: 16 },
+        { width: 16 },
+        { width: 18 },
+      ];
+
+      // ================= LOGO =================
+      const getBase64 = async (url) => {
+        const res = await fetch(url);
+        const blob = await res.blob();
+
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+
+          reader.onloadend = () =>
+            resolve(reader.result.split(",")[1]);
+
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const logoBase64 = await getBase64("/SUN-TWS.png");
+
+      const imageId = workbook.addImage({
+        base64: logoBase64,
+        extension: "png",
+      });
+
+      worksheet.addImage(imageId, {
+        tl: { col: 0, row: 0 },
+        ext: { width: 140, height: 60 },
+      });
+
+      // ================= TITLE =================
+      worksheet.mergeCells("A3:O3");
+
+      const titleCell = worksheet.getCell("A3");
+
+      titleCell.value = title;
+
+      titleCell.font = {
+        bold: true,
+        size: 18,
+        color: { argb: "1F4E79" },
+      };
+
+      titleCell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
+      // ================= DETAILS =================
+      const details = [
+        ["Customer", clean(InspectionDetails?.custFullName)],
+        ["Work Order", clean(InspectionDetails?.workOrderNo)],
+        ["Total Qty", clean(totalQty)],
+        ["Scanned Qty", clean(scanedQty)],
+      ];
+
+      let rowStart = 5;
+
+      details.forEach(([label, value], i) => {
+        const row = worksheet.getRow(rowStart + i);
+
+        row.getCell(1).value = label;
+        row.getCell(2).value = ":";
+        row.getCell(3).value = value;
+
+        row.getCell(1).font = { bold: true };
+
+        row.getCell(1).alignment = {
+          horizontal: "left",
+        };
+
+        row.getCell(3).alignment = {
+          horizontal: "left",
+        };
+      });
+
+      return rowStart + details.length + 2;
+    };
+
+    // =========================================================
+    // PAGE 1 - BARCODE WISE
+    // =========================================================
+    const barcodeSheet = workbook.addWorksheet("Barcode Wise");
+
+    const barcodeHeaderRowIndex = await setupWorksheet(
+      barcodeSheet,
+      "BARCODE WISE REPORT"
+    );
+
+    const barcodeHeaders = [
+      "Platform",
+      "Tyre Size",
+      "Rim",
+      "Type",
+      "Brand",
+      "Sidewall",
+      "ProcessID",
+      "Stencil No",
+      "Grade",
+      "Metal Detector",
+      "ID Gauge",
+      "Tread Hardness",
+      "Base Hardness",
+      "Bead Type",
+      "Remarks",
+    ];
+
+    const barcodeHeaderRow = barcodeSheet.getRow(
+      barcodeHeaderRowIndex
+    );
+
+    barcodeHeaders.forEach((header, i) => {
+      const cell = barcodeHeaderRow.getCell(i + 1);
+
+      cell.value = header;
+
+      cell.font = {
+        bold: true,
+        color: { argb: "FFFFFF" },
+      };
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "1F4E79" },
+      };
+
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+      };
+    });
+
+    let barcodeDataStart = barcodeHeaderRowIndex + 1;
+
+    processStencilList.forEach((item, idx) => {
+      const row = barcodeSheet.getRow(barcodeDataStart + idx);
+
+      const rowData = [
+        clean(item.platform),
+        clean(item.tyreSize),
+        clean(item.rim),
+        clean(item.type),
+        clean(item.brand),
+        clean(item.sidewall),
+        clean(item.processId),
+        clean(item.stencilNo),
+        clean(item.grade),
+        clean(item.metalDetector),
+        clean(item.idGauge),
+        clean(item.treadHardness),
+        clean(item.baseHardness),
+        clean(item.beadType),
+        clean(item.remarks),
+      ];
+
+      rowData.forEach((val, i) => {
+        const cell = row.getCell(i + 1);
+
+        cell.value = val;
+
+        cell.alignment = {
+          horizontal: "center",
+        };
+
+        cell.border = {
+          bottom: { style: "thin" },
+        };
+      });
+    });
+
+    // =========================================================
+    // PAGE 2 - ITEM QTY WISE
+    // =========================================================
+    const itemQtySheet = workbook.addWorksheet("Item Qty Wise");
+
+    const itemHeaderRowIndex = await setupWorksheet(
+      itemQtySheet,
+      "ITEM QTY WISE REPORT"
+    );
+
+    const itemHeaders = [
+      "Platform",
+      "Tyre Size",
+      "Rim",
+      "Type",
+      "Brand",
+      "Sidewall",
+      "Grade",
+      "ProcessID",
+      "Qty",
+    ];
+
+    const itemHeaderRow = itemQtySheet.getRow(
+      itemHeaderRowIndex
+    );
+
+    itemHeaders.forEach((header, i) => {
+      const cell = itemHeaderRow.getCell(i + 1);
+
+      cell.value = header;
+
+      cell.font = {
+        bold: true,
+        color: { argb: "FFFFFF" },
+      };
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "1F4E79" },
+      };
+
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+      };
+    });
+
+    // ================= GROUPED DATA =================
+    const groupedData = Object.values(
+      processStencilList.reduce((acc, item) => {
+        const key = [
+          item.platform,
+          item.tyreSize,
+          item.rim,
+          item.type,
+          item.brand,
+          item.sidewall,
+          item.grade,
+          item.processId,
+        ].join("_");
+
+        if (!acc[key]) {
+          acc[key] = {
+            platform: item.platform,
+            tyreSize: item.tyreSize,
+            rim: item.rim,
+            type: item.type,
+            brand: item.brand,
+            sidewall: item.sidewall,
+            grade: item.grade,
+            processId: item.processId,
+            qty: 0,
+          };
+        }
+
+        acc[key].qty += 1;
+
+        return acc;
+      }, {})
+    );
+
+    let itemDataStart = itemHeaderRowIndex + 1;
+
+    groupedData.forEach((item, idx) => {
+      const row = itemQtySheet.getRow(itemDataStart + idx);
+
+      const rowData = [
+        clean(item.platform),
+        clean(item.tyreSize),
+        clean(item.rim),
+        clean(item.type),
+        clean(item.brand),
+        clean(item.sidewall),
+        clean(item.grade),
+        clean(item.processId),
+        item.qty,
+      ];
+
+      rowData.forEach((val, i) => {
+        const cell = row.getCell(i + 1);
+
+        cell.value = val;
+
+        cell.alignment = {
+          horizontal: "center",
+        };
+
+        cell.border = {
+          bottom: { style: "thin" },
+        };
+      });
+    });
+
+    // =========================================================
+    // DOWNLOAD
+    // =========================================================
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    saveAs(
+      new Blob([buffer]),
+      `Inspection_Report_${InspectionDetails?.workOrderNo}_${new Date().toISOString().slice(0, 10)
+      }.xlsx`
+    );
+  };
+
   /* ─── render ─────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-gray-800/50">
@@ -297,10 +644,9 @@ const BarcodeDetailList = () => {
                   flex-shrink-0 px-2.5 sm:px-3.5 py-1.5
                   text-[10px] sm:text-[11px] font-semibold
                   rounded-lg border transition-all duration-150 whitespace-nowrap
-                  ${
-                    mode === key
-                      ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm"
-                      : "bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-gray-700 hover:border-[var(--primary)]/50 hover:text-[var(--primary)]"
+                  ${mode === key
+                    ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm"
+                    : "bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-gray-700 hover:border-[var(--primary)]/50 hover:text-[var(--primary)]"
                   }
                 `}
               >
@@ -313,6 +659,12 @@ const BarcodeDetailList = () => {
             >
               {filteredData.length} row{filteredData.length !== 1 ? "s" : ""}
             </span>
+            <button
+              onClick={handleDownloadExcel}
+              className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all"
+            >
+              <FaFileDownload className="w-3 h-3 mr-2" /> Download
+            </button>
           </div>
 
           {/* Row B: search + filter button */}
@@ -334,10 +686,9 @@ const BarcodeDetailList = () => {
                   px-3 sm:px-3.5 py-2.5 sm:py-2 rounded-lg border
                   text-[10px] sm:text-[11px] font-semibold
                   transition-all duration-150 whitespace-nowrap
-                  ${
-                    showFilters || activeFilterCount > 0
-                      ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm"
-                      : "bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-gray-700 hover:border-[var(--primary)]/50 hover:text-[var(--primary)]"
+                  ${showFilters || activeFilterCount > 0
+                    ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm"
+                    : "bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-gray-700 hover:border-[var(--primary)]/50 hover:text-[var(--primary)]"
                   }
                 `}
               >
