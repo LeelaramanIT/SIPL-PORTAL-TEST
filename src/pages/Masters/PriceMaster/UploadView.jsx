@@ -245,23 +245,24 @@ export default function UploadView() {
           defval: "",
           raw: false,
         });
-
+        const cleanString = (value) => String(value || "").trim();
         let formattedJson = rawJson.map((row) => ({
           productKey: `${row["ProcessID"]}~${row["TyreSize"]}~${Math.random()}`,
-          custCode:
+          custCode: cleanString(
             row["CustCode"] ||
             row["CUSTCODE"] ||
             row["custcode"] ||
             row["Customer Code"] ||
             row["customer code"] ||
-            row["customerCode"],
-          processID:
+            row["customerCode"]),
+          processID: cleanString(
             row["ProcessID"] ||
             row["PROCESSID"] ||
             row["processID"] ||
             row["Process Id"] ||
             row["process Id"] ||
-            row["processid"],
+            row["processid"]
+          ),
           unitPrice: parseUnitPrice(
             row["UnitPrice"] ?? row["unitprice"] ?? row["unitPrice"],
           ),
