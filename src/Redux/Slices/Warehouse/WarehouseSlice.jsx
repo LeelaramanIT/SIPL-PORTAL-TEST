@@ -1,10 +1,15 @@
 // src/store/sidebarSlice.js
 import { createSlice } from "@reduxjs/toolkit";
+import { api } from "../../../utils/axios";
 
 
 
 const initialState = {
- 
+ loading:'',
+ plant:'',
+ barcode:'',
+ scannedList:'',
+
 };
 
 const WarehouseSlice = createSlice({
@@ -15,9 +20,9 @@ const WarehouseSlice = createSlice({
   },
 });
 
-export const fetchMaster = (url, key) => async (dispatch) => {
+export const scanBarcode = (payload) => async (dispatch) => {
   try {
-    
+    const res = await api.post('')
   } catch (error) {
     
   }

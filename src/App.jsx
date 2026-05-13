@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { PersistGate } from "redux-persist/integration/react";
 import ThemeSwitcher from "./components/ThemeSwitcher";
+import SystemUpdater from "./utils/SystemUpdater";
 // import "antd/dist/reset.css";
 
 
@@ -45,6 +46,7 @@ function App() {
   //  useAxiosInterceptors()
   return (
     <Provider store={store}>
+      <SystemUpdater />
       <PersistGate loading={null} persistor={persistor}>
         <Toaster
         

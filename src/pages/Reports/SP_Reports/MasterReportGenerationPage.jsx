@@ -37,6 +37,8 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { api } from "../../../utils/axios";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -275,8 +277,11 @@ const MasterReportGenerationPage = () => {
 
   // Column metadata
   const [columnMetadata, setColumnMetadata] = useState({});
+  const [selectedReportName, setSelectedReportName] = useState("");
 
   const isInitialized = useRef(false);
+
+  
 
   // Fetch report types
   useEffect(() => {
@@ -304,8 +309,12 @@ const MasterReportGenerationPage = () => {
   };
 
   const handleReportChange = (value) => {
-    setSelectedReport(value);
-  };
+  setSelectedReport(value);
+
+  const report = reports.find((item) => item.reportId === value);
+
+  setSelectedReportName(report?.reportName || "Report");
+};
 
   // Execute report with proper data processing
   const executeReport = useCallback(async () => {
@@ -348,16 +357,6 @@ const MasterReportGenerationPage = () => {
     }
   }, [selectedType, selectedReport, executeReport]);
 
-  // Analyze columns when data changes
-  useEffect(() => {
-    if (data.length > 0 && !isInitialized.current) {
-      const metadata = analyzeColumns(data);
-      setColumnMetadata(metadata);
-      setVisibleColumns(Object.keys(metadata));
-      isInitialized.current = true;
-    }
-  }, [data]);
-
   // Column analysis with proper typing
   const analyzeColumns = useCallback((data) => {
     const scanLimit = Math.min(data.length, 1000);
@@ -396,6 +395,30 @@ const MasterReportGenerationPage = () => {
 
     return columnInfo;
   }, []);
+
+  // Analyze columns when data changes
+  useEffect(() => {
+    if (data.length > 0) {
+      const metadata = analyzeColumns(data);
+
+      setColumnMetadata(metadata);
+
+      // Reset visible columns for new dataset
+      setVisibleColumns(Object.keys(metadata));
+
+      // Reset filters because columns changed
+      setColumnFilters({});
+
+      // Reset pagination
+      setCurrentPage(1);
+    } else {
+      // Clear everything when no data
+      setColumnMetadata({});
+      setVisibleColumns([]);
+    }
+  }, [data, analyzeColumns]);
+
+
 
   // Enhanced filtering logic
   const fullyFilteredData = useMemo(() => {
@@ -621,7 +644,53 @@ const MasterReportGenerationPage = () => {
         : [...prev, columnKey],
     );
   };
+const handleExportExcel = () => {
+    if (!fullyFilteredData || fullyFilteredData.length === 0) return;
 
+    // Remove internal rowKey
+    const cleanedData = fullyFilteredData.map(({ rowKey, ...rest }) => rest);
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(cleanedData);
+
+    // Auto column width
+    const columnWidths = Object.keys(cleanedData[0] || {}).map((key) => ({
+      wch: Math.max(
+        key.length,
+        ...cleanedData.map((row) => String(row[key] || "").length),
+      ),
+    }));
+
+    worksheet["!cols"] = columnWidths;
+    const sheetName = selectedReportName || "Report";
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      sheetName,
+    );
+    
+    
+
+    // Generate excel buffer
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    // Save file
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+
+    saveAs(
+      blob,
+      `${sheetName}_Report_${dayjs().format("DD-MM-YYYY_HH-mm")}.xlsx`,
+    );
+  };
   return (
     <div
       className={`min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-6 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
@@ -703,6 +772,7 @@ const MasterReportGenerationPage = () => {
             <Button
               icon={<DownloadOutlined />}
               type="primary"
+              onClick={handleExportExcel}
               disabled={fullyFilteredData.length === 0}
             >
               Export
