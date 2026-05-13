@@ -28,7 +28,7 @@ import { IoMdWarning } from "react-icons/io";
 import InfoTooltip from "../../../components/InfoTooltip";
 import { Select } from "antd";
 
-export default function ManageView({}) {
+export default function ManageView({ }) {
   const [search, setSearch] = useState("");
   // const [visibleRows, setVisibleRows] = useState(50);
   const [isOpen, setOpen] = useState(false);
@@ -36,10 +36,11 @@ export default function ManageView({}) {
     title: "",
     message: "",
     confirmText: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
   const dispatch = useDispatch();
   const [endDate, setEndDate] = useState("");
+  const [isUpdatingDate, setIsUpdatingDate] = useState(false);
   const {
     selectedCustomer,
     selectedSheet,
@@ -262,12 +263,12 @@ export default function ManageView({}) {
           try {
             const payload = isFiltered
               ? {
-                  updateType: "CustCode",
-                  customerStatus: {
-                    custCode: custCode[0],
-                    priceRefNo: currentSheet.id,
-                  },
-                }
+                updateType: "CustCode",
+                customerStatus: {
+                  custCode: custCode[0],
+                  priceRefNo: currentSheet.id,
+                },
+              }
               : { updateType: "PriceSheet", PriceRefNos: [currentSheet.id] };
 
             const res = await api.post(
@@ -446,6 +447,7 @@ export default function ManageView({}) {
       confirmText: "Update End Date",
       onConfirm: async () => {
         try {
+          setIsUpdatingDate(true);
           const payload = {
             updateType: "PriceSheet",
             priceRefNos: [currentSheet.id],
@@ -462,6 +464,8 @@ export default function ManageView({}) {
         } catch (error) {
           console.error("Update error:", error);
           toast.error("Failed to update end dates.");
+        } finally {
+          setIsUpdatingDate(false);
         }
       },
     };
@@ -478,11 +482,10 @@ export default function ManageView({}) {
         </span>
         {/* Status Badge */}
         <span
-          className={`text-[0.7rem] font-bold px-1.5 py-0.5 rounded border ${
-            currentSheet?.activeStatus
-              ? "border-green-500 text-green-400 bg-green-500/10"
-              : "border-red-500 text-red-400 bg-red-500/10"
-          }`}
+          className={`text-[0.7rem] font-bold px-1.5 py-0.5 rounded border ${currentSheet?.activeStatus
+            ? "border-green-500 text-green-400 bg-green-500/10"
+            : "border-red-500 text-red-400 bg-red-500/10"
+            }`}
         >
           {currentSheet?.activeStatus ? "ACTIVE" : "INACTIVE"}
         </span>
@@ -550,11 +553,10 @@ export default function ManageView({}) {
           </span>
           {/* Status Badge */}
           <span
-            className={`text-[0.7rem] font-bold px-1.5 py-0.5 rounded border ${
-              sheet.active
-                ? "border-green-500 text-green-400 bg-green-500/10"
-                : "border-red-500 text-red-400 bg-red-500/10"
-            }`}
+            className={`text-[0.7rem] font-bold px-1.5 py-0.5 rounded border ${sheet.active
+              ? "border-green-500 text-green-400 bg-green-500/10"
+              : "border-red-500 text-red-400 bg-red-500/10"
+              }`}
           >
             {sheet.active ? "ACTIVE" : "INACTIVE"}
           </span>
@@ -826,7 +828,55 @@ export default function ManageView({}) {
           )}
         </div>
       </div>
+      {currentSheet?.endDate &&
+        new Date(currentSheet.endDate) < new Date() && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+          >
+            <IoMdWarning className="text-lg" />
+            <span className="text-[0.75rem] font-semibold">
+              Price Sheet validity expired on{" "}
+              <span className="font-bold">
+                {formatDate(currentSheet.endDate)}
+              </span>
+              . Please update the end date.
+            </span>
+          </motion.div>
+        )}
+      {/* Date Update Loading Overlay */}
+      {isUpdatingDate && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0 z-50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm flex items-center justify-center rounded-xl"
+        >
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center">
+            {/* Spinner */}
+            <div className="relative h-14 w-14">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-[var(--primary)]"
+              />
+            </div>
 
+            {/* Text */}
+            <h3 className="mt-5 text-[0.9rem] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+              Updating End Date
+            </h3>
+
+            <p className="mt-1 text-[0.72rem] text-slate-500 dark:text-slate-400">
+              Please wait while updating the price sheet...
+            </p>
+          </div>
+        </motion.div>
+      )}
       {/* === DATA GRID TABLE === */}
       <div className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex flex-col overflow-hidden">
         {/* Horizontal Scroll Wrapper */}
@@ -973,11 +1023,10 @@ export default function ManageView({}) {
                     <div className="text-center flex flex-col items-center justify-center">
                       {/* 2. Visual Badge */}
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[0.5rem] font-bold mb-1 transition-colors ${
-                          item.active
-                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                            : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"
-                        }`}
+                        className={`px-2.5 py-0.5 rounded-full text-[0.5rem] font-bold mb-1 transition-colors ${item.active
+                          ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                          : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"
+                          }`}
                       >
                         {item.active ? "ACTIVE" : "INACTIVE"}
                       </span>
@@ -986,13 +1035,12 @@ export default function ManageView({}) {
                       <button
                         onClick={() => handleToggleStatus(item)}
                         disabled={!moduleOn} // Disable toggle if the whole module is off
-                        className={`relative w-10 h-5 rounded-full transition-colors duration-300 focus:outline-none ${
-                          !moduleOn
-                            ? "bg-slate-200 dark:bg-slate-600 cursor-not-allowed"
-                            : item.active
-                              ? "bg-green-600"
-                              : "bg-red-300 dark:bg-red-900"
-                        }`}
+                        className={`relative w-10 h-5 rounded-full transition-colors duration-300 focus:outline-none ${!moduleOn
+                          ? "bg-slate-200 dark:bg-slate-600 cursor-not-allowed"
+                          : item.active
+                            ? "bg-green-600"
+                            : "bg-red-300 dark:bg-red-900"
+                          }`}
                       >
                         <motion.div
                           animate={{ x: item.active ? 20 : 2 }}

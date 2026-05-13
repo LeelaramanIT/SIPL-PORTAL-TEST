@@ -26,6 +26,7 @@ import {
   setExistingSheets,
   setDates,
 } from "../../../Redux/Slices/PriceMasterSlice";
+import { IoMdWarning } from "react-icons/io";
 export default function UploadView() {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -206,8 +207,19 @@ export default function UploadView() {
     );
     toast.success("Error File downloaded!");
   };
-
+  const isSheetExpired = () => {
+    if (!endDate) return false;
+    return new Date(endDate) < new Date().setHours(0, 0, 0, 0);
+  };
   const handleExcelUpload = (e) => {
+    if (isSheetExpired()) {
+      toast.error(
+        `Price Sheet expired on ${endDate}. Please update end date before upload.`,
+      );
+
+      e.target.value = null;
+      return;
+    }
     const file = e.target.files[0];
     if (!file || !startDate || !endDate) {
       toast.error("Please select dates first.");
@@ -816,11 +828,10 @@ export default function UploadView() {
                     }
                     readOnly={sheetMode === "existing"} // Lock if existing
                     className={`w-full text-[0.8rem] rounded-lg px-3 py-2 transition-shadow outline-none border
-    ${
-      sheetMode === "existing"
-        ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
-        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-[var(--primary)]"
-    }`}
+    ${sheetMode === "existing"
+                        ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
+                        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-[var(--primary)]"
+                      }`}
                   />
                 </div>
 
@@ -839,11 +850,10 @@ export default function UploadView() {
                     }
                     readOnly={sheetMode === "existing"} // Lock if existing
                     className={`w-full text-[0.8rem] rounded-lg px-3 py-2 transition-shadow outline-none border
-    ${
-      sheetMode === "existing"
-        ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
-        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-[var(--primary)]"
-    }`}
+    ${sheetMode === "existing"
+                        ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 cursor-not-allowed"
+                        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-[var(--primary)]"
+                      }`}
                   />
                 </div>
                 {/* Category Select */}
@@ -882,8 +892,60 @@ export default function UploadView() {
                 className="hidden"
               />
               <div
-                onClick={() => document.getElementById("excelUpload").click()}
-                className="md:col-span-2 border-1 border-dashed border-[var(--accent)] rounded-xl p-4 flex flex-col items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer group"
+                onClick={() => {
+                  if (isSheetExpired()) {
+                    toast.custom((t) => (
+                      <div
+                        className={`${t.visible ? "animate-enter" : "animate-leave"
+                          } max-w-md w-full bg-white dark:bg-slate-900 shadow-xl rounded-xl pointer-events-auto flex border border-red-200 dark:border-red-800 overflow-hidden`}
+                      >
+                        {/* Left Accent */}
+                        <div className="w-1.5 bg-gradient-to-b from-red-500 to-orange-500" />
+
+                        {/* Content */}
+                        <div className="flex-1 px-4 py-2">
+                          <div className="flex items-start gap-3">
+                            {/* Icon */}
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                              <IoMdWarning className="text-red-600 dark:text-red-400 text-xl" />
+                            </div>
+
+                            {/* Text */}
+                            <div className="flex-1">
+                              <p className="text-[0.8rem] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">
+                                Price Sheet Expired
+                              </p>
+
+                              <p className="mt-1 text-[0.72rem] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Validity ended on{" "}
+                                <span className="font-semibold text-red-600 dark:text-red-400">
+                                  {endDate}
+                                </span>
+                                . Please update the end date before uploading.
+                              </p>
+                            </div>
+
+                            {/* Close */}
+                            <button
+                              onClick={() => toast.dismiss(t.id)}
+                              className="text-slate-400 hover:text-red-500 transition"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                    return;
+                  }
+
+                  document.getElementById("excelUpload").click();
+                }}
+                className={`md:col-span-2 border-1 border-dashed rounded-xl p-4 flex flex-col items-center justify-center transition
+                 ${isSheetExpired()
+                    ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/10 cursor-not-allowed opacity-70"
+                    : "border-[var(--accent)] hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
+                  }`}
               >
                 <span className="text-[0.7rem] font-medium text-slate-600 dark:text-slate-300 group-hover:text-[var(--primary)] transition-colors">
                   Click to browse or drag Excel file here
@@ -997,7 +1059,7 @@ export default function UploadView() {
                     <SearchBar
                       value={search}
                       onChange={(e) => dispatch(setSearch(e.target.value))}
-                      onSearch={() => {}}
+                      onSearch={() => { }}
                     />
                   </div>
                   <div className="mt-auto">
