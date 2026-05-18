@@ -43,6 +43,7 @@ const ChargesRow = ({
   schemeName,
   dbMaxTotal = 0,
   isPrepared,
+  watch,
   baseAmount = 0, // ← NEW: invoice total for % calculation
 }) => {
   const [gstType, setGstType] = useState("");
@@ -89,6 +90,16 @@ const ChargesRow = ({
   const remaining = maxAllowed - total;
   const exceeded = isPrepared && total > dbMaxTotal;
 
+  const chargeOptions = [
+  "SURCHARGE",
+  "PALLET CHARGES",
+  "FREIGHT CHARGES",
+  "FUMIGATION",
+  "WRAPPING CHARGES",
+  "BRAND PLATE MAKING CHARGES",
+  "TARIFF",
+];
+
   return (
     <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
       <h5 className="text-sm font-semibold mb-2 flex justify-between">
@@ -104,23 +115,31 @@ const ChargesRow = ({
       <div className="space-y-3">
         {fields.map((field, k) => (
           <div key={field.id} className="flex gap-2 items-start pt-4">
-            <Input
+            {/* <Input
               {...register(`additionalCharges.${invoiceIndex}.rows.${k}.desc`)}
               placeholder="Description"
               className="w-full px-2 py-1 text-sm border rounded"
+            /> */}
+            <SelectField
+              label=""
+              name={`additionalCharges.${invoiceIndex}.rows.${k}.desc`}
+              register={register}
+              errors={errors}
+              options={chargeOptions}
+              watch={watch}
+              setValue={setValue}
             />
             <SmartValueInput
               value={rows?.[k]?.value ?? ""}
               baseAmount={baseAmount}
               readOnly={false}
-              className={`w-28 px-2 py-1 text-sm border rounded ${
-                isPrepared &&
+              className={`w-28 px-2 py-1 text-sm border rounded ${isPrepared &&
                 Number(rows?.[k]?.value) +
-                  (total - (Number(rows?.[k]?.value) || 0)) >
-                  dbMaxTotal
-                  ? "border-red-400"
-                  : "border-gray-300"
-              }`}
+                (total - (Number(rows?.[k]?.value) || 0)) >
+                dbMaxTotal
+                ? "border-red-400"
+                : "border-gray-300"
+                }`}
               onChange={(computed) => {
                 const otherTotal = total - (Number(rows?.[k]?.value) || 0);
                 if (isPrepared && computed + otherTotal > dbMaxTotal) {
@@ -189,6 +208,7 @@ const DiscountRow = ({
   setValue,
   schemeName,
   isPrepared,
+  watch,
   baseAmount = 0, // ← NEW
 }) => {
   const { fields, append, remove } = useFieldArray({
@@ -208,6 +228,11 @@ const DiscountRow = ({
     setValue(`discountDetails.${invoiceIndex}.total`, total);
   }, [total, invoiceIndex, setValue]);
 
+  const discountOptions = [
+  "DISCOUNT",
+  "CLAIM ADJUSTMENT",
+];
+
   return (
     <div className="bg-white dark:bg-gray-800 p-3 rounded border border-red-100 dark:border-red-900">
       <h5 className="text-sm font-semibold mb-2 flex justify-between text-red-700 dark:text-red-400">
@@ -218,11 +243,20 @@ const DiscountRow = ({
       <div className="space-y-3">
         {fields.map((field, k) => (
           <div key={field.id} className="flex gap-2 items-start pt-4">
-            <Input
+            {/* <Input
               {...register(`discountDetails.${invoiceIndex}.rows.${k}.desc`)}
               placeholder="Reason"
               className="w-full px-2 py-1 text-sm border rounded"
               readOnly={isPrepared}
+            /> */}
+            <SelectField
+              label=""
+              name={`discountDetails.${invoiceIndex}.rows.${k}.desc`}
+              register={register}
+              errors={errors}
+              options={discountOptions}
+              watch={watch}
+              setValue={setValue}
             />
             <SmartValueInput
               value={rows?.[k]?.value ?? ""}
@@ -305,8 +339,8 @@ const AdditionalCustDetailsForm = ({
 
   const formattedAddress = formatMultilineText(
     savedFormData?.exportAuthorisedAddress ||
-      invoiceDetails?.exportAuthorisedAddress ||
-      "",
+    invoiceDetails?.exportAuthorisedAddress ||
+    "",
   );
 
   const matchedAddress = master?.exporterAddresses?.find(
@@ -343,8 +377,8 @@ const AdditionalCustDetailsForm = ({
       // Address & References
       exportAuthorisedAddress: formatMultilineText(
         savedFormData?.exportAuthorisedAddress ||
-          invoiceDetails?.exportAuthorisedAddress ||
-          "",
+        invoiceDetails?.exportAuthorisedAddress ||
+        "",
       ),
       authorisedSignature,
       countryOfOriginOfGoods:
@@ -765,7 +799,7 @@ const AdditionalCustDetailsForm = ({
                   name="revisionNumber"
                   register={register}
                   errors={errors}
-                  // required
+                // required
                 />
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -774,7 +808,7 @@ const AdditionalCustDetailsForm = ({
                   name="revisionDate"
                   register={register}
                   errors={errors}
-                  // required={true}
+                // required={true}
                 />
               </div>
             </div>
@@ -836,7 +870,7 @@ const AdditionalCustDetailsForm = ({
                   name="notifyPartyAddress"
                   register={register}
                   rows={2}
-                  // required={true}
+                // required={true}
                 />
               </div>
             </div>
@@ -956,6 +990,7 @@ const AdditionalCustDetailsForm = ({
                 dbMaxTotal={Number(invoiceDetails?.maxAdditionalCharges) || 0}
                 isPrepared={isPrepared}
                 baseAmount={Number(subtotal) || 0}
+                watch={watch} 
               />
               <DiscountRow
                 invoiceIndex={0}
@@ -966,6 +1001,7 @@ const AdditionalCustDetailsForm = ({
                 schemeName={invoiceDetails?.schemeName || ""}
                 isPrepared={isPrepared}
                 baseAmount={Number(subtotal) || 0}
+                watch={watch}
               />
             </div>
             <GstCharges
@@ -1114,11 +1150,10 @@ const InputField = ({
       type={type}
       readOnly={readOnly}
       placeholder={placeholder}
-      className={`w-full px-3 py-2 rounded border text-sm ${
-        errors[name]
-          ? "border-red-500 focus:ring-red-200"
-          : "border-gray-300 focus:ring-blue-100"
-      }`}
+      className={`w-full px-3 py-2 rounded border text-sm ${errors[name]
+        ? "border-red-500 focus:ring-red-200"
+        : "border-gray-300 focus:ring-blue-100"
+        }`}
       {...register(name, {
         required: required ? `${label} is required` : false,
         validate,
@@ -1142,9 +1177,8 @@ const DateField = ({ label, name, register, errors, required = false }) => (
       {...register(name, {
         required: required ? `${label} is required` : false,
       })}
-      className={`w-full px-3 py-2 rounded border text-sm bg-white dark:bg-gray-800 dark:text-white ${
-        errors[name] ? "border-red-500" : "border-gray-300"
-      }`}
+      className={`w-full px-3 py-2 rounded border text-sm bg-white dark:bg-gray-800 dark:text-white ${errors[name] ? "border-red-500" : "border-gray-300"
+        }`}
     />
     {errors[name] && (
       <p className="text-red-500 text-[10px] mt-0.5">{errors[name].message}</p>
@@ -1186,9 +1220,8 @@ const SelectField = ({
       {!isCustom ? (
         <Select
           name={name}
-          className={`w-full px-3 py-2 rounded border text-sm ${
-            errors?.[name] ? "border-red-500" : "border-gray-300"
-          }`}
+          className={`w-full px-3 py-2 rounded border text-sm ${errors?.[name] ? "border-red-500" : "border-gray-300"
+            }`}
           {...register(name, {
             required: required ? `${label} is required` : false,
           })}
@@ -1206,7 +1239,7 @@ const SelectField = ({
         >
           <option value="">Select...</option>
           {normalizedOptions.map((opt) => (
-            <option key={opt} value={opt}>
+            <option key={opt} value={opt} title={opt}>
               {opt}
             </option>
           ))}
@@ -1218,9 +1251,8 @@ const SelectField = ({
             name={name}
             type="text"
             placeholder="Enter value..."
-            className={`w-full px-3 py-2 rounded border text-sm pr-8 ${
-              errors?.[name] ? "border-red-500" : "border-blue-400"
-            }`}
+            className={`w-full px-3 py-2 rounded border text-sm pr-8 ${errors?.[name] ? "border-red-500" : "border-blue-400"
+              }`}
             {...register(name, {
               required: required ? `${label} is required` : false,
             })} // ✅ FIX HERE
@@ -1407,9 +1439,8 @@ const GstCharges = ({
               min: { value: 0, message: "Min 0%" },
               max: { value: 100, message: "Max 100%" },
             })}
-            className={`w-full px-3 py-2 border rounded text-sm ${
-              errors?.gstCharges?.igst ? "border-red-400" : "border-gray-300"
-            }`}
+            className={`w-full px-3 py-2 border rounded text-sm ${errors?.gstCharges?.igst ? "border-red-400" : "border-gray-300"
+              }`}
           />
 
           {errors?.gstCharges?.igst && (
@@ -1439,9 +1470,8 @@ const GstCharges = ({
                 min: { value: 0, message: "Min 0%" },
                 max: { value: 100, message: "Max 100%" },
               })}
-              className={`w-full px-3 py-2 border rounded text-sm ${
-                errors?.gstCharges?.cgst ? "border-red-400" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2 border rounded text-sm ${errors?.gstCharges?.cgst ? "border-red-400" : "border-gray-300"
+                }`}
             />
 
             {errors?.gstCharges?.cgst && (
@@ -1467,9 +1497,8 @@ const GstCharges = ({
                 min: { value: 0, message: "Min 0%" },
                 max: { value: 100, message: "Max 100%" },
               })}
-              className={`w-full px-3 py-2 border rounded text-sm ${
-                errors?.gstCharges?.sgst ? "border-red-400" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2 border rounded text-sm ${errors?.gstCharges?.sgst ? "border-red-400" : "border-gray-300"
+                }`}
             />
 
             {errors?.gstCharges?.sgst && (
