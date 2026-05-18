@@ -2,11 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from "vite-plugin-pwa";
 
-
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+
     VitePWA({
       registerType: "autoUpdate",
 
@@ -36,6 +35,9 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
 
+        // 🔥 ADD THIS
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+
         runtimeCaching: [
           {
             urlPattern: ({ request }) =>
@@ -51,12 +53,13 @@ export default defineConfig({
       },
     }),
   ],
+
   optimizeDeps: {
     include: ['redux-persist-transform-encrypt'],
-    // exclude: ['@react-pdf/renderer'],
   },
+
   server: {
-    port: "5174",
+    port: 5174,
     host: '0.0.0.0'
   }
 })
