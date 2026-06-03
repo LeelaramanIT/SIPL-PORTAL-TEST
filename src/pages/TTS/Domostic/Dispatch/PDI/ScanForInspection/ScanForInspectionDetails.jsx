@@ -86,71 +86,91 @@ const ScanForInspectionDetails = () => {
     }
   }, [location.state, dispatch]);
 
-  const handleScan = (e) => {
-    if (e.key === "Enter" && scanInput.trim()) {
-      if (isProcessingScan || open) {
-        toast.error("Previous tyre verification pending");
+ const handleScan = (e) => {
+  if (e.key === "Enter" && scanInput.trim()) {
+    if (isProcessingScan || open) {
+      toast.error("Previous tyre verification pending");
+      return;
+    }
 
-        return;
-      }
-      if (scanInput.trim().length === 19 && scanInput.trim().startsWith("P")) {
-        const trimmedBarcode = scanInput.trim();
+    const trimmedBarcode = scanInput.trim();
 
-        setScanInput("");
+    // ❌ Block spaces + special characters
+    const invalidCharRegex = /[\s_!@#$%^&*()+~`]/;
 
-        const processID = trimmedBarcode.substring(0, 8);
-        const stencilNo = trimmedBarcode.substring(8, 18);
+    if (invalidCharRegex.test(trimmedBarcode)) {
+      setError("Spaces and special characters are not allowed");
 
-        const matchedItem = InspectionDetails.items.find(
-          (item) => item.processID === processID,
-        );
+      setTimeout(() => setError(""), 2000);
 
-        console.log(matchedItem);
+      toast.error("Spaces and special characters are not allowed", {
+        position: "top-center",
+      });
 
-        if (!matchedItem) {
-          toast.error("No item found for this Order", {
-            position: "top-center",
-          });
-          return;
-        }
+      setScanInput("");
+      return;
+    }
 
-        // ✅ Prevent extra scanning
-        if (matchedItem.scannedQty >= matchedItem.orderQty) {
-          toast.error(
-            `Scanning limit exceeded. Allowed Qty: ${matchedItem.orderQty}`,
-            {
-              position: "top-center",
-            },
-          );
-          return;
-        }
+    // ✅ Validate barcode format
+    if (
+      trimmedBarcode.length === 19 &&
+      trimmedBarcode.startsWith("P")
+    ) {
+      const processID = trimmedBarcode.substring(0, 8);
+      const stencilNo = trimmedBarcode.substring(8, 18);
 
-        const payload = {
-          ...InspectionDetails,
-          processID,
-          stencilNo,
-          barcode: trimmedBarcode,
-          o_ItemID: matchedItem.o_ItemID,
-        };
-        setIsProcessingScan(true);
-        dispatch(resetBarcodeDetails());
-        dispatch(PDICheckBarcode(payload));
-        setOpen(true);
-      } else {
-        setError(
-          'Invalid Barcode. Length must be 19 characters and start with "P"',
-        );
+      const matchedItem = InspectionDetails.items.find(
+        (item) => item.processID === processID,
+      );
 
-        setTimeout(() => setError(""), 2000);
+      console.log(matchedItem);
 
-        toast.error("Invalid Barcode.", {
+      if (!matchedItem) {
+        toast.error("No item found for this Order", {
           position: "top-center",
         });
-
-        setScanInput("");
+        return;
       }
+
+      // ✅ Prevent extra scanning
+      if (matchedItem.scannedQty >= matchedItem.orderQty) {
+        toast.error(
+          `Scanning limit exceeded. Allowed Qty: ${matchedItem.orderQty}`,
+          {
+            position: "top-center",
+          },
+        );
+        return;
+      }
+
+      const payload = {
+        ...InspectionDetails,
+        processID,
+        stencilNo,
+        barcode: trimmedBarcode,
+        o_ItemID: matchedItem.o_ItemID,
+      };
+
+      setIsProcessingScan(true);
+      dispatch(resetBarcodeDetails());
+      dispatch(PDICheckBarcode(payload));
+      setOpen(true);
+      setScanInput("");
+    } else {
+      setError(
+        'Invalid Barcode. Length must be 19 characters and start with "P"',
+      );
+
+      setTimeout(() => setError(""), 2000);
+
+      toast.error("Invalid Barcode.", {
+        position: "top-center",
+      });
+
+      setScanInput("");
     }
-  };
+  }
+};
   const successAudio = useMemo(() => new Audio("/sounds/ok.mp3"), []);
 
   const scanedQty = InspectionDetails?.items?.reduce(
