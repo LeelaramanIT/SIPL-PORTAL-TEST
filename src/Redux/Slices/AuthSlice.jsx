@@ -2,17 +2,25 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../utils/axios";
 import { toast } from "react-hot-toast";
 
+const userData = JSON.parse(localStorage.getItem("user")) || {};
+
 const initialState = {
   token: localStorage.getItem("authToken") || null,
-  username: JSON.parse(localStorage.getItem("user"))?.username || null,
-  roles: JSON.parse(localStorage.getItem("user"))?.roles || "",
-  menus: JSON.parse(localStorage.getItem("user"))?.menus || [],
+
+  username: userData.username || null,
+  roles: userData.roles || "",
+  Menus: userData.Menus || [],
+
+  DepartmentDetails: userData.DepartmentDetails || [],
+  LocationDetails: userData.LocationDetails || [],
+
+  RoleID: userData.RoleID || "",
+
   loggedIn: !!localStorage.getItem("authToken"),
   loading: false,
   error: null,
-  Department: JSON.parse(localStorage.getItem("user"))?.Department || "",
-  RoleID: JSON.parse(localStorage.getItem("user"))?.RoleID || "",
 };
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -24,25 +32,28 @@ const authSlice = createSlice({
     loginSuccess: (state, action) => {
       console.log(action.payload);
 
-      const { Token, username, roles, Menus, RoleID, Department } =
-      action.payload;
-      state.token = Token;
-      state.username = username;
-      state.roles = roles;
-      state.menus = Menus;
-      state.Department = Department;
-      state.RoleID = RoleID;
+      const data = action.payload;
+
+      state.token = data.Token;
+
+      state.username = data.username;
+      state.roles = data.roles;
+
+      state.Menus = data.Menus || [];
+
+      state.DepartmentDetails = data.DepartmentDetails || [];
+
+      state.LocationDetails = data.LocationDetails || [];
+
+      state.RoleID = data.RoleID;
+
       state.loggedIn = true;
       state.loading = false;
-      localStorage.setItem("authToken", Token);
-      const userObj = {
-        username,
-        roles,
-        menus: Menus, // Ensure this matches the casing in initialState
-        Department,
-        RoleID,
-      };
-      localStorage.setItem("user", JSON.stringify(userObj));
+
+      localStorage.setItem("authToken", data.Token);
+
+      // SAVE FULL RESPONSE EXACTLY
+      localStorage.setItem("user", JSON.stringify(data));
     },
 
     logout: (state) => {
@@ -53,6 +64,9 @@ const authSlice = createSlice({
       state.loggedIn = false;
       state.Department = "";
       state.RoleID = "";
+      state.Location = "";
+      state.loading = false;
+      state.error = null;
       window.localStorage.clear();
       window.sessionStorage.clear();
       console.log("logout");
@@ -103,9 +117,9 @@ export const userLogout = (navigate) => async (dispatch) => {
       if (res?.data?.message) {
         toast.success(res?.data?.message);
       } else {
-        toast.success("LOGOUT SUCCESSFULL")
+        toast.success("LOGOUT SUCCESSFULL");
       }
-    }     
+    }
   } catch (error) {
     let message = "Logout failed";
 
@@ -129,9 +143,9 @@ export const resetPassword = (payload) => async (dispatch) => {
       if (res?.data?.message) {
         toast.success(res?.data?.message);
       } else {
-        toast.success("LOGOUT SUCCESSFULL")
+        toast.success("LOGOUT SUCCESSFULL");
       }
-    }     
+    }
   } catch (error) {
     let message = "Logout failed";
 

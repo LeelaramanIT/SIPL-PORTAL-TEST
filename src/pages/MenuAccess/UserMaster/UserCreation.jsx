@@ -330,9 +330,10 @@ const UserCreation = () => {
     { value: "other", label: "Other" },
   ];
   const departmentOptions = [
-    { value: "1", label: "Engineering" },
-    { value: "2", label: "Sales" },
-    { value: "3", label: "Marketing" },
+    { value: "1", label: "IT" },
+    { value: "2", label: "CRM" },
+    { value: "3", label: "DISPATCH" },
+    { value: "3", label: "PLANT" },
   ];
   const designationOptions = [
     { value: "1", label: "Jr Developer" },
@@ -351,7 +352,7 @@ const UserCreation = () => {
   const roleOptions = [
     { value: "1", label: "Admin" },
     { value: "2", label: "User" },
-    { value: "3", label: "Viewer" },
+    // { value: "3", label: "Viewer" },
   ];
 
   return (

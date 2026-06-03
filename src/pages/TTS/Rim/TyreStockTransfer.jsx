@@ -1,4 +1,11 @@
-import React, { useState, useCallback, useEffect, useRef, memo, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  memo,
+  useMemo,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout,
@@ -35,6 +42,19 @@ import {
   ClockCircleOutlined,
   MenuOutlined,
 } from "@ant-design/icons";
+import { useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  GetFactoryRefNo,
+  scanFactoryBarcode,
+  setScannedTyres,
+  InsertTransaction,
+  UpdateLoadDone,
+  GetTransactionById,
+  setFactoryRefNo,
+  GetFactoryWarehouseDetails,
+} from "../../../Redux/Slices/Warehouse/WarehouseSlice";
+import { platform } from "@floating-ui/react";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
@@ -66,10 +86,6 @@ const getStatusLabel = (status) => {
   }
 };
 
-function generateReferenceNumber() {
-  return `TRF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-}
-
 // Custom Hook for Responsive Behavior
 const useResponsive = () => {
   const [screenSize, setScreenSize] = useState({
@@ -97,846 +113,1640 @@ const useResponsive = () => {
 };
 
 // Sub-components moved outside to prevent recreation on every render
-const ResponsiveHeader = memo(({
-  isMobile,
-  isTablet,
-  isDesktop,
-  referenceNumber,
-  scannedTyresCount,
-  completionPercentage,
-  setMobileDrawerOpen,
-  transferPlan,
-  setTransferPlan,
-  transferFrom,
-  setTransferFrom,
-  transferTo,
-  setTransferTo
-}) => (
-  <Header
-    style={{
-      background: "linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)",
-      height: isMobile ? "auto" : "10vh",
-      padding: isMobile ? "8px 16px" : isTablet ? "10px 20px" : "8px 32px",
-      borderBottom: "1px solid #e2e8f0",
-      boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
-      position: "sticky",
-      top: 0,
-      zIndex: 100,
-      display: "flex",
-      alignItems: "center",
-    }}
-  >
-    <Row justify="space-between" align="middle" gutter={isMobile ? 12 : 16} style={{ width: "100%" }}>
-      <Col flex={isMobile ? "auto" : "180px"} style={{ minWidth: 0 }}>
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Space direction="vertical" size={0}>
-            <Title
-              level={isMobile ? 5 : 4}
-              style={{
-                margin: 0,
-                color: "#0f172a",
-                fontWeight: 700,
-                fontSize: isMobile ? 13 : isTablet ? 16 : 21,
-              }}
-            >
-              Stock Transfer
-            </Title>
-            <Text
-              type="secondary"
-              style={{
-                fontSize: isMobile ? 8 : isTablet ? 9 : 12,
-                color: "#64748b",
-                letterSpacing: 0.2,
-                textTransform: "uppercase",
-                fontWeight: 500,
-                marginTop: 0,
-              }}
-            >
-              ⚙ Factory → Warehouse
-            </Text>
-          </Space>
-        </motion.div>
-      </Col>
+const ResponsiveHeader = memo(
+  ({
+    isMobile,
+    isTablet,
+    isDesktop,
+    scannedTyresCount,
+    completionPercentage,
+    setMobileDrawerOpen,
+    transferPlan,
+    setTransferPlan,
+    transferFrom,
+    setTransferFrom,
+    transferTo,
+    setTransferTo,
+    state,
+    isTransactionLocked,
+  }) => {
+    const isReceive = state?.type === "RECEIVE";
+    const isNewMode = state?.mode === "NEW";
+    const isExistingMode = state?.mode === "EXISTING";
+    const pageTitle = isReceive ? "Stock Receive" : "Stock Transfer";
+    const subTitle = isReceive
+      ? "📥 Warehouse Receiving"
+      : "📤 Factory → Warehouse";
+    const { LocationDetails } = useSelector((state) => state.auth);
+    const { factoryRefNo, factoryWarehouseDetails } = useSelector(
+      (state) => state.warehouse,
+    );
 
-      {!isMobile && (
-        <Col flex="auto">
-          <Row gutter={8} align="middle" justify="center">
-            <Col span={6}>
-              <Select
-                size={isDesktop ? "middle" : "small"}
-                placeholder="Select Plan"
-                style={{ width: "100%" }}
-                value={transferPlan}
-                onChange={setTransferPlan}
-                options={[
-                  { value: "MMN", label: "MMN Plant" },
-                  { value: "PDK", label: "PDK Plant" },
-                  { value: "SITL", label: "SITL Plant" },
-                  { value: "SLTL", label: "SLTL Plant" },
-                ]}
-              />
-            </Col>
-            <Col span={6}>
-              <Select
-                size={isDesktop ? "middle" : "small"}
-                placeholder="From Location"
-                style={{ width: "100%" }}
-                value={transferFrom}
-                onChange={setTransferFrom}
-                options={[
-                  { value: "factory_a", label: "Factory A" },
-                  { value: "factory_b", label: "Factory B" },
-                  { value: "main_plant", label: "Main Plant" },
-                ]}
-              />
-            </Col>
-            <Col span={6}>
-              <Select
-                size={isDesktop ? "Transfer List" : "small"}
-                placeholder="To Location"
-                style={{ width: "100%" }}
-                value={transferTo}
-                onChange={setTransferTo}
-                options={[
-                  { value: "wh_1", label: "Warehouse 1" },
-                  { value: "wh_2", label: "Warehouse 2" },
-                  { value: "hub", label: "Regional Hub" },
-                ]}
-              />
-            </Col>
-          </Row>
-        </Col>
-      )}
+    const dispatch = useDispatch();
 
-      {!isMobile && (
-        <Col>
-          <Row gutter={isMobile ? 8 : isTablet ? 12 : 24} align="middle">
-            <Col>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div
-                  style={{
-                    background: "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
-                    padding: isDesktop ? "6px 26px" : "1px 5px",
-                    borderRadius: 4,
-                    color: "white",
-                    width: "fit-content",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: isDesktop ? 10 : 7,
-                      color: "rgba(255,255,255,0.8)",
-                      display: "block",
-                      lineHeight: 1.1,
-                      fontWeight: 600,
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    REF #
-                  </Text>
-                  <Text
-                    strong
-                    style={{
-                      fontSize: isDesktop ? 20 : 9,
-                      color: "white",
-                      fontFamily: "monospace",
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {referenceNumber}
-                  </Text>
-                </div>
-              </motion.div>
-            </Col>
+    useEffect(() => {
+      if (LocationDetails?.length > 0 && !transferPlan) {
+        setTransferPlan(LocationDetails[0].LocationName);
+      }
+    }, [LocationDetails, transferPlan]);
 
-            <Col>
-              <Progress
-                type="circle"
-                percent={completionPercentage}
-                size={35}
-                format={(percent) => (
-                  <div style={{ fontSize: 8, fontWeight: 700, color: "#0f172a" }}>
-                    {Math.round(percent)}%
-                  </div>
-                )}
-                strokeColor={{ "0%": "#3b82f6", "100%": "#1e40af" }}
-              />
-            </Col>
-          </Row>
-        </Col>
-      )}
+    const selectedPlantDetails = factoryWarehouseDetails?.find(
+      (item) => item.plant === transferPlan,
+    );
 
-      {isMobile && (
-        <Col>
-          <Button
-            type="text"
-            icon={<MenuOutlined style={{ fontSize: 18 }} />}
-            onClick={() => setMobileDrawerOpen(true)}
-          />
-        </Col>
-      )}
-    </Row>
+    // Responsive widths for select containers (increased for full dropdown display)
+    const selectContainerWidth = isDesktop
+      ? "220px"
+      : isTablet
+        ? "170px"
+        : "100%";
+    const selectFontSize = isDesktop ? 14 : isTablet ? 13 : 11;
+    const refFontSize = isDesktop ? 18 : isTablet ? 16 : 14;
 
-    {isMobile && (
-      <Row gutter={8} style={{ marginTop: 8, width: "100%" }} align="middle">
-        <Col span={8}>
-          <Select
-            size="small"
-            placeholder="Plan"
-            style={{ width: "100%" }}
-            value={transferPlan}
-            onChange={setTransferPlan}
-            options={[
-              { value: "daily", label: "Daily" },
-              { value: "weekly", label: "Weekly" },
-            ]}
-          />
-        </Col>
-        <Col span={8}>
-          <Select
-            size="small"
-            placeholder="From"
-            style={{ width: "100%" }}
-            value={transferFrom}
-            onChange={setTransferFrom}
-            options={[
-              { value: "factory_a", label: "F-A" },
-              { value: "factory_b", label: "F-B" },
-            ]}
-          />
-        </Col>
-        <Col span={8}>
-          <Select
-            size="small"
-            placeholder="To"
-            style={{ width: "100%" }}
-            value={transferTo}
-            onChange={setTransferTo}
-            options={[
-              { value: "wh_1", label: "W-1" },
-              { value: "wh_2", label: "W-2" },
-            ]}
-          />
-        </Col>
-      </Row>
-    )}
-  </Header>
-));
-
-const ResponsiveContent = memo(({
-  isMobile,
-  isTablet,
-  isDesktop,
-  scanStatus,
-  barcodeInput,
-  setBarcodeInput,
-  handleScan,
-  isScanning,
-  lastScannedTime,
-  inputRef,
-  previewTyre,
-  setPreviewTyre,
-  saveTyre,
-  scannedTyres,
-  setShowConfirmModal,
-  columns,
-  transferPlan,
-  transferFrom,
-  transferTo
-}) => {
-  const isSelectionMissing = !transferPlan || !transferFrom || !transferTo;
-
-  if (isMobile) {
     return (
-      <Content
+      <Header
         style={{
-          padding: "8px",
-          overflow: "hidden",
-          height: "calc(100vh - 150px)",
+          background: "linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)",
+          height: "auto",
+          minHeight: isMobile ? "auto" : "80px",
+          padding: isMobile
+            ? "12px 16px"
+            : isTablet
+              ? "12px 20px"
+              : "12px 28px",
+          borderBottom: "1px solid #e2e8f0",
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          style={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-          }}
+        <Row
+          justify="space-between"
+          align="middle"
+          gutter={isMobile ? 8 : isTablet ? 10 : 14}
+          style={{ width: "100%" }}
+          wrap={false}
         >
-          <Card
-            style={{
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-              borderRadius: 12,
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-              flex: previewTyre ? 0 : 1,
-              overflow: "hidden",
-            }}
-            bodyStyle={{ padding: 12 }}
+          {/* Title Section */}
+          <Col
+            flex={isMobile ? "auto" : isTablet ? "190px" : "170px"}
+            style={{ minWidth: 0, flexShrink: 0 }}
           >
-            <div style={{ marginBottom: 10 }}>
-              <motion.div
-                animate={{
-                  boxShadow:
-                    scanStatus === "scanning"
-                      ? "0 0 15px rgba(59, 130, 246, 0.4)"
-                      : scanStatus === "success"
-                        ? "0 0 15px rgba(16, 185, 129, 0.3)"
-                        : "0 0 0px rgba(0, 0, 0, 0)",
-                }}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 6,
-                  background:
-                    scanStatus === "scanning"
-                      ? "#eff6ff"
-                      : scanStatus === "success"
-                        ? "#ecfdf5"
-                        : scanStatus === "duplicate"
-                          ? "#fef2f2"
-                          : "#f1f5f9",
-                  border: `1px solid ${getStatusColor(scanStatus)}`,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <motion.div
-                  animate={
-                    scanStatus === "scanning"
-                      ? { rotate: 360 }
-                      : { rotate: 0 }
-                  }
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Space direction="vertical" size={0}>
+                <Title
+                  level={isMobile ? 5 : 4}
+                  style={{
+                    margin: 0,
+                    color: "#0f172a",
+                    fontWeight: 700,
+                    fontSize: isMobile ? 15 : isTablet ? 17 : 19,
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
-                  <RadarChartOutlined
+                  {pageTitle}
+                </Title>
+
+                <Text
+                  type="secondary"
+                  style={{
+                    fontSize: isMobile ? 10 : isTablet ? 11 : 12,
+                    color: "#64748b",
+                    letterSpacing: 0.2,
+                    textTransform: "uppercase",
+                    fontWeight: 500,
+                    marginTop: 2,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {subTitle}
+                </Text>
+              </Space>
+            </motion.div>
+          </Col>
+
+          {/* Transfer Selects (Desktop/Tablet only) */}
+          {!isMobile && (
+            <Col
+              flex="auto"
+              style={{
+                minWidth: 0,
+                overflowX: "auto",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Row
+                gutter={isDesktop ? 12 : 10}
+                align="middle"
+                justify="flex-start"
+                wrap={false}
+                style={{ marginLeft: 0 }}
+              >
+                <Col
+                  style={{
+                    width: selectContainerWidth,
+                    minWidth: selectContainerWidth,
+                    maxWidth: selectContainerWidth,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Select
+                    size="small"
+                    placeholder="Select Plan"
                     style={{
-                      color: getStatusColor(scanStatus),
-                      fontSize: 14,
+                      width: "100%",
+                      fontSize: selectFontSize,
+                      height: isDesktop ? 34 : 30,
+                    }}
+                    value={transferPlan}
+                    onChange={setTransferPlan}
+                    disabled={isTransactionLocked || isExistingMode}
+                    options={factoryWarehouseDetails?.map((item) => ({
+                      value: item.plant,
+                      label: `${item.plant} - ${item.factoryDetails}`,
+                    }))}
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{
+                      minWidth: selectContainerWidth,
+                      maxWidth: "300px",
                     }}
                   />
-                </motion.div>
-                <Text
-                  strong
-                  style={{ color: getStatusColor(scanStatus), fontSize: 12 }}
-                >
-                  {getStatusLabel(scanStatus)}
-                </Text>
-              </motion.div>
-            </div>
-
-            <Input
-              ref={inputRef}
-              size="large"
-              value={barcodeInput}
-              placeholder="Scan or enter..."
-              prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
-              onPressEnter={handleScan}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              style={{
-                fontFamily: "monospace",
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 10,
-              }}
-              maxLength={50}
-            />
-
-            <Button
-              type="primary"
-              block
-              size="large"
-              onClick={handleScan}
-              loading={isScanning}
-              disabled={isSelectionMissing}
-              style={{
-                background: isSelectionMissing ? "#cbd5e1" : "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
-                border: "none",
-                height: 40,
-                fontSize: 13,
-                fontWeight: 600,
-                borderRadius: 8,
-              }}
-            >
-              Scan
-            </Button>
-
-            {lastScannedTime && (
-              <Text
-                type="secondary"
-                style={{ fontSize: 11, display: "block", marginTop: 8 }}
-              >
-                <ClockCircleOutlined /> {lastScannedTime.toLocaleTimeString()}
-              </Text>
-            )}
-          </Card>
-
-          <AnimatePresence>
-            {previewTyre && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              >
-                <Card
+                </Col>
+                <Col
                   style={{
-                    background: "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)",
-                    borderRadius: 12,
-                    border: "2px solid #3b82f6",
-                    boxShadow: "0 10px 20px rgba(59, 130, 246, 0.1)",
-                    overflow: "hidden",
+                    width: selectContainerWidth,
+                    minWidth: selectContainerWidth,
+                    maxWidth: selectContainerWidth,
+                    flexShrink: 0,
                   }}
-                  bodyStyle={{ padding: 0 }}
                 >
-                  <div
+                  <Select
+                    size="small"
+                    placeholder="From Location"
                     style={{
-                      background: "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
-                      padding: "12px",
-                      color: "white",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+                      width: "100%",
+                      fontSize: selectFontSize,
+                      height: isDesktop ? 34 : 30,
                     }}
-                  >
-                    <Text strong style={{ color: "white", fontSize: 13 }}>
-                      Details
-                    </Text>
-                    <Tag color="gold" style={{ fontSize: 11 }}>
-                      Pending
-                    </Tag>
-                  </div>
-
-                  <div style={{ padding: "12px" }}>
-                    <div style={{ marginBottom: 8 }}>
-                      <Text type="secondary" style={{ fontSize: 10 }}>Brand</Text>
-                      <Text strong style={{ display: "block", fontSize: 13 }}>{previewTyre.brand}</Text>
-                    </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <Text type="secondary" style={{ fontSize: 10 }}>Size</Text>
-                      <Text strong style={{ display: "block", fontSize: 13 }}>{previewTyre.size}</Text>
-                    </div>
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 10 }}>Category</Text>
-                      <Tag style={{ display: "block", marginTop: 4 }}>{previewTyre.category}</Tag>
-                    </div>
-
-                    <Row gutter={6} style={{ marginTop: 12 }}>
-                      <Col span={12}>
-                        <Button
-                          block
-                          size="small"
-                          onClick={() => setPreviewTyre(null)}
-                          style={{ height: 36, borderRadius: 6, fontSize: 12 }}
-                        >
-                          Discard
-                        </Button>
-                      </Col>
-                      <Col span={12}>
-                        <Button
-                          type="primary"
-                          block
-                          size="small"
-                          onClick={saveTyre}
-                          style={{
-                            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                            border: "none",
-                            height: 36,
-                            borderRadius: 6,
-                            fontSize: 12,
-                            fontWeight: 600,
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </Col>
-                    </Row>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {scannedTyres.length > 0 && (
-            <Card
-              style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                flex: 2,
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-              }}
-              bodyStyle={{ padding: 0, flex: 1, display: "flex", flexDirection: "column" }}
-            >
-              <div style={{ padding: "8px 12px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Text strong style={{ fontSize: 12 }}>Items ({scannedTyres.length})</Text>
-              </div>
-              <div style={{ flex: 1, overflow: "auto" }}>
-                <Table
-                  columns={columns}
-                  dataSource={scannedTyres.map((tyre, index) => ({ ...tyre, key: index }))}
-                  pagination={false}
-                  size="small"
-                  showHeader={false}
-                  locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text style={{ fontSize: 11 }}>No items</Text>} /> }}
-                />
-              </div>
-            </Card>
+                    value={transferFrom}
+                    onChange={setTransferFrom}
+                    disabled={isTransactionLocked || isExistingMode}
+                    options={
+                      selectedPlantDetails
+                        ? [
+                            {
+                              value: selectedPlantDetails.factoryDetails,
+                              label: selectedPlantDetails.factoryDetails,
+                            },
+                          ]
+                        : []
+                    }
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{
+                      minWidth: selectContainerWidth,
+                      maxWidth: "300px",
+                    }}
+                  />
+                </Col>
+                <Col
+                  style={{
+                    width: selectContainerWidth,
+                    minWidth: selectContainerWidth,
+                    maxWidth: selectContainerWidth,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Select
+                    size="small"
+                    placeholder="To Location"
+                    style={{
+                      width: "100%",
+                      fontSize: selectFontSize,
+                      height: isDesktop ? 34 : 30,
+                    }}
+                    value={transferTo}
+                    onChange={setTransferTo}
+                    disabled={isTransactionLocked || isExistingMode}
+                    options={
+                      selectedPlantDetails?.warehouses?.map((warehouse) => ({
+                        value: warehouse,
+                        label: warehouse,
+                      })) || []
+                    }
+                    dropdownMatchSelectWidth={false}
+                    dropdownStyle={{
+                      minWidth: selectContainerWidth,
+                      maxWidth: "300px",
+                    }}
+                  />
+                </Col>
+              </Row>
+            </Col>
           )}
 
-          {scannedTyres.length > 0 && (
-            <Card
-              style={{
-                background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-                borderRadius: 12,
-                border: "none",
-                padding: "8px 12px",
-                color: "white",
-              }}
-              bodyStyle={{ padding: "8px" }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, display: "block" }}>READY</Text>
-                  <Text strong style={{ color: "white", fontSize: 16, display: "block" }}>{scannedTyres.length} items</Text>
-                </div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    type="primary"
-                    size="middle"
-                    icon={<SendOutlined />}
-                    onClick={() => setShowConfirmModal(true)}
-                    style={{
-                      background: "#10b981",
-                      border: "none",
-                      height: 36,
-                      paddingLeft: 12,
-                      paddingRight: 12,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
+          {/* REF Number Section */}
+          {!isMobile && (
+            <Col style={{ flexShrink: 0, minWidth: 0 }}>
+              <Row gutter={isTablet ? 8 : 10} align="middle">
+                <Col>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 }}
                   >
-                    Submit
-                  </Button>
-                </motion.div>
-              </div>
-            </Card>
+                    <div
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+                        padding: isDesktop ? "8px 14px" : "6px 12px",
+                        borderRadius: 6,
+                        color: "white",
+                        width: "fit-content",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        minWidth: "80px",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: isDesktop ? 11 : 10,
+                          color: "rgba(255,255,255,0.85)",
+                          display: "block",
+                          lineHeight: 1.1,
+                          fontWeight: 600,
+                          letterSpacing: "0.02em",
+                        }}
+                      >
+                        REF #
+                      </Text>
+                      <Text
+                        strong
+                        style={{
+                          fontSize: refFontSize,
+                          color: "white",
+                          fontFamily: "monospace",
+                          lineHeight: 1.1,
+                          whiteSpace: "nowrap",
+                          display: "inline-block",
+                        }}
+                      >
+                        {factoryRefNo}
+                      </Text>
+                    </div>
+                  </motion.div>
+                </Col>
+              </Row>
+            </Col>
           )}
-        </motion.div>
-      </Content>
+
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <Col style={{ flexShrink: 0 }}>
+              <Button
+                type="text"
+                icon={<MenuOutlined style={{ fontSize: 20 }} />}
+                onClick={() => setMobileDrawerOpen(true)}
+                style={{ fontSize: 16 }}
+              />
+            </Col>
+          )}
+        </Row>
+
+        {/* Mobile Selects */}
+        {isMobile && (
+          <Row
+            gutter={6}
+            style={{ marginTop: 10, width: "100%" }}
+            align="middle"
+            wrap={false}
+          >
+            <Col span={8} style={{ minWidth: 0 }}>
+              <Select
+                size="small"
+                placeholder="Plant"
+                disabled={isTransactionLocked}
+                style={{ width: "100%", fontSize: 11 }}
+                value={transferPlan}
+                onChange={setTransferPlan}
+                options={factoryWarehouseDetails?.map((item) => ({
+                  value: item.plant,
+                  label: `${item.plant} - ${item.factoryDetails}`,
+                }))}
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: "120px" }}
+              />
+            </Col>
+            <Col span={8} style={{ minWidth: 0 }}>
+              <Select
+                size="small"
+                placeholder="From"
+                disabled={isTransactionLocked}
+                style={{ width: "100%", fontSize: 11 }}
+                value={transferFrom}
+                onChange={setTransferFrom}
+                options={
+                  selectedPlantDetails
+                    ? [
+                        {
+                          value: selectedPlantDetails.factoryDetails,
+                          label: selectedPlantDetails.factoryDetails,
+                        },
+                      ]
+                    : []
+                }
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: "120px" }}
+              />
+            </Col>
+            <Col span={8} style={{ minWidth: 0 }}>
+              <Select
+                size="small"
+                disabled={isTransactionLocked}
+                placeholder="To"
+                style={{ width: "100%", fontSize: 11 }}
+                value={transferTo}
+                onChange={setTransferTo}
+                options={
+                  selectedPlantDetails?.warehouses?.map((warehouse) => ({
+                    value: warehouse,
+                    label: warehouse,
+                  })) || []
+                }
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ minWidth: "120px" }}
+              />
+            </Col>
+          </Row>
+        )}
+      </Header>
     );
-  }
+  },
+);
 
-  return (
-    <Content
-      style={{
-        flex: 1,
-        padding: isTablet ? "16px" : "24px 32px",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-      }}
-    >
-      <Row gutter={isTablet ? 12 : 24} style={{ flex: 1, minHeight: 0 }}>
-        <Col xs={24} sm={24} md={isTablet ? 10 : 8} style={{ height: "100%", display: "flex", flexDirection: "column", gap: isTablet ? 12 : 20 }}>
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+const ResponsiveContent = memo(
+  ({
+    isMobile,
+    isTablet,
+    isDesktop,
+    scanStatus,
+    barcodeInput,
+    setBarcodeInput,
+    handleScan,
+    isScanning,
+    lastScannedTime,
+    inputRef,
+    previewTyre,
+    setPreviewTyre,
+    saveTyre,
+    scannedTyres,
+    setShowConfirmModal,
+    columns,
+    transferPlan,
+    transferFrom,
+    transferTo,
+    groupedTyres,
+    tableLoading,
+    addLoading,
+  }) => {
+    const isSelectionMissing = !transferPlan || !transferFrom || !transferTo;
+
+    if (isMobile) {
+      return (
+        <Content
+          style={{
+            flex: 1,
+            padding: "8px",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
             <Card
               style={{
                 background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
                 borderRadius: 12,
                 border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                flex: previewTyre ? 0 : 1,
                 overflow: "hidden",
               }}
-              bodyStyle={{ padding: isTablet ? 8 : 12 }}
+              bodyStyle={{ padding: 12 }}
             >
-              <div style={{ marginBottom: 12 }}>
+              <div style={{ marginBottom: 10 }}>
                 <motion.div
                   animate={{
-                    boxShadow: scanStatus === "scanning" ? "0 0 10px rgba(59, 130, 246, 0.4)" : scanStatus === "success" ? "0 0 10px rgba(16, 185, 129, 0.3)" : "0 0 0px rgba(0, 0, 0, 0)",
+                    boxShadow:
+                      scanStatus === "scanning"
+                        ? "0 0 15px rgba(59, 130, 246, 0.4)"
+                        : scanStatus === "success"
+                          ? "0 0 15px rgba(16, 185, 129, 0.3)"
+                          : "0 0 0px rgba(0, 0, 0, 0)",
                   }}
                   style={{
-                    padding: "6px 10px",
+                    padding: "10px 12px",
                     borderRadius: 6,
-                    background: scanStatus === "scanning" ? "#eff6ff" : scanStatus === "success" ? "#ecfdf5" : scanStatus === "duplicate" ? "#fef2f2" : "#f1f5f9",
+                    background:
+                      scanStatus === "scanning"
+                        ? "#eff6ff"
+                        : scanStatus === "success"
+                          ? "#ecfdf5"
+                          : scanStatus === "duplicate"
+                            ? "#fef2f2"
+                            : "#f1f5f9",
                     border: `1px solid ${getStatusColor(scanStatus)}`,
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
                   }}
                 >
-                  <motion.div animate={scanStatus === "scanning" ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-                    <RadarChartOutlined style={{ color: getStatusColor(scanStatus), fontSize: 13 }} />
+                  <motion.div
+                    animate={
+                      scanStatus === "scanning"
+                        ? { rotate: 360 }
+                        : { rotate: 0 }
+                    }
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  >
+                    <RadarChartOutlined
+                      style={{
+                        color: getStatusColor(scanStatus),
+                        fontSize: 14,
+                      }}
+                    />
                   </motion.div>
-                  <Text strong style={{ color: getStatusColor(scanStatus), fontSize: 11 }}>{getStatusLabel(scanStatus)}</Text>
+                  <Text
+                    strong
+                    style={{ color: getStatusColor(scanStatus), fontSize: 12 }}
+                  >
+                    {getStatusLabel(scanStatus)}
+                  </Text>
                 </motion.div>
               </div>
 
-              <div style={{ marginBottom: 12 }}>
-                <Input
-                  ref={inputRef}
-                  size={isDesktop ? "middle" : "small"}
-                  value={barcodeInput}
-                  placeholder="Scan barcode..."
-                  prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
-                  onPressEnter={handleScan}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  style={{ fontFamily: "monospace", fontSize: isDesktop ? 16 : 12, fontWeight: 500 }}
-                  maxLength={50}
-                  suffix={isScanning ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}><ScanOutlined style={{ color: "#3b82f6", fontSize: isDesktop ? 18 : 12 }} /></motion.div> : null}
-                />
-              </div>
+              <Input
+                ref={inputRef}
+                size="large"
+                value={barcodeInput}
+                placeholder="Scan or enter..."
+                prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
+                onPressEnter={handleScan}
+                onChange={(e) => setBarcodeInput(e.target.value)}
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  marginBottom: 10,
+                }}
+                maxLength={50}
+              />
 
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  type="primary"
-                  block
-                  size={isDesktop ? "large" : "middle"}
-                  onClick={handleScan}
-                  loading={isScanning}
-                  disabled={isSelectionMissing}
-                  style={{
-                    background: isSelectionMissing ? "#cbd5e1" : "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
-                    border: "none",
-                    height: isDesktop ? 42 : 32,
-                    fontSize: isDesktop ? 14 : 12,
-                    fontWeight: 600,
-                    borderRadius: 8,
-                  }}
-                >
-                  Manual Scan
-                </Button>
-              </motion.div>
+              <Button
+                type="primary"
+                block
+                size="large"
+                onClick={handleScan}
+                loading={isScanning}
+                disabled={isSelectionMissing}
+                style={{
+                  background: isSelectionMissing
+                    ? "#cbd5e1"
+                    : "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+                  border: "none",
+                  height: 40,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  borderRadius: 8,
+                }}
+              >
+                Scan
+              </Button>
 
               {lastScannedTime && (
-                <Text type="secondary" style={{ fontSize: 11, display: "block", marginTop: 10 }}>
+                <Text
+                  type="secondary"
+                  style={{ fontSize: 11, display: "block", marginTop: 8 }}
+                >
                   <ClockCircleOutlined /> {lastScannedTime.toLocaleTimeString()}
                 </Text>
               )}
             </Card>
-          </motion.div>
 
-          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            <AnimatePresence mode="wait">
-              {previewTyre ? (
-                <motion.div key="preview" initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20, scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <AnimatePresence>
+              {previewTyre && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
                   <Card
                     style={{
-                      background: "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)",
-                      borderRadius: isTablet ? 12 : 16,
+                      background:
+                        "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)",
+                      borderRadius: 12,
                       border: "2px solid #3b82f6",
-                      boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.1)",
+                      boxShadow: "0 10px 20px rgba(59, 130, 246, 0.1)",
                       overflow: "hidden",
-                      flex: 1,
-                      display: "flex",
-                      flexDirection: "column",
                     }}
-                    bodyStyle={{ padding: 0, flex: 1, display: "flex", flexDirection: "column" }}
+                    bodyStyle={{ padding: 0 }}
                   >
-                    <div style={{ background: "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)", padding: isDesktop ? "12px 20px" : "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Text strong style={{ color: "white", fontSize: isDesktop ? 16 : 12 }}>Item Details</Text>
-                      <Tag color="gold" style={{ fontSize: isDesktop ? 12 : 10 }}>Pending</Tag>
+                    <div
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+                        padding: "12px",
+                        color: "white",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text strong style={{ color: "white", fontSize: 13 }}>
+                        Details
+                      </Text>
+                      <Tag color="gold" style={{ fontSize: 11 }}>
+                        Pending
+                      </Tag>
                     </div>
 
-                    <div style={{ padding: isDesktop ? "24px" : isTablet ? "12px" : "20px", flex: 1, overflowY: "auto" }}>
-                      <Descriptions column={1} size={isDesktop ? "default" : "small"} bordered>
-                        <Descriptions.Item label={<Text strong style={{ fontSize: isDesktop ? 14 : isTablet ? 11 : 12 }}>Barcode</Text>}><Text code style={{ fontSize: isDesktop ? 14 : isTablet ? 11 : 12 }}>{previewTyre.barcode}</Text></Descriptions.Item>
-                        <Descriptions.Item label={<Text strong style={{ fontSize: isDesktop ? 14 : isTablet ? 11 : 12 }}>Brand</Text>}><Badge color="#3b82f6" text={<Text strong style={{ fontSize: isDesktop ? 14 : 12 }}>{previewTyre.brand}</Text>} /></Descriptions.Item>
-                        <Descriptions.Item label={<Text strong style={{ fontSize: isDesktop ? 14 : isTablet ? 11 : 12 }}>Size</Text>}><Text strong style={{ fontSize: isDesktop ? 14 : 12 }}>{previewTyre.size}</Text></Descriptions.Item>
-                        <Descriptions.Item label={<Text strong style={{ fontSize: isDesktop ? 14 : isTablet ? 11 : 12 }}>Category</Text>}><Tag color="cyan" style={{ fontSize: isDesktop ? 13 : 11 }}>{previewTyre.category}</Tag></Descriptions.Item>
-                        <Descriptions.Item label={<Text strong style={{ fontSize: isDesktop ? 14 : isTablet ? 11 : 12 }}>Batch #</Text>}><Text type="secondary" style={{ fontSize: isDesktop ? 14 : 12 }}>{previewTyre.batchNumber}</Text></Descriptions.Item>
-                      </Descriptions>
-                    </div>
+                    <div style={{ padding: "12px" }}>
+                      <div style={{ marginBottom: 8 }}>
+                        <Text type="secondary" style={{ fontSize: 10 }}>
+                          Brand
+                        </Text>
+                        <Text strong style={{ display: "block", fontSize: 13 }}>
+                          {previewTyre.brand}
+                        </Text>
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        <Text type="secondary" style={{ fontSize: 10 }}>
+                          Size
+                        </Text>
+                        <Text strong style={{ display: "block", fontSize: 13 }}>
+                          {previewTyre.size}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 10 }}>
+                          Category
+                        </Text>
+                        <Tag style={{ display: "block", marginTop: 4 }}>
+                          {previewTyre.category}
+                        </Tag>
+                      </div>
 
-                    <div style={{ padding: isDesktop ? "16px 24px" : "8px 12px", borderTop: "1px solid #e2e8f0" }}>
-                      <Row gutter={isDesktop ? 12 : 4}>
-                        <Col span={12}><Button block onClick={() => setPreviewTyre(null)} size={isDesktop ? "large" : "small"} style={{ height: isDesktop ? 44 : 28, borderRadius: 6, fontWeight: 600, fontSize: isDesktop ? 14 : 11 }}>Discard</Button></Col>
-                        <Col span={12}><Button type="primary" block onClick={saveTyre} size={isDesktop ? "large" : "small"} style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", border: "none", height: isDesktop ? 44 : 28, borderRadius: 6, fontWeight: 600, fontSize: isDesktop ? 14 : 11 }}>Add</Button></Col>
+                      <Row gutter={6} style={{ marginTop: 12 }}>
+                        <Col span={12}>
+                          <Button
+                            block
+                            size="small"
+                            onClick={() => setPreviewTyre(null)}
+                            style={{
+                              height: 36,
+                              borderRadius: 6,
+                              fontSize: 12,
+                            }}
+                          >
+                            Discard
+                          </Button>
+                        </Col>
+                        <Col span={12}>
+                          <Button
+                            type="primary"
+                            block
+                            size="small"
+                            onClick={saveTyre}
+                            loading={addLoading}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                              border: "none",
+                              height: 36,
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </Col>
                       </Row>
                     </div>
                   </Card>
                 </motion.div>
-              ) : (
-                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ flex: 1 }}>
-                  <Card
-                    style={{
-                      background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                      borderRadius: isTablet ? 12 : 16,
-                      border: "2px dashed #cbd5e1",
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    bodyStyle={{ padding: 20 }}
-                  >
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text type="secondary" style={{ fontSize: 12 }}>Ready to scan</Text>} style={{ margin: 0 }} />
-                  </Card>
-                </motion.div>
               )}
             </AnimatePresence>
-          </div>
-        </Col>
 
-        <Col xs={24} sm={24} md={isTablet ? 14 : 16} style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <Card
+            {scannedTyres.length > 0 && (
+              <Card
+                style={{
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  flex: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }}
+                bodyStyle={{
+                  padding: 0,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    background: "#f1f5f9",
+                    borderBottom: "1px solid #e2e8f0",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text strong style={{ fontSize: 12 }}>
+                    Items ({scannedTyres.length})
+                  </Text>
+                </div>
+                <div style={{ flex: 1, overflow: "auto" }}>
+                  <Table // Mobile
+                    loading={tableLoading}
+                    columns={columns}
+                    dataSource={(Array.isArray(scannedTyres)
+                      ? scannedTyres
+                      : []
+                    ).map((tyre, index) => ({
+                      ...tyre,
+                      key: index,
+                    }))}
+                    pagination={false}
+                    size="small"
+                    showHeader={false}
+                    locale={{
+                      emptyText: (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description={
+                            <Text style={{ fontSize: 11 }}>No items</Text>
+                          }
+                        />
+                      ),
+                    }}
+                  />
+                </div>
+              </Card>
+            )}
+
+            {scannedTyres.length > 0 && (
+              <Card
+                style={{
+                  background:
+                    "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+                  borderRadius: 12,
+                  border: "none",
+                  padding: "8px 12px",
+                  color: "white",
+                }}
+                bodyStyle={{ padding: "8px" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <Text
+                      style={{
+                        color: "rgba(255,255,255,0.7)",
+                        fontSize: 10,
+                        display: "block",
+                      }}
+                    >
+                      READY
+                    </Text>
+                    <Text
+                      strong
+                      style={{ color: "white", fontSize: 16, display: "block" }}
+                    >
+                      {scannedTyres.length} items
+                    </Text>
+                  </div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      type="primary"
+                      size="middle"
+                      icon={<SendOutlined />}
+                      onClick={() => setShowConfirmModal(true)}
+                      style={{
+                        background: "#10b981",
+                        border: "none",
+                        height: 36,
+                        paddingLeft: 12,
+                        paddingRight: 12,
+                        fontSize: 13,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Submit
+                    </Button>
+                  </motion.div>
+                </div>
+              </Card>
+            )}
+          </motion.div>
+        </Content>
+      );
+    }
+
+    return (
+      <Content
+        style={{
+          flex: 1,
+          padding: isTablet ? "16px" : "24px 32px",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+      >
+        <Row gutter={isTablet ? 12 : 24} style={{ flex: 1, minHeight: 0 }}>
+          <Col
+            xs={24}
+            sm={24}
+            md={isTablet ? 10 : 8}
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: isTablet ? 12 : 20,
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card
+                style={{
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                  overflow: "hidden",
+                }}
+                bodyStyle={{ padding: isTablet ? 8 : 12 }}
+              >
+                <div style={{ marginBottom: 12 }}>
+                  <motion.div
+                    animate={{
+                      boxShadow:
+                        scanStatus === "scanning"
+                          ? "0 0 10px rgba(59, 130, 246, 0.4)"
+                          : scanStatus === "success"
+                            ? "0 0 10px rgba(16, 185, 129, 0.3)"
+                            : "0 0 0px rgba(0, 0, 0, 0)",
+                    }}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 6,
+                      background:
+                        scanStatus === "scanning"
+                          ? "#eff6ff"
+                          : scanStatus === "success"
+                            ? "#ecfdf5"
+                            : scanStatus === "duplicate"
+                              ? "#fef2f2"
+                              : "#f1f5f9",
+                      border: `1px solid ${getStatusColor(scanStatus)}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <motion.div
+                      animate={
+                        scanStatus === "scanning"
+                          ? { rotate: 360 }
+                          : { rotate: 0 }
+                      }
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <RadarChartOutlined
+                        style={{
+                          color: getStatusColor(scanStatus),
+                          fontSize: 13,
+                        }}
+                      />
+                    </motion.div>
+                    <Text
+                      strong
+                      style={{
+                        color: getStatusColor(scanStatus),
+                        fontSize: 11,
+                      }}
+                    >
+                      {getStatusLabel(scanStatus)}
+                    </Text>
+                  </motion.div>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <Input
+                    ref={inputRef}
+                    size={isDesktop ? "middle" : "small"}
+                    value={barcodeInput}
+                    placeholder="Scan barcode..."
+                    prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
+                    onPressEnter={handleScan}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: isDesktop ? 16 : 12,
+                      fontWeight: 500,
+                    }}
+                    maxLength={50}
+                    suffix={
+                      isScanning ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          <ScanOutlined
+                            style={{
+                              color: "#3b82f6",
+                              fontSize: isDesktop ? 18 : 12,
+                            }}
+                          />
+                        </motion.div>
+                      ) : null
+                    }
+                  />
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    type="primary"
+                    block
+                    size={isDesktop ? "large" : "middle"}
+                    onClick={handleScan}
+                    loading={isScanning}
+                    disabled={isSelectionMissing}
+                    style={{
+                      background: isSelectionMissing
+                        ? "#cbd5e1"
+                        : "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+                      border: "none",
+                      height: isDesktop ? 42 : 32,
+                      fontSize: isDesktop ? 14 : 12,
+                      fontWeight: 600,
+                      borderRadius: 8,
+                    }}
+                  >
+                    Manual Scan
+                  </Button>
+                </motion.div>
+
+                {lastScannedTime && (
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: 11, display: "block", marginTop: 10 }}
+                  >
+                    <ClockCircleOutlined />{" "}
+                    {lastScannedTime.toLocaleTimeString()}
+                  </Text>
+                )}
+              </Card>
+            </motion.div>
+
+            <div
               style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-                borderRadius: isTablet ? 12 : 16,
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-                height: "100%",
-                overflow: "hidden",
+                flex: 1,
+                minHeight: 0,
                 display: "flex",
                 flexDirection: "column",
+                overflow: "hidden",
               }}
-              bodyStyle={{ padding: 0, flex: 1, display: "flex", flexDirection: "column" }}
             >
-              <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: isDesktop ? "10px 20px" : "10px 16px", color: "white", display: "flex", justifyContent: "space-between", borderRadius: "16px 16px 0 0", alignItems: "center" }}>
-                <div>
-                  <Title level={5} style={{ margin: 0, color: "white", fontSize: isDesktop ? 18 : 14, fontWeight: 700 }}>Transfer List</Title>
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: isDesktop ? 12 : 10, marginTop: 1, display: "block" }}>{scannedTyres.length} item{scannedTyres.length !== 1 ? "s" : ""}</Text>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: isDesktop ? 11 : 9, display: "block", marginBottom: 2 }}>TOTAL</Text>
-                  <Text strong style={{ color: "white", fontSize: isDesktop ? 22 : 16 }}>{scannedTyres.length}</Text>
-                </div>
-              </div>
+              <AnimatePresence mode="wait">
+                {previewTyre ? (
+                  <motion.div
+                    key="preview"
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <Card
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)",
+                        borderRadius: isTablet ? 12 : 16,
+                        border: "2px solid #3b82f6",
+                        boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.1)",
+                        overflow: "hidden",
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                      bodyStyle={{
+                        padding: 0,
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <div
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+                          padding: isDesktop ? "12px 20px" : "8px 12px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text
+                          strong
+                          style={{
+                            color: "white",
+                            fontSize: isDesktop ? 16 : 12,
+                          }}
+                        >
+                          Item Details
+                        </Text>
+                        <Tag
+                          color="gold"
+                          style={{ fontSize: isDesktop ? 12 : 10 }}
+                        >
+                          Pending
+                        </Tag>
+                      </div>
 
-              <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <Table
-                  columns={columns}
-                  dataSource={scannedTyres.map((tyre, index) => ({ ...tyre, key: index }))}
-                  pagination={false}
-                  size={isDesktop ? "middle" : "small"}
-                  scroll={{ y: `calc(100vh - ${isDesktop ? "320px" : isTablet ? "260px" : "280px"})` }}
-                  locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text type="secondary" style={{ fontSize: isDesktop ? 14 : 12 }}>No items scanned yet</Text>} /> }}
-                  rowClassName={(record, index) => index === 0 ? "ant-table-row-highlight" : ""}
-                />
-              </div>
-            </Card>
-          </motion.div>
-        </Col>
-      </Row>
-    </Content>
-  );
-});
+                      <Descriptions
+                        column={1}
+                        size={isDesktop ? "default" : "small"}
+                        bordered
+                      >
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Barcode
+                            </Text>
+                          }
+                        >
+                          <Text
+                            code
+                            style={{
+                              fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                            }}
+                          >
+                            {previewTyre.barcode}
+                          </Text>
+                        </Descriptions.Item>
 
-const ResponsiveFooter = memo(({
-  isMobile,
-  isTablet,
-  isDesktop,
-  scannedTyresCount,
-  setScannedTyres,
-  setShowConfirmModal
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.4 }}
-    style={{
-      background: "linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)",
-      borderTop: "1px solid #e2e8f0",
-      padding: isMobile ? "8px" : isTablet ? "10px 12px" : "10px 32px",
-      display: "flex",
-      flexDirection: isMobile ? "column" : "row",
-      alignItems: isMobile ? "stretch" : "center",
-      justifyContent: "space-between",
-      gap: isMobile ? 8 : 12,
-      minHeight: isMobile ? "auto" : 60,
-      boxShadow: "0 -1px 3px 0 rgba(0, 0, 0, 0.08)",
-    }}
-  >
-    <Text
-      type="secondary"
-      style={{ display: "flex", alignItems: "center", gap: 6, fontSize: isMobile ? 11 : isDesktop ? 15 : 12 }}
-    >
-      <span
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Process ID
+                            </Text>
+                          }
+                        >
+                          <Text
+                            strong
+                            style={{ fontSize: isDesktop ? 14 : 12 }}
+                          >
+                            {previewTyre.processID}
+                          </Text>
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Brand
+                            </Text>
+                          }
+                        >
+                          <Badge
+                            color="#3b82f6"
+                            text={
+                              <Text
+                                strong
+                                style={{ fontSize: isDesktop ? 14 : 12 }}
+                              >
+                                {previewTyre.brand}
+                              </Text>
+                            }
+                          />
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Sidewall
+                            </Text>
+                          }
+                        >
+                          <Badge
+                            color="#3b82f6"
+                            text={
+                              <Text
+                                strong
+                                style={{ fontSize: isDesktop ? 14 : 12 }}
+                              >
+                                {previewTyre.sidewall}
+                              </Text>
+                            }
+                          />
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Tyre Size
+                            </Text>
+                          }
+                        >
+                          <Text
+                            strong
+                            style={{ fontSize: isDesktop ? 14 : 12 }}
+                          >
+                            {previewTyre.tyreSize}
+                          </Text>
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Rim Size
+                            </Text>
+                          }
+                        >
+                          <Text
+                            strong
+                            style={{ fontSize: isDesktop ? 14 : 12 }}
+                          >
+                            {previewTyre.rimSize}
+                          </Text>
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Tyre Type
+                            </Text>
+                          }
+                        >
+                          <Tag
+                            color="cyan"
+                            style={{ fontSize: isDesktop ? 13 : 11 }}
+                          >
+                            {previewTyre.tyreType}
+                          </Tag>
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Grade
+                            </Text>
+                          }
+                        >
+                          <Tag
+                            color={
+                              previewTyre.grade === "A" ? "green" : "orange"
+                            }
+                            style={{ fontSize: isDesktop ? 13 : 11 }}
+                          >
+                            {previewTyre.grade}
+                          </Tag>
+                        </Descriptions.Item>
+
+                        <Descriptions.Item
+                          label={
+                            <Text
+                              strong
+                              style={{
+                                fontSize: isDesktop ? 14 : isTablet ? 11 : 12,
+                              }}
+                            >
+                              Stencil No
+                            </Text>
+                          }
+                        >
+                          <Text
+                            type="secondary"
+                            style={{ fontSize: isDesktop ? 14 : 12 }}
+                          >
+                            {previewTyre.stencilNo}
+                          </Text>
+                        </Descriptions.Item>
+                      </Descriptions>
+
+                      <div
+                        style={{
+                          padding: isDesktop ? "16px 24px" : "8px 12px",
+                          borderTop: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <Row gutter={isDesktop ? 12 : 4}>
+                          <Col span={12}>
+                            <Button
+                              block
+                              onClick={() => setPreviewTyre(null)}
+                              size={isDesktop ? "large" : "small"}
+                              style={{
+                                height: isDesktop ? 44 : 28,
+                                borderRadius: 6,
+                                fontWeight: 600,
+                                fontSize: isDesktop ? 14 : 11,
+                              }}
+                            >
+                              Discard
+                            </Button>
+                          </Col>
+                          <Col span={12}>
+                            <Button
+                              type="primary"
+                              block
+                              onClick={saveTyre}
+                              loading={addLoading}
+                              size={isDesktop ? "large" : "small"}
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                border: "none",
+                                height: isDesktop ? 44 : 28,
+                                borderRadius: 6,
+                                fontWeight: 600,
+                                fontSize: isDesktop ? 14 : 11,
+                              }}
+                            >
+                              Add
+                            </Button>
+                          </Col>
+                        </Row>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ flex: 1 }}
+                  >
+                    <Card
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                        borderRadius: isTablet ? 12 : 16,
+                        border: "2px dashed #cbd5e1",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      bodyStyle={{ padding: 20 }}
+                    >
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            Ready to scan
+                          </Text>
+                        }
+                        style={{ margin: 0 }}
+                      />
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </Col>
+
+          <Col
+            xs={24}
+            sm={24}
+            md={isTablet ? 14 : 16}
+            style={{ display: "flex", flexDirection: "column", minHeight: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              style={{ flex: 1, display: "flex", flexDirection: "column" }}
+            >
+              <Card
+                style={{
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                  borderRadius: isTablet ? 12 : 16,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                  height: "100%",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                bodyStyle={{
+                  padding: 0,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+                    padding: isDesktop ? "10px 20px" : "10px 16px",
+                    color: "white",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    borderRadius: "16px 16px 0 0",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <Title
+                      level={5}
+                      style={{
+                        margin: 0,
+                        color: "white",
+                        fontSize: isDesktop ? 18 : 14,
+                        fontWeight: 700,
+                      }}
+                    >
+                      Transfer List
+                    </Title>
+                    <Text
+                      style={{
+                        color: "rgba(255,255,255,0.7)",
+                        fontSize: isDesktop ? 12 : 10,
+                        marginTop: 1,
+                        display: "block",
+                      }}
+                    >
+                      {scannedTyres.length} item
+                      {scannedTyres.length !== 1 ? "s" : ""}
+                    </Text>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <Text
+                      style={{
+                        color: "rgba(255,255,255,0.7)",
+                        fontSize: isDesktop ? 11 : 9,
+                        display: "block",
+                        marginBottom: 2,
+                      }}
+                    >
+                      TOTAL
+                    </Text>
+                    <Text
+                      strong
+                      style={{ color: "white", fontSize: isDesktop ? 22 : 16 }}
+                    >
+                      {scannedTyres.length}
+                    </Text>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    flex: 1,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Table // table
+                    loading={tableLoading}
+                    columns={columns}
+                    dataSource={groupedTyres.map((item, index) => ({
+                      ...item,
+                      key: index,
+                    }))}
+                    pagination={false}
+                    size={isDesktop ? "middle" : "small"}
+                    scroll={{
+                      y: `calc(100vh - ${isDesktop ? "320px" : isTablet ? "260px" : "280px"})`,
+                    }}
+                    locale={{
+                      emptyText: (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description={
+                            <Text
+                              type="secondary"
+                              style={{ fontSize: isDesktop ? 14 : 12 }}
+                            >
+                              No items scanned yet
+                            </Text>
+                          }
+                        />
+                      ),
+                    }}
+                    rowClassName={(record, index) =>
+                      index === 0 ? "ant-table-row-highlight" : ""
+                    }
+                  />
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
+      </Content>
+    );
+  },
+);
+
+const ResponsiveFooter = memo(
+  ({
+    isMobile,
+    isTablet,
+    isDesktop,
+    scannedTyresCount,
+    setScannedTyres,
+    setShowConfirmModal,
+  }) => {
+    const dispatch = useDispatch();
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
         style={{
-          display: "inline-block",
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: scannedTyresCount > 0 ? "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)" : "#cbd5e1",
+          background: "linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)",
+          borderTop: "1px solid #e2e8f0",
+          padding: isMobile ? "8px" : isTablet ? "10px 12px" : "10px 32px",
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "stretch" : "center",
+          justifyContent: "space-between",
+          gap: isMobile ? 8 : 12,
+          minHeight: isMobile ? "auto" : 60,
+          boxShadow: "0 -1px 3px 0 rgba(0, 0, 0, 0.08)",
         }}
-      />
-      <Text strong>{scannedTyresCount > 0 ? "Ready for Transfer" : "Awaiting Items"}</Text>
-    </Text>
-
-    <Space size={8} style={{ width: isMobile ? "100%" : "auto" }}>
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: isMobile ? 1 : "auto" }}>
-        <Button
-          icon={<ClearOutlined />}
-          onClick={() => { setScannedTyres([]); message.info("Cleared"); }}
-          disabled={scannedTyresCount === 0}
-          style={{ height: isDesktop ? 40 : 32, borderRadius: 6, width: isMobile ? "100%" : "auto", fontSize: isDesktop ? 14 : 12 }}
-          size={isDesktop ? "middle" : "small"}
-        >
-          {isMobile ? "Clear" : "Clear All"}
-        </Button>
-      </motion.div>
-
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: isMobile ? 1 : "auto" }}>
-        <Button
-          type="primary"
-          icon={<SendOutlined />}
-          onClick={() => setShowConfirmModal(true)}
-          disabled={scannedTyresCount === 0}
+      >
+        <Text
+          type="secondary"
           style={{
-            background: scannedTyresCount > 0 ? "linear-gradient(135deg, #10b981 0%, #059669 100%)" : "",
-            border: "none",
-            height: isDesktop ? 40 : 32,
-            borderRadius: 6,
-            fontSize: isDesktop ? 14 : 12,
-            fontWeight: 600,
-            width: isMobile ? "100%" : "auto",
-            minWidth: isMobile ? "auto" : isDesktop ? 180 : 140,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: isMobile ? 11 : isDesktop ? 15 : 12,
           }}
-          size={isDesktop ? "middle" : "small"}
         >
-          {isMobile ? "Submit" : `Submit (${scannedTyresCount})`}
-        </Button>
+          <span
+            style={{
+              display: "inline-block",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background:
+                scannedTyresCount > 0
+                  ? "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)"
+                  : "#cbd5e1",
+            }}
+          />
+          <Text strong>
+            {scannedTyresCount > 0 ? "Ready for Transfer" : "Awaiting Items"}
+          </Text>
+        </Text>
+
+        <div
+          style={{ display: "flex", gap: 8, width: isMobile ? "100%" : "auto" }}
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ flex: isMobile ? 1 : "auto", display: "flex" }}
+          >
+            <Button
+              icon={<ClearOutlined />}
+              onClick={() => {
+                dispatch(setScannedTyres([]));
+
+                sessionStorage.removeItem("activeFactoryTransfer");
+
+                setActiveTransactionId(null);
+
+                setIsTransactionLocked(false);
+
+                dispatch(GetFactoryRefNo(transferPlan));
+
+                message.info("Cleared");
+              }}
+              disabled={scannedTyresCount === 0}
+              style={{
+                height: isDesktop ? 40 : 32,
+                borderRadius: 6,
+                width: isMobile ? "100%" : "auto",
+                fontSize: isDesktop ? 14 : 12,
+              }}
+              size={isDesktop ? "middle" : "small"}
+            >
+              {isMobile ? "Clear" : "Clear All"}
+            </Button>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ flex: isMobile ? 1 : "auto", display: "flex" }}
+          >
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={() => setShowConfirmModal(true)}
+              disabled={scannedTyresCount === 0}
+              style={{
+                background:
+                  scannedTyresCount > 0
+                    ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                    : "",
+                border: "none",
+                height: isDesktop ? 40 : 32,
+                borderRadius: 6,
+                fontSize: isDesktop ? 14 : 12,
+                fontWeight: 600,
+                width: isMobile ? "100%" : "auto",
+                minWidth: isMobile ? "auto" : isDesktop ? 180 : 140,
+              }}
+              size={isDesktop ? "middle" : "small"}
+            >
+              {isMobile ? "Submit" : `Submit (${scannedTyresCount})`}
+            </Button>
+          </motion.div>
+        </div>
       </motion.div>
-    </Space>
-  </motion.div>
-));
+    );
+  },
+);
 
 export default function TyreStockTransferRedesign() {
   const { isMobile, isTablet, isDesktop } = useResponsive();
-  const [scannedTyres, setScannedTyres] = useState([]);
+  // const [scannedTyres, setScannedTyres] = useState([]);
   const [previewTyre, setPreviewTyre] = useState(null);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [referenceNumber] = useState(generateReferenceNumber());
   const [scanStatus, setScanStatus] = useState("ready");
   const [lastScannedTime, setLastScannedTime] = useState(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [transferPlan, setTransferPlan] = useState(null);
   const [transferFrom, setTransferFrom] = useState(null);
   const [transferTo, setTransferTo] = useState(null);
+  const [isTransactionLocked, setIsTransactionLocked] = useState(false);
+  const [activeTransactionId, setActiveTransactionId] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  const { state } = useLocation();
+  const { LocationDetails } = useSelector((state) => state.auth);
+  const { factoryRefNo } = useSelector((state) => state.warehouse);
+  const scannedTyres = useSelector((state) =>
+    Array.isArray(state.warehouse.scannedTyres)
+      ? state.warehouse.scannedTyres
+      : [],
+  );
+  const [form] = Form.useForm();
+  const dispatch = useDispatch();
+  const transferData = state?.transferData;
+  const [tableLoading, setTableLoading] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  console.log("transferData", transferData);
+  console.log("scannedTyres", scannedTyres);
+
+  useEffect(() => {
+    dispatch(GetFactoryWarehouseDetails());
+  }, []);
+
+  useEffect(() => {
+    if (state?.mode === "EXISTING" && transferData) {
+      setIsTransactionLocked(true);
+
+      setActiveTransactionId(transferData.tM_ID);
+
+      setTransferFrom(transferData.from);
+
+      setTransferTo(transferData.to);
+
+      dispatch(setFactoryRefNo(transferData.id));
+
+      if (transferData.plant) {
+        setTransferPlan(transferData.plant);
+      }
+
+      dispatch(
+        GetTransactionById(transferData.tM_ID, transferData.statusNo),
+      ).then((res) => {
+        const items = res?.data?.data || [];
+
+        dispatch(setScannedTyres(items));
+      });
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (LocationDetails?.length > 0 && !transferPlan) {
+      setTransferPlan(LocationDetails[0].LocationName);
+    }
+  }, [LocationDetails, transferPlan]);
+
+  useEffect(() => {
+    if (transferPlan && !activeTransactionId && isRestoring === false) {
+      dispatch(GetFactoryRefNo(transferPlan));
+    }
+  }, [transferPlan, activeTransactionId, isRestoring]);
 
   const inputRef = useRef(null);
 
@@ -952,59 +1762,195 @@ export default function TyreStockTransferRedesign() {
 
     if (!barcodeInput.trim()) {
       message.error("Please scan a barcode");
-      setScanStatus("ready");
       return;
     }
 
-    if (scannedTyres.some((t) => t.barcode === barcodeInput)) {
+    if (
+      Array.isArray(scannedTyres) &&
+      scannedTyres.some((t) => t.barcode === barcodeInput)
+    ) {
       setScanStatus("duplicate");
       message.warning("Barcode already scanned");
-      setTimeout(() => setScanStatus("ready"), 2000);
       setBarcodeInput("");
       return;
     }
 
     setScanStatus("scanning");
     setIsScanning(true);
+    setTableLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const tyreData = {
+      const payload = {
         barcode: barcodeInput,
-        tyreNumber: `TYR-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
-        category: ["APW", "BR", "PBB", "POB", "SKS", "SRT", "TLH"][Math.floor(Math.random() * 7)],
-        brand: ["Michelin", "Bridgestone", "Continental", "Goodyear"][Math.floor(Math.random() * 4)],
-        size: ["195/65R15", "205/55R16", "215/60R17"][Math.floor(Math.random() * 3)],
-        pattern: "All Season",
-        batchNumber: `BT-${Math.floor(Math.random() * 10000)}`,
-        manufacturingDate: "2026-01-10",
+        stencilNo: barcodeInput.slice(8, -1),
+        plant: transferPlan,
       };
+
+      const res = await dispatch(scanFactoryBarcode(payload));
+
+      const data = res.data?.data;
+
+      if (!data) {
+        message.error("No data found");
+        return;
+      }
+
+      const tyreData = {
+        id: data.id,
+        barcode: data.barcode,
+        config: data.config,
+        tyreSize: data.tyresize,
+        rimSize: data.rimsize,
+        tyreType: data.tyretype,
+        brand: data.brand,
+        sidewall: data.sidewall,
+        processID: data.processID,
+        stencilNo: data.stencilno,
+        grade: data.grade,
+      };
+
       setPreviewTyre(tyreData);
+
       setScanStatus("success");
       setLastScannedTime(new Date());
       setBarcodeInput("");
-      setTimeout(() => setScanStatus("ready"), 1500);
+
+      setTimeout(() => {
+        setScanStatus("ready");
+      }, 1500);
     } catch (err) {
-      message.error("Scan failed. Please try again.");
+      message.error(err?.response?.data?.message || "Scan failed");
       setScanStatus("ready");
     } finally {
       setIsScanning(false);
+      setTableLoading(false);
     }
-  }, [barcodeInput, scannedTyres]);
+  }, [barcodeInput, scannedTyres, transferPlan]);
 
-  const saveTyre = useCallback(() => {
-    if (!previewTyre) return;
-    const tyre = { ...previewTyre, scanTime: new Date().toLocaleTimeString() };
-    setScannedTyres((prev) => [tyre, ...prev]);
-    setPreviewTyre(null);
-    message.success("✓ Tyre added");
-    inputRef.current?.focus();
-  }, [previewTyre]);
+  useEffect(() => {
+    // CLEAR OLD DATA FOR NEW SEND MODE
+    if (state?.mode !== "EXISTING") {
+      dispatch(setScannedTyres([]));
 
-  const deleteTyre = useCallback((index) => {
-    setScannedTyres((prev) => prev.filter((_, i) => i !== index));
-    message.info("Tyre removed");
+      sessionStorage.removeItem("activeFactoryTransfer");
+
+      setActiveTransactionId(null);
+
+      setIsTransactionLocked(false);
+    }
   }, []);
+
+  const saveTyre = useCallback(async () => {
+    if (!previewTyre) return;
+
+    try {
+      setAddLoading(true);
+      setTableLoading(true);
+
+      const payload = {
+        dcno: factoryRefNo,
+        usename: "ADMIN",
+        plant: transferPlan,
+        pwD_ID: previewTyre.id,
+        barcode: previewTyre.barcode,
+        processID: previewTyre.processID,
+        stencilNo: previewTyre.stencilNo,
+        grade: previewTyre.grade,
+        factoryUser: "ADMIN",
+        send: transferFrom,
+        recevie: transferTo,
+        config: previewTyre.config,
+        tyreSize: previewTyre.tyreSize,
+        rimSize: previewTyre.rimSize,
+        tyreType: previewTyre.tyreType,
+        brand: previewTyre.brand,
+        sidewall: previewTyre.sidewall,
+      };
+
+      const res = await dispatch(InsertTransaction(payload));
+
+      const data = res?.data?.data;
+
+      let currentTransactionId = activeTransactionId;
+
+      if (!activeTransactionId && data?.tM_ID) {
+        currentTransactionId = data.tM_ID;
+
+        setActiveTransactionId(data.tM_ID);
+        setIsTransactionLocked(true);
+      }
+
+      const updated = await dispatch(
+        GetTransactionById(currentTransactionId, transferData?.statusNo || 46),
+      );
+
+      dispatch(setScannedTyres(updated?.data?.data || []));
+
+      setPreviewTyre(null);
+
+      message.success("✓ Tyre added successfully");
+
+      inputRef.current?.focus();
+    } catch (err) {
+      setScanStatus("duplicate");
+
+      message.error(err?.response?.data?.message || "Add failed");
+
+      setTimeout(() => {
+        setScanStatus("ready");
+      }, 2000);
+    } finally {
+      setAddLoading(false);
+      setTableLoading(false);
+    }
+  }, [
+    previewTyre,
+    transferPlan,
+    transferFrom,
+    transferTo,
+    factoryRefNo,
+    activeTransactionId,
+  ]);
+
+  const deleteTyre = useCallback(
+    (index) => {
+      const updatedTyres = scannedTyres.filter((_, i) => i !== index);
+
+      dispatch(setScannedTyres(updatedTyres));
+
+      message.info("Tyre removed");
+    },
+    [scannedTyres],
+  );
+
+  const groupedTyres = useMemo(() => {
+    const grouped = {};
+    console.log("------------------------------", scannedTyres);
+
+    scannedTyres.forEach((item) => {
+      const key = item.processID;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          config: item.config,
+          barcode: item.barcode,
+          stencilNo: item.stencilNo,
+          grade: item.grade,
+          sideWall: item.sideWall,
+          processID: item.processID,
+          brand: item.brand,
+          tyreSize: item.tyreSize,
+          rimSize: item.rimSize,
+          tyreType: item.tyreType,
+          qty: 1,
+        };
+      } else {
+        grouped[key].qty += 1;
+      }
+    });
+
+    return Object.values(grouped);
+  }, [scannedTyres]);
 
   const columns = useMemo(() => {
     if (isMobile || isTablet) {
@@ -1015,8 +1961,12 @@ export default function TyreStockTransferRedesign() {
           width: "60%",
           render: (text, record) => (
             <div>
-              <Text strong style={{ fontSize: isMobile ? 11 : 12 }}>{text}</Text>
-              <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{record.brand} • {record.size}</div>
+              <Text strong style={{ fontSize: isMobile ? 11 : 12 }}>
+                {text}
+              </Text>
+              <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>
+                {record.brand} • {record.size}
+              </div>
             </div>
           ),
         },
@@ -1025,7 +1975,13 @@ export default function TyreStockTransferRedesign() {
           width: "40%",
           render: (_, __, index) => (
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-              <Button danger type="text" size="small" icon={<DeleteOutlined />} onClick={() => deleteTyre(index)} />
+              <Button
+                danger
+                type="text"
+                size="small"
+                icon={<DeleteOutlined />}
+                onClick={() => deleteTyre(index)}
+              />
             </motion.div>
           ),
         },
@@ -1033,33 +1989,173 @@ export default function TyreStockTransferRedesign() {
     }
 
     return [
-      { title: "Barcode", dataIndex: "barcode", width: 120, render: (text) => <Text code style={{ fontSize: isDesktop ? 14 : 10 }}>{text}</Text> },
-      { title: "Tyre No.", dataIndex: "tyreNumber", width: 140, render: (text) => <Text strong style={{ fontSize: isDesktop ? 14 : 11 }}>{text}</Text> },
-      { title: "Brand", dataIndex: "brand", width: 100, render: (text) => <Tag color="blue" style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}>{text}</Tag> },
-      { title: "Size", dataIndex: "size", width: 110, render: (text) => <span style={{ fontSize: isDesktop ? 14 : 10 }}>{text}</span> },
-      { title: "Category", dataIndex: "category", width: 90, render: (text) => <Tag style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}>{text}</Tag> },
-      { title: "Scanned", dataIndex: "scanTime", width: 100, render: (text) => <Text type="secondary" style={{ fontSize: isDesktop ? 13 : 10 }}>{text}</Text> },
       {
-        title: "Action",
-        width: 60,
-        render: (_, __, index) => (
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-            <Button danger type="text" size="small" icon={<DeleteOutlined style={{ fontSize: isDesktop ? 16 : 12 }} />} onClick={() => deleteTyre(index)} />
-          </motion.div>
+        title: "Platform",
+        dataIndex: "config",
+        width: 140,
+        render: (text) => (
+          <Text strong style={{ fontSize: isDesktop ? 14 : 11 }}>
+            {text}
+          </Text>
         ),
+      },
+      {
+        title: "Brand",
+        dataIndex: "brand",
+        width: 100,
+        render: (text) => (
+          <Tag
+            color="blue"
+            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+          >
+            {text}
+          </Tag>
+        ),
+      },
+      {
+        title: "SideWall",
+        dataIndex: "sideWall",
+        width: 100,
+        render: (text) => (
+          <Tag
+            color="blue"
+            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+          >
+            {text}
+          </Tag>
+        ),
+      },
+      {
+        title: "Tyre Size",
+        dataIndex: "tyreSize",
+        width: 140,
+        render: (text) => (
+          <span style={{ fontSize: isDesktop ? 14 : 10 }}>{text}</span>
+        ),
+      },
+      {
+        title: "Rim Size",
+        dataIndex: "rimSize",
+        width: 100,
+        render: (text) => (
+          <Text style={{ fontSize: isDesktop ? 14 : 10 }}>{text}</Text>
+        ),
+      },
+
+      {
+        title: "Tyre Type",
+        dataIndex: "tyreType",
+        width: 120,
+        render: (text) => (
+          <Tag
+            color="cyan"
+            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+          >
+            {text}
+          </Tag>
+        ),
+      },
+      {
+        title: "Process ID",
+        dataIndex: "processID",
+        width: 140,
+        render: (text) => (
+          <Text strong style={{ fontSize: isDesktop ? 14 : 11 }}>
+            {text}
+          </Text>
+        ),
+      },
+      {
+        title: "Grade",
+        dataIndex: "grade",
+        width: 80,
+        render: (text) => (
+          <Tag
+            color={text === "A" ? "green" : "orange"}
+            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+          >
+            {text}
+          </Tag>
+        ),
+      },
+      {
+        title: "Qty",
+        dataIndex: "qty",
+        width: 100,
+        render: (text) => <Tag color="green">{text}</Tag>,
       },
     ];
   }, [isMobile, isTablet, deleteTyre]);
 
-  const completionPercentage = Math.min(((scannedTyres.length || 0) / Math.max(scannedTyres.length || 1, 10)) * 100, 100);
+  const completionPercentage = Math.min(
+    ((scannedTyres.length || 0) / Math.max(scannedTyres.length || 1, 10)) * 100,
+    100,
+  );
+
+  const restoreTransaction = async () => {
+    try {
+      setIsRestoring(true);
+
+      const saved = sessionStorage.getItem("activeFactoryTransfer");
+
+      // NO ACTIVE TRANSACTION
+      if (!saved) {
+        return;
+      }
+
+      const parsed = JSON.parse(saved);
+      dispatch(setFactoryRefNo(parsed.refNo));
+
+      // CALL DB
+      const res = await dispatch(GetTransactionById(parsed.transactionId));
+
+      const data = res?.data?.data;
+
+      // INVALID TRANSACTION
+      if (!data) {
+        sessionStorage.removeItem("activeFactoryTransfer");
+
+        dispatch(GetFactoryRefNo(transferPlan));
+
+        return;
+      }
+
+      // RESTORE UI
+      setActiveTransactionId(data.id);
+
+      setTransferPlan(parsed.plant);
+
+      setTransferFrom(parsed.from);
+
+      setTransferTo(parsed.to);
+
+      setIsTransactionLocked(true);
+
+      // RESTORE ITEMS
+      dispatch(setScannedTyres(Array.isArray(data?.items) ? data.items : []));
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+  useEffect(() => {
+    restoreTransaction();
+  }, []);
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f8fafc", display: "flex", flexDirection: "column" }}>
+    <Layout
+      style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <ResponsiveHeader
         isMobile={isMobile}
         isTablet={isTablet}
         isDesktop={isDesktop}
-        referenceNumber={referenceNumber}
         scannedTyresCount={scannedTyres.length}
         completionPercentage={completionPercentage}
         setMobileDrawerOpen={setMobileDrawerOpen}
@@ -1069,6 +2165,8 @@ export default function TyreStockTransferRedesign() {
         setTransferFrom={setTransferFrom}
         transferTo={transferTo}
         setTransferTo={setTransferTo}
+        state={state}
+        isTransactionLocked={isTransactionLocked}
       />
       <ResponsiveContent
         isMobile={isMobile}
@@ -1090,6 +2188,9 @@ export default function TyreStockTransferRedesign() {
         transferPlan={transferPlan}
         transferFrom={transferFrom}
         transferTo={transferTo}
+        groupedTyres={groupedTyres}
+        tableLoading={tableLoading}
+        addLoading={addLoading}
       />
       <ResponsiveFooter
         isMobile={isMobile}
@@ -1101,25 +2202,52 @@ export default function TyreStockTransferRedesign() {
       />
 
       {isMobile && (
-        <Drawer title="Transfer Details" placement="right" onClose={() => setMobileDrawerOpen(false)} open={mobileDrawerOpen}>
+        <Drawer
+          title="Transfer Details"
+          placement="right"
+          onClose={() => setMobileDrawerOpen(false)}
+          open={mobileDrawerOpen}
+        >
           <Space direction="vertical" style={{ width: "100%" }}>
             <div>
-              <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>REFERENCE NUMBER</Text>
-              <Text code style={{ display: "block", marginTop: 4, fontSize: 14 }}>{referenceNumber}</Text>
+              <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>
+                REFERENCE NUMBER
+              </Text>
+              <Text
+                code
+                style={{ display: "block", marginTop: 4, fontSize: 14 }}
+              >
+                {factoryRefNo}
+              </Text>
             </div>
             <Divider />
             <div>
-              <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>PROGRESS</Text>
-              <Progress percent={completionPercentage} style={{ marginTop: 8 }} />
-              <Text style={{ fontSize: 12, marginTop: 8, display: "block" }}>{scannedTyres.length} of 10 items scanned</Text>
+              <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>
+                PROGRESS
+              </Text>
+              <Progress
+                percent={completionPercentage}
+                style={{ marginTop: 8 }}
+              />
+              <Text style={{ fontSize: 12, marginTop: 8, display: "block" }}>
+                {scannedTyres.length} of 10 items scanned
+              </Text>
             </div>
             <Divider />
             <Button
               type="primary"
               block
-              onClick={() => { setShowConfirmModal(true); setMobileDrawerOpen(false); }}
+              onClick={() => {
+                setShowConfirmModal(true);
+                setMobileDrawerOpen(false);
+              }}
               disabled={scannedTyres.length === 0}
-              style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", border: "none", height: 40, borderRadius: 8 }}
+              style={{
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                border: "none",
+                height: 40,
+                borderRadius: 8,
+              }}
             >
               Submit Transfer
             </Button>
@@ -1136,34 +2264,125 @@ export default function TyreStockTransferRedesign() {
         bodyStyle={{ padding: 0 }}
         style={{ borderRadius: 16 }}
       >
-        <div style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", padding: isMobile ? "24px 16px" : "32px 24px", borderRadius: "8px 8px 0 0", color: "white", textAlign: "center", marginBottom: 20 }}>
-          <CheckCircleOutlined style={{ fontSize: 36, marginBottom: 10, display: "block" }} />
-          <Title level={3} style={{ margin: 0, color: "white", fontSize: isMobile ? 18 : 20 }}>Finalize Transfer</Title>
-          <Text style={{ color: "rgba(255,255,255,0.9)", display: "block", marginTop: 6, fontSize: isMobile ? 12 : 13 }}>{scannedTyres.length} items ready</Text>
+        <div
+          style={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            padding: isMobile ? "24px 16px" : "32px 24px",
+            borderRadius: "8px 8px 0 0",
+            color: "white",
+            textAlign: "center",
+            marginBottom: 20,
+          }}
+        >
+          <CheckCircleOutlined
+            style={{ fontSize: 36, marginBottom: 10, display: "block" }}
+          />
+          <Title
+            level={3}
+            style={{ margin: 0, color: "white", fontSize: isMobile ? 18 : 20 }}
+          >
+            Finalize Transfer
+          </Title>
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.9)",
+              display: "block",
+              marginTop: 6,
+              fontSize: isMobile ? 12 : 13,
+            }}
+          >
+            {scannedTyres.length} items ready
+          </Text>
         </div>
 
         <Form
+          form={form}
           layout="vertical"
-          onFinish={() => {
-            setIsSubmitting(true);
-            setTimeout(() => {
-              message.success("✓ Submitted!");
-              setScannedTyres([]);
+          onFinish={async (values) => {
+            try {
+              setIsSubmitting(true);
+              console.log(scannedTyres, "scannedTyres");
+
+              const payload = {
+                id: scannedTyres?.[0]?.tM_ID || 0,
+                vehicleNo: values.vehicleNumber,
+              };
+              console.log(payload, "payload");
+
+              const res = await dispatch(UpdateLoadDone(payload));
+              console.log(res?.data?.message, "res");
+
+              message.success(
+                res?.data?.message || "✓ Load completed successfully",
+              );
+
+              dispatch(setScannedTyres([]));
+
+              sessionStorage.removeItem("activeFactoryTransfer");
+
+              setActiveTransactionId(null);
+
+              setIsTransactionLocked(false);
+
+              dispatch(GetFactoryRefNo(transferPlan));
+              message.info("Cleared");
+
+              form.resetFields();
+
               setShowConfirmModal(false);
+            } catch (err) {
+              console.log(err);
+
+              message.error(
+                err?.message || err?.data?.message || "Failed to submit",
+              );
+            } finally {
               setIsSubmitting(false);
-            }, 1200);
+            }
           }}
           style={{ padding: isMobile ? "16px" : "24px" }}
         >
-          <Form.Item label={<Text strong>Vehicle Number</Text>} name="vehicleNumber" rules={[{ required: true, message: "Required" }]}>
-            <Input size="large" prefix={<CarOutlined />} placeholder="e.g., TN-01-AB-1234" style={{ borderRadius: 8, fontSize: isMobile ? 13 : 14 }} />
+          <Form.Item
+            label={<Text strong>Vehicle Number</Text>}
+            name="vehicleNumber"
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input
+              size="large"
+              prefix={<CarOutlined />}
+              placeholder="e.g., TN-01-AB-1234"
+              style={{ borderRadius: 8, fontSize: isMobile ? 13 : 14 }}
+            />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={isSubmitting} style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", border: "none", height: isMobile ? 40 : 44, borderRadius: 8, fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={isSubmitting}
+              style={{
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                border: "none",
+                height: isMobile ? 40 : 44,
+                borderRadius: 8,
+                fontSize: isMobile ? 13 : 14,
+                fontWeight: 600,
+              }}
+            >
               Confirm & Dispatch
             </Button>
           </Form.Item>
-          <Button block onClick={() => setShowConfirmModal(false)} style={{ height: isMobile ? 36 : 40, borderRadius: 8, fontSize: isMobile ? 12 : 13 }}>Cancel</Button>
+          <Button
+            block
+            onClick={() => setShowConfirmModal(false)}
+            style={{
+              height: isMobile ? 36 : 40,
+              borderRadius: 8,
+              fontSize: isMobile ? 12 : 13,
+            }}
+          >
+            Cancel
+          </Button>
         </Form>
       </Modal>
 

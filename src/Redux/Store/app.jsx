@@ -26,6 +26,10 @@ import SprintReducer from '../Slices/Task_Master/Sprint/SprintSlice'
 import CIMMasterReducer from '../Slices/Customer_Item_Management/CIMMasterSlice'
 import CIMBarcodeReducer from '../Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice'
 
+// orderProcess
+import OrderProcessReducer from "../Slices/OrderProcess/OrderProcessSlice";
+
+
 
 // warehouse
 import WarehouseReducer from "../Slices/Warehouse/WarehouseSlice";
@@ -162,7 +166,13 @@ const SprintReducerConfig = {
 }
 
 const WarehouseReducerConfig = {
-  key:'Warehouse',
+  key:'warehouse',
+  version:1,
+  storage: storageSession
+}
+
+const OrderProcessConfig = {
+  key:'orderProcess',
   version:1,
   storage: storageSession
 }
@@ -189,6 +199,8 @@ const persistedCIMBarcodeReducer = persistReducer(CIMBarcodeReducerConfig,CIMBar
 const persistedSprintReducer = persistReducer(SprintReducerConfig,SprintReducer)
 const presistedUserMasterReducer = persistReducer(UserMastertConfig,UserMasterReducer)
 const persistedWarehouseReducer = persistReducer(WarehouseReducerConfig,WarehouseReducer)
+const persistedOrderProcessReducer = persistReducer(OrderProcessConfig,OrderProcessReducer)
+
 
 
 
@@ -214,7 +226,8 @@ const rootReducer = combineReducers({
   CIMMaster:persistedCIMMasterReducer,
   CIMBarcode:persistedCIMBarcodeReducer,
   Sprint:persistedSprintReducer,
-  Warehouse:persistedWarehouseReducer
+  warehouse:persistedWarehouseReducer,
+  orderProcess:persistedOrderProcessReducer
 });
 
 // Store setup

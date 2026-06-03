@@ -22,6 +22,7 @@ import {
   Slider,
   Radio,
   DatePicker,
+  message
 } from "antd";
 import {
   SearchOutlined,
@@ -263,6 +264,8 @@ const MasterReportGenerationPage = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [reportParams, setReportParams] = useState([]);
+  const [paramValues, setParamValues] = useState({});
 
   // Enhanced filter state
   const [columnFilters, setColumnFilters] = useState({});
@@ -281,7 +284,7 @@ const MasterReportGenerationPage = () => {
 
   const isInitialized = useRef(false);
 
-  
+
 
   // Fetch report types
   useEffect(() => {
@@ -309,47 +312,92 @@ const MasterReportGenerationPage = () => {
   };
 
   const handleReportChange = (value) => {
-  setSelectedReport(value);
+    setSelectedReport(value);
 
-  const report = reports.find((item) => item.reportId === value);
+    const report = reports.find((item) => item.reportId === value);
 
-  setSelectedReportName(report?.reportName || "Report");
-};
+    setSelectedReportName(report?.reportName || "Report");
+
+    // Dynamic params
+    setReportParams(report?.reportParams || []);
+
+    // Reset old values
+    setParamValues({});
+  };
+
+  const handleParamChange = (key, value) => {
+    setParamValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   // Execute report with proper data processing
   const executeReport = useCallback(async () => {
     if (!selectedType || !selectedReport) return;
 
+    // Validate required params
+    const missingParams = reportParams.filter(
+      (param) =>
+        param.required &&
+        !paramValues[param.paramName]
+    );
+
+    if (missingParams.length > 0) {
+      message.warning(
+        `Please fill: ${missingParams
+          .map((p) => p.paramName)
+          .join(", ")}`
+      );
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const response = await api.post("/BulkReport/Execute-Report", {
-        reportTypeID: selectedType,
-        reportNameID: selectedReport,
-      });
+      const response = await api.post(
+        "/BulkReport/Execute-Report",
+        {
+          reportTypeID: selectedType,
+          reportNameID: selectedReport,
+          parameters: paramValues,
+        }
+      );
 
       const responseData = response.data;
+
       let tableData = [];
 
-      // Handle different response structures
       if (Array.isArray(responseData)) {
         tableData = responseData;
-      } else if (responseData && typeof responseData === "object") {
+      } else if (
+        responseData &&
+        typeof responseData === "object"
+      ) {
         const firstKey = Object.keys(responseData).find(
           (key) =>
-            Array.isArray(responseData[key]) && responseData[key].length > 0,
+            Array.isArray(responseData[key]) &&
+            responseData[key].length > 0
         );
-        tableData = firstKey ? responseData[firstKey] : [];
+
+        tableData = firstKey
+          ? responseData[firstKey]
+          : [];
       }
 
       setData(tableData);
     } catch (error) {
-      console.error("Error executing report:", error);
+      console.error(error);
       setData([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedType, selectedReport]);
-
+  }, [
+    selectedType,
+    selectedReport,
+    paramValues,
+    reportParams,
+  ]);
   // Auto-execute on selection
   useEffect(() => {
     if (selectedType && selectedReport) {
@@ -636,6 +684,7 @@ const MasterReportGenerationPage = () => {
 
   // UI handlers
   const handleRefresh = () => executeReport();
+
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
   const toggleColumn = (columnKey) => {
     setVisibleColumns((prev) =>
@@ -644,7 +693,7 @@ const MasterReportGenerationPage = () => {
         : [...prev, columnKey],
     );
   };
-const handleExportExcel = () => {
+  const handleExportExcel = () => {
     if (!fullyFilteredData || fullyFilteredData.length === 0) return;
 
     // Remove internal rowKey
@@ -672,8 +721,8 @@ const handleExportExcel = () => {
       worksheet,
       sheetName,
     );
-    
-    
+
+
 
     // Generate excel buffer
     const excelBuffer = XLSX.write(workbook, {
@@ -696,7 +745,7 @@ const handleExportExcel = () => {
       className={`min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-6 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
     >
       {/* Header */}
-      <div className="max-w-7xl mx-auto space-y-3">
+      <div className={`${isFullscreen ? "max-w-7xl" : "max-w-[87rem]"} mx-auto space-y-3`}>
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:text-white bg-clip-text text-transparent">
@@ -707,7 +756,11 @@ const handleExportExcel = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button icon={<FullscreenOutlined />} onClick={toggleFullscreen} />
+            <Button icon={<FullscreenOutlined />} onClick={toggleFullscreen} style={{
+              backgroundColor: "var(--primary)",
+              borderColor: "var(--primary)",
+              color: "#fff",
+            }} />
             <Segmented
               options={[
                 { label: "Compact", value: "small" },
@@ -716,12 +769,17 @@ const handleExportExcel = () => {
               ]}
               value={densityMode}
               onChange={(value) => setDensityMode(value)}
+              style={{
+                backgroundColor: "var(--primary)",
+                borderColor: "var(--primary)",
+                color: "#fff",
+              }}
             />
           </div>
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
           <Select
             placeholder="Report Type"
             value={selectedType}
@@ -730,7 +788,7 @@ const handleExportExcel = () => {
             size="large"
           >
             {reportTypes.map((type) => (
-              <Option key={type.typeId} value={type.typeId}>
+              <Option key={type.typeId} value={type.typeId} >
                 {type.typeName}
               </Option>
             ))}
@@ -750,6 +808,63 @@ const handleExportExcel = () => {
               </Option>
             ))}
           </Select>
+          {/* Dynamic Params */}
+          {reportParams.map((param) => (
+            <div key={param.paramName}>
+              {param.options ? (
+                <Select
+                  placeholder={`Select ${param.paramName}`}
+                  value={paramValues[param.paramName]}
+                  onChange={(value) =>
+                    handleParamChange(param.paramName, value)
+                  }
+                  className="w-full"
+                  size="large"
+                >
+                  {param.options.map((option) => (
+                    <Option key={option} value={option}>
+                      {option}
+                    </Option>
+                  ))}
+                </Select>
+              ) : param.dataType === "datetime" ? (
+                <DatePicker
+                  className="w-full"
+                  size="large"
+                  placeholder={`Select ${param.paramName}`}
+                  value={
+                    paramValues[param.paramName]
+                      ? dayjs(paramValues[param.paramName])
+                      : null
+                  }
+                  onChange={(date) =>
+                    handleParamChange(
+                      param.paramName,
+                      date ? dayjs(date).format("YYYY-MM-DD") : null
+                    )
+                  }
+                />
+              ) : (
+                <Select
+                  placeholder={`Select ${param.paramName}`}
+                  value={paramValues[param.paramName]}
+                  onChange={(value) =>
+                    handleParamChange(param.paramName, value)
+                  }
+                  className="w-full"
+                  size="large"
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {(param.values || []).map((option) => (
+                    <Option key={option} value={option}>
+                      {option}
+                    </Option>
+                  ))}
+                </Select>
+              )}
+            </div>
+          ))}
 
           <Input
             placeholder="Global Search..."
@@ -763,9 +878,14 @@ const handleExportExcel = () => {
           <div className="flex gap-2">
             <Button
               icon={<ReloadOutlined />}
-              onClick={handleRefresh}
+              onClick={executeReport}
               loading={loading}
               disabled={!selectedReport}
+              style={{
+                backgroundColor: "var(--primary-light)",
+                borderColor: "var(--primary)",
+                color: "var(--primary)",
+              }}
             >
               Refresh
             </Button>
@@ -774,6 +894,11 @@ const handleExportExcel = () => {
               type="primary"
               onClick={handleExportExcel}
               disabled={fullyFilteredData.length === 0}
+              style={{
+                backgroundColor: "var(--primary)",
+                borderColor: "var(--primary)",
+                color: "#fff",
+              }}
             >
               Export
             </Button>
@@ -796,8 +921,13 @@ const handleExportExcel = () => {
               }}
               trigger={["click"]}
               placement="topRight"
+
             >
-              <Button icon={<SettingOutlined />}>
+              <Button icon={<SettingOutlined />} style={{
+                backgroundColor: "var(--primary-light)",
+                borderColor: "var(--primary)",
+                color: "var(--primary)",
+              }}>
                 Columns ({visibleColumns.length})
               </Button>
             </Dropdown>
@@ -806,7 +936,7 @@ const handleExportExcel = () => {
 
         {/* Stats & Filters */}
         {fullyFilteredData.length > 0 && (
-          <div className="flex flex-wrap items-center gap-4 bg-white/50 backdrop-blur-sm rounded-t-lg p-3 border">
+          <div className="flex flex-wrap items-center gap-4 bg-[var(--background)] rounded-lg p-3 border border-[var(--border)] shadow-sm">
             <div className="flex items-center gap-2">
               <span className="font-medium">Records:</span>
               <Badge count={fullyFilteredData.length.toLocaleString()} />
@@ -830,18 +960,20 @@ const handleExportExcel = () => {
         )}
 
         {/* Table */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-[var(--primary)] overflow-hidden">
           {loading ? (
             <div className="p-12">
               <Skeleton active paragraph={{ rows: 12 }} />
             </div>
           ) : fullyFilteredData.length === 0 ? (
             <Empty
-              className="p-24"
+              className="p-24 font-medium text-base"
               description={
-                !selectedReport
-                  ? "Select a report to view data"
-                  : "No data matches your filters"
+                <span style={{ color: "var(--primary)" }}>
+                  {!selectedReport
+                    ? "Select a report to view data"
+                    : "No data matches your filters"}
+                </span>
               }
             />
           ) : (

@@ -6,6 +6,7 @@ import { RxDashboard } from "react-icons/rx";
 import {
   MdOutlineAssignmentTurnedIn,
   MdOutlineManageAccounts,
+  MdOutlineManageSearch,
   MdOutlineQrCode,
   MdOutlineReceipt,
   MdOutlineTimeline,
@@ -59,6 +60,8 @@ import {
   HiOutlineCube, // Masters
 } from "react-icons/hi";
 import { HiOutlineArchiveBox } from "react-icons/hi2";
+import { TbRouteAltLeft } from "react-icons/tb";
+import { FiPackage } from "react-icons/fi";
 
 const { Sider } = Layout;
 
@@ -191,6 +194,11 @@ const SideBar = () => {
           icon: <BsGlobeCentralSouthAsia />,
           label: "International",
           children: [
+            {
+              key: "/TTS/International/OrderProcess",
+              icon: <FiPackage   />,
+              label: "Order Process",
+            },
             {
               key: "InternationalInvoice",
               icon: <FaFileInvoiceDollar />,
@@ -332,6 +340,11 @@ const SideBar = () => {
         {
           key: "/Masters/ItemIDMaster",
           label: "Item Master Creation",
+          icon: <MdOutlinePriceChange />,
+        },
+        {
+          key: "/Masters/Master-creation",
+          label: "Master Creation",
           icon: <MdOutlinePriceChange />,
         },
       ],

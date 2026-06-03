@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Order — Dynamic Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0e13;--s1:#111318;--s2:#161820;--s3:#1c1f29;
+  --b1:#2a2e3f;--b2:#363b52;--b3:#464c68;
+  --tx1:#f0f1f5;--tx2:#a8adc4;--tx3:#666d8a;--tx4:#3d4260;
+  --gold:#e8a020;--red:#e8442a;--blue:#3d7ef8;--green:#22c97a;
+  --purple:#9d6ef0;--teal:#16bfcf;--orange:#f07030;--amber:#f59e0b;
+  --r:12px;--rs:7px;
+  --glow:0 0 0 3px rgba(232,160,32,0.15);
+  --sh:0 2px 12px rgba(0,0,0,0.3);--sh2:0 8px 40px rgba(0,0,0,0.5);
+}
+html{font-size:13px}
+body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--tx1);min-height:100vh;padding-bottom:100px}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:200;background:rgba(12,14,19,.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b1);height:52px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.logo{font-family:'Instrument Serif',serif;font-size:1.2rem;display:flex;align-items:center;gap:8px}
+.logo-gem{width:26px;height:26px;background:linear-gradient(135deg,var(--gold),var(--red));
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;color:#fff;font-family:'Geist',sans-serif}
+.hc{font-size:.72rem;color:var(--tx3);display:flex;align-items:center;gap:6px}
+.hc span{color:var(--tx2)}.hc .cur{color:var(--tx1);font-weight:600}.hc .sep{color:var(--tx4)}
+.hr{display:flex;align-items:center;gap:8px}
+.sono{font-family:'Geist Mono',monospace;font-size:.68rem;color:var(--gold);
+  background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.2);padding:3px 10px;border-radius:20px}
+.hbtn{padding:6px 14px;border-radius:var(--rs);font-family:'Geist',sans-serif;
+  font-size:.75rem;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.hbtn-g{background:rgba(255,255,255,.06);border:1px solid var(--b2);color:var(--tx2)}
+.hbtn-g:hover{color:var(--tx1)}
+.hbtn-p{background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff}
+.hbtn-p:hover{opacity:.88}
+
+/* LAYOUT */
+.wrap{max-width:1400px;margin:0 auto;padding:24px;position:relative;z-index:1}
+.ptop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.ptitle{font-family:'Instrument Serif',serif;font-size:2rem;
+  background:linear-gradient(135deg,var(--tx1),var(--tx2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
+.psub{font-size:.75rem;color:var(--tx3)}
+.dpill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;
+  font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  background:rgba(232,160,32,.12);color:var(--gold);border:1px solid rgba(232,160,32,.2)}
+.ddot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* STEP TRACK */
+.strack{display:flex;align-items:center;background:var(--s1);border:1px solid var(--b1);
+  border-radius:var(--r);padding:10px 20px;margin-bottom:18px;gap:0;overflow-x:auto;
+  min-height:54px}
+.sti{display:flex;align-items:center;gap:7px;flex-shrink:0;padding:4px 8px;border-radius:8px}
+.stn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;font-weight:700;border:1.5px solid var(--b2);color:var(--tx3);
+  background:var(--s2);flex-shrink:0;transition:all .3s}
+.sti.done .stn{background:rgba(34,201,122,.15);border-color:var(--green);color:var(--green)}
+.sti.act .stn{background:rgba(232,160,32,.15);border-color:var(--gold);color:var(--gold)}
+.sti.skip .stn{background:rgba(42,46,63,.3);border-color:var(--b1);color:var(--tx4)}
+.stlb{font-size:.68rem;font-weight:600;color:var(--tx3);transition:color .3s}
+.sti.act .stlb{color:var(--gold)}
+.sti.done .stlb{color:var(--green)}
+.sti.skip .stlb{color:var(--tx4);text-decoration:line-through;opacity:.5}
+.stline{flex:1;height:1px;background:var(--b1);min-width:14px;max-width:44px;margin:0 3px;transition:background .3s}
+.stline.d{background:rgba(34,201,122,.3)}
+.stline.sk{background:rgba(42,46,63,.3)}
+.skip-badge{font-size:.52rem;font-weight:700;text-transform:uppercase;padding:1px 5px;
+  border-radius:20px;background:rgba(42,46,63,.5);color:var(--tx4);letter-spacing:.06em;margin-left:3px}
+
+/* ORDER TYPE BANNER — shown after selection */
+.ot-banner{
+  display:none;
+  align-items:center;gap:12px;
+  padding:12px 18px;border-radius:var(--r);margin-bottom:14px;
+  border:1px solid;font-size:.82rem;font-weight:600;
+}
+.ot-banner.show{display:flex}
+.ot-banner-icon{font-size:1.4rem}
+.ot-banner-text{}
+.ot-banner-name{font-weight:700;font-size:.9rem}
+.ot-banner-desc{font-size:.72rem;font-weight:400;margin-top:2px;opacity:.8}
+.ot-banner-skips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.skip-chip{font-size:.6rem;font-weight:700;text-transform:uppercase;
+  padding:3px 8px;border-radius:20px;border:1px solid;letter-spacing:.05em;opacity:.7}
+
+/* MAIN GRID */
+.mg{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+
+/* PANEL */
+.panel{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  margin-bottom:12px;overflow:hidden;transition:all .3s}
+.panel.hidden{display:none}
+.panel.skipped{opacity:.35;pointer-events:none;filter:grayscale(.8)}
+.ph{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid var(--b1);background:var(--s2);cursor:pointer}
+.pht{display:flex;align-items:center;gap:8px;font-size:.83rem;font-weight:600;color:var(--tx1)}
+.phi{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.phi-gd{background:rgba(232,160,32,.12)}.phi-bl{background:rgba(61,126,248,.12)}
+.phi-gn{background:rgba(34,201,122,.12)}.phi-or{background:rgba(240,112,48,.12)}
+.phi-pu{background:rgba(157,110,240,.12)}.phi-tl{background:rgba(22,191,207,.12)}
+.phi-am{background:rgba(245,158,11,.12)}.phi-rd{background:rgba(232,68,42,.12)}
+.pm{display:flex;align-items:center;gap:7px}
+.rbadge{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  padding:2px 7px;border-radius:20px;border:1px solid rgba(232,160,32,.3);color:var(--gold)}
+.na-badge{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  padding:2px 7px;border-radius:20px;border:1px solid rgba(42,46,63,.6);color:var(--tx4);
+  background:rgba(42,46,63,.3)}
+.carrow{color:var(--tx4);font-size:.62rem;transition:transform .3s}
+.panel.coll .carrow{transform:rotate(-90deg)}
+.pb{padding:16px 18px}
+.panel.coll .pb{display:none}
+
+/* FORM */
+.fg{display:grid;gap:11px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.f{display:flex;flex-direction:column;gap:5px}
+.f label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
+.f label .rq{color:var(--red);margin-left:2px}
+.f input,.f select,.f textarea{
+  background:var(--s3);border:1.5px solid var(--b1);border-radius:var(--rs);
+  padding:8px 10px;color:var(--tx1);font-family:'Geist',sans-serif;font-size:.82rem;
+  outline:none;transition:all .2s;appearance:none;width:100%}
+.f input:focus,.f select:focus,.f textarea:focus{
+  border-color:var(--gold);background:rgba(232,160,32,.04);box-shadow:var(--glow)}
+.f input::placeholder{color:var(--tx4)}
+.f select option{background:var(--s2)}
+.f textarea{resize:vertical;min-height:60px}
+.f input[readonly]{color:var(--tx2);cursor:default;background:rgba(42,46,63,.2)}
+
+/* INFO BOX */
+.info-box{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;
+  border-radius:var(--rs);font-size:.75rem;line-height:1.5;margin-bottom:12px}
+.info-box.blue{background:rgba(61,126,248,.08);border:1px solid rgba(61,126,248,.2);color:var(--tx2)}
+.info-box.amber{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--tx2)}
+.info-box.green{background:rgba(34,201,122,.08);border:1px solid rgba(34,201,122,.2);color:var(--tx2)}
+.info-box.teal{background:rgba(22,191,207,.08);border:1px solid rgba(22,191,207,.2);color:var(--tx2)}
+
+/* ENTITY CARDS */
+.egrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.ec{background:var(--s3);border:1.5px solid var(--b1);border-radius:9px;padding:11px;
+  cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.ec:hover{border-color:var(--b2);transform:translateY(-1px)}
+.ec.sel{border-color:var(--gold);background:rgba(232,160,32,.05);box-shadow:0 0 0 2px rgba(232,160,32,.1)}
+.ec-chk{position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:50%;
+  background:var(--gold);display:none;align-items:center;justify-content:center;
+  font-size:.5rem;color:#000;font-weight:800}
+.ec.sel .ec-chk{display:flex}
+.ec-av{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:.75rem;color:#fff;margin-bottom:7px}
+.ec-name{font-size:.75rem;font-weight:700;color:var(--tx1);margin-bottom:1px}
+.ec-code{font-family:'Geist Mono',monospace;font-size:.58rem;color:var(--tx3)}
+.ec-loc{font-size:.6rem;color:var(--tx4);margin-top:2px}
+
+/* ORDER TYPE CARDS */
+.otg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:0}
+.otc{background:var(--s3);border:2px solid var(--b1);border-radius:10px;
+  padding:14px 12px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.otc::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s}
+.otc:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.otc:hover::before{opacity:1}
+/* each type color */
+.otc.t-std{border-color:rgba(61,126,248,.25)}.otc.t-std::before{background:rgba(61,126,248,.04)}
+.otc.t-std:hover,.otc.t-std.sel{border-color:var(--blue)}.otc.t-std.sel{background:rgba(61,126,248,.07)}
+.otc.t-blk{border-color:rgba(157,110,240,.25)}.otc.t-blk::before{background:rgba(157,110,240,.04)}
+.otc.t-blk:hover,.otc.t-blk.sel{border-color:var(--purple)}.otc.t-blk.sel{background:rgba(157,110,240,.07)}
+.otc.t-mts{border-color:rgba(245,158,11,.25)}.otc.t-mts::before{background:rgba(245,158,11,.04)}
+.otc.t-mts:hover,.otc.t-mts.sel{border-color:var(--amber)}.otc.t-mts.sel{background:rgba(245,158,11,.07)}
+.otc.t-tri{border-color:rgba(22,191,207,.25)}.otc.t-tri::before{background:rgba(22,191,207,.04)}
+.otc.t-tri:hover,.otc.t-tri.sel{border-color:var(--teal)}.otc.t-tri.sel{background:rgba(22,191,207,.07)}
+.otc.t-ipt{border-color:rgba(34,201,122,.25)}.otc.t-ipt::before{background:rgba(34,201,122,.04)}
+.otc.t-ipt:hover,.otc.t-ipt.sel{border-color:var(--green)}.otc.t-ipt.sel{background:rgba(34,201,122,.07)}
+
+.ot-chk{position:absolute;top:7px;right:7px;width:15px;height:15px;border-radius:50%;
+  display:none;align-items:center;justify-content:center;font-size:.52rem;font-weight:800}
+.otc.sel .ot-chk{display:flex}
+.t-std.sel .ot-chk{background:var(--blue);color:#fff}
+.t-blk.sel .ot-chk{background:var(--purple);color:#fff}
+.t-mts.sel .ot-chk{background:var(--amber);color:#000}
+.t-tri.sel .ot-chk{background:var(--teal);color:#000}
+.t-ipt.sel .ot-chk{background:var(--green);color:#000}
+
+.oti{font-size:1.6rem;margin-bottom:8px;display:block}
+.otn{font-size:.75rem;font-weight:700;margin-bottom:3px}
+.t-std .otn{color:var(--tx2)}.t-std.sel .otn{color:var(--blue)}
+.t-blk .otn{color:var(--tx2)}.t-blk.sel .otn{color:var(--purple)}
+.t-mts .otn{color:var(--tx2)}.t-mts.sel .otn{color:var(--amber)}
+.t-tri .otn{color:var(--tx2)}.t-tri.sel .otn{color:var(--teal)}
+.t-ipt .otn{color:var(--tx2)}.t-ipt.sel .otn{color:var(--green)}
+.otd{font-size:.6rem;color:var(--tx3);line-height:1.4}
+.ot-tag{position:absolute;top:6px;left:6px;font-size:.5rem;font-weight:700;
+  text-transform:uppercase;padding:2px 5px;border-radius:20px;letter-spacing:.06em}
+.tag-cust{background:rgba(61,126,248,.15);color:var(--blue)}
+.tag-int{background:rgba(22,191,207,.15);color:var(--teal)}
+.tag-prod{background:rgba(245,158,11,.15);color:var(--amber)}
+.ot-flows{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.ot-flow-item{font-size:.58rem;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.ot-flow-item.yes{color:var(--green)}.ot-flow-item.no{color:var(--tx4);text-decoration:line-through;opacity:.6}
+
+/* CUSTOMER */
+.csw{position:relative}
+.csd{display:flex;align-items:center;gap:10px;background:var(--s3);border:1.5px solid var(--b1);
+  border-radius:var(--rs);padding:9px 12px;cursor:pointer;transition:all .2s}
+.csd:hover{border-color:var(--b2)}.csd.fil{border-color:rgba(34,201,122,.3);background:rgba(34,201,122,.03)}
+.cav{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:.75rem;color:#fff;flex-shrink:0}
+.ci{flex:1}.cn{font-size:.83rem;font-weight:600}
+.cm{font-family:'Geist Mono',monospace;font-size:.63rem;color:var(--tx3);margin-top:1px}
+.cdd{position:absolute;top:calc(100%+5px);left:0;right:0;background:var(--s2);
+  border:1px solid var(--b2);border-radius:var(--r);box-shadow:var(--sh2);z-index:50;display:none;overflow:hidden}
+.cdd.op{display:block}
+.cds{display:flex;align-items:center;gap:7px;padding:10px 12px;border-bottom:1px solid var(--b1)}
+.cds input{background:transparent;border:none;color:var(--tx1);font-size:.82rem;flex:1;
+  outline:none;font-family:'Geist',sans-serif}
+.cdl{max-height:200px;overflow-y:auto}
+.cdi{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--b1)}
+.cdi:last-child{border-bottom:none}.cdi:hover{background:var(--s3)}
+.cdbal{font-family:'Geist Mono',monospace;font-size:.63rem;color:var(--green)}
+
+/* PLANT SELECTOR */
+.plant-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.plant-card{background:var(--s3);border:1.5px solid var(--b1);border-radius:9px;
+  padding:13px 14px;cursor:pointer;transition:all .2s;position:relative}
+.plant-card:hover{border-color:var(--b2)}
+.plant-card.sel{border-color:var(--green);background:rgba(34,201,122,.05)}
+.plant-card.sel-dest{border-color:var(--blue);background:rgba(61,126,248,.05)}
+.pc-badge{position:absolute;top:8px;right:8px;font-size:.55rem;font-weight:700;
+  text-transform:uppercase;padding:2px 6px;border-radius:20px;letter-spacing:.06em}
+.pc-src{background:rgba(34,201,122,.15);color:var(--green)}
+.pc-dst{background:rgba(61,126,248,.15);color:var(--blue)}
+.pc-icon{font-size:1.1rem;margin-bottom:5px}
+.pc-name{font-size:.8rem;font-weight:700;color:var(--tx1);margin-bottom:2px}
+.pc-code{font-family:'Geist Mono',monospace;font-size:.62rem;color:var(--tx3)}
+.pc-loc{font-size:.62rem;color:var(--tx4);margin-top:2px}
+.pc-stock{font-size:.65rem;color:var(--green);margin-top:4px;font-family:'Geist Mono',monospace}
+
+/* ADDRESS */
+.atabs{display:flex;gap:3px;background:var(--bg);border-radius:7px;padding:3px;
+  margin-bottom:12px;border:1px solid var(--b1)}
+.atab{flex:1;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:.7rem;font-weight:600;
+  transition:all .2s;text-align:center;border:none;background:transparent;color:var(--tx3);
+  display:flex;align-items:center;justify-content:center;gap:5px}
+.atab.act{background:var(--s1);color:var(--tx1);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.atc{display:none}.atc.act{display:block}
+.amc{background:var(--s3);border:1.5px solid var(--b1);border-radius:8px;
+  padding:11px 13px;display:flex;align-items:flex-start;gap:9px;
+  cursor:pointer;transition:all .2s;margin-bottom:7px;position:relative}
+.amc:hover{border-color:var(--b2)}.amc.sel{border-color:var(--blue);background:rgba(61,126,248,.05)}
+.arad{width:14px;height:14px;border-radius:50%;border:2px solid var(--b2);
+  flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.amc.sel .arad{border-color:var(--blue);background:var(--blue)}
+.amc.sel .arad::after{content:'';width:4px;height:4px;border-radius:50%;background:#fff}
+.ad{flex:1}
+.at2{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px}
+.al1{font-size:.8rem;font-weight:600;color:var(--tx1)}.al2{font-size:.7rem;color:var(--tx2);margin-top:1px}
+.adef{font-size:.56rem;font-weight:700;text-transform:uppercase;padding:2px 6px;
+  border-radius:20px;background:rgba(34,201,122,.12);color:var(--green);position:absolute;top:8px;right:8px}
+.stog{display:flex;align-items:center;gap:8px;font-size:.73rem;color:var(--tx2);
+  cursor:pointer;padding:8px 10px;background:var(--s3);border:1px solid var(--b1);
+  border-radius:var(--rs);margin-bottom:10px;user-select:none}
+.tog{width:28px;height:15px;border-radius:8px;background:var(--b1);position:relative;
+  cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--blue)}
+.tog::after{content:'';position:absolute;width:9px;height:9px;border-radius:50%;
+  background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.tog.on::after{transform:translateX(13px)}
+
+/* PRODUCTION ORDER FIELDS */
+.prod-fields{background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.15);
+  border-radius:var(--r);padding:14px;margin-bottom:12px}
+.pf-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--amber);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* TRIAL FIELDS */
+.trial-fields{background:rgba(22,191,207,.04);border:1px solid rgba(22,191,207,.15);
+  border-radius:var(--r);padding:14px;margin-bottom:12px}
+.tf-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* TRANSFER ARROW */
+.transfer-arrow{display:flex;align-items:center;justify-content:center;padding:10px 0;
+  font-size:1.4rem;color:var(--green);opacity:.7}
+
+/* ITEMS TABLE */
+.impbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.imc{display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:var(--s3);border:1.5px solid var(--b1);border-radius:9px;
+  padding:10px 13px;cursor:pointer;transition:all .2s;min-width:90px;text-align:center;position:relative}
+.imc:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.imc.exc{border-color:rgba(34,201,122,.2)}.imc.exc:hover{border-color:var(--green)}
+.imc.pdf{border-color:rgba(232,68,42,.2)}.imc.pdf:hover{border-color:var(--red)}
+.imc.pst{border-color:rgba(61,126,248,.2)}.imc.pst:hover{border-color:var(--blue)}
+.imc.ai{border-color:rgba(22,191,207,.2);background:linear-gradient(135deg,rgba(22,191,207,.04),transparent)}.imc.ai:hover{border-color:var(--teal)}
+.imc.tpl{border-color:rgba(157,110,240,.2)}.imc.tpl:hover{border-color:var(--purple)}
+.im-ic{font-size:1.3rem;line-height:1}.im-lb{font-size:.65rem;font-weight:700;color:var(--tx2)}.im-sb{font-size:.56rem;color:var(--tx3)}
+.ai-tag{position:absolute;top:4px;right:4px;font-size:.48rem;font-weight:700;text-transform:uppercase;
+  padding:1px 5px;border-radius:20px;background:rgba(22,191,207,.15);color:var(--teal);letter-spacing:.06em}
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+thead tr{background:var(--s2)}
+th{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--tx3);padding:8px 7px;text-align:left;border-bottom:2px solid var(--b1);white-space:nowrap}
+th.num{text-align:right}
+tbody tr{border-bottom:1px solid rgba(42,46,63,.6);transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.015)}
+td{padding:4px 4px;vertical-align:middle}
+td.rn{color:var(--tx4);font-family:'Geist Mono',monospace;font-size:.62rem;padding-left:10px;width:28px}
+td input,td select{background:transparent;border:1.5px solid transparent;border-radius:5px;
+  padding:5px 6px;font-family:'Geist',sans-serif;font-size:.78rem;color:var(--tx1);
+  width:100%;outline:none;transition:all .2s}
+td input:hover,td select:hover{border-color:var(--b2);background:var(--s3)}
+td input:focus,td select:focus{border-color:var(--blue);background:rgba(61,126,248,.06);box-shadow:0 0 0 2px rgba(61,126,248,.1)}
+td.num input{text-align:right}
+td.ltot{font-family:'Geist Mono',monospace;font-size:.78rem;font-weight:600;text-align:right;padding-right:7px;color:var(--gold)}
+.delbtn{background:none;border:none;color:var(--tx4);cursor:pointer;font-size:.9rem;padding:3px 5px;border-radius:4px;transition:all .2s;line-height:1}
+.delbtn:hover{color:var(--red);background:rgba(232,68,42,.08)}
+.icw{position:relative}
+.icdd{position:absolute;top:calc(100%+2px);left:0;background:var(--s2);border:1px solid var(--b2);
+  border-radius:var(--r);box-shadow:var(--sh2);z-index:300;width:290px;display:none;overflow:hidden}
+.icdd.op{display:block}
+.icdsb{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--b1)}
+.icdsb input{background:transparent;border:none;color:var(--tx1);font-size:.78rem;flex:1;outline:none;font-family:'Geist',sans-serif}
+.icdl{max-height:170px;overflow-y:auto}
+.icdi{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--b1)}
+.icdi:last-child{border-bottom:none}.icdi:hover{background:var(--s3)}
+.icdcode{font-family:'Geist Mono',monospace;font-size:.62rem;color:var(--blue);font-weight:500}
+.icdname{font-size:.72rem;font-weight:500;color:var(--tx1);margin-top:1px}
+.icdstock{font-size:.58rem;color:var(--tx3)}.icdprice{font-family:'Geist Mono',monospace;font-size:.65rem;color:var(--green);font-weight:500}
+.addrow{display:flex;align-items:center;gap:5px;background:none;border:none;
+  color:var(--gold);cursor:pointer;font-size:.72rem;font-weight:600;padding:8px 10px;
+  transition:opacity .2s;font-family:'Geist',sans-serif}
+.addrow:hover{opacity:.7}
+
+/* DOC DISCOUNT TAX */
+.dtpanel{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.dtpanel.hidden{display:none}
+.dth{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid var(--b1);background:var(--s2)}
+.dtt{display:flex;align-items:center;gap:8px;font-size:.83rem;font-weight:600;color:var(--tx1)}
+.dtb{padding:16px 18px}
+.disc-types{display:flex;gap:5px;margin-bottom:10px}
+.dt-btn{padding:5px 11px;border-radius:20px;font-size:.68rem;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--b1);background:var(--s3);color:var(--tx3);transition:all .2s;font-family:'Geist',sans-serif}
+.dt-btn.act{border-color:var(--gold);color:var(--gold);background:rgba(232,160,32,.08)}
+.tax-rows{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.tax-row{display:flex;align-items:center;gap:8px;background:var(--s3);border:1px solid var(--b1);border-radius:var(--rs);padding:9px 11px}
+.tax-row .f{flex:1;gap:2px}.tax-row .f label{font-size:.55rem}
+.tr-del{background:none;border:none;color:var(--tx4);cursor:pointer;font-size:.82rem;padding:3px;transition:color .2s}
+.tr-del:hover{color:var(--red)}
+.add-tax-btn{display:flex;align-items:center;gap:4px;background:none;border:none;
+  color:var(--blue);cursor:pointer;font-size:.7rem;font-weight:600;padding:5px 0;
+  transition:opacity .2s;font-family:'Geist',sans-serif}
+.add-tax-btn:hover{opacity:.7}
+.charge-row{display:flex;align-items:center;gap:8px;background:var(--s3);
+  border:1px solid var(--b1);border-radius:var(--rs);padding:9px 11px;margin-bottom:7px}
+.charge-row .f{flex:1;gap:2px}
+.calc-ladder{background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);padding:14px 16px;margin-top:12px}
+.cl-title{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:10px}
+.cl-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;
+  border-bottom:1px solid rgba(42,46,63,.5);font-size:.78rem}
+.cl-row:last-child{border-bottom:none}
+.cl-lbl{color:var(--tx3)}.cl-val{font-family:'Geist Mono',monospace;font-weight:500;color:var(--tx1)}
+.cl-row.deduct .cl-val{color:var(--red)}
+.cl-row.grand{padding-top:8px;margin-top:3px;border-top:2px solid var(--b2)}
+.cl-row.grand .cl-lbl{font-weight:700;color:var(--tx1);font-size:.85rem}
+.cl-row.grand .cl-val{color:var(--gold);font-size:1.15rem;font-weight:700}
+.dv{height:1px;background:var(--b1);margin:12px 0}
+.dv-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--tx4);display:flex;align-items:center;gap:7px;margin:12px 0 9px}
+.dv-lbl::after{content:'';flex:1;height:1px;background:var(--b1)}
+.ptg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ptc{background:var(--s3);border:1.5px solid var(--b1);border-radius:var(--rs);
+  padding:8px 9px;cursor:pointer;text-align:center;transition:all .2s}
+.ptc:hover{border-color:var(--b2)}.ptc.sel{border-color:var(--purple);background:rgba(157,110,240,.08)}
+.ptc-n{font-size:.75rem;font-weight:700;margin-bottom:1px}
+.ptc.sel .ptc-n{color:var(--purple)}.ptc-d{font-size:.58rem;color:var(--tx3)}
+
+/* SIDEBAR */
+.sidebar{position:sticky;top:68px}
+.sum-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;margin-bottom:10px;box-shadow:var(--sh)}
+.sc-head{padding:12px 16px;border-bottom:1px solid var(--b1);font-size:.65rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);
+  display:flex;justify-content:space-between;align-items:center}
+.sc-body{padding:12px 16px}
+.sr{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:5px 0;border-bottom:1px solid rgba(42,46,63,.5);font-size:.72rem}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--tx3)}.sv{color:var(--tx1);font-weight:500;text-align:right;max-width:140px}
+.sv.mono{font-family:'Geist Mono',monospace}.sv.gold{color:var(--gold)}
+.sv.green{color:var(--green)}.sv.blue{color:var(--blue)}.sv.red{color:var(--red)}
+.sv.purple{color:var(--purple)}.sv.teal{color:var(--teal)}.sv.amber{color:var(--amber)}
+
+/* ORDER TYPE COLOR IN SIDEBAR */
+.ot-indicator{display:flex;align-items:center;gap:7px;padding:10px 12px;
+  border-radius:var(--rs);margin-bottom:10px;font-size:.75rem;font-weight:600;border:1px solid}
+
+.grand-box{border-radius:var(--r);padding:16px;margin-bottom:10px;text-align:center;border:1px solid}
+.gb-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;opacity:.8}
+.gb-val{font-family:'Instrument Serif',serif;font-size:2.2rem;line-height:1}
+.gb-cur{font-size:.7rem;margin-top:3px;font-family:'Geist Mono',monospace;color:var(--tx3)}
+
+.chklist{list-style:none}
+.cli{display:flex;align-items:center;gap:6px;padding:5px 0;font-size:.7rem;color:var(--tx3)}
+.cli.done{color:var(--green)}.cli.pend{color:var(--tx3)}.cli.na{color:var(--tx4);opacity:.5}
+.clico{width:13px;height:13px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.48rem}
+.cli.done .clico{background:rgba(34,201,122,.2);color:var(--green)}
+.cli.pend .clico{background:var(--s3);border:1px solid var(--b2)}
+.cli.na .clico{background:rgba(42,46,63,.3);border:1px solid var(--b1);color:var(--tx4)}
+
+.act-btns{display:flex;flex-direction:column;gap:6px;padding:12px 16px;border-top:1px solid var(--b1)}
+.abtn{width:100%;padding:9px;border-radius:var(--rs);font-family:'Geist',sans-serif;
+  font-size:.78rem;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.ab-prim{background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff}
+.ab-prim:hover{opacity:.88;transform:translateY(-1px)}
+.ab-sec{background:var(--s3);border:1px solid var(--b2);color:var(--tx2)}
+.ab-sec:hover{color:var(--tx1);border-color:var(--b3)}
+
+/* MODAL */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+  z-index:500;display:none;align-items:center;justify-content:center}
+.mover.op{display:flex}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:14px;
+  width:520px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,.6);overflow:hidden}
+.mh{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--b1);background:var(--s2)}
+.mt{font-family:'Instrument Serif',serif;font-size:.95rem}
+.mc-btn{background:none;border:none;color:var(--tx3);font-size:1.1rem;cursor:pointer;transition:color .2s}
+.mc-btn:hover{color:var(--tx1)}
+.mb{padding:16px 18px}
+.mhint{font-size:.72rem;color:var(--tx3);margin-bottom:10px;
+  background:rgba(61,126,248,.06);border:1px solid rgba(61,126,248,.15);
+  border-radius:var(--rs);padding:8px 11px;line-height:1.5}
+.mhint code{font-family:'Geist Mono',monospace;color:var(--blue);font-size:.7rem}
+#pasteArea{width:100%;min-height:110px;background:var(--s3);border:1.5px solid var(--b1);
+  border-radius:var(--rs);padding:10px;font-family:'Geist Mono',monospace;font-size:.72rem;
+  color:var(--tx1);outline:none;resize:vertical;line-height:1.6}
+#pasteArea:focus{border-color:var(--blue)}
+.mf{padding:11px 18px;border-top:1px solid var(--b1);display:flex;justify-content:flex-end;gap:7px}
+.mbtn{padding:7px 16px;border-radius:var(--rs);font-family:'Geist',sans-serif;
+  font-size:.73rem;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.mb-g{background:var(--s3);border:1px solid var(--b2);color:var(--tx2)}.mb-g:hover{color:var(--tx1)}
+.mb-p{background:var(--blue);color:#fff}.mb-p:hover{background:#2d6ef0}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:var(--s1);border:1px solid var(--b2);color:var(--tx1);
+  padding:8px 16px;border-radius:99px;font-size:.73rem;box-shadow:var(--sh2);
+  display:flex;align-items:center;gap:6px;z-index:999;opacity:0;pointer-events:none;
+  white-space:nowrap;transition:opacity .3s,transform .3s}
+.toast.sh{opacity:1;transform:translateX(-50%) translateY(-4px)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:99px}
+@media(max-width:1060px){.mg{grid-template-columns:1fr}.sidebar{position:static}}
+@media(max-width:700px){.fg3,.fg4{grid-template-columns:1fr 1fr}.egrid{grid-template-columns:repeat(3,1fr)}.otg{grid-template-columns:1fr 1fr}.ptg{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-gem">SF</div>SalesFlow ERP</div>
+  <div class="hc"><span>Sales</span><span class="sep">›</span><span>Orders</span><span class="sep">›</span><span class="cur">New Order</span></div>
+  <div class="hr">
+    <div class="sono" id="sonoEl">SO-2026-0413</div>
+    <button class="hbtn hbtn-g" onclick="saveDraft()">Save Draft</button>
+    <button class="hbtn hbtn-p" onclick="submitOrder()">Submit</button>
+  </div>
+</header>
+
+<!-- PASTE MODAL -->
+<div class="mover" id="pModal">
+  <div class="modal">
+    <div class="mh"><div class="mt">📋 Paste from Clipboard</div><button class="mc-btn" onclick="closeM('pModal')">✕</button></div>
+    <div class="mb">
+      <div class="mhint">Copy rows from <strong>Excel / Google Sheets</strong>.<br>Columns: <code>Item Code</code> · <code>Description</code> · <code>Qty</code> · <code>Unit Price</code> · <code>Disc%</code></div>
+      <textarea id="pasteArea" placeholder="WGT-PRO-01&#9;Widget Pro&#9;10&#9;49.99&#9;5"></textarea>
+    </div>
+    <div class="mf">
+      <button class="mbtn mb-g" onclick="closeM('pModal')">Cancel</button>
+      <button class="mbtn mb-p" onclick="importPasted()">Import →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+  <div class="ptop">
+    <div>
+      <div class="ptitle">New Sales Order</div>
+      <div class="psub" id="psubEl">Select entity and order type — form adapts to your selection</div>
+    </div>
+    <div class="dpill"><span class="ddot"></span>Draft</div>
+  </div>
+
+  <!-- DYNAMIC STEP TRACK -->
+  <div class="strack" id="stepTrack"><!-- rendered by JS --></div>
+
+  <!-- ORDER TYPE BANNER -->
+  <div class="ot-banner" id="otBanner">
+    <div class="ot-banner-icon" id="otbIcon"></div>
+    <div class="ot-banner-text">
+      <div class="ot-banner-name" id="otbName"></div>
+      <div class="ot-banner-desc" id="otbDesc"></div>
+    </div>
+    <div class="ot-banner-skips" id="otbSkips"></div>
+  </div>
+
+  <div class="mg">
+  <div id="formCols">
+
+    <!-- ══ PANEL 1: ENTITY ══ -->
+    <div class="panel" id="p-entity">
+      <div class="ph" onclick="togPanel('p-entity')">
+        <div class="pht"><div class="phi phi-gd">🏢</div>Company Entity</div>
+        <div class="pm"><span class="rbadge">Step 1</span><span class="carrow">▾</span></div>
+      </div>
+      <div class="pb">
+        <div class="info-box blue">ℹ️ &nbsp;Entity determines legal company, currency, tax rules and available warehouses/plants.</div>
+        <div class="egrid">
+          <div class="ec sel" onclick="selEnt(this,'Global HQ','ENT-001','SGD','Singapore')">
+            <div class="ec-chk">✓</div>
+            <div class="ec-av" style="background:linear-gradient(135deg,#e8a020,#f07030)">GH</div>
+            <div class="ec-name">Global HQ</div><div class="ec-code">ENT-001</div><div class="ec-loc">📍 Singapore</div>
+          </div>
+          <div class="ec" onclick="selEnt(this,'US Division','ENT-002','USD','New York')">
+            <div class="ec-chk">✓</div>
+            <div class="ec-av" style="background:linear-gradient(135deg,#3d7ef8,#6366f1)">US</div>
+            <div class="ec-name">US Division</div><div class="ec-code">ENT-002</div><div class="ec-loc">📍 New York</div>
+          </div>
+          <div class="ec" onclick="selEnt(this,'India Ops','ENT-003','INR','Chennai')">
+            <div class="ec-chk">✓</div>
+            <div class="ec-av" style="background:linear-gradient(135deg,#22c97a,#0ea472)">IO</div>
+            <div class="ec-name">India Ops</div><div class="ec-code">ENT-003</div><div class="ec-loc">📍 Chennai</div>
+          </div>
+          <div class="ec" onclick="selEnt(this,'EU Branch','ENT-004','EUR','Amsterdam')">
+            <div class="ec-chk">✓</div>
+            <div class="ec-av" style="background:linear-gradient(135deg,#9d6ef0,#7c3aed)">EU</div>
+            <div class="ec-name">EU Branch</div><div class="ec-code">ENT-004</div><div class="ec-loc">📍 Amsterdam</div>
+          </div>
+          <div class="ec" onclick="selEnt(this,'ME Office','ENT-005','AED','Dubai')">
+            <div class="ec-chk">✓</div>
+            <div class="ec-av" style="background:linear-gradient(135deg,#f07030,#dc2626)">ME</div>
+            <div class="ec-name">ME Office</div><div class="ec-code">ENT-005</div><div class="ec-loc">📍 Dubai</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL 2: ORDER TYPE ══ -->
+    <div class="panel" id="p-ordertype">
+      <div class="ph" onclick="togPanel('p-ordertype')">
+        <div class="pht"><div class="phi phi-bl">📄</div>Order Type</div>
+        <div class="pm"><span class="rbadge">Step 2 — Critical</span><span class="carrow">▾</span></div>
+      </div>
+      <div class="pb">
+        <div class="info-box amber">⚡ &nbsp;<strong>Choose carefully.</strong> Order type determines which sections appear next. Customer, Ship/Bill address and Plant fields change based on your selection.</div>
+
+        <div class="otg">
+          <!-- STANDARD SALES ORDER -->
+          <div class="otc t-std" onclick="selOT('std')">
+            <div class="ot-tag tag-cust">Customer</div>
+            <div class="ot-chk">✓</div>
+            <span class="oti">📦</span>
+            <div class="otn">Standard Sales Order</div>
+            <div class="otd">Regular customer order with external delivery</div>
+            <div class="ot-flows">
+              <div class="ot-flow-item yes">✓ Customer required</div>
+              <div class="ot-flow-item yes">✓ Ship &amp; Bill address</div>
+              <div class="ot-flow-item yes">✓ Single warehouse</div>
+            </div>
+          </div>
+          <!-- BLANKET AGREEMENT -->
+          <div class="otc t-blk" onclick="selOT('blk')">
+            <div class="ot-tag tag-cust">Customer</div>
+            <div class="ot-chk">✓</div>
+            <span class="oti">📋</span>
+            <div class="otn">Sales Agreement</div>
+            <div class="otd">Long-term contract with scheduled releases</div>
+            <div class="ot-flows">
+              <div class="ot-flow-item yes">✓ Customer required</div>
+              <div class="ot-flow-item yes">✓ Ship &amp; Bill address</div>
+              <div class="ot-flow-item yes">✓ Release schedule</div>
+            </div>
+          </div>
+          <!-- MAKE TO STOCK -->
+          <div class="otc t-mts" onclick="selOT('mts')">
+            <div class="ot-tag tag-prod">Production</div>
+            <div class="ot-chk">✓</div>
+            <span class="oti">🏭</span>
+            <div class="otn">Make-to-Stock</div>
+            <div class="otd">Internal production order for stock replenishment</div>
+            <div class="ot-flows">
+              <div class="ot-flow-item no">✗ No customer</div>
+              <div class="ot-flow-item no">✗ No ship/bill</div>
+              <div class="ot-flow-item yes">✓ Plant + BOM</div>
+            </div>
+          </div>
+          <!-- TRIAL -->
+          <div class="otc t-tri" onclick="selOT('tri')">
+            <div class="ot-tag tag-int">Internal</div>
+            <div class="ot-chk">✓</div>
+            <span class="oti">🧪</span>
+            <div class="otn">Trial / Sample</div>
+            <div class="otd">Internal plant trial — R&amp;D, QC or process testing</div>
+            <div class="ot-flows">
+              <div class="ot-flow-item no">✗ No customer</div>
+              <div class="ot-flow-item no">✗ No ship/bill</div>
+              <div class="ot-flow-item yes">✓ Within plant only</div>
+            </div>
+          </div>
+          <!-- INTER PLANT TRANSFER -->
+          <div class="otc t-ipt" onclick="selOT('ipt')">
+            <div class="ot-tag tag-int">Internal</div>
+            <div class="ot-chk">✓</div>
+            <span class="oti">🔄</span>
+            <div class="otn">Inter-Plant Transfer</div>
+            <div class="otd">Material movement from one plant to another</div>
+            <div class="ot-flows">
+              <div class="ot-flow-item no">✗ No customer</div>
+              <div class="ot-flow-item no">✗ No ship/bill</div>
+              <div class="ot-flow-item yes">✓ From → To plant</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER DATE FIELDS — always shown -->
+        <div style="margin-top:14px">
+          <div class="dv-lbl">Order Details</div>
+          <div class="fg fg4">
+            <div class="f"><label>Order Date <span class="rq">*</span></label><input type="date" value="2026-05-22"></div>
+            <div class="f"><label>Required By <span class="rq">*</span></label><input type="date" value="2026-06-05"></div>
+            <div class="f"><label>Valid Until</label><input type="date" value="2026-06-30"></div>
+            <div class="f"><label>Priority</label><select><option>Normal</option><option>High</option><option>Urgent</option></select></div>
+            <div class="f"><label>Currency</label><input id="currencyField" value="SGD" readonly></div>
+            <div class="f"><label>Price List</label><select><option>Standard Price</option><option>Wholesale</option><option>VIP</option></select></div>
+            <div class="f" id="salesRepField"><label>Sales Rep</label><select><option>Michael Brown</option><option>Sarah Lee</option></select></div>
+            <div class="f"><label>Reference #</label><input placeholder="PO / Work Order ref"></div>
+          </div>
+        </div>
+
+        <!-- BLANKET EXTRA FIELDS -->
+        <div id="blkFields" style="display:none;margin-top:12px">
+          <div class="dv-lbl">Agreement Details</div>
+          <div class="fg fg3">
+            <div class="f"><label>Agreement Start</label><input type="date" value="2026-06-01"></div>
+            <div class="f"><label>Agreement End</label><input type="date" value="2026-12-31"></div>
+            <div class="f"><label>Release Frequency</label><select><option>Monthly</option><option>Weekly</option><option>Quarterly</option><option>On Request</option></select></div>
+            <div class="f"><label>Max Release Qty</label><input type="number" placeholder="Total agreed qty"></div>
+            <div class="f"><label>Min Order Value</label><input type="number" placeholder="Min per release"></div>
+            <div class="f"><label>Auto Release</label><select><option>Manual</option><option>Auto on Date</option><option>On Trigger</option></select></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL 3: CUSTOMER (shown for std, blk only) ══ -->
+    <div class="panel" id="p-customer">
+      <div class="ph" onclick="togPanel('p-customer')">
+        <div class="pht"><div class="phi phi-gn">👤</div>Customer</div>
+        <div class="pm"><span class="rbadge">Step 3</span><span class="carrow">▾</span></div>
+      </div>
+      <div class="pb">
+        <div class="f" style="margin-bottom:12px">
+          <label>Customer Master <span class="rq">*</span></label>
+          <div class="csw">
+            <div class="csd fil" onclick="togCDD()">
+              <div class="cav" id="cavEl" style="background:linear-gradient(135deg,#22c97a,#0ea472)">AC</div>
+              <div class="ci">
+                <div class="cn" id="cnEl">Acme Corporation</div>
+                <div class="cm" id="cmEl">CUST-1042 · Net 30 · SGD · Credit $50,000</div>
+              </div>
+              <div style="color:var(--tx3);font-size:.7rem">Change ›</div>
+            </div>
+            <div class="cdd" id="custDD">
+              <div class="cds"><span style="color:var(--tx3)">🔍</span>
+                <input placeholder="Search customer…" oninput="filtCust(this.value)">
+              </div>
+              <div class="cdl">
+                <div class="cdi" onclick="pickC('Acme Corporation','CUST-1042','AC','linear-gradient(135deg,#22c97a,#0ea472)','Net 30 · Credit $50K')">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="cav" style="background:linear-gradient(135deg,#22c97a,#0ea472);width:26px;height:26px;font-size:.62rem;border-radius:6px">AC</div>
+                    <div><div style="font-size:.75rem;font-weight:600">Acme Corporation</div><div style="font-size:.62rem;color:var(--tx3)">CUST-1042 · Singapore</div></div>
+                  </div><div class="cdbal">$50K</div>
+                </div>
+                <div class="cdi" onclick="pickC('Bright Supplies Ltd','CUST-1107','BS','linear-gradient(135deg,#3d7ef8,#6366f1)','Net 15 · Credit $30K')">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="cav" style="background:linear-gradient(135deg,#3d7ef8,#6366f1);width:26px;height:26px;font-size:.62rem;border-radius:6px">BS</div>
+                    <div><div style="font-size:.75rem;font-weight:600">Bright Supplies Ltd</div><div style="font-size:.62rem;color:var(--tx3)">CUST-1107 · Austin TX</div></div>
+                  </div><div class="cdbal">$30K</div>
+                </div>
+                <div class="cdi" onclick="pickC('Global Trade Ltd','CUST-2034','GT','linear-gradient(135deg,#e8a020,#f07030)','Net 45 · Credit $100K')">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="cav" style="background:linear-gradient(135deg,#e8a020,#f07030);width:26px;height:26px;font-size:.62rem;border-radius:6px">GT</div>
+                    <div><div style="font-size:.75rem;font-weight:600">Global Trade Ltd</div><div style="font-size:.62rem;color:var(--tx3)">CUST-2034 · Amsterdam</div></div>
+                  </div><div class="cdbal">$100K</div>
+                </div>
+                <div class="cdi" onclick="pickC('NovaTech Inc','CUST-3011','NT','linear-gradient(135deg,#9d6ef0,#7c3aed)','COD only')">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="cav" style="background:linear-gradient(135deg,#9d6ef0,#7c3aed);width:26px;height:26px;font-size:.62rem;border-radius:6px">NT</div>
+                    <div><div style="font-size:.75rem;font-weight:600">NovaTech Inc</div><div style="font-size:.62rem;color:var(--tx3)">CUST-3011 · Seattle</div></div>
+                  </div><div class="cdbal" style="color:var(--red)">COD</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fg fg3">
+          <div class="f"><label>Contact Person</label><input value="Jane Smith"></div>
+          <div class="f"><label>Email</label><input type="email" value="jane@acmecorp.com"></div>
+          <div class="f"><label>Phone</label><input placeholder="+1 555 000 0000"></div>
+          <div class="f"><label>Customer PO #</label><input placeholder="Their reference"></div>
+          <div class="f"><label>PO Date</label><input type="date"></div>
+          <div class="f"><label>Tax Reg #</label><input placeholder="GST/VAT number"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL 4: SHIP BILL PAYMENT (std, blk only) ══ -->
+    <div class="panel" id="p-address">
+      <div class="ph" onclick="togPanel('p-address')">
+        <div class="pht"><div class="phi phi-or">📍</div>Ship · Bill · Payment</div>
+        <div class="pm"><span class="rbadge">Step 4</span><span class="carrow">▾</span></div>
+      </div>
+      <div class="pb">
+        <div class="atabs">
+          <button class="atab act" onclick="swAddr('ship',this)">🚚 Ship To</button>
+          <button class="atab" onclick="swAddr('bill',this)">💳 Bill To</button>
+          <button class="atab" onclick="swAddr('pay',this)">🏦 Payment</button>
+        </div>
+        <div class="atc act" id="addr-ship">
+          <div class="amc sel" onclick="selAddr(this)"><div class="arad"></div>
+            <div class="ad"><div class="at2">Primary Shipping</div><div class="al1">123 Main Street, Suite 400</div><div class="al2">San Francisco, CA 94105 · USA</div></div>
+            <div class="adef">Default</div>
+          </div>
+          <div class="amc" onclick="selAddr(this)"><div class="arad"></div>
+            <div class="ad"><div class="at2">Warehouse Dock</div><div class="al1">789 Industrial Blvd, Dock B</div><div class="al2">Oakland, CA 94601 · USA</div></div>
+          </div>
+          <div class="dv-lbl">Or custom address</div>
+          <div class="fg fg2">
+            <div class="f" style="grid-column:span 2"><label>Street</label><input placeholder="Street address"></div>
+            <div class="f"><label>City</label><input placeholder="City"></div>
+            <div class="f"><label>State</label><input placeholder="State"></div>
+            <div class="f"><label>ZIP</label><input placeholder="ZIP"></div>
+            <div class="f"><label>Country</label><select><option>United States</option><option>Singapore</option><option>India</option></select></div>
+          </div>
+        </div>
+        <div class="atc" id="addr-bill">
+          <div class="stog" onclick="togSync(this)"><div class="tog on" id="billToggle"></div><span>Same as Ship To address</span></div>
+          <div id="billBody" style="display:none">
+            <div class="amc sel" onclick="selAddr(this)"><div class="arad"></div>
+              <div class="ad"><div class="at2">Billing / Accounts</div><div class="al1">456 Finance Avenue, Floor 8</div><div class="al2">San Francisco, CA 94103 · USA</div></div>
+              <div class="adef">Default</div>
+            </div>
+          </div>
+        </div>
+        <div class="atc" id="addr-pay">
+          <div class="dv-lbl">Payment Terms</div>
+          <div class="ptg" style="margin-bottom:12px">
+            <div class="ptc sel" onclick="selPT(this,'Net 30')"><div class="ptc-n">Net 30</div><div class="ptc-d">Due in 30 days</div></div>
+            <div class="ptc" onclick="selPT(this,'Net 15')"><div class="ptc-n">Net 15</div><div class="ptc-d">Due in 15 days</div></div>
+            <div class="ptc" onclick="selPT(this,'Net 45')"><div class="ptc-n">Net 45</div><div class="ptc-d">Due in 45 days</div></div>
+            <div class="ptc" onclick="selPT(this,'Net 60')"><div class="ptc-n">Net 60</div><div class="ptc-d">Due in 60 days</div></div>
+            <div class="ptc" onclick="selPT(this,'COD')"><div class="ptc-n">COD</div><div class="ptc-d">Cash on delivery</div></div>
+            <div class="ptc" onclick="selPT(this,'Advance')"><div class="ptc-n">Advance</div><div class="ptc-d">Pay before ship</div></div>
+            <div class="ptc" onclick="selPT(this,'2/10 N30')"><div class="ptc-n">2/10 N30</div><div class="ptc-d">2% disc in 10d</div></div>
+            <div class="ptc" onclick="selPT(this,'EOM')"><div class="ptc-n">EOM</div><div class="ptc-d">End of month</div></div>
+          </div>
+          <div class="fg fg2">
+            <div class="f"><label>Payment Method</label><select><option>Bank Transfer</option><option>Cheque</option><option>Credit Card</option></select></div>
+            <div class="f"><label>Bank Account</label><select><option>Acme — DBS ****4521</option><option>Acme — OCBC ****8834</option></select></div>
+          </div>
+          <div class="fg fg3" style="margin-top:10px">
+            <div class="f"><label>Credit Limit</label><input value="$50,000.00" readonly style="color:var(--green)"></div>
+            <div class="f"><label>Outstanding</label><input value="$12,450.00" readonly style="color:var(--gold)"></div>
+            <div class="f"><label>Available Credit</label><input value="$37,550.00" readonly style="color:var(--blue)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL 5: PLANT (mts, tri, ipt) ══ -->
+    <div class="panel hidden" id="p-plant">
+      <div class="ph" onclick="togPanel('p-plant')">
+        <div class="pht"><div class="phi phi-am">🏭</div><span id="plantPanelTitle">Plant / Warehouse</span></div>
+        <div class="pm"><span class="rbadge">Step 3</span><span class="carrow">▾</span></div>
+      </div>
+      <div class="pb">
+
+        <!-- MTS: Single plant -->
+        <div id="mtsPlant" style="display:none">
+          <div class="info-box amber">🏭 &nbsp;Select the production plant and warehouse where stock will be produced and stored.</div>
+          <div class="fg fg2" style="margin-bottom:12px">
+            <div class="f"><label>Production Plant <span class="rq">*</span></label>
+              <select>
+                <option>PLT-01 — Main Production Chennai</option>
+                <option>PLT-02 — Assembly Singapore</option>
+                <option>PLT-03 — Pack &amp; Ship Dubai</option>
+              </select>
+            </div>
+            <div class="f"><label>Target Warehouse <span class="rq">*</span></label>
+              <select>
+                <option>WH-01 Main Store</option>
+                <option>WH-02 Secondary</option>
+                <option>WH-03 Export</option>
+              </select>
+            </div>
+          </div>
+          <div class="prod-fields">
+            <div class="pf-title">🏭 Production Details</div>
+            <div class="fg fg3">
+              <div class="f"><label>Production Order #</label><input placeholder="Auto-generated" readonly value="PRD-2026-0089"></div>
+              <div class="f"><label>BOM Version</label><select><option>BOM-v2.1 (Current)</option><option>BOM-v2.0</option><option>BOM-v1.9</option></select></div>
+              <div class="f"><label>Routing</label><select><option>STD-ROUTE-01</option><option>FAST-ROUTE-02</option></select></div>
+              <div class="f"><label>Planned Start</label><input type="date" value="2026-05-25"></div>
+              <div class="f"><label>Planned Finish</label><input type="date" value="2026-06-10"></div>
+              <div class="f"><label>Work Center</label><select><option>WC-ASSEMBLY-01</option><option>WC-PACK-02</option></select></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRIAL: Single plant internal -->
+        <div id="triPlant" style="display:none">
+          <div class="info-box teal">🧪 &nbsp;Trial orders are <strong>internal only</strong> — within the selected plant. No external customer or delivery involved.</div>
+          <div class="fg fg2" style="margin-bottom:12px">
+            <div class="f"><label>Plant <span class="rq">*</span></label>
+              <select>
+                <option>PLT-01 — Main Production Chennai</option>
+                <option>PLT-02 — Assembly Singapore</option>
+                <option>PLT-03 — Pack &amp; Ship Dubai</option>
+              </select>
+            </div>
+            <div class="f"><label>Department / Lab</label>
+              <select>
+                <option>R&amp;D Lab A</option>
+                <option>Quality Control</option>
+                <option>Process Engineering</option>
+                <option>Production Test Line</option>
+              </select>
+            </div>
+          </div>
+          <div class="trial-fields">
+            <div class="tf-title">🧪 Trial Details</div>
+            <div class="fg fg3">
+              <div class="f"><label>Trial ID</label><input value="TRL-2026-0044" readonly></div>
+              <div class="f"><label>Trial Purpose</label><select><option>R&amp;D Testing</option><option>QC Verification</option><option>Process Validation</option><option>New Material Test</option></select></div>
+              <div class="f"><label>Responsible Person</label><select><option>Dr. Anand Kumar</option><option>Sarah Lee</option><option>Tom Wilson</option></select></div>
+              <div class="f"><label>Trial Start Date</label><input type="date" value="2026-05-25"></div>
+              <div class="f"><label>Trial End Date</label><input type="date" value="2026-06-04"></div>
+              <div class="f"><label>Expected Outcome</label><select><option>Pass/Fail Report</option><option>Data Collection</option><option>Prototype Output</option></select></div>
+            </div>
+            <div class="f" style="margin-top:10px"><label>Trial Notes / Hypothesis</label>
+              <textarea placeholder="Describe the trial objective, hypothesis or test parameters…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- INTER-PLANT: From → To -->
+        <div id="iptPlant" style="display:none">
+          <div class="info-box green">🔄 &nbsp;Select the <strong>source plant</strong> (From) and <strong>destination plant</strong> (To). Both must belong to the same entity.</div>
+          <div class="plant-grid">
+            <div>
+              <div class="dv-lbl" style="color:var(--green)">FROM — Source Plant</div>
+              <div class="plant-card sel" onclick="selPlant(this,'src')">
+                <div class="pc-badge pc-src">Source</div>
+                <div class="pc-icon">🏭</div>
+                <div class="pc-name">Main Production</div>
+                <div class="pc-code">PLT-01 · Chennai, India</div>
+                <div class="pc-stock">Stock: 2,450 units available</div>
+              </div>
+              <div class="plant-card" onclick="selPlant(this,'src')">
+                <div class="pc-icon">🏭</div>
+                <div class="pc-name">Assembly Plant</div>
+                <div class="pc-code">PLT-02 · Singapore</div>
+                <div class="pc-stock">Stock: 980 units available</div>
+              </div>
+              <div class="plant-card" onclick="selPlant(this,'src')">
+                <div class="pc-icon">📦</div>
+                <div class="pc-name">Pack &amp; Ship</div>
+                <div class="pc-code">PLT-03 · Dubai, UAE</div>
+                <div class="pc-stock">Stock: 340 units available</div>
+              </div>
+            </div>
+            <div>
+              <div class="dv-lbl" style="color:var(--blue)">TO — Destination Plant</div>
+              <div class="plant-card" onclick="selPlant(this,'dst')">
+                <div class="pc-icon">🏭</div>
+                <div class="pc-name">Main Production</div>
+                <div class="pc-code">PLT-01 · Chennai, India</div>
+                <div class="pc-stock">Capacity: 5,000 units</div>
+              </div>
+              <div class="plant-card sel-dest" onclick="selPlant(this,'dst')">
+                <div class="pc-badge pc-dst">Destination</div>
+                <div class="pc-icon">🏭</div>
+                <div class="pc-name">Assembly Plant</div>
+                <div class="pc-code">PLT-02 · Singapore</div>
+                <div class="pc-stock">Capacity: 3,200 units</div>
+              </div>
+              <div class="plant-card" onclick="selPlant(this,'dst')">
+                <div class="pc-icon">📦</div>
+                <div class="pc-name">Pack &amp; Ship</div>
+                <div class="pc-code">PLT-03 · Dubai, UAE</div>
+                <div class="pc-stock">Capacity: 1,500 units</div>
+              </div>
+            </div>
+          </div>
+          <div class="fg fg3" style="margin-top:12px">
+            <div class="f"><label>Transfer Type</label><select><option>Standard Transfer</option><option>Urgent Transfer</option><option>Replenishment</option></select></div>
+            <div class="f"><label>Transport Mode</label><select><option>Road Freight</option><option>Air Freight</option><option>Rail</option><option>Sea</option></select></div>
+            <div class="f"><label>Transfer Cost Center</label><select><option>CC-LOGISTICS-01</option><option>CC-OPERATIONS-02</option></select></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ PANEL 6: LINE ITEMS ══ -->
+    <div class="panel" id="p-items">
+      <div class="ph" onclick="togPanel('p-items')">
+        <div class="pht"><div class="phi phi-gn">📦</div><span id="itemPanelTitle">Line Items</span></div>
+        <div class="pm"><span id="itemBadge" style="font-family:'Geist Mono',monospace;font-size:.63rem;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:20px;color:var(--tx3)">3 items</span><span class="carrow">▾</span></div>
+      </div>
+      <div class="pb">
+        <div class="impbar">
+          <label class="imc exc" for="xlFile"><div class="im-ic">📊</div><div class="im-lb">Excel</div><div class="im-sb">.xlsx</div></label>
+          <input type="file" id="xlFile" accept=".xlsx,.xls" style="display:none" onchange="handleXL(this)">
+          <label class="imc pdf" for="pdfFile"><div class="im-ic">📄</div><div class="im-lb">PDF</div><div class="im-sb">PO / Doc</div></label>
+          <input type="file" id="pdfFile" accept=".pdf" style="display:none" onchange="handlePDF(this)">
+          <div class="imc pst" onclick="openM('pModal')"><div class="im-ic">📋</div><div class="im-lb">Copy-Paste</div><div class="im-sb">Spreadsheet</div></div>
+          <div class="imc ai" onclick="toast('🤖 AI reading document…')"><span class="ai-tag">AI</span><div class="im-ic">🤖</div><div class="im-lb">AI Extract</div><div class="im-sb">Claude reads</div></div>
+          <div class="imc tpl" onclick="toast('⬇️ Template downloaded')"><div class="im-ic">📥</div><div class="im-lb">Template</div><div class="im-sb">Download</div></div>
+        </div>
+        <div class="tblwrap">
+          <table id="itbl">
+            <thead><tr>
+              <th style="width:28px">#</th>
+              <th style="width:115px">Item Code</th>
+              <th>Description</th>
+              <th style="width:68px">UOM</th>
+              <th class="num" style="width:72px">Qty</th>
+              <th class="num" style="width:90px" id="priceColHead">Unit Price</th>
+              <th class="num" style="width:65px">Disc %</th>
+              <th class="num" style="width:65px">Tax %</th>
+              <th class="num" style="width:100px">Line Total</th>
+              <th style="width:28px"></th>
+            </tr></thead>
+            <tbody id="itbody"></tbody>
+          </table>
+        </div>
+        <button class="addrow" onclick="addRow()">＋ Add Line Item</button>
+      </div>
+    </div>
+
+    <!-- ══ PANEL 7: DOC DISCOUNT & TAX (hidden for internal types) ══ -->
+    <div class="dtpanel" id="p-dtax">
+      <div class="dth">
+        <div class="dtt"><div class="phi phi-pu" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center">🏷️</div>Document Discount &amp; Tax</div>
+        <span style="font-size:.58rem;padding:2px 8px;border-radius:20px;background:rgba(157,110,240,.12);color:var(--purple);font-weight:700;border:1px solid rgba(157,110,240,.2)">Applied after line items</span>
+      </div>
+      <div class="dtb">
+        <div style="margin-bottom:14px">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">🏷️ Document Discount</div>
+          <div class="disc-types">
+            <button class="dt-btn act" onclick="selDType(this,'pct')">% Percentage</button>
+            <button class="dt-btn" onclick="selDType(this,'flat')">$ Flat Amount</button>
+            <button class="dt-btn" onclick="selDType(this,'none')">No Discount</button>
+          </div>
+          <div class="fg fg3" id="discFields">
+            <div class="f"><label>Discount Type</label><select><option>Trade Discount</option><option>Cash Discount</option><option>Loyalty Discount</option><option>Promotional</option></select></div>
+            <div class="f"><label>Discount Value</label><input type="number" id="docDisc" value="5" min="0" step="0.01" onchange="recalc()"></div>
+            <div class="f"><label>Approval / Reason</label><input value="LOYAL2026" id="discReason"></div>
+          </div>
+        </div>
+        <div class="dv"></div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">📊 Tax Components</div>
+          <div class="tax-rows" id="taxRows">
+            <div class="tax-row">
+              <div class="f"><label>Tax Name</label><input value="GST"></div>
+              <div class="f"><label>Code</label><select><option>GST-9</option><option>VAT-20</option><option>EXEMPT</option></select></div>
+              <div class="f"><label>Rate %</label><input type="number" value="9" class="taxrate" onchange="recalc()"></div>
+              <div class="f"><label>Amount</label><input class="taxamt" readonly style="color:var(--green)"></div>
+              <button class="tr-del" onclick="delTaxRow(this)">×</button>
+            </div>
+          </div>
+          <button class="add-tax-btn" onclick="addTaxRow()">＋ Add Tax Component</button>
+        </div>
+        <div class="dv"></div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:8px">📦 Additional Charges</div>
+          <div id="chargeRows">
+            <div class="charge-row">
+              <div class="f"><label>Name</label><input value="Freight"></div>
+              <div class="f"><label>Amount</label><input type="number" value="120" class="chgamt" onchange="recalc()"></div>
+              <div class="f"><label>Taxable</label><select><option>Yes</option><option>No</option></select></div>
+              <button class="tr-del" onclick="this.closest('.charge-row').remove();recalc()">×</button>
+            </div>
+          </div>
+          <button class="add-tax-btn" onclick="addCharge()">＋ Add Charge</button>
+        </div>
+        <div class="dv"></div>
+        <div class="calc-ladder">
+          <div class="cl-title">📐 Calculation Breakdown</div>
+          <div class="cl-row"><span class="cl-lbl">Gross Subtotal</span><span class="cl-val" id="cl-gross">$0.00</span></div>
+          <div class="cl-row deduct"><span class="cl-lbl">Line Discounts</span><span class="cl-val" id="cl-linedisc">-$0.00</span></div>
+          <div class="cl-row"><span class="cl-lbl">Net After Line Disc</span><span class="cl-val" id="cl-net1">$0.00</span></div>
+          <div class="cl-row deduct"><span class="cl-lbl" id="cl-docdlbl">Doc Discount (5%)</span><span class="cl-val" id="cl-docdisc">-$0.00</span></div>
+          <div class="cl-row"><span class="cl-lbl">Taxable Amount</span><span class="cl-val" id="cl-taxable">$0.00</span></div>
+          <div class="cl-row"><span class="cl-lbl" id="cl-taxlbl">Tax (GST 9%)</span><span class="cl-val" id="cl-tax">+$0.00</span></div>
+          <div class="cl-row"><span class="cl-lbl">Additional Charges</span><span class="cl-val" id="cl-charges">+$0.00</span></div>
+          <div class="cl-row grand"><span class="cl-lbl">Grand Total</span><span class="cl-val" id="cl-grand">$0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /form cols -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <!-- OT INDICATOR -->
+    <div class="ot-indicator" id="otIndicator" style="display:none;color:var(--tx2);border-color:var(--b1);background:var(--s1)">
+      <span id="otiIcon" style="font-size:1.2rem"></span>
+      <div><div id="otiName" style="font-size:.8rem;font-weight:700"></div><div id="otiFlow" style="font-size:.65rem;opacity:.7;margin-top:1px"></div></div>
+    </div>
+
+    <!-- GRAND TOTAL -->
+    <div class="grand-box" id="grandBox" style="background:linear-gradient(135deg,rgba(232,160,32,.1),rgba(240,112,48,.06));border-color:rgba(232,160,32,.2)">
+      <div class="gb-lbl" style="color:var(--gold)">Grand Total</div>
+      <div class="gb-val" style="color:var(--gold)" id="sb-grand">$0.00</div>
+      <div class="gb-cur" id="sb-cur">SGD · SO-2026-0413</div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="sum-card">
+      <div class="sc-head">Order Summary <div class="dpill" style="font-size:.58rem;padding:2px 7px"><span class="ddot"></span>Draft</div></div>
+      <div class="sc-body">
+        <div class="sr"><span class="sl">Order #</span><span class="sv mono gold">SO-2026-0413</span></div>
+        <div class="sr"><span class="sl">Entity</span><span class="sv" id="sb-ent">Global HQ</span></div>
+        <div class="sr"><span class="sl">Order Type</span><span class="sv" id="sb-ot">— not selected —</span></div>
+        <div class="sr" id="sr-cust"><span class="sl">Customer</span><span class="sv green" id="sb-cust">Acme Corporation</span></div>
+        <div class="sr" id="sr-plant" style="display:none"><span class="sl">Plant</span><span class="sv amber" id="sb-plant">—</span></div>
+        <div class="sr"><span class="sl">Date</span><span class="sv">22 May 2026</span></div>
+        <div class="sr"><span class="sl">Items</span><span class="sv mono blue" id="sb-items">3</span></div>
+        <div class="sr" id="sr-sub"><span class="sl">Subtotal</span><span class="sv mono" id="sb-sub">$0.00</span></div>
+        <div class="sr" id="sr-disc"><span class="sl">Discounts</span><span class="sv mono red" id="sb-disc">-$0.00</span></div>
+        <div class="sr" id="sr-tax"><span class="sl">Tax</span><span class="sv mono" id="sb-tax">+$0.00</span></div>
+        <div class="sr" style="padding-top:8px;border-top:1px solid var(--b2);margin-top:3px">
+          <span class="sl" style="font-weight:700;color:var(--tx1)">Grand Total</span>
+          <span class="sv mono gold" style="font-size:.95rem" id="sb-gt">$0.00</span>
+        </div>
+      </div>
+      <div class="act-btns">
+        <button class="abtn ab-prim" onclick="submitOrder()">🚀 Submit Order</button>
+        <button class="abtn ab-sec" onclick="saveDraft()">💾 Save Draft</button>
+        <button class="abtn ab-sec" onclick="toast('👁 Preview generated')">👁 Preview</button>
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="sum-card">
+      <div class="sc-head">Checklist</div>
+      <div class="sc-body">
+        <ul class="chklist" id="checklist">
+          <li class="cli done"><div class="clico">✓</div>Entity selected</li>
+          <li class="cli pend" id="chk-ot"><div class="clico"></div>Order type chosen</li>
+          <li class="cli pend" id="chk-cust"><div class="clico"></div>Customer / Plant set</li>
+          <li class="cli na" id="chk-addr"><div class="clico">—</div>Address set</li>
+          <li class="cli pend" id="chk-items"><div class="clico"></div>Line items added</li>
+          <li class="cli na" id="chk-disc"><div class="clico">—</div>Discount &amp; Tax</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- /mg -->
+</div><!-- /wrap -->
+
+<script>
+// ── CATALOG ──
+const CAT=[
+  {code:'WGT-PRO-01',name:'Widget Pro Black',uom:'EA',price:49.99,stock:245},
+  {code:'WGT-STD-02',name:'Widget Standard',uom:'EA',price:29.99,stock:580},
+  {code:'BLT-KIT-01',name:'Bolt Kit 50pcs',uom:'SET',price:12.50,stock:120},
+  {code:'CBL-USB-C3',name:'USB-C Cable 1m',uom:'EA',price:8.00,stock:1200},
+  {code:'MTR-ALU-1M',name:'Aluminium Rod 1m',uom:'M',price:22.00,stock:340},
+  {code:'SVC-INST-HR',name:'Installation Service',uom:'HR',price:85.00,stock:999},
+  {code:'PKG-BOX-SM',name:'Packaging Box Small',uom:'BOX',price:2.50,stock:3000},
+  {code:'RM-STEEL-KG',name:'Steel Raw Material',uom:'KG',price:4.20,stock:8000},
+];
+
+let items=[
+  {code:'WGT-PRO-01',desc:'Widget Pro Black',uom:'EA',qty:10,price:49.99,disc:5,tax:9},
+  {code:'BLT-KIT-01',desc:'Bolt Kit 50pcs',uom:'SET',qty:25,price:12.50,disc:0,tax:9},
+  {code:'CBL-USB-C3',desc:'USB-C Cable 1m',uom:'EA',qty:50,price:8.00,disc:10,tax:9},
+];
+
+let activeOT=null;
+let activeICD=null;
+let discMode='pct';
+let currency='SGD';
+
+// ── ORDER TYPE CONFIGS ──
+const OT_CONFIG={
+  std:{
+    icon:'📦',name:'Standard Sales Order',
+    desc:'External customer order with delivery',
+    color:'var(--blue)',
+    showCustomer:true,showAddress:true,showPlant:false,showDiscTax:true,
+    skips:[],
+    steps:['Entity','Order Type','Customer','Ship·Bill·Pay','Line Items','Disc & Tax','Review'],
+    itemLabel:'Line Items',priceLabel:'Unit Price',
+    infoBox:'Customer, shipping & billing address and payment terms required.',
+    checklistAddr:'Ship/Bill address set',checklistCust:'Customer selected',
+  },
+  blk:{
+    icon:'📋',name:'Sales Agreement',
+    desc:'Long-term contract with scheduled releases',
+    color:'var(--purple)',
+    showCustomer:true,showAddress:true,showPlant:false,showDiscTax:true,
+    skips:[],
+    steps:['Entity','Order Type','Customer','Ship·Bill·Pay','Line Items','Disc & Tax','Review'],
+    itemLabel:'Agreed Items',priceLabel:'Agreed Price',
+    infoBox:'Blanket agreement — customer and delivery addresses required. Release schedule configured in Order Type section.',
+    checklistAddr:'Ship/Bill address set',checklistCust:'Customer selected',
+  },
+  mts:{
+    icon:'🏭',name:'Make-to-Stock',
+    desc:'Internal production — no customer, no delivery',
+    color:'var(--amber)',
+    showCustomer:false,showAddress:false,showPlant:true,showDiscTax:false,
+    skips:['Customer','Ship·Bill·Pay','Disc & Tax'],
+    steps:['Entity','Order Type','Plant / Production','Line Items','Review'],
+    itemLabel:'Materials / BOM Items',priceLabel:'Cost Price',
+    infoBox:'Internal production order. Customer and delivery address are not applicable.',
+    checklistAddr:'N/A — internal order',checklistCust:'Plant selected',
+  },
+  tri:{
+    icon:'🧪',name:'Trial / Sample',
+    desc:'Internal plant trial — R&D or QC only',
+    color:'var(--teal)',
+    showCustomer:false,showAddress:false,showPlant:true,showDiscTax:false,
+    skips:['Customer','Ship·Bill·Pay','Disc & Tax'],
+    steps:['Entity','Order Type','Plant / Lab','Line Items','Review'],
+    itemLabel:'Trial Materials',priceLabel:'Cost Price',
+    infoBox:'Trial is strictly internal within the plant. No external customer, no ship/bill address, no discounts apply.',
+    checklistAddr:'N/A — internal trial',checklistCust:'Plant & Lab selected',
+  },
+  ipt:{
+    icon:'🔄',name:'Inter-Plant Transfer',
+    desc:'Material movement between plants',
+    color:'var(--green)',
+    showCustomer:false,showAddress:false,showPlant:true,showDiscTax:false,
+    skips:['Customer','Ship·Bill·Pay','Disc & Tax'],
+    steps:['Entity','Order Type','From → To Plant','Line Items','Review'],
+    itemLabel:'Transfer Items',priceLabel:'Transfer Value',
+    infoBox:'Inter-plant transfer — select source and destination plants. No customer or external delivery.',
+    checklistAddr:'N/A — plant transfer',checklistCust:'From/To plant selected',
+  },
+};
+
+function selOT(type){
+  activeOT=type;
+  const cfg=OT_CONFIG[type];
+
+  // highlight card
+  document.querySelectorAll('.otc').forEach(c=>c.classList.remove('sel'));
+  document.querySelector('.otc.t-'+type)?.classList.add('sel');
+
+  // show blanket extra fields
+  document.getElementById('blkFields').style.display=type==='blk'?'block':'none';
+
+  // show/hide panels
+  const showAddr=cfg.showAddress;
+  const showCust=cfg.showCustomer;
+  const showPlant=cfg.showPlant;
+  const showDT=cfg.showDiscTax;
+
+  toggle('p-customer', showCust);
+  toggle('p-address', showAddr);
+  toggle('p-plant', showPlant);
+  toggleDT(showDT);
+
+  // plant sub-sections
+  document.getElementById('mtsPlant').style.display=type==='mts'?'block':'none';
+  document.getElementById('triPlant').style.display=type==='tri'?'block':'none';
+  document.getElementById('iptPlant').style.display=type==='ipt'?'block':'none';
+
+  // plant panel title
+  const plantTitles={mts:'Plant & Production',tri:'Plant & Lab (Internal)',ipt:'From Plant → To Plant'};
+  const ptEl=document.getElementById('plantPanelTitle');
+  if(ptEl)ptEl.textContent=plantTitles[type]||'Plant';
+
+  // item panel title & price col
+  document.getElementById('itemPanelTitle').textContent=cfg.itemLabel;
+  document.getElementById('priceColHead').textContent=cfg.priceLabel;
+
+  // banner
+  const banner=document.getElementById('otBanner');
+  banner.style.cssText=`display:flex;border-color:${cfg.color}30;background:${cfg.color}08;color:var(--tx1)`;
+  document.getElementById('otbIcon').textContent=cfg.icon;
+  document.getElementById('otbName').textContent=cfg.name;
+  document.getElementById('otbDesc').textContent=cfg.desc;
+  const skipsEl=document.getElementById('otbSkips');
+  skipsEl.innerHTML=cfg.skips.map(s=>`<span class="skip-chip" style="border-color:${cfg.color}40;color:${cfg.color}">${s} — N/A</span>`).join('');
+
+  // sidebar OT indicator
+  const oti=document.getElementById('otIndicator');
+  oti.style.display='flex';
+  oti.style.borderColor=cfg.color+'40';
+  oti.style.background=cfg.color+'08';
+  document.getElementById('otiIcon').textContent=cfg.icon;
+  document.getElementById('otiName').textContent=cfg.name;
+  document.getElementById('otiFlow').textContent=showCust?'External · Customer · Delivery':'Internal · No customer · No delivery';
+  oti.style.color=cfg.color;
+
+  // sidebar rows
+  document.getElementById('sr-cust').style.display=showCust?'':'none';
+  document.getElementById('sr-plant').style.display=showPlant?'':'none';
+  document.getElementById('sr-sub').style.display=showDT?'':'none';
+  document.getElementById('sr-disc').style.display=showDT?'':'none';
+  document.getElementById('sr-tax').style.display=showDT?'':'none';
+
+  // update sidebar ot label
+  s('sb-ot',cfg.name);
+
+  // grand box color
+  const gb=document.getElementById('grandBox');
+  gb.style.background=`linear-gradient(135deg,${cfg.color}15,${cfg.color}06)`;
+  gb.style.borderColor=cfg.color+'30';
+  gb.querySelector('.gb-lbl').style.color=cfg.color;
+  gb.querySelector('.gb-val').style.color=cfg.color;
+
+  // steps
+  renderSteps(cfg.steps,type);
+
+  // checklist
+  document.getElementById('chk-ot').className='cli done';
+  document.getElementById('chk-ot').innerHTML='<div class="clico">✓</div>Order type: '+cfg.icon+' '+cfg.name.split(' ')[0];
+  document.getElementById('chk-cust').innerHTML='<div class="clico"></div>'+cfg.checklistCust;
+  document.getElementById('chk-addr').innerHTML=showAddr?'<div class="clico"></div>Ship/Bill address set':'<div class="clico">—</div>'+cfg.checklistAddr;
+  document.getElementById('chk-addr').className=showAddr?'cli pend':'cli na';
+  document.getElementById('chk-disc').innerHTML=showDT?'<div class="clico"></div>Discount &amp; Tax':'<div class="clico">—</div>N/A for this type';
+  document.getElementById('chk-disc').className=showDT?'cli pend':'cli na';
+
+  // page subtitle
+  document.getElementById('psubEl').textContent=cfg.infoBox;
+
+  toast(cfg.icon+' '+cfg.name+' — form updated');
+  recalc();
+}
+
+function toggle(id,show){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('hidden',!show);
+}
+function toggleDT(show){
+  const el=document.getElementById('p-dtax');
+  if(!el)return;
+  el.classList.toggle('hidden',!show);
+}
+
+// ── STEPS ──
+function renderSteps(steps,type){
+  const cfg=OT_CONFIG[type];
+  const track=document.getElementById('stepTrack');
+  track.innerHTML='';
+  steps.forEach((s,i)=>{
+    const done=i<2;
+    const act=i===2;
+    const div=document.createElement('div');
+    div.className='sti '+(done?'done':act?'act':'');
+    div.innerHTML=`<div class="stn" style="${act?'border-color:'+cfg.color+';color:'+cfg.color+';background:'+cfg.color+'18':''}">
+      ${done?'✓':i+1}
+    </div><span class="stlb" style="${act?'color:'+cfg.color:''}">${s}</span>`;
+    track.appendChild(div);
+    if(i<steps.length-1){
+      const line=document.createElement('div');
+      line.className='stline '+(done?'d':'');
+      if(done)line.style.background='rgba(34,201,122,.3)';
+      track.appendChild(line);
+    }
+  });
+}
+
+// ── ENTITY ──
+function selEnt(el,name,code,cur,loc){
+  document.querySelectorAll('.ec').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+  currency=cur;
+  s('sb-ent',name);
+  document.getElementById('currencyField').value=cur;
+  document.getElementById('sb-cur').textContent=cur+' · SO-2026-0413';
+  toast('🏢 Entity: '+name+' ('+cur+')');
+  recalc();
+}
+
+// ── CUSTOMER ──
+let cddOpen=false;
+function togCDD(){
+  cddOpen=!cddOpen;
+  document.getElementById('custDD').classList.toggle('op',cddOpen);
+  if(cddOpen)setTimeout(()=>document.querySelector('#custDD input')?.focus(),50);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.csw')){cddOpen=false;document.getElementById('custDD')?.classList.remove('op')}});
+function filtCust(q){document.querySelectorAll('.cdi').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'})}
+function pickC(name,id,ini,grad,meta){
+  document.getElementById('cnEl').textContent=name;
+  document.getElementById('cmEl').textContent=id+' · '+meta;
+  document.getElementById('cavEl').textContent=ini;
+  document.getElementById('cavEl').style.background=grad;
+  s('sb-cust',name);
+  cddOpen=false;document.getElementById('custDD').classList.remove('op');
+  document.getElementById('chk-cust').className='cli done';
+  document.getElementById('chk-cust').innerHTML='<div class="clico">✓</div>Customer: '+name;
+  toast('👤 '+name+' loaded from master');
+}
+
+// ── ADDRESS ──
+function swAddr(tab,btn){
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('act'));
+  document.querySelectorAll('.atc').forEach(c=>c.classList.remove('act'));
+  btn.classList.add('act');document.getElementById('addr-'+tab)?.classList.add('act');
+}
+function selAddr(el){
+  el.closest('.atc').querySelectorAll('.amc').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');toast('📍 Address selected');
+}
+function togSync(el){
+  const t=el.querySelector('.tog');t.classList.toggle('on');
+  document.getElementById('billBody').style.display=t.classList.contains('on')?'none':'block';
+}
+function selPT(el,name){
+  document.querySelectorAll('.ptc').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');toast('💳 Payment: '+name);
+}
+
+// ── PLANT ──
+function selPlant(el,role){
+  const parent=el.closest('div[style]')||el.parentElement;
+  if(role==='src'){
+    document.querySelectorAll('.plant-card').forEach(c=>{if(c.classList.contains('sel'))c.classList.remove('sel')});
+    el.classList.add('sel');
+    const badge=el.querySelector('.pc-badge');
+    if(!badge){const b=document.createElement('div');b.className='pc-badge pc-src';b.textContent='Source';el.appendChild(b)}
+  } else {
+    document.querySelectorAll('.plant-card.sel-dest').forEach(c=>c.classList.remove('sel-dest'));
+    el.classList.add('sel-dest');
+    const badge=el.querySelector('.pc-badge.pc-dst');
+    if(!badge){const b=document.createElement('div');b.className='pc-badge pc-dst';b.textContent='Destination';el.appendChild(b)}
+  }
+  const name=el.querySelector('.pc-name')?.textContent||'—';
+  s('sb-plant',name);
+  toast('🏭 Plant selected: '+name);
+}
+
+// ── ITEMS TABLE ──
+function render(){
+  const tb=document.getElementById('itbody');
+  tb.innerHTML='';
+  const showPrice=activeOT?OT_CONFIG[activeOT]?.showDiscTax:true;
+  items.forEach((it,i)=>{
+    const base=it.qty*it.price;
+    const d=base*(it.disc/100);
+    const t=(base-d)*(it.tax/100);
+    const lt=base-d+t;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="rn">${i+1}</td>
+      <td><div class="icw">
+        <input value="${it.code}" placeholder="Search…"
+          style="width:105px;font-family:'Geist Mono',monospace;font-size:.7rem"
+          onfocus="openICD(${i},this)" oninput="filtICD(${i},this.value,this)">
+        <div class="icdd" id="icd${i}">
+          <div class="icdsb"><span style="color:var(--tx3)">🔍</span>
+            <input placeholder="Search…" id="ics${i}" oninput="filtICD(${i},this.value,null)"></div>
+          <div class="icdl" id="icr${i}"></div>
+        </div>
+      </div></td>
+      <td><input value="${it.desc}" placeholder="Description" onchange="items[${i}].desc=this.value" style="min-width:140px"></td>
+      <td><select style="width:62px" onchange="items[${i}].uom=this.value">
+        ${['EA','BOX','SET','KG','LT','M','PCS','HR'].map(u=>`<option ${u===it.uom?'selected':''}>${u}</option>`).join('')}
+      </select></td>
+      <td class="num"><input type="number" value="${it.qty}" min="0" style="width:62px" onchange="items[${i}].qty=+this.value;recalc()"></td>
+      <td class="num"><input type="number" value="${it.price}" step="0.01" style="width:80px" onchange="items[${i}].price=+this.value;recalc()"></td>
+      <td class="num"><input type="number" value="${it.disc}" min="0" max="100" style="width:56px" ${showPrice?'':'disabled style="opacity:.3;width:56px"'} onchange="items[${i}].disc=+this.value;recalc()"></td>
+      <td class="num"><input type="number" value="${it.tax}" min="0" max="100" style="width:56px" ${showPrice?'':'disabled style="opacity:.3;width:56px"'} onchange="items[${i}].tax=+this.value;recalc()"></td>
+      <td class="ltot">${fmt(lt)}</td>
+      <td><button class="delbtn" onclick="delRow(${i})">×</button></td>`;
+    tb.appendChild(tr);
+    buildICD(i,'');
+  });
+  recalc();
+}
+
+function openICD(i,inp){
+  if(activeICD&&activeICD!==`icd${i}`)document.getElementById(activeICD)?.classList.remove('op');
+  activeICD=`icd${i}`;document.getElementById(`icd${i}`).classList.add('op');buildICD(i,inp.value);
+}
+function filtICD(i,q,inp){
+  if(inp)items[i].code=q;buildICD(i,q);
+  document.getElementById(`icd${i}`).classList.add('op');activeICD=`icd${i}`;
+}
+function buildICD(i,q){
+  const el=document.getElementById(`icr${i}`);if(!el)return;
+  const res=CAT.filter(c=>c.code.toLowerCase().includes(q.toLowerCase())||c.name.toLowerCase().includes(q.toLowerCase()));
+  el.innerHTML=res.map(c=>`
+    <div class="icdi" onclick="pickItem(${i},'${c.code}','${c.name}','${c.uom}',${c.price})">
+      <div><div class="icdcode">${c.code}</div><div class="icdname">${c.name}</div><div class="icdstock">Stock: ${c.stock}</div></div>
+      <div class="icdprice">${fmt(c.price)}</div>
+    </div>`).join('');
+}
+function pickItem(i,code,name,uom,price){
+  items[i]={...items[i],code,desc:name,uom,price};
+  document.getElementById(`icd${i}`)?.classList.remove('op');activeICD=null;
+  render();toast('📦 '+name+' added');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.icw')&&activeICD){document.getElementById(activeICD)?.classList.remove('op');activeICD=null;}
+});
+function addRow(){items.push({code:'',desc:'',uom:'EA',qty:1,price:0,disc:0,tax:9});render();toast('➕ Row added')}
+function delRow(i){items.splice(i,1);render()}
+
+// ── RECALC ──
+function recalc(){
+  let gross=0,lineDisc=0;
+  items.forEach(it=>{const b=it.qty*it.price;gross+=b;lineDisc+=b*(it.disc/100);});
+  const net=gross-lineDisc;
+  const ddVal=parseFloat(document.getElementById('docDisc')?.value)||0;
+  let docD=0;
+  if(discMode==='pct')docD=net*(ddVal/100);
+  else if(discMode==='flat')docD=ddVal;
+  const taxable=net-docD;
+  let totalTax=0;
+  document.querySelectorAll('.taxrate').forEach(inp=>{
+    const r=parseFloat(inp.value)||0;const ta=taxable*(r/100);totalTax+=ta;
+    const row=inp.closest('.tax-row');if(row){const a=row.querySelector('.taxamt');if(a)a.value=fmt(ta);}
+  });
+  let charges=0;
+  document.querySelectorAll('.chgamt').forEach(inp=>charges+=parseFloat(inp.value)||0);
+  const grand=taxable+totalTax+charges;
+
+  s('cl-gross',fmt(gross));s('cl-linedisc','-'+fmt(lineDisc));s('cl-net1',fmt(net));
+  s('cl-docdlbl',discMode==='pct'?`Doc Discount (${ddVal}%)`:'Doc Discount (Flat)');
+  s('cl-docdisc','-'+fmt(docD));s('cl-taxable',fmt(taxable));
+  s('cl-tax','+'+fmt(totalTax));s('cl-charges','+'+fmt(charges));s('cl-grand',fmt(grand));
+  s('sb-sub',fmt(gross));s('sb-disc','-'+fmt(lineDisc+docD));s('sb-tax','+'+fmt(totalTax));
+  s('sb-gt',fmt(grand));s('sb-grand',fmt(grand));
+  s('sb-items',items.length);
+  s('itemBadge',items.length+' item'+(items.length!==1?'s':''));
+  if(items.length>0){
+    document.getElementById('chk-items').className='cli done';
+    document.getElementById('chk-items').innerHTML='<div class="clico">✓</div>'+items.length+' line items added';
+  }
+}
+
+// ── DISCOUNT MODE ──
+function selDType(el,mode){
+  document.querySelectorAll('.dt-btn').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');discMode=mode;
+  document.getElementById('discFields').style.display=mode==='none'?'none':'';
+  recalc();
+}
+
+// ── TAX / CHARGES ──
+function addTaxRow(){
+  const row=document.createElement('div');row.className='tax-row';
+  row.innerHTML=`<div class="f"><label>Tax Name</label><input value="VAT"></div>
+    <div class="f"><label>Code</label><select><option>VAT-20</option><option>GST-9</option><option>EXEMPT</option></select></div>
+    <div class="f"><label>Rate %</label><input type="number" value="0" class="taxrate" onchange="recalc()"></div>
+    <div class="f"><label>Amount</label><input class="taxamt" readonly style="color:var(--green)"></div>
+    <button class="tr-del" onclick="delTaxRow(this)">×</button>`;
+  document.getElementById('taxRows').appendChild(row);recalc();toast('➕ Tax added');
+}
+function delTaxRow(btn){btn.closest('.tax-row').remove();recalc();}
+function addCharge(){
+  const row=document.createElement('div');row.className='charge-row';
+  row.innerHTML=`<div class="f"><label>Name</label><input value="Insurance"></div>
+    <div class="f"><label>Amount</label><input type="number" value="0" class="chgamt" onchange="recalc()"></div>
+    <div class="f"><label>Taxable</label><select><option>Yes</option><option>No</option></select></div>
+    <button class="tr-del" onclick="this.closest('.charge-row').remove();recalc()">×</button>`;
+  document.getElementById('chargeRows').appendChild(row);toast('➕ Charge added');
+}
+
+// ── PANEL TOGGLE ──
+function togPanel(id){document.getElementById(id)?.classList.toggle('coll')}
+
+// ── FILES ──
+function handleXL(inp){const f=inp.files[0];if(!f)return;toast('📊 Importing '+f.name);setTimeout(()=>{items.push({code:'XL-001',desc:'Excel Import Item',uom:'EA',qty:5,price:25,disc:0,tax:9});render();toast('✅ Excel imported');},900);}
+function handlePDF(inp){const f=inp.files[0];if(!f)return;toast('🤖 AI reading PDF…');setTimeout(()=>{items.push({code:'PDF-001',desc:'AI Extracted Item',uom:'EA',qty:3,price:99,disc:5,tax:9});render();toast('✅ PDF extraction complete');},2400);}
+function importPasted(){
+  const raw=document.getElementById('pasteArea').value.trim();if(!raw){closeM('pModal');return;}
+  raw.split('\n').filter(r=>r.trim()).forEach(row=>{
+    const c=row.split(/\t|,/);
+    if(c.length>=2)items.push({code:c[0]?.trim()||'',desc:c[1]?.trim()||'',uom:'EA',qty:parseFloat(c[2])||1,price:parseFloat(c[3])||0,disc:parseFloat(c[4])||0,tax:9});
+  });
+  render();closeM('pModal');document.getElementById('pasteArea').value='';toast('📋 Items imported');
+}
+function openM(id){document.getElementById(id)?.classList.add('op')}
+function closeM(id){document.getElementById(id)?.classList.remove('op')}
+
+// ── ACTIONS ──
+function saveDraft(){toast('💾 Draft saved — SO-2026-0413')}
+function submitOrder(){
+  if(!activeOT){toast('⚠️ Please select an order type first');return;}
+  toast('🚀 Order submitted successfully!');
+}
+
+// ── HELPERS ──
+function fmt(v){return'$'+(+v).toFixed(2)}
+function s(id,v){const el=document.getElementById(id);if(el)el.textContent=v}
+
+// ── INIT ──
+// Default steps before order type selected
+renderSteps(['Entity','Order Type','Customer','Addresses','Line Items','Disc & Tax','Review'],'std');
+render();
+</script>
+</body>
+</html>

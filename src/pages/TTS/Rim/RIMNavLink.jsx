@@ -25,19 +25,9 @@ const RIMNavLink = () => {
   }, []);
 
   const items = [
-    { key: 'factory', label: 'Factory', onClick: () => navigate('factory') },
-    { key: 'warehouse', label: 'Warehouse', onClick: () => navigate('warehouse') },
-    // {
-    //   key: 'rim-barcode',
-    //   label: 'Rim Barcode',
-    //   children: [
-    //     { key: 'datawise', label: 'Data Wise', onClick: () => navigate('DataWise') },
-    //     { key: 'edcnowise', label: 'EDC No Wise', onClick: () => navigate('EDCNoWise') },
-    //   ],
-    // },
-    // { key: 'rimstock', label: 'Rim Stock', onClick: () => navigate('rimstock') },
-    // { key: 'analytics', label: 'Analytics', icon: <BarChartOutlined />, onClick: () => navigate('/analytics') },
-    // { key: 'settings', label: 'Settings', icon: <SettingOutlined />, onClick: () => navigate('/settings') },
+    { key: 'PendingTransfer', label: 'PendingTransfer', onClick: () => navigate('PendingTransfer') },
+    { key: 'factory', label: 'Send', onClick: () => navigate('factory',{state:{type:'SEND',mode: "NEW",}}) },
+    { key: 'warehouse', label: 'Receive' }
   ];
 
   return (
@@ -47,8 +37,6 @@ const RIMNavLink = () => {
       }}
     >
       <Header 
-        // 1. REMOVE Tailwind bg classes. 
-        // 2. USE inline style with token.colorBgContainer so it changes with the theme.
         className="flex items-center justify-between px-4 py-3 shadow-sm border-b transition-all duration-300"
         style={{ 
           height: '64px',

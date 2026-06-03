@@ -74,6 +74,16 @@ import UserList from "../pages/MenuAccess/UserMaster/UserList";
 import UserMasterLayout from "../layout/UserMasterLayout";
 import MasterReportGenerationPage from "../pages/Reports/SP_Reports/MasterReportGenerationPage";
 import TyreStockTransfer from "../pages/TTS/Rim/TyreStockTransfer";
+import PendingTransferPage from "../pages/TTS/Rim/PendingTransferPage";
+import TyreStockReceiveRedesign from "../pages/TTS/Rim/TyreStockReceiveRedesign";
+import DCPreparationApproval from "../pages/TTS/Rim/DCPreparationApproval";
+import OrderEntryPage from "../pages/TTS/International/OrderProcess/OrderEntry/OrderEntryPage";
+import SalesOrderForm from "../pages/TTS/International/OrderProcess/OrderEntry/OrderEntryCopy";
+import SalesOrderPage from "../pages/TTS/International/OrderProcess/OrderEntry/OrderCopy";
+import OrderCopy from "../pages/TTS/International/OrderProcess/OrderEntry/OrderCopy";
+import MasterManagement from "../pages/Masters/MasterManagement/MasterManagement";
+import OrderEntryCopy from "../pages/TTS/International/OrderProcess/OrderEntry/OrderEntryCopy";
+import MasterCreationLayout from "../layout/MasterCreationLayout";
 
 export const router = createBrowserRouter([
   {
@@ -98,6 +108,17 @@ export const router = createBrowserRouter([
               { path: "UserMaster/UserCreate", element: <UserCreate /> },
               { path: "/Masters/UserMaster/AllUsers", element: <AllUSers /> },
               { path: "/Masters/PriceMaster", element: <PriceMaster /> },
+              // {
+              //   path: "/Masters/Master-creation",
+              //   element: <MasterManagement />,
+              // },
+              {
+                path: "/Masters/Master-creation",
+                element: <MasterCreationLayout />,
+                children: [
+                  { index: true, element: <MasterManagement /> },
+                ],
+              },
               {
                 path: "ItemIDMaster",
                 element: <ItemIDMaster />,
@@ -124,58 +145,58 @@ export const router = createBrowserRouter([
                   },
                 ],
               },
-              {
-                path: "UserMaster",
-                element: <ItemIDMaster />,
-                children: [
-                  {
-                    index: true,
-                    element: <Navigate to="AssemblyProcessIDCreation" />,
-                  },
-                  {
-                    path: "AssemblyProcessIDCreation",
-                    element: <AssemblyProcessIDCreation />,
-                  },
-                  {
-                    path: "TyreProcessIDCreation",
-                    element: <TyreProcessIDCreation />,
-                  },
-                  {
-                    path: "RIMProcessIDCreation",
-                    element: <RIMProcessIDCreation />,
-                  },
-                  {
-                    path: "CustomerProcessIDCreation",
-                    element: <RIMProcessIDCreation />,
-                  },
-                ],
-              },
-              {
-                path: "UserMaster",
-                element: <ItemIDMaster />,
-                children: [
-                  {
-                    index: true,
-                    element: <Navigate to="AssemblyProcessIDCreation" />,
-                  },
-                  {
-                    path: "AssemblyProcessIDCreation",
-                    element: <AssemblyProcessIDCreation />,
-                  },
-                  {
-                    path: "TyreProcessIDCreation",
-                    element: <TyreProcessIDCreation />,
-                  },
-                  {
-                    path: "RIMProcessIDCreation",
-                    element: <RIMProcessIDCreation />,
-                  },
-                  {
-                    path: "CustomerProcessIDCreation",
-                    element: <RIMProcessIDCreation />,
-                  },
-                ],
-              },
+              // {
+              //   path: "UserMaster",
+              //   element: <ItemIDMaster />,
+              //   children: [
+              //     {
+              //       index: true,
+              //       element: <Navigate to="AssemblyProcessIDCreation" />,
+              //     },
+              //     {
+              //       path: "AssemblyProcessIDCreation",
+              //       element: <AssemblyProcessIDCreation />,
+              //     },
+              //     {
+              //       path: "TyreProcessIDCreation",
+              //       element: <TyreProcessIDCreation />,
+              //     },
+              //     {
+              //       path: "RIMProcessIDCreation",
+              //       element: <RIMProcessIDCreation />,
+              //     },
+              //     {
+              //       path: "CustomerProcessIDCreation",
+              //       element: <RIMProcessIDCreation />,
+              //     },
+              //   ],
+              // },
+              // {
+              //   path: "UserMaster",
+              //   element: <ItemIDMaster />,
+              //   children: [
+              //     {
+              //       index: true,
+              //       element: <Navigate to="AssemblyProcessIDCreation" />,
+              //     },
+              //     {
+              //       path: "AssemblyProcessIDCreation",
+              //       element: <AssemblyProcessIDCreation />,
+              //     },
+              //     {
+              //       path: "TyreProcessIDCreation",
+              //       element: <TyreProcessIDCreation />,
+              //     },
+              //     {
+              //       path: "RIMProcessIDCreation",
+              //       element: <RIMProcessIDCreation />,
+              //     },
+              //     {
+              //       path: "CustomerProcessIDCreation",
+              //       element: <RIMProcessIDCreation />,
+              //     },
+              //   ],
+              // },
             ],
           },
           {
@@ -258,6 +279,11 @@ export const router = createBrowserRouter([
             path: "TTS/International",
             element: <InvoiceLayout />,
             children: [
+              // Order Process
+              { path: "OrderProcess", element: <OrderCopy /> },
+              { path: "OrderProcesscopy", element: <OrderEntryCopy /> },
+              { path: "OrderProcess1", element: <SalesOrderPage /> },
+              // invoice
               { path: "Invoice/CustomerInvoice", element: <ExportInvoice /> },
               { path: "Invoice/CustomInvoice", element: <ExportInvoice /> },
               {
@@ -381,15 +407,23 @@ export const router = createBrowserRouter([
             children: [
               {
                 index: true, // ✅ default route
-                element: <Navigate to="factory"/>, // 👈 choose your default page
+                element: <Navigate to="PendingTransfer" />, // 👈 choose your default page
+              },
+              {
+                path: "/TTS/Warehouse/PendingTransfer",
+                element: <PendingTransferPage />,
               },
               {
                 path: "/TTS/Warehouse/factory",
                 element: <TyreStockTransfer />,
               },
               {
-                path: "DataWise",
-                element: <RimWiseAndEDCWise />,
+                path: "/TTS/Warehouse/warehouse",
+                element: <TyreStockReceiveRedesign />,
+              },
+              {
+                path: "/TTS/Warehouse/DCPreparationApproval",
+                element: <DCPreparationApproval />,
               },
               {
                 path: "EDCNoWise",
@@ -420,9 +454,15 @@ export const router = createBrowserRouter([
                     element: <Navigate to="SaleRepost" replace />,
                   },
                   { path: "PowerBIReport", element: <TTSPowerBIReports /> },
-                  { path: "SaleRepost", element: <TyreSalesDashboard/> },
-                  { path: "ProductionRepost", element: <ProductionDashboard /> },
-                  { path: "MasterReportGeneration", element: <MasterReportGenerationPage /> },
+                  { path: "SaleRepost", element: <TyreSalesDashboard /> },
+                  {
+                    path: "ProductionRepost",
+                    element: <ProductionDashboard />,
+                  },
+                  {
+                    path: "MasterReportGeneration",
+                    element: <MasterReportGenerationPage />,
+                  },
                 ],
               },
             ],
@@ -444,11 +484,11 @@ export const router = createBrowserRouter([
           },
           {
             path: "customer-item-management",
-            element:<CPMMaster/>,
+            element: <CPMMaster />,
             children: [
               {
                 index: true, // ✅ default route
-                element: <Navigate to="barcode-print"/>, // 👈 choose your default page
+                element: <Navigate to="barcode-print" />, // 👈 choose your default page
               },
               {
                 path: "barcode-print",
@@ -459,9 +499,7 @@ export const router = createBrowserRouter([
           {
             path: "Settings",
             element: <SettingsLayout />,
-            children: [
-              { index: true, element: <Settings /> },
-            ],
+            children: [{ index: true, element: <Settings /> }],
           },
           {
             path: "UserMaster",

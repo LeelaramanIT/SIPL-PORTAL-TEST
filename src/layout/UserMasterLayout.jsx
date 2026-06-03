@@ -6,8 +6,9 @@ import {
   MenuUnfoldOutlined,
   UserOutlined,
   PlusCircleOutlined,
-//   ShieldCheckOutlined,
+  //   ShieldCheckOutlined,
 } from "@ant-design/icons";
+import { CgMenuGridR } from "react-icons/cg";
 
 const UserMasterLayout = () => {
   const location = useLocation();
@@ -16,18 +17,23 @@ const UserMasterLayout = () => {
   const menuItems = [
     {
       key: "/UserMaster/user-list",
-      icon: <UserOutlined style={{ fontSize: '18px' }} />,
+      icon: <UserOutlined style={{ fontSize: "18px" }} />,
       label: <Link to="/UserMaster/user-list">User List</Link>,
     },
     {
       key: "/UserMaster/user-creation",
-      icon: <PlusCircleOutlined style={{ fontSize: '18px' }} />,
+      icon: <PlusCircleOutlined style={{ fontSize: "18px" }} />,
       label: <Link to="/UserMaster/user-creation">User Creation</Link>,
     },
     {
       key: "/UserMaster/Menuaccess",
-    //   icon: <ShieldCheckOutlined style={{ fontSize: '18px' }} />,
+      icon: <CgMenuGridR style={{ fontSize: "18px" }} />,
       label: <Link to="/UserMaster/Menuaccess">Menu Access</Link>,
+    },
+    {
+      key: "/UserMaster/MasterManagement",
+      icon: <CgMenuGridR style={{ fontSize: "18px" }} />,
+      label: <Link to="/UserMaster/MasterManagement">Master Management</Link>,
     },
   ];
 
@@ -39,18 +45,19 @@ const UserMasterLayout = () => {
           borderRadius: 8,
         },
         components: {
-          Menu: {
+          Menu: { 
             itemBg: "transparent",
             itemSelectedBg: "#3b82f6",
             itemSelectedColor: "#ffffff",
             itemHoverBg: "rgba(0, 0, 0, 0.04)",
             itemColor: "var(--foreground)",
+            popupBg: "#1f2937",
+            darkItemColor: "#ffffff",
           },
         },
       }}
     >
-    <div className="flex h-[calc(100vh-62px)] w-full bg-[var(--card)] p-3 gap-3 overflow-hidden font-sans">
-        
+      <div className="flex h-[calc(100vh-62px)] w-full bg-[var(--card)] p-3 gap-3 overflow-hidden font-sans">
         {/* --- Modern Sidebar --- */}
         <aside
           className={`
@@ -61,7 +68,9 @@ const UserMasterLayout = () => {
           `}
         >
           {/* Header & Toggle */}
-          <div className={`flex items-center p-4 mb-2 ${collapsed ? "justify-center" : "justify-between"}`}>
+          <div
+            className={`flex items-center p-4 mb-2 ${collapsed ? "justify-center" : "justify-between"}`}
+          >
             {!collapsed && (
               <span className="text-[10px] font-bold uppercase tracking-[2px] text-gray-400">
                 Management
@@ -89,10 +98,14 @@ const UserMasterLayout = () => {
 
           {/* Optional Footer/Profile placeholder */}
           <div className="p-4 border-t border-[var(--border)] mt-auto">
-             <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0" />
-                {!collapsed && <div className="text-sm font-medium truncate">Admin User</div>}
-             </div>
+            <div
+              className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}
+            >
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0" />
+              {!collapsed && (
+                <div className="text-sm font-medium truncate">Admin User</div>
+              )}
+            </div>
           </div>
         </aside>
 
