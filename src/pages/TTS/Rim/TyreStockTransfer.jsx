@@ -146,7 +146,7 @@ const ResponsiveHeader = memo(
 
     useEffect(() => {
       if (LocationDetails?.length > 0 && !transferPlan) {
-        setTransferPlan(LocationDetails[0].LocationName);
+        setTransferPlan(LocationDetails[0].locationName);
       }
     }, [LocationDetails, transferPlan]);
 
@@ -799,6 +799,7 @@ const ResponsiveContent = memo(
                 </div>
                 <div style={{ flex: 1, overflow: "auto" }}>
                   <Table // Mobile
+                    className="responsive-transfer-table"
                     loading={tableLoading}
                     columns={columns}
                     dataSource={(Array.isArray(scannedTyres)
@@ -811,6 +812,7 @@ const ResponsiveContent = memo(
                     pagination={false}
                     size="small"
                     showHeader={false}
+                    scroll={{ x: 1060 }}
                     locale={{
                       emptyText: (
                         <Empty
@@ -1508,6 +1510,7 @@ const ResponsiveContent = memo(
                   }}
                 >
                   <Table // table
+                    className="responsive-transfer-table"
                     loading={tableLoading}
                     columns={columns}
                     dataSource={groupedTyres.map((item, index) => ({
@@ -1516,9 +1519,16 @@ const ResponsiveContent = memo(
                     }))}
                     pagination={false}
                     size={isDesktop ? "middle" : "small"}
-                    scroll={{
-                      y: `calc(100vh - ${isDesktop ? "320px" : isTablet ? "260px" : "280px"})`,
-                    }}
+                    scroll={
+                      isDesktop
+                        ? {
+                            y: "calc(100vh - 320px)",
+                          }
+                        : {
+                            x: 1060,
+                            y: `calc(100vh - ${isTablet ? "260px" : "280px"})`,
+                          }
+                    }
                     locale={{
                       emptyText: (
                         <Empty
@@ -1738,7 +1748,7 @@ export default function TyreStockTransferRedesign() {
 
   useEffect(() => {
     if (LocationDetails?.length > 0 && !transferPlan) {
-      setTransferPlan(LocationDetails[0].LocationName);
+      setTransferPlan(LocationDetails[0].locationName);
     }
   }, [LocationDetails, transferPlan]);
 
@@ -1953,48 +1963,31 @@ export default function TyreStockTransferRedesign() {
   }, [scannedTyres]);
 
   const columns = useMemo(() => {
-    if (isMobile || isTablet) {
-      return [
-        {
-          title: "Tyre",
-          dataIndex: "tyreNumber",
-          width: "60%",
-          render: (text, record) => (
-            <div>
-              <Text strong style={{ fontSize: isMobile ? 11 : 12 }}>
-                {text}
-              </Text>
-              <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>
-                {record.brand} • {record.size}
-              </div>
-            </div>
-          ),
-        },
-        {
-          title: "Del",
-          width: "40%",
-          render: (_, __, index) => (
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                danger
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => deleteTyre(index)}
-              />
-            </motion.div>
-          ),
-        },
-      ];
-    }
+    const responsiveTextStyle = {
+      fontSize: isDesktop ? 14 : 11,
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
+      wordBreak: "break-word",
+      lineHeight: 1.35,
+    };
 
-    return [
+    const responsiveTagStyle = {
+      fontSize: isDesktop ? 13 : 10,
+      margin: 0,
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
+      wordBreak: "break-word",
+      lineHeight: 1.25,
+      maxWidth: "100%",
+    };
+
+    const stockColumns = [
       {
         title: "Platform",
         dataIndex: "config",
         width: 140,
         render: (text) => (
-          <Text strong style={{ fontSize: isDesktop ? 14 : 11 }}>
+          <Text strong style={responsiveTextStyle}>
             {text}
           </Text>
         ),
@@ -2006,7 +1999,7 @@ export default function TyreStockTransferRedesign() {
         render: (text) => (
           <Tag
             color="blue"
-            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+            style={responsiveTagStyle}
           >
             {text}
           </Tag>
@@ -2019,7 +2012,7 @@ export default function TyreStockTransferRedesign() {
         render: (text) => (
           <Tag
             color="blue"
-            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+            style={responsiveTagStyle}
           >
             {text}
           </Tag>
@@ -2030,7 +2023,7 @@ export default function TyreStockTransferRedesign() {
         dataIndex: "tyreSize",
         width: 140,
         render: (text) => (
-          <span style={{ fontSize: isDesktop ? 14 : 10 }}>{text}</span>
+          <span style={responsiveTextStyle}>{text}</span>
         ),
       },
       {
@@ -2038,7 +2031,7 @@ export default function TyreStockTransferRedesign() {
         dataIndex: "rimSize",
         width: 100,
         render: (text) => (
-          <Text style={{ fontSize: isDesktop ? 14 : 10 }}>{text}</Text>
+          <Text style={responsiveTextStyle}>{text}</Text>
         ),
       },
 
@@ -2049,7 +2042,7 @@ export default function TyreStockTransferRedesign() {
         render: (text) => (
           <Tag
             color="cyan"
-            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+            style={responsiveTagStyle}
           >
             {text}
           </Tag>
@@ -2060,7 +2053,7 @@ export default function TyreStockTransferRedesign() {
         dataIndex: "processID",
         width: 140,
         render: (text) => (
-          <Text strong style={{ fontSize: isDesktop ? 14 : 11 }}>
+          <Text strong style={responsiveTextStyle}>
             {text}
           </Text>
         ),
@@ -2072,7 +2065,7 @@ export default function TyreStockTransferRedesign() {
         render: (text) => (
           <Tag
             color={text === "A" ? "green" : "orange"}
-            style={{ fontSize: isDesktop ? 13 : 10, margin: 0 }}
+            style={responsiveTagStyle}
           >
             {text}
           </Tag>
@@ -2081,11 +2074,15 @@ export default function TyreStockTransferRedesign() {
       {
         title: "Qty",
         dataIndex: "qty",
-        width: 100,
-        render: (text) => <Tag color="green">{text}</Tag>,
+        width: isDesktop ? 100 : 70,
+        fixed: isDesktop ? undefined : "right",
+        align: "center",
+        render: (text) => <Tag color="green">{text || 1}</Tag>,
       },
     ];
-  }, [isMobile, isTablet, deleteTyre]);
+
+    return stockColumns;
+  }, [isDesktop]);
 
   const completionPercentage = Math.min(
     ((scannedTyres.length || 0) / Math.max(scannedTyres.length || 1, 10)) * 100,
@@ -2405,6 +2402,27 @@ export default function TyreStockTransferRedesign() {
         .ant-descriptions-item-content { color: #1e293b; font-size: ${isDesktop ? "14px" : "11px"}; padding: ${isDesktop ? "12px 16px" : "4px 8px"} !important; }
         .ant-table-cell { padding: ${isDesktop ? "12px 16px" : "8px 12px"} !important; font-size: ${isDesktop ? "14px" : "12px"} !important; }
         .ant-card-body { padding: 12px !important; }
+        @media (max-width: 1024px) {
+          .responsive-transfer-table .ant-table-container,
+          .responsive-transfer-table .ant-table-content,
+          .responsive-transfer-table .ant-table-body {
+            overflow-x: auto !important;
+          }
+          .responsive-transfer-table .ant-table-cell {
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+            vertical-align: top !important;
+          }
+          .responsive-transfer-table .ant-table-cell-fix-right {
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+          }
+          .responsive-transfer-table .ant-btn {
+            min-width: 36px;
+            min-height: 36px;
+          }
+        }
         @media (max-width: 768px) {
           .ant-card { border-radius: 8px !important; }
           .ant-btn { font-size: 11px !important; }

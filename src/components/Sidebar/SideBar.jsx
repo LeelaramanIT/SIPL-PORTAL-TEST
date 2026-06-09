@@ -72,6 +72,8 @@ const SideBar = () => {
 
   const { open: isSidebarOpen, isDark } = useSelector((s) => s.global);
   const auth = useSelector((s) => s.auth);
+  console.log(auth);
+  
 
   // ✅ Create permissions array dynamically from menus
   const user = {
@@ -483,7 +485,7 @@ const SideBar = () => {
   // ✅ Filter based on user.permissions
   const filterMenu = (items) => {
     // 🟩 Admin with RoleID 1 — full access
-    if (user?.roles?.toLowerCase() === "admin" && Number(user?.RoleID) === 1) {
+    if (user?.roles?.toLowerCase() === "admin" && Number(user?.roleID) === 1) {
       return items;
     }
 

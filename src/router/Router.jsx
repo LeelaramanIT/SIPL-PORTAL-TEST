@@ -77,12 +77,8 @@ import TyreStockTransfer from "../pages/TTS/Rim/TyreStockTransfer";
 import PendingTransferPage from "../pages/TTS/Rim/PendingTransferPage";
 import TyreStockReceiveRedesign from "../pages/TTS/Rim/TyreStockReceiveRedesign";
 import DCPreparationApproval from "../pages/TTS/Rim/DCPreparationApproval";
-import OrderEntryPage from "../pages/TTS/International/OrderProcess/OrderEntry/OrderEntryPage";
-import SalesOrderForm from "../pages/TTS/International/OrderProcess/OrderEntry/OrderEntryCopy";
-import SalesOrderPage from "../pages/TTS/International/OrderProcess/OrderEntry/OrderCopy";
-import OrderCopy from "../pages/TTS/International/OrderProcess/OrderEntry/OrderCopy";
+import OrderCopy from "../pages/TTS/International/OrderProcess/OrderEntry/SaleOrderEntry";
 import MasterManagement from "../pages/Masters/MasterManagement/MasterManagement";
-import OrderEntryCopy from "../pages/TTS/International/OrderProcess/OrderEntry/OrderEntryCopy";
 import MasterCreationLayout from "../layout/MasterCreationLayout";
 
 export const router = createBrowserRouter([
@@ -281,8 +277,8 @@ export const router = createBrowserRouter([
             children: [
               // Order Process
               { path: "OrderProcess", element: <OrderCopy /> },
-              { path: "OrderProcesscopy", element: <OrderEntryCopy /> },
-              { path: "OrderProcess1", element: <SalesOrderPage /> },
+              // { path: "OrderProcesscopy", element: <OrderEntryCopy /> },
+              // { path: "OrderProcess1", element: <SalesOrderPage /> },
               // invoice
               { path: "Invoice/CustomerInvoice", element: <ExportInvoice /> },
               { path: "Invoice/CustomInvoice", element: <ExportInvoice /> },

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { MdOutlineContentPasteSearch } from "react-icons/md";
+
 import {
   getCustomerDetails,
   getWorkorder,
@@ -27,6 +29,7 @@ import { BsUpcScan } from "react-icons/bs";
 import { HiOutlineViewList } from "react-icons/hi";
 import { IoMdClose } from "react-icons/io";
 import BarcodeDetailList from "./BarcodeDetailList";
+import CheckStencil from "./CheckStencil";
 import InfoTooltip from "../../../../../../components/InfoTooltip";
 import { Tooltip } from "antd";
 const ScanForInspectionDetails = () => {
@@ -44,6 +47,7 @@ const ScanForInspectionDetails = () => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef(null);
   const [showDetailsForm, setShowDetailsForm] = useState(false);
+  const [showCheckStencil, setShowCheckStencil] = useState(false);
   const [isProcessingScan, setIsProcessingScan] = useState(false);
 
   const fadeUp = {
@@ -52,6 +56,10 @@ const ScanForInspectionDetails = () => {
   };
   const handleCloseForm = () => {
     setShowDetailsForm(false);
+  };
+
+  const handleCloseCheckStencil = () => {
+    setShowCheckStencil(false);
   };
 
   useEffect(() => {
@@ -239,6 +247,10 @@ const ScanForInspectionDetails = () => {
 
   const handleBarcodeOpen = () => {
     setShowDetailsForm(true);
+  };
+
+  const handleCheckStencilOpen = () => {
+    setShowCheckStencil(true);
   };
   const custtype =
     location.state.type === "International" ? "Export" : "Domestic";
@@ -501,6 +513,12 @@ const ScanForInspectionDetails = () => {
 
                 {/* Controls Wrapper */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full xl:w-auto">
+                  {/* <button
+                    onClick={handleCheckStencilOpen}
+                    className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all"
+                  >
+                    <MdOutlineContentPasteSearch className="w-3 h-3 mr-2" /> Check Stencil
+                  </button> */}
                   <button
                     onClick={handleBarcodeOpen}
                     className="flex items-center justify-center whitespace-nowrap rounded bg-[var(--primary)] px-3 py-2 text-xs text-white hover:bg-[var(--primary)]/90 transition-all"
@@ -556,6 +574,60 @@ const ScanForInspectionDetails = () => {
         onConfirm={handleConfirmation}
         loading={loading}
       />
+
+      <AnimatePresence>
+        {showCheckStencil && (
+          <motion.div
+            key="check-stencil-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm layout-scroll flex items-center justify-center p-3"
+          >
+            <motion.div
+              key="check-stencil-modal-content"
+              initial={{ scale: 0.95, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 40 }}
+              transition={{ duration: 0.1, ease: "easeIn" }}
+              className="relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg max-h-[100vh] flex flex-col border border-gray-300 dark:border-gray-700"
+            >
+              <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-2.5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                <h1 className="text-sm sm:text-lg md:text-xl font-bold flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <ClipboardList
+                    className="text-[var(--primary)] flex-shrink-0"
+                    size={16}
+                    style={{
+                      width: "clamp(14px, 2vw, 20px)",
+                      height: "clamp(14px, 2vw, 20px)",
+                    }}
+                  />
+                  <span className="truncate">Check Stencil</span>
+                </h1>
+                <button
+                  onClick={handleCloseCheckStencil}
+                  className="
+      flex items-center justify-center
+      ml-2 flex-shrink-0
+      w-7 h-7 sm:w-8 sm:h-8
+      rounded-md
+      text-gray-500 dark:text-gray-400
+      hover:text-gray-900 dark:hover:text-white
+      hover:bg-gray-100 dark:hover:bg-gray-700
+      transition-all
+    "
+                >
+                  <IoMdClose className="text-base sm:text-xl" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                <CheckStencil />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Fix: Remove overflow-y-auto from modal wrapper, use flex-col + fixed height instead */}
       <AnimatePresence>

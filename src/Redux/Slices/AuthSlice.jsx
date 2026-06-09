@@ -3,18 +3,20 @@ import { api } from "../../utils/axios";
 import { toast } from "react-hot-toast";
 
 const userData = JSON.parse(localStorage.getItem("user")) || {};
+console.log(userData);
+
 
 const initialState = {
   token: localStorage.getItem("authToken") || null,
 
   username: userData.username || null,
   roles: userData.roles || "",
-  Menus: userData.Menus || [],
+  Menus: userData.menus || [],
 
-  DepartmentDetails: userData.DepartmentDetails || [],
-  LocationDetails: userData.LocationDetails || [],
+  DepartmentDetails: userData.departmentDetails || [],
+  LocationDetails: userData.locationDetails || [],
 
-  RoleID: userData.RoleID || "",
+  RoleID: userData.roleID || "",
 
   loggedIn: !!localStorage.getItem("authToken"),
   loading: false,
@@ -39,13 +41,13 @@ const authSlice = createSlice({
       state.username = data.username;
       state.roles = data.roles;
 
-      state.Menus = data.Menus || [];
+      state.Menus = data.menus || [];
 
-      state.DepartmentDetails = data.DepartmentDetails || [];
+      state.DepartmentDetails = data.departmentDetails || [];
 
-      state.LocationDetails = data.LocationDetails || [];
+      state.LocationDetails = data.locationDetails || [];
 
-      state.RoleID = data.RoleID;
+      state.RoleID = data.roleID;
 
       state.loggedIn = true;
       state.loading = false;
@@ -60,7 +62,7 @@ const authSlice = createSlice({
       state.token = null;
       state.username = null;
       state.roles = [];
-      state.menus = [];
+      state.Menus = [];
       state.loggedIn = false;
       state.Department = "";
       state.RoleID = "";

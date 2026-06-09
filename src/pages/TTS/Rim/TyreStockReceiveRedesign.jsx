@@ -137,7 +137,7 @@ const ResponsiveHeader = memo(
 
     useEffect(() => {
       if (LocationDetails?.length > 0 && !receivePlan) {
-        setReceivePlan(LocationDetails[0].LocationName);
+        setReceivePlan(LocationDetails[0].locationName);
       }
     }, [LocationDetails, receivePlan]);
 
@@ -1619,7 +1619,7 @@ export default function TyreStockReceiveRedesign() {
 
   useEffect(() => {
     if (LocationDetails?.length > 0 && !receivePlan) {
-      setReceivePlan(LocationDetails[0].LocationName);
+      setReceivePlan(LocationDetails[0].locationName);
     }
   }, [LocationDetails, receivePlan]);
 

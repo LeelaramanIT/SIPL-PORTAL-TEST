@@ -228,6 +228,27 @@ export const getWorkorder = (custCode, orderRefNo, Plant, custtype) => async () 
     }
 };
 
+export const getStencileData = (barcode) => async (dispatch) => {
+    try {
+        dispatch(setLoading(true))
+        dispatch
+        
+        const res = await api.get(``);
+       
+        if (res.status === 200) {
+            dispatch('')
+        }
+        dispatch(setLoading(false))
+    } catch (error) {
+        dispatch(setLoading(false))
+        console.log(error)
+        toast.error(error.message,{
+            position: "top-center",
+          })
+    }
+}
+
+
 
 export const { setListOfInspectionData, setSearch, resetAll, setInspectionDetails, restInspectionDetails, setBarcodeDetails, resetBarcodeDetails, setLoadingBarcode } = scanforinspectionSlice.actions;
 export default scanforinspectionSlice.reducer;

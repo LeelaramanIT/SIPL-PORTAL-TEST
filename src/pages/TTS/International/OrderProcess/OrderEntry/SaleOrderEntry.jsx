@@ -5,6 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { getListOfCustomer, getListOfItems } from "../../../../../Redux/Slices/OrderProcess/OrderProcessSlice";
 import ItemSelectorDrawer from "./ItemSelectorDrawer";
 import ExistingOrdersModal, { ExistingOrdersButton } from "./ExistingOrdersModal";
+import { Document, PDFViewer } from "@react-pdf/renderer";
+import ProformaPDF from "./ProformaPDF";
+import { getMasterData } from "../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
 const ICONS = {
   entity: "\u{1F3E2}", order: "\u{1F4C4}", customer: "\u{1F464}", address: "\u{1F4CD}",
   plant: "\u{1F3ED}", item: "\u{1F4E6}", tag: "\u{1F3F7}", standard: "\u{1F4E6}",
@@ -129,6 +132,23 @@ function cx(...names) {
   return names.filter(Boolean).join(" ");
 }
 
+function normalizeNumericInput(value) {
+  const cleaned = String(value ?? "")
+    .replace(/[^\d.]/g, "")
+    .replace(/(\..*)\./g, "$1");
+
+  if (cleaned === "") return "";
+
+  const [whole, decimal] = cleaned.split(".");
+  const normalizedWhole = whole.replace(/^0+(?=\d)/, "") || "0";
+
+  return decimal === undefined ? normalizedWhole : `${normalizedWhole}.${decimal}`;
+}
+
+function inputValueOrZero(value) {
+  return value === "" || value === null || value === undefined ? "0" : value;
+}
+
 function Field({ label, required, children, wide }) {
   return (
     <label className={cx("flex flex-col gap-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-slate-500 dark:text-slate-400", wide && "col-span-full")}>
@@ -174,7 +194,7 @@ function Panel({ section, title, icon, badge, collapsed, onToggle, children }) {
   );
 }
 
-export default function OrderCopy() {
+export default function SaleOrderEntry() {
   const nextId = useRef(20);
   const toastTimer = useRef(null);
   const [entity, setEntity] = useState([]);
@@ -194,9 +214,9 @@ export default function OrderCopy() {
   const [items, setItems] = useState([]);
   const [catalogRow, setCatalogRow] = useState(null);
   const [discountMode, setDiscountMode] = useState("pct");
-  const [docDiscount, setDocDiscount] = useState(5);
+  const [docDiscount, setDocDiscount] = useState(0);
   const [taxes, setTaxes] = useState([{ id: 1, name: "GST", code: "GST-9", rate: 9 }]);
-  const [charges, setCharges] = useState([{ id: 1, name: "Freight", amount: 120, taxable: "Yes" }]);
+  const [charges, setCharges] = useState([{ id: 1, name: "Freight", amount: 0, taxable: "Yes" }]);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [toast, setToast] = useState("");
@@ -204,8 +224,25 @@ export default function OrderCopy() {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [logistics, setLogistics] = useState({ preCarriageBy: "", finalDestination: "", containerType: "", packingMethod: "", incoterm: "", placeOfIncoterm: "", leadTime: "", validityDate: "", paymentTerms: "", remarks: "", });
   const { loading, listOfCustomer, error, entityMaster , listOfItems } = useSelector((state) => state.orderProcess);
+  const { master } = useSelector((state) => state.proformaInvoice);
   const [ordersOpen, setOrdersOpen] = useState(false);
-
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [orderDate, setOrderDate] = useState("2026-05-22");
+  const [desiredShipDate, setDesiredShipDate] = useState("2026-06-05");
+  const [customerPo, setCustomerPo] = useState("");
+  const [emailRef, setEmailRef] = useState("");
+  const [notifyParty, setNotifyParty] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "United States",
+  });
+  console.log(master);
+  
   const config = orderType ? ORDER_TYPES[orderType] : null;
   const theme = THEME[orderType || "std"];
   const isExternal = config ? config.showDiscTax : true;
@@ -308,7 +345,9 @@ const resolveImportCode = (rawCode) => {
 
   useEffect(() => {
     dispatch(getListOfCustomer())
+    dispatch(getMasterData())
   }, [dispatch])
+
   useEffect(() => {
   if (customer?.custID) {
     dispatch(getListOfItems(customer?.custID));
@@ -318,6 +357,7 @@ const resolveImportCode = (rawCode) => {
   console.log(entityMaster);
 
   const mappedEntities = (entityMaster || []).map((item) => ({
+    ...item,
     id: item.entityID,
     code: item.entityCode,
     initials: item.entityShortName,
@@ -437,10 +477,11 @@ const resolveImportCode = (rawCode) => {
     const gross = items.reduce((sum, item) => sum + item.qty * item.price, 0);
     const lineDiscount = isExternal ? items.reduce((sum, item) => sum + item.qty * item.price * item.disc / 100, 0) : 0;
     const net = gross - lineDiscount;
-    const documentDiscount = !isExternal || discountMode === "none" ? 0 : discountMode === "pct" ? net * docDiscount / 100 : Math.min(net, docDiscount);
+    const docDiscountValue = Number(docDiscount) || 0;
+    const documentDiscount = !isExternal || discountMode === "none" ? 0 : discountMode === "pct" ? net * docDiscountValue / 100 : Math.min(net, docDiscountValue);
     const taxable = net - documentDiscount;
-    const totalTax = isExternal ? taxes.reduce((sum, tax) => sum + taxable * tax.rate / 100, 0) : 0;
-    const totalCharges = isExternal ? charges.reduce((sum, charge) => sum + charge.amount, 0) : 0;
+    const totalTax = isExternal ? taxes.reduce((sum, tax) => sum + taxable * (Number(tax.rate) || 0) / 100, 0) : 0;
+    const totalCharges = isExternal ? charges.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0) : 0;
     return { gross, lineDiscount, net, documentDiscount, taxable, totalTax, totalCharges, grand: taxable + totalTax + totalCharges };
   }, [items, isExternal, discountMode, docDiscount, taxes, charges]);
 
@@ -733,6 +774,146 @@ results.added.push({
       .includes(customerSearch.toLowerCase())
   );
 
+  // Helper to map UI form states to the data structure expected by ProformaPDF
+  const mapFormToPDFData = () => {
+    const activeShipAddress = customerAddresses.ship.find(addr => addr.id === shipAddress);
+    const activeBillAddress = customerAddresses.bill.find(addr => addr.id === billAddress);
+
+    // Dynamic GST Charges derived from taxes array
+    const gstItem = taxes.find(t => t.name.toUpperCase().includes("GST") || t.name.toUpperCase().includes("TAX"));
+    const gstRate = gstItem ? gstItem.rate : 0;
+    const gstCharges = {
+      percentage: gstRate,
+      type: gstItem?.name?.toUpperCase() === "IGST" ? "IGST" : "CGST_SGST",
+      cgst: gstRate / 2,
+      sgst: gstRate / 2,
+      igst: gstRate,
+    };
+
+    // Mapping items
+    const mappedItems = items.map((item, index) => {
+      // If added via catalog selection or imported, item._raw contains database fields.
+      // If manually typed, we fallback to the UI-entered item values.
+      return {
+        srNo: index + 1,
+        partNumber: item.customerPartNo || item.partNumber || "",
+        itemCode: item.code || item.itemCode || "",
+        PONumber: item.PONumber || customerPo || "",
+        category: item._raw?.category || item.category || "",
+        tyreSize: item._raw?.tyreSize || item.tyreSize || "",
+        tyreRim: item._raw?.tyreRim || item.tyreRim || "",
+        brand: item._raw?.brand || item.brand || "",
+        sidewall: item._raw?.sidewall || item.sidewall || "",
+        tyreType: item._raw?.tyreType || item.tyreType || "",
+        assyRimstatus: item._raw?.assyRimstatus || item._itemType === "ASSEMBLY" || false,
+        edcNo: item._raw?.edcNo || item._raw?.edcno || item.edcNo || "",
+        color: item._raw?.color || item.color || "",
+        des: item._raw?.des || item.des || "",
+        itemQty: Number(item.qty || 0),
+        finishedWt: Number(item._raw?.finishedWt || item._raw?.finishedwt || item.finishedWt || 0),
+        rimfinishedwt: Number(item._raw?.rimWt || item._raw?.rimfinishedwt || item.rimfinishedwt || 0),
+        basicPrice: Number(item.price || 0),
+        rimUnitPrice: Number(item.rimUnitPrice || 0),
+      };
+    });
+
+    // Mapping additional charges
+    const mappedCharges = [
+      {
+        total: charges.reduce((sum, c) => sum + Number(c.amount || 0), 0),
+        rows: charges.map(c => ({
+          desc: c.name || "Charge",
+          value: Number(c.amount || 0),
+        })),
+      }
+    ];
+
+    // Mapping discounts
+    const mappedDiscounts = [
+      {
+        total: totals.lineDiscount + totals.documentDiscount,
+        rows: [
+          ...(totals.lineDiscount > 0 ? [{ desc: "Line Discount", value: totals.lineDiscount }] : []),
+          ...(totals.documentDiscount > 0 ? [{ desc: discountMode === "pct" ? `Doc Discount (${docDiscount}%)` : "Doc Discount (Flat)", value: totals.documentDiscount }] : []),
+        ],
+      }
+    ];
+
+    // Selected plant
+    const source = PLANTS.find((plant) => plant.id === sourcePlant);
+
+    return {
+      // ── Exporter / Entity details ──────────────────────────────────────────
+      // Spreading item in mappedEntities preserves fields like exporterAddressFormatted
+      exportAuthorisedAddress: entity?.exporterAddressFormatted || entity?.exportAuthorisedAddress || entity?.exporterAuthorizedAddress || entity?.entityAddress || entity?.address || "SUNDARAM INDUSTRIES PRIVATE LIMITED\nMMN & PDK PLANT",
+      plantAddress: source?.location || "",
+      authorisedSignature: entity?.entityName || "",
+      custFullName: customer?.name || "",
+
+      // ── Billing Address ──────────────────────────────────────────────────────
+      billingCompanyName: customer?.name || "",
+      billingAddress: activeBillAddress?.first || "",
+      billingCity: activeBillAddress?.original?.city || "",
+      billingState: activeBillAddress?.original?.stateName || "",
+      billingCountry: activeBillAddress?.original?.country || "",
+      billingZipcode: activeBillAddress?.original?.zipCode || "",
+      billingContactName: activeBillAddress?.original?.contactName || customer?.name || "",
+      billingEmailId: activeBillAddress?.original?.emailId || customer?.email || "",
+      billingMobile: activeBillAddress?.original?.mobile || customer?.phone || "",
+
+      // ── Shipping Address ─────────────────────────────────────────────────────
+      shippingCompanyName: customer?.name || "",
+      shippingAddress: activeShipAddress?.first || "",
+      shippingCity: activeShipAddress?.original?.city || "",
+      shippingState: activeShipAddress?.original?.stateName || "",
+      shippingCountry: activeShipAddress?.original?.country || "",
+      shippingZipcode: activeShipAddress?.original?.zipCode || "",
+      shippingContactName: activeShipAddress?.original?.contactName || "",
+      shippingEmailId: activeShipAddress?.original?.emailId || "",
+      shippingMobile: activeShipAddress?.original?.mobile || "",
+
+      // ── Notify Party ─────────────────────────────────────────────────────────
+      notifyPartyName: notifyParty.name || "",
+      notifyPartyAddress: notifyParty.street || "",
+      notifyPartyCity: notifyParty.city || "",
+      notifyPartyState: notifyParty.state || "",
+      notifyPartyZipcode: notifyParty.zip || "",
+      notifyPartyCountry: notifyParty.country || "",
+      notifyPartyEmail: notifyParty.email || "",
+      notifyPartyPhone: notifyParty.phone || "",
+
+      // ── Carriage / Logistics ─────────────────────────────────────────────────
+      preCarriageBy: logistics.preCarriageBy || "",
+      packingMethod: logistics.packingMethod || "",
+      containerType: logistics.containerType || "",
+      leadTime: logistics.leadTime || "",
+      incoterm: logistics.incoterm || "",
+      placeOfIncoterm: logistics.placeOfIncoterm || "",
+      validityDate: logistics.validityDate || "",
+
+      // ── References & Date ────────────────────────────────────────────────────
+      BuyersOrderNumber: customerPo || "",
+      Date: orderDate || "",
+      EmailDate: emailRef || "",
+      orderRefNo: "SO-2026-0413", // display reference code
+      paymentTerms: logistics.paymentTerms || paymentTerm || customer?.terms || "",
+      bankDetails: entity?.bankDetails || entity?.bankAddressFormatted || "",
+      userCurrency: customer?.currency || entity?.currency || "USD",
+
+      // ── Items, Charges, Discounts, Taxes ─────────────────────────────────────
+      items: mappedItems,
+      gstCharges,
+      additionalCharges: mappedCharges,
+      discountDetails: mappedDiscounts,
+      custInstruction: logistics.remarks || "", // mapped dynamic remarks
+
+      // ── Fields not available in UI (documented per instructions) ────────────
+      // revisionNumber: No revision number input field exists in the form UI.
+      // revisionDate: No revision date input field exists in the form UI.
+      // containerNo: No container number input field exists in the form UI.
+    };
+  };
+
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-800 dark:bg-[#0c0e13] dark:text-slate-100">
@@ -833,14 +1014,37 @@ results.added.push({
               </div>
               <Divider>Order Details</Divider>
               <Grid columns={4}>
-                <Field label="Order Date" required><input type="date" defaultValue="2026-05-22" /></Field>
-                <Field label="Desired Ship Date" required><input type="date" defaultValue="2026-06-05" /></Field>
-                {!["mts", "tri", "ipt"].includes(orderType) && (<>
-                  {/* <Field label="Lead Time"><select defaultValue="Above 1 Week"><option>Above 1 Week</option><option>Above 2 Week</option></select></Field> */}
-                  {/* <Field label="Validity Date"><input type="date" defaultValue="2026-06-30" /></Field> */}
-                  <Field label="Customer PO #"><input placeholder="Their reference" /></Field>
-                  <Field label="Email Reference #"><input placeholder="Email REF / Order ref" /></Field>
-                </>
+                <Field label="Order Date" required>
+                  <input
+                    type="date"
+                    value={orderDate}
+                    onChange={(e) => setOrderDate(e.target.value)}
+                  />
+                </Field>
+                <Field label="Desired Ship Date" required>
+                  <input
+                    type="date"
+                    value={desiredShipDate}
+                    onChange={(e) => setDesiredShipDate(e.target.value)}
+                  />
+                </Field>
+                {!["mts", "tri", "ipt"].includes(orderType) && (
+                  <>
+                    <Field label="Customer PO #">
+                      <input
+                        placeholder="Their reference"
+                        value={customerPo}
+                        onChange={(e) => setCustomerPo(e.target.value)}
+                      />
+                    </Field>
+                    <Field label="Email Reference #">
+                      <input
+                        placeholder="Email REF / Order ref"
+                        value={emailRef}
+                        onChange={(e) => setEmailRef(e.target.value)}
+                      />
+                    </Field>
+                  </>
                 )}
               </Grid>
               <AnimatePresence>{orderType === "blk" && <motion.div {...rise}><Divider>Agreement Details</Divider><Grid><Field label="Agreement Start"><input type="date" defaultValue="2026-06-01" /></Field><Field label="Agreement End"><input type="date" defaultValue="2026-12-31" /></Field><Field label="Release Frequency"><select><option>Monthly</option><option>Weekly</option><option>Quarterly</option></select></Field><Field label="Max Release Qty"><input type="number" placeholder="Total agreed qty" /></Field><Field label="Min Order Value"><input type="number" placeholder="Min per release" /></Field><Field label="Auto Release"><select><option>Manual</option><option>Auto on Date</option></select></Field></Grid></motion.div>}</AnimatePresence>
@@ -855,19 +1059,17 @@ results.added.push({
                 setTab={setAddressTab}
                 shipAddress={shipAddress}
                 setShipAddress={setShipAddress}
-                // ❌ REMOVE: billSynced={billSynced} 
-                // ❌ REMOVE: setBillSynced={setBillSynced} 
-                // ✅ ADD THESE:
                 billAddress={billAddress}
                 setBillAddress={setBillAddress}
                 customerAddresses={customerAddresses}
-                // KEEP THE REST:
                 paymentTerm={paymentTerm}
                 setPaymentTerm={setPaymentTerm}
                 entity={entity}
                 notify={notify}
                 collapsed={collapsed.address}
                 onToggle={togglePanel}
+                notifyParty={notifyParty}
+                setNotifyParty={setNotifyParty}
               />}
               {showPlant && <PlantPanel key="plant" type={orderType} sourcePlant={sourcePlant} destinationPlant={destinationPlant} setSourcePlant={setSourcePlant} setDestinationPlant={setDestinationPlant} notify={notify} collapsed={collapsed.plant} onToggle={togglePanel} />}
             </AnimatePresence>
@@ -875,13 +1077,15 @@ results.added.push({
             <ItemsPanel config={config} items={items} isExternal={isExternal} catalogRow={catalogRow} setCatalogRow={setCatalogRow} updateItem={updateItem} chooseCatalogItem={chooseCatalogItem} appendItem={appendItem} setItems={setItems} formatMoney={formatMoney} simulateDocumentImport={simulateDocumentImport} setPasteOpen={setPasteOpen} downloadTemplate={downloadTemplate} notify={notify} collapsed={collapsed.items} onToggle={togglePanel} onOpenSelector={() => setSelectorOpen(true)} catalogueMap={catalogueMap} />
             <AnimatePresence>
               {/* {isExternal && <DiscountPanel taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />} */}
-              {isExternal && (<> <LogisticsPanel logistics={logistics} setLogistics={setLogistics} collapsed={collapsed.logistics} onToggle={togglePanel} />
-                <DiscountPanel taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />
+              {isExternal && (
+                <> 
+                   <DiscountPanel taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />
+                   <LogisticsPanel logistics={logistics} setLogistics={setLogistics} collapsed={collapsed.logistics} onToggle={togglePanel} />
               </>)}
             </AnimatePresence>
           </div>
 
-          <Sidebar config={config} theme={theme} entity={entity} customer={customer} showCustomer={showCustomer} showPlant={showPlant} source={source} destination={destination} orderType={orderType} isExternal={isExternal} items={items} totals={totals} formatMoney={formatMoney} notify={notify} />
+          <Sidebar config={config} theme={theme} entity={entity} customer={customer} showCustomer={showCustomer} showPlant={showPlant} source={source} destination={destination} orderType={orderType} isExternal={isExternal} items={items} totals={totals} formatMoney={formatMoney} notify={notify} onPreview={() => setPreviewOpen(true)} />
         </div>
         <ItemSelectorDrawer
           open={selectorOpen}
@@ -901,6 +1105,13 @@ results.added.push({
           onClose={() => setOrdersOpen(false)}
           onOpen={() => setOrdersOpen(false)}   // "New Order" button inside modal just closes it
         />
+        {previewOpen && (
+          <PDFPreviewModal
+            open={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+            data={mapFormToPDFData()}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
@@ -932,11 +1143,13 @@ function CustomerPanel({ customer, entity, open, search, filtered, collapsed, on
 function AddressPanel({
   tab, setTab,
   shipAddress, setShipAddress,
-  billAddress, setBillAddress,  // ✅ CHANGED
+  billAddress, setBillAddress,
   paymentTerm, setPaymentTerm,
   entity, notify,
   collapsed, onToggle,
-  customerAddresses = { ship: [], bill: [] }  // ✅ NEW
+  customerAddresses = { ship: [], bill: [] },
+  notifyParty,
+  setNotifyParty
 }) {
   return (
     <motion.div {...rise}>
@@ -978,7 +1191,69 @@ function AddressPanel({
                   }}
                 />
               ))
-            }<Divider>Agent Or notify address</Divider><Grid columns={3}><Field label="Name"><input placeholder="City" /></Field><Field label="Phone"><input placeholder="Phone" /></Field><Field label="Email"><input placeholder="Email" /></Field><Field label="Street" wide><input placeholder="Street address" /></Field><Field label="City"><input placeholder="City" /></Field><Field label="State"><input placeholder="State" /></Field><Field label="ZIP"><input placeholder="ZIP" /></Field><Field label="Country"><select><option>United States</option><option>Singapore</option><option>India</option></select></Field></Grid></motion.div>}
+            }<Divider>Agent Or notify address</Divider>
+            <Grid columns={3}>
+              <Field label="Name">
+                <input
+                  placeholder="Enter name"
+                  value={notifyParty?.name || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </Field>
+              <Field label="Phone">
+                <input
+                  placeholder="Phone"
+                  value={notifyParty?.phone || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, phone: e.target.value }))}
+                />
+              </Field>
+              <Field label="Email">
+                <input
+                  placeholder="Email"
+                  value={notifyParty?.email || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </Field>
+              <Field label="Street" wide>
+                <input
+                  placeholder="Street address"
+                  value={notifyParty?.street || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, street: e.target.value }))}
+                />
+              </Field>
+              <Field label="City">
+                <input
+                  placeholder="City"
+                  value={notifyParty?.city || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, city: e.target.value }))}
+                />
+              </Field>
+              <Field label="State">
+                <input
+                  placeholder="State"
+                  value={notifyParty?.state || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, state: e.target.value }))}
+                />
+              </Field>
+              <Field label="ZIP">
+                <input
+                  placeholder="ZIP"
+                  value={notifyParty?.zip || ""}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, zip: e.target.value }))}
+                />
+              </Field>
+              <Field label="Country">
+                <select
+                  value={notifyParty?.country || "United States"}
+                  onChange={(e) => setNotifyParty(prev => ({ ...prev, country: e.target.value }))}
+                >
+                  <option value="United States">United States</option>
+                  <option value="Singapore">Singapore</option>
+                  <option value="India">India</option>
+                </select>
+              </Field>
+            </Grid>
+          </motion.div>}
           {tab === "bill" &&
             <motion.div key="bill" {...rise}>
               {customerAddresses?.bill?.length > 0
@@ -1021,7 +1296,7 @@ function AddressPanel({
             <strong className={cx("block text-xs", paymentTerm === name && "text-purple-500 dark:text-purple-400")}>{name}</strong>
             <small className="text-[9px] text-slate-500">{desc}</small></motion.button>)}</div><Grid columns={2} className="mt-3">
               {/* <Field label="Payment Method"><select><option>Bank Transfer</option><option>Cheque</option><option>Credit Card</option></select></Field> */}
-              {/* <Field label="Bank Account"><select><option>Acme - DBS ****4521</option><option>Acme - OCBC ****8834</option></select></Field> */}
+              <Field label="Bank Account"><select><option>Acme - DBS ****4521</option><option>Acme - OCBC ****8834</option></select></Field>
               </Grid>
             <Grid className="mt-3">
               {/* <Field label="Credit Limit"><input readOnly value={`${entity.currency} 50,000.00`} /></Field> */}
@@ -1072,6 +1347,8 @@ function ItemsPanel({
   // ── Search & filter state ────────────────────────────────────────────────
   const [lineSearch,   setLineSearch]   = useState("");
   const [activeType,   setActiveType]   = useState("ALL");
+  const [selectedRows, setSelectedRows] = useState(() => new Set());
+  const [selectedOnly, setSelectedOnly] = useState(false);
 
   const TYPE_STYLES = {
     ALL:      { bg: "bg-slate-500/10",   text: "text-slate-500",   border: "border-slate-400/50"  },
@@ -1093,11 +1370,55 @@ function ItemsPanel({
   const displayedItems = useMemo(() => {
     const q = lineSearch.toLowerCase();
     return items.filter(item => {
+      if (selectedOnly && !selectedRows.has(item.id)) return false;
       if (activeType !== "ALL" && (item._itemType || "ITEM") !== activeType) return false;
       if (!q) return true;
-      return `${item.code} ${item.desc} ${item.customerPartNo}`.toLowerCase().includes(q);
+      return `${item.code} ${item.desc} ${item.customerPartNo || item.customerPartNumber || item.custPartNo || ""}`.toLowerCase().includes(q);
     });
-  }, [items, lineSearch, activeType]);
+  }, [items, lineSearch, activeType, selectedOnly, selectedRows]);
+
+  const hasCustomerPartNo = useMemo(
+    () => items.some((item) => String(item.customerPartNo || item.customerPartNumber || item.custPartNo || "").trim()),
+    [items]
+  );
+  const displayedIds = useMemo(() => displayedItems.map((item) => item.id), [displayedItems]);
+  const selectedCount = selectedRows.size;
+  const allDisplayedSelected = displayedIds.length > 0 && displayedIds.every((id) => selectedRows.has(id));
+  const someDisplayedSelected = displayedIds.some((id) => selectedRows.has(id));
+
+  useEffect(() => {
+    const itemIds = new Set(items.map((item) => item.id));
+    setSelectedRows((current) => {
+      const next = new Set([...current].filter((id) => itemIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [items]);
+
+  const toggleRowSelection = (id) => {
+    setSelectedRows((current) => {
+      const next = new Set(current);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllDisplayed = () => {
+    setSelectedRows((current) => {
+      const next = new Set(current);
+      if (allDisplayedSelected) {
+        displayedIds.forEach((id) => next.delete(id));
+      } else {
+        displayedIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const deleteSelectedRows = () => {
+    setItems((current) => current.filter((row) => !selectedRows.has(row.id)));
+    setSelectedRows(new Set());
+    setSelectedOnly(false);
+  };
 
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
@@ -1215,6 +1536,43 @@ function ItemsPanel({
         )}
       </div>
 
+      {selectedCount > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/[.05] px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
+            {selectedCount} selected
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedOnly((current) => !current)}
+            className={cx(
+              "rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold transition",
+              selectedOnly
+                ? "border-blue-500 bg-blue-500 text-white"
+                : "border-blue-500/30 bg-white text-blue-500 hover:bg-blue-500/[.08] dark:bg-slate-800"
+            )}
+          >
+            {selectedOnly ? "Showing Selected" : "Show Selected"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRows(new Set());
+              setSelectedOnly(false);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-500 transition hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={deleteSelectedRows}
+            className="rounded-lg border border-red-500/30 bg-red-500/[.08] px-2.5 py-1.5 text-[10px] font-semibold text-red-500 transition hover:bg-red-500/15"
+          >
+            Delete Selected
+          </button>
+        </div>
+      )}
+
       {/* ── Floating Catalog Dropdown (outside table overflow) ── */}
       <AnimatePresence>
         {activeItem && filteredCatalogOutside.length > 0 && (
@@ -1266,10 +1624,11 @@ function ItemsPanel({
           <thead>
             <tr>
               {[
+                "Select",
                 "#",
                 "Type",
                 "Process ID",
-                "Customer Part No",
+                ...(hasCustomerPartNo ? ["Customer Part No"] : []),
                 "Description",
                 "Qty",
                 config?.priceLabel || "Unit Price",
@@ -1283,11 +1642,22 @@ function ItemsPanel({
                   key={head || "action"}
                   className={cx(
                     "border-b-2 border-slate-200 px-1.5 py-2 text-left text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:border-slate-800",
-                    index >= 6 && index <= 9 && "text-right",
-                    index === 10 && "text-center"
+                    ["Qty", config?.priceLabel || "Unit Price", "Disc %", "Line Total"].includes(head) && "text-right",
+                    head === "Select" && "w-10 text-center"
                   )}
                 >
-                  {head}
+                  {head === "Select" ? (
+                    <input
+                      type="checkbox"
+                      checked={allDisplayedSelected}
+                      ref={(input) => {
+                        if (input) input.indeterminate = !allDisplayedSelected && someDisplayedSelected;
+                      }}
+                      onChange={toggleSelectAllDisplayed}
+                      className="size-4 rounded border-slate-300 text-blue-500"
+                      aria-label="Select all displayed line items"
+                    />
+                  ) : head}
                 </th>
               ))}
             </tr>
@@ -1321,8 +1691,22 @@ function ItemsPanel({
                 <motion.tr
                   layout
                   key={item.id}
-                  className={cx("border-b border-slate-200/80 hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-white/[.015]", item.isInvalid && "bg-rose-100 dark:bg-rose-900")}
+                  className={cx(
+                    "border-b border-slate-200/80 hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-white/[.015]",
+                    selectedRows.has(item.id) && "bg-blue-500/[.06] dark:bg-blue-500/[.08]",
+                    item.isInvalid && "bg-rose-100 dark:bg-rose-900"
+                  )}
                 >
+                  <td className="px-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(item.id)}
+                      onChange={() => toggleRowSelection(item.id)}
+                      className="size-4 rounded border-slate-300 text-blue-500"
+                      aria-label={`Select line ${index + 1}`}
+                    />
+                  </td>
+
                   {/* # */}
                   <td className="px-2 text-slate-400 dark:text-slate-600">{index + 1}</td>
 
@@ -1371,15 +1755,16 @@ function ItemsPanel({
                     />
                   </td>
 
-                  {/* Customer Part No */}
-                  <td className="w-[110px] min-w-[100px] p-1">
-                    <input
-                      className={cell}
-                      value={item.customerPartNo || ""}
-                      placeholder="Customer Part No"
-                      onChange={(e) => updateItem(item.id, "customerPartNo", e.target.value)}
-                    />
-                  </td>
+                  {hasCustomerPartNo && (
+                    <td className="w-[110px] min-w-[100px] p-1">
+                      <input
+                        className={cell}
+                        value={item.customerPartNo || item.customerPartNumber || item.custPartNo || ""}
+                        placeholder="Customer Part No"
+                        onChange={(e) => updateItem(item.id, "customerPartNo", e.target.value)}
+                      />
+                    </td>
+                  )}
 
                   {/* Description */}
                   <td className="min-w-[200px] w-[260px] p-1">
@@ -1567,7 +1952,7 @@ function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
           />
         </Field>
 
-        <Field label="Payment Terms">
+        {/* <Field label="Payment Terms">
           <select
             value={logistics.paymentTerms}
             onChange={(e) =>
@@ -1580,7 +1965,7 @@ function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
             <option>Net 45</option>
             <option>COD</option>
           </select>
-        </Field>
+        </Field> */}
 
         <Field label="Remarks" wide>
           <textarea
@@ -1600,13 +1985,134 @@ function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
 }
 
 function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, setDiscountMode, docDiscount, setDocDiscount, entity, totals, formatMoney, nextId, collapsed, onToggle }) {
-  return <motion.div {...rise}><Panel section="discount" title="Document Discount & Tax" icon={ICONS.tag} badge="Applied after line items" collapsed={collapsed} onToggle={onToggle}><Divider className="mt-0">Document Discount</Divider><div className="mb-3 flex gap-1.5">{[["pct", "% Percentage"], ["flat", `${entity.currency} Flat Amount`], ["none", "No Discount"]].map(([id, label]) => <button className={cx("rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800", discountMode === id && "border-amber-400 bg-amber-500/[.08] text-amber-500 dark:text-amber-400")} type="button" key={id} onClick={() => setDiscountMode(id)}>{label}</button>)}</div><AnimatePresence>{discountMode !== "none" && <motion.div {...rise}><Grid><Field label="Discount Type"><select><option>Trade Discount</option><option>Cash Discount</option><option>Loyalty Discount</option></select></Field><Field label="Discount Value"><input type="number" value={docDiscount} onChange={(event) => setDocDiscount(Number(event.target.value) || 0)} /></Field><Field label="Approval / Reason"><input defaultValue="LOYAL2026" /></Field></Grid></motion.div>}</AnimatePresence><Divider>Tax Components</Divider><div className="space-y-2">{taxes.map((tax) => <motion.div layout key={tax.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(4,minmax(0,1fr))_auto]"><Field label="Tax Name"><input value={tax.name} onChange={(event) => setTaxes((current) => current.map((entry) => entry.id === tax.id ? { ...entry, name: event.target.value } : entry))} /></Field><Field label="Code"><select value={tax.code} onChange={(event) => setTaxes((current) => current.map((entry) => entry.id === tax.id ? { ...entry, code: event.target.value } : entry))}><option>GST-9</option><option>VAT-20</option><option>EXEMPT</option></select></Field><Field label="Rate %"><input type="number" value={tax.rate} onChange={(event) => setTaxes((current) => current.map((entry) => entry.id === tax.id ? { ...entry, rate: Number(event.target.value) || 0 } : entry))} /></Field><Field label="Amount"><input readOnly value={formatMoney(totals.taxable * tax.rate / 100)} /></Field><Remove onClick={() => setTaxes((current) => current.filter((entry) => entry.id !== tax.id))} /></motion.div>)}</div>
-    {/* <Add onClick={() => setTaxes((current) => [...current, { id: nextId.current++, name: "VAT", code: "VAT-20", rate: 0 }])}>Add Tax Component</Add> */}
-    <Divider>Additional Charges</Divider><div className="space-y-2">{charges.map((charge) => <motion.div layout key={charge.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]"><Field label="Name"><input value={charge.name} onChange={(event) => setCharges((current) => current.map((entry) => entry.id === charge.id ? { ...entry, name: event.target.value } : entry))} /></Field><Field label="Amount"><input type="number" value={charge.amount} onChange={(event) => setCharges((current) => current.map((entry) => entry.id === charge.id ? { ...entry, amount: Number(event.target.value) || 0 } : entry))} /></Field><Field label="Taxable"><select value={charge.taxable} onChange={(event) => setCharges((current) => current.map((entry) => entry.id === charge.id ? { ...entry, taxable: event.target.value } : entry))}><option>Yes</option><option>No</option></select></Field><Remove onClick={() => setCharges((current) => current.filter((entry) => entry.id !== charge.id))} /></motion.div>)}</div><Add onClick={() => setCharges((current) => [...current, { id: nextId.current++, name: "Insurance", amount: 0, taxable: "Yes" }])}>Add Charge</Add><Calculation totals={totals} format={formatMoney} discountMode={discountMode} docDiscount={docDiscount} /></Panel></motion.div>;
+  const updateTax = (id, field, value) => {
+    setTaxes((current) => current.map((entry) => entry.id === id ? { ...entry, [field]: value } : entry));
+  };
+  const updateCharge = (id, field, value) => {
+    setCharges((current) => current.map((entry) => entry.id === id ? { ...entry, [field]: value } : entry));
+  };
+
+  return (
+    <motion.div {...rise}>
+      <Panel section="discount" title="Document Discount & Tax" icon={ICONS.tag} badge="Applied after line items" collapsed={collapsed} onToggle={onToggle}>
+        <Divider className="mt-0">Document Discount</Divider>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {[
+            ["pct", "% Percentage"],
+            ["flat", `${entity?.currency || ""} Flat Amount`],
+            ["none", "No Discount"],
+          ].map(([id, label]) => {
+            const active = discountMode === id;
+            return (
+              <button
+                className={cx(
+                  "rounded-full border px-3 py-1.5 text-[10px] font-semibold transition",
+                  active
+                    ? "border-amber-400 bg-amber-500 text-white shadow-sm shadow-amber-500/20"
+                    : "border-slate-200 bg-slate-50 text-slate-500 hover:border-amber-300 hover:text-amber-500 dark:border-slate-700 dark:bg-slate-800"
+                )}
+                type="button"
+                key={id}
+                onClick={() => setDiscountMode(id)}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        <AnimatePresence>
+          {discountMode !== "none" && (
+            <motion.div {...rise}>
+              <Grid>
+                <Field label="Discount Type">
+                  <select>
+                    <option>Trade Discount</option>
+                    <option>Cash Discount</option>
+                    <option>Loyalty Discount</option>
+                  </select>
+                </Field>
+                <Field label="Discount Value">
+                  <input
+                    inputMode="decimal"
+                    value={docDiscount}
+                    onChange={(event) => setDocDiscount(normalizeNumericInput(event.target.value))}
+                    onBlur={() => setDocDiscount((current) => inputValueOrZero(current))}
+                  />
+                </Field>
+                <Field label="Approval / Reason"><input defaultValue="LOYAL2026" /></Field>
+              </Grid>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Divider>Tax Components</Divider>
+        <div className="space-y-2">
+          {taxes.map((tax) => {
+            const rate = Number(tax.rate) || 0;
+            return (
+              <motion.div layout key={tax.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+                <Field label="Tax Name">
+                  <input value={tax.name} onChange={(event) => updateTax(tax.id, "name", event.target.value)} placeholder="Tax name" />
+                </Field>
+                <Field label="Code">
+                  <select value={tax.code} onChange={(event) => updateTax(tax.id, "code", event.target.value)}>
+                    <option>GST-9</option>
+                    <option>VAT-20</option>
+                    <option>EXEMPT</option>
+                    <option>CUSTOM</option>
+                  </select>
+                </Field>
+                <Field label="Rate / Value %">
+                  <input
+                    inputMode="decimal"
+                    value={tax.rate}
+                    onChange={(event) => updateTax(tax.id, "rate", normalizeNumericInput(event.target.value))}
+                    onBlur={() => updateTax(tax.id, "rate", inputValueOrZero(tax.rate))}
+                  />
+                </Field>
+                <Field label="Amount"><input readOnly value={formatMoney(totals.taxable * rate / 100)} /></Field>
+                <Remove onClick={() => setTaxes((current) => current.filter((entry) => entry.id !== tax.id))} />
+              </motion.div>
+            );
+          })}
+        </div>
+        <Add onClick={() => setTaxes((current) => [...current, { id: nextId.current++, name: "New Tax", code: "CUSTOM", rate: 0 }])}>Add Tax Component</Add>
+
+        <Divider>Additional Charges</Divider>
+        <div className="space-y-2">
+          {charges.map((charge) => (
+            <motion.div layout key={charge.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+              <Field label="Name">
+                <input value={charge.name} onChange={(event) => updateCharge(charge.id, "name", event.target.value)} />
+              </Field>
+              <Field label="Amount">
+                <input
+                  inputMode="decimal"
+                  value={charge.amount}
+                  onChange={(event) => updateCharge(charge.id, "amount", normalizeNumericInput(event.target.value))}
+                  onBlur={() => updateCharge(charge.id, "amount", inputValueOrZero(charge.amount))}
+                />
+              </Field>
+              <Field label="Taxable">
+                <select value={charge.taxable} onChange={(event) => updateCharge(charge.id, "taxable", event.target.value)}>
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
+              </Field>
+              <Remove onClick={() => setCharges((current) => current.filter((entry) => entry.id !== charge.id))} />
+            </motion.div>
+          ))}
+        </div>
+        <Add onClick={() => setCharges((current) => [...current, { id: nextId.current++, name: "Insurance", amount: 0, taxable: "Yes" }])}>Add Charge</Add>
+        <Calculation totals={totals} format={formatMoney} discountMode={discountMode} docDiscount={Number(docDiscount) || 0} />
+      </Panel>
+    </motion.div>
+  );
 }
 
-function Sidebar({ config, theme, entity, customer, showCustomer, showPlant, source, destination, orderType, isExternal, items, totals, formatMoney, notify }) {
-  return <aside className="lg:sticky lg:top-[68px]"><AnimatePresence>{config && <motion.div {...rise} className={cx("mb-2.5 grid grid-cols-[auto_1fr] items-center rounded-lg border px-3 py-2.5", theme.bg, theme.border, theme.text)}><span className="row-span-2 mr-2 text-lg">{config.icon}</span><strong className="text-xs">{config.name}</strong><small className="text-[10px] opacity-80">{config.showCustomer ? "External - Customer - Delivery" : "Internal - No customer - No delivery"}</small></motion.div>}</AnimatePresence><motion.div layout className={cx("mb-2.5 flex flex-col rounded-xl border p-4 text-center", theme.bg, theme.border, theme.text)}><small className="text-[10px] font-bold uppercase tracking-[.1em]">Grand Total</small><strong className="font-serif text-3xl font-normal">{formatMoney(totals.grand)}</strong><span className="font-mono text-[10px] text-slate-500">{customer?.currency} - SO-2026-0413</span></motion.div><SummaryCard title={<span className="flex w-full justify-between">Order Summary <Draft /></span>}><Summary label="Order #" value="SO-2026-0413" accent /><Summary label="Entity" value={entity.name} /><Summary label="Order Type" value={config?.name || "- not selected -"} />{showCustomer && <Summary label="Customer" value={customer?.name} green />}{showPlant && <Summary label="Plant" value={orderType === "ipt" ? `${source?.id} -> ${destination?.id}` : source?.name} amber />}<Summary label="Date" value="22 May 2026" /><Summary label="Items" value={`${items.length}`} blue />{isExternal && <Summary label="Subtotal" value={formatMoney(totals.gross)} />}{isExternal && <Summary label="Discounts" value={`-${formatMoney(totals.lineDiscount + totals.documentDiscount)}`} red />}{isExternal && <Summary label="Tax" value={`+${formatMoney(totals.totalTax)}`} />}<Summary label="Grand Total" value={formatMoney(totals.grand)} accent total /><div className="mt-3 flex flex-col gap-1.5 border-t border-slate-200 pt-3 dark:border-slate-800"><button className={PRIMARY} type="button" onClick={() => config ? notify(`${ICONS.rocket} Order submitted successfully!`) : notify("Please select an order type first")}>{ICONS.rocket} Submit Order</button><button className={MUTED} type="button" onClick={() => notify(`${ICONS.save} Draft saved - SO-2026-0413`)}>{ICONS.save} Save Draft</button><button className={MUTED} type="button" onClick={() => notify(`${ICONS.preview} Preview generated`)}>{ICONS.preview} Preview</button></div></SummaryCard><SummaryCard title="Checklist"><Checklist done label="Entity selected" /><Checklist done={Boolean(config)} label="Order type chosen" /><Checklist done={Boolean(config)} label={config?.showCustomer ? "Customer selected" : config?.showPlant ? "Plant set" : "Customer / Plant set"} /><Checklist done={Boolean(config?.showAddress)} na={Boolean(config && !config.showAddress)} label={config?.showAddress ? "Address set" : "Address not applicable"} /><Checklist done={items.length > 0} label="Line items added" /><Checklist done={Boolean(config?.showDiscTax)} na={Boolean(config && !config.showDiscTax)} label={config?.showDiscTax ? "Discount & Tax" : "Discount not applicable"} /></SummaryCard></aside>;
+function Sidebar({ config, theme, entity, customer, showCustomer, showPlant, source, destination, orderType, isExternal, items, totals, formatMoney, notify, onPreview }) {
+  return <aside className="lg:sticky lg:top-[68px]"><AnimatePresence>{config && <motion.div {...rise} className={cx("mb-2.5 grid grid-cols-[auto_1fr] items-center rounded-lg border px-3 py-2.5", theme.bg, theme.border, theme.text)}><span className="row-span-2 mr-2 text-lg">{config.icon}</span><strong className="text-xs">{config.name}</strong><small className="text-[10px] opacity-80">{config.showCustomer ? "External - Customer - Delivery" : "Internal - No customer - No delivery"}</small></motion.div>}</AnimatePresence><motion.div layout className={cx("mb-2.5 flex flex-col rounded-xl border p-4 text-center", theme.bg, theme.border, theme.text)}><small className="text-[10px] font-bold uppercase tracking-[.1em]">Grand Total</small><strong className="font-serif text-3xl font-normal">{formatMoney(totals.grand)}</strong><span className="font-mono text-[10px] text-slate-500">{customer?.currency} - SO-2026-0413</span></motion.div><SummaryCard title={<span className="flex w-full justify-between">Order Summary <Draft /></span>}><Summary label="Order #" value="SO-2026-0413" accent /><Summary label="Entity" value={entity.name} /><Summary label="Order Type" value={config?.name || "- not selected -"} />{showCustomer && <Summary label="Customer" value={customer?.name} green />}{showPlant && <Summary label="Plant" value={orderType === "ipt" ? `${source?.id} -> ${destination?.id}` : source?.name} amber />}<Summary label="Date" value="22 May 2026" /><Summary label="Items" value={`${items.length}`} blue />{isExternal && <Summary label="Subtotal" value={formatMoney(totals.gross)} />}{isExternal && <Summary label="Discounts" value={`-${formatMoney(totals.lineDiscount + totals.documentDiscount)}`} red />}{isExternal && <Summary label="Tax" value={`+${formatMoney(totals.totalTax)}`} />}<Summary label="Grand Total" value={formatMoney(totals.grand)} accent total /><div className="mt-3 flex flex-col gap-1.5 border-t border-slate-200 pt-3 dark:border-slate-800"><button className={PRIMARY} type="button" onClick={() => config ? notify(`${ICONS.rocket} Order submitted successfully!`) : notify("Please select an order type first")}>{ICONS.rocket} Submit Order</button><button className={MUTED} type="button" onClick={() => notify(`${ICONS.save} Draft saved - SO-2026-0413`)}>{ICONS.save} Save Draft</button><button className={MUTED} type="button" onClick={onPreview}>{ICONS.preview} Preview</button></div></SummaryCard><SummaryCard title="Checklist"><Checklist done label="Entity selected" /><Checklist done={Boolean(config)} label="Order type chosen" /><Checklist done={Boolean(config)} label={config?.showCustomer ? "Customer selected" : config?.showPlant ? "Plant set" : "Customer / Plant set"} /><Checklist done={Boolean(config?.showAddress)} na={Boolean(config && !config.showAddress)} label={config?.showAddress ? "Address set" : "Address not applicable"} /><Checklist done={items.length > 0} label="Line items added" /><Checklist done={Boolean(config?.showDiscTax)} na={Boolean(config && !config.showDiscTax)} label={config?.showDiscTax ? "Discount & Tax" : "Discount not applicable"} /></SummaryCard></aside>;
 }
 
 function PlantChooser({ title, selected, onChoose, type }) {
@@ -1663,4 +2169,53 @@ function Remove({ onClick }) {
 }
 function Add({ onClick, children }) {
   return <button className="mt-2 px-1 py-1 text-xs font-semibold text-blue-400 hover:text-blue-300" type="button" onClick={onClick}>+ {children}</button>;
+}
+
+function PDFPreviewModal({ open, onClose, data }) {
+  if (!open) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 p-4 backdrop-blur-md dark:bg-black/75"
+    >
+      <motion.section
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        className="flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-[#111318]"
+      >
+        <header className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-[#161820]">
+          <div className="flex flex-col">
+            <strong className="text-sm font-bold text-slate-800 dark:text-white">Proforma Invoice PDF Preview</strong>
+            <span className="text-[10px] text-slate-500">Preview and verify the layout and mappings</span>
+          </div>
+          <button
+            className="text-xl text-slate-500 hover:text-slate-900 dark:hover:text-white"
+            type="button"
+            onClick={onClose}
+          >
+            &times;
+          </button>
+        </header>
+        <div className="flex-1 bg-slate-100 dark:bg-[#0c0e13]">
+          <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+            <Document title={`Proforma Invoice - ${data?.orderRefNo || "SO-2026-0413"}`}>
+              <ProformaPDF data={data} />
+            </Document>
+          </PDFViewer>
+        </div>
+        <footer className="flex justify-end border-t border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-800 dark:bg-[#161820]">
+          <button
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
+            type="button"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </footer>
+      </motion.section>
+    </motion.div>
+  );
 }
