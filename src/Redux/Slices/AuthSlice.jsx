@@ -7,7 +7,7 @@ console.log(userData);
 
 
 const initialState = {
-  token: localStorage.getItem("authToken") || null,
+  // token: localStorage.getItem("authToken") || null,
 
   username: userData.username || null,
   roles: userData.roles || "",
@@ -36,7 +36,7 @@ const authSlice = createSlice({
 
       const data = action.payload;
 
-      state.token = data.Token;
+      // state.token = data.Token;
 
       state.username = data.username;
       state.roles = data.roles;

@@ -78,7 +78,7 @@ const SideBar = () => {
   // ✅ Create permissions array dynamically from menus
   const user = {
     ...auth,
-    permissions: auth?.menus?.map((m) => m.MenuUrl) || [],
+    permissions: auth?.Menus?.map((m) => m.menuUrl) || [],
   };
 
   const collapsed = !isSidebarOpen;
@@ -485,7 +485,7 @@ const SideBar = () => {
   // ✅ Filter based on user.permissions
   const filterMenu = (items) => {
     // 🟩 Admin with RoleID 1 — full access
-    if (user?.roles?.toLowerCase() === "admin" && Number(user?.roleID) === 1) {
+    if (user?.roles?.toLowerCase() === "admin" && Number(user?.RoleID) === 1) {
       return items;
     }
 
