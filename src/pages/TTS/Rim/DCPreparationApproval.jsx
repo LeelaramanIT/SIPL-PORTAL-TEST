@@ -128,70 +128,70 @@ export default function DCPreparationApproval() {
       //   }
       //   return acc;
       // }, {});
-      const groupedDataMap = rawApiData.reduce((acc, curr) => {
-        if (!acc[curr.processID]) {
-          acc[curr.processID] = {
-            processId: curr.processID,
-
-            itemName: `
-        ${curr.config || ""} | 
-        ${curr.tyreSize || ""} | 
-        ${curr.rimSize || ""} | 
-        ${curr.tyreType || ""} | 
-        ${curr.brand || ""} | 
+     const groupedDataMap = rawApiData.reduce((acc, curr) => {
+  if (!acc[curr.processID]) {
+    acc[curr.processID] = {
+      processId: curr.processID,
+      itemName: `
+        ${curr.config || ""} |
+        ${curr.tyreSize || ""} |
+        ${curr.rimSize || ""} |
+        ${curr.tyreType || ""} |
+        ${curr.brand || ""} |
         ${curr.sideWall || ""}
       `
-              .replace(/\s+/g, " ")
-              .trim(),
+        .replace(/\s+/g, " ")
+        .trim(),
 
-            // Start with 1 because first row entered
-            qty: 1,
+      // First row FWT
+      fwt: Number(curr.fwt) || 0,
 
-            // Count scanned qty
-            scannedQty: curr.whScannedQty ? 1 : 0,
+      qty: 1,
+      scannedQty: curr.whScannedQty ? 1 : 0,
+      status:
+        curr.statusNo === 47 ? "PENDING DC PREPARATION" : "Prepared",
+      createdDate: curr.createdDate
+        ? curr.createdDate.split("T")[0]
+        : "-",
 
-            status:
-              curr.statusNo === 47 ? "PENDING DC PREPARATION" : "Prepared",
+      barcodes: [curr.barcode],
+    };
+  } else {
+    // Increase Qty
+    acc[curr.processID].qty += 1;
 
-            createdDate: curr.createdDate
-              ? curr.createdDate.split("T")[0]
-              : "-",
+    // Sum FWT for duplicate process IDs
+    acc[curr.processID].fwt += Number(curr.fwt) || 0;
 
-            barcodes: [curr.barcode],
-          };
-        } else {
-          // Increase qty for same processID
-          acc[curr.processID].qty += 1;
+    // Increase scanned qty
+    if (curr.whScannedQty) {
+      acc[curr.processID].scannedQty += 1;
+    }
 
-          // Increase scanned qty if scanned
-          if (curr.whScannedQty) {
-            acc[curr.processID].scannedQty += 1;
-          }
+    // Add barcode
+    acc[curr.processID].barcodes.push(curr.barcode);
+  }
 
-          // Add barcode
-          acc[curr.processID].barcodes.push(curr.barcode);
-        }
-
-        return acc;
-      }, {});
+  return acc;
+}, {});
 
       // Convert grouped map back to an array for the DataTable
       const formattedData = Object.values(groupedDataMap).map(
-        (item, index) => ({
-          id: index + 1, // S.No
-          processId: item.processId,
-          itemName: item.itemName,
-          // Show multiple count if grouped, otherwise show the single barcode string
-          barcode:
-            item.barcodes.length > 1
-              ? `Multiple (${item.barcodes.length})`
-              : item.barcodes[0],
-          qty: item.qty,
-          scannedQty: item.scannedQty,
-          status: item.status,
-          createdDate: item.createdDate,
-        }),
-      );
+  (item, index) => ({
+    id: index + 1,
+    processId: item.processId,
+    itemName: item.itemName,
+    fwt: item.fwt, // <-- ADD THIS
+    barcode:
+      item.barcodes.length > 1
+        ? `Multiple (${item.barcodes.length})`
+        : item.barcodes[0],
+    qty: item.qty,
+    scannedQty: item.scannedQty,
+    status: item.status,
+    createdDate: item.createdDate,
+  }),
+);
 
       setData(formattedData);
       setVisibleRows(50);
@@ -227,6 +227,13 @@ export default function DCPreparationApproval() {
     () => filteredData.reduce((acc, curr) => acc + curr.scannedQty, 0),
     [filteredData],
   );
+  const totalFWT = useMemo(
+  () => filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.fwt) || 0),
+    0
+  ),
+  [filteredData],
+);
 
   const handleExport = async () => {
   if (!filteredData || filteredData.length === 0) {
@@ -286,14 +293,15 @@ export default function DCPreparationApproval() {
 
   // Column widths
   worksheet.columns = [
-    { width: 7 },  // S.No
-    { width: 18 }, // Process ID
-    { width: 34 }, // Item Name
-    { width: 10 }, // Qty
-    { width: 12 }, // Scanned Qty
-    { width: 16 }, // Status
-    { width: 16 }, // Created Date
-  ];
+  { width: 7 },   // S.No
+  { width: 18 },  // Process ID
+  { width: 34 },  // Item Name
+  { width: 10 },  // FWT
+  { width: 10 },  // Qty
+  { width: 12 },  // Scanned Qty
+  { width: 16 },  // Status
+  { width: 16 },  // Created Date
+];
 
   // Title
   worksheet.mergeCells("A2:G2");
@@ -403,16 +411,16 @@ export default function DCPreparationApproval() {
 
   // Table header
   const headerRowIndex = sectionRow + 1;
-  const headers = [
-    "S.No",
-    "Process ID",
-    "Item Name",
-    "Qty",
-    "Scanned Qty",
-    "Status",
-    "Created Date",
-  ];
-
+const headers = [
+  "S.No",
+  "Process ID",
+  "Item Name",
+  "FWT",          // <-- ADD
+  "Qty",
+  "Scanned Qty",
+  "Status",
+  "Created Date",
+];
   const headerRow = worksheet.getRow(headerRowIndex);
   headerRow.height = 26;
 
@@ -447,26 +455,30 @@ export default function DCPreparationApproval() {
   const dataStartRow = headerRowIndex + 1;
   let totalQty = 0;
   let totalScanned = 0;
+  let totalFWT = 0;
 
   filteredData.forEach((item, index) => {
     const currentRowNumber = dataStartRow + index;
     const row = worksheet.getRow(currentRowNumber);
 
-    const itemQty = Number(item.qty) || 0;
-    const itemScanned = Number(item.scannedQty) || 0;
-
+   const itemFWT = Number(item.fwt) || 0;
+const itemQty = Number(item.qty) || 0;
+const itemScanned = Number(item.scannedQty) || 0;
+    
+    totalFWT += itemFWT;
     totalQty += itemQty;
     totalScanned += itemScanned;
 
     const rowData = [
-      index + 1,
-      item.processId || "-",
-      item.itemName || "-",
-      itemQty,
-      itemScanned,
-      item.status || "-",
-      formatDateTime(item.createdDate) || "-",
-    ];
+  index + 1,
+  item.processId || "-",
+  item.itemName || "-",
+  item.fwt || 0,           // <-- ADD
+  itemQty,
+  itemScanned,
+  item.status || "-",
+  formatDateTime(item.createdDate) || "-",
+];
 
     const rowTextForHeight = `${item.processId || ""} ${item.itemName || ""} ${item.status || ""} ${formatDateTime(item.createdDate) || ""}`;
     row.height = estimateRowHeight(rowTextForHeight, 20, 40, 16);
@@ -475,7 +487,10 @@ export default function DCPreparationApproval() {
       const cell = row.getCell(colIndex + 1);
       cell.value = value;
 
-      const isNumeric = colIndex === 3 || colIndex === 4;
+      const isNumeric =
+  colIndex === 3 || // FWT
+  colIndex === 4 || // Qty
+  colIndex === 5;   // Scanned Qty
       const isLongText = colIndex === 1 || colIndex === 2 || colIndex === 5 || colIndex === 6;
 
       setCellStyle(cell, {
@@ -526,8 +541,9 @@ export default function DCPreparationApproval() {
   totalRow.height = 22;
 
   totalRow.getCell(1).value = "TOTALS";
-  totalRow.getCell(4).value = totalQty;
-  totalRow.getCell(5).value = totalScanned;
+totalRow.getCell(4).value = totalFWT;       // FWT column
+totalRow.getCell(5).value = totalQty;       // Qty column
+totalRow.getCell(6).value = totalScanned;   // Scanned Qty column
 
   totalRow.eachCell((cell, colNumber) => {
     cell.font = {
@@ -542,13 +558,17 @@ export default function DCPreparationApproval() {
       fgColor: { argb: "F3F4F6" },
     };
     cell.alignment = {
-      horizontal: colNumber === 1 ? "left" : colNumber === 4 || colNumber === 5 ? "right" : "center",
+      horizontal:  colNumber === 1
+    ? "left"
+    : colNumber === 4 || colNumber === 5 || colNumber === 6
+    ? "right"
+    : "center",
       vertical: "middle",
       wrapText: true,
     };
-    if (colNumber === 4 || colNumber === 5) {
-      cell.numFormat = "#,##0";
-    }
+    if (colNumber === 4 || colNumber === 5 || colNumber === 6) {
+  cell.numFormat = "#,##0.##";
+}
     cell.border = {
       top: { style: "thin", color: { argb: "111827" } },
       bottom: { style: "double", color: { argb: "111827" } },
@@ -618,6 +638,12 @@ export default function DCPreparationApproval() {
       width: "3fr",
       align: "left",
     },
+    {
+  header: "FWT",
+  accessor: "fwt",
+  width: "100px",
+  align: "center",
+},
 
     {
       header: "Qty",
@@ -813,6 +839,12 @@ export default function DCPreparationApproval() {
               {totalQuantity}
             </strong>
           </span>
+          <span className="text-slate-500">
+  Total FWT:{" "}
+  <strong className="text-slate-800 dark:text-white">
+    {totalFWT.toFixed(2)}
+  </strong>
+</span>
           <span className="text-slate-500">
             Scanned Qty:{" "}
             <strong

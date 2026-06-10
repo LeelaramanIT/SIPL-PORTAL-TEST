@@ -22,6 +22,7 @@ import {
   ClockCircleOutlined,
   WarningOutlined,
   LoadingOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
@@ -372,129 +373,105 @@ const TransferFilters = memo(
     onSearchChange,
     statusFilter,
     onStatusChange,
-    locationFilter,
-    onLocationChange,
     dateFilter,
     onDateChange,
     onAddNew,
   }) => {
-    const locations = [
-      "Warehouse A",
-      "Warehouse B",
-      "Warehouse C",
-      "Store C",
-      "Store D",
-      "Store E",
-      "Store F",
-      "Store G",
-      "Distribution Center",
-      "Regional Hub",
-    ];
+    const [filtersVisible, setFiltersVisible] = useState(false);
+
+    const hasActiveFilters = statusFilter !== 'all' || !!dateFilter;
 
     return (
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-white to-white/95 backdrop-blur-lg border-b border-slate-200 p-6 rounded-xl mb-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Search Input */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-semibold text-slate-700 mb-2">
-              Search Transfer
-            </label>
-            <Input
-              placeholder="Search by ID..."
-              prefix={<SearchOutlined />}
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-8 rounded-lg"
-              allowClear
-            />
+      <div className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-100 p-3 sm:px-6 mb-4">
+        <div className="max-w-7xl mx-auto flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          
+          {/* Top Bar: Search & Actions */}
+          <div className="flex items-center justify-between gap-3 w-full lg:w-auto lg:flex-1">
+            <div className="relative flex-1 max-w-md">
+              <Input
+                placeholder="Search by ID..."
+                prefix={<SearchOutlined className="text-slate-400" />}
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="h-9 rounded-lg bg-slate-50 border-slate-200 hover:border-indigo-400 focus:border-indigo-500 transition-all"
+                allowClear
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Mobile Filter Toggle */}
+              <div className="lg:hidden">
+                <Button
+                  icon={filtersVisible ? <CloseOutlined /> : <FilterOutlined />}
+                  onClick={() => setFiltersVisible(!filtersVisible)}
+                  className={`h-9 w-9 flex items-center justify-center rounded-lg border-slate-200 transition-all ${
+                    filtersVisible || hasActiveFilters
+                      ? "bg-indigo-50 text-indigo-600 border-indigo-200"
+                      : "bg-white text-slate-600"
+                  }`}
+                />
+              </div>
+
+              {/* Add New Action */}
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={onAddNew}
+                className="h-9 font-medium bg-slate-900 hover:bg-slate-800 border-none rounded-lg px-4 flex items-center shadow-sm transition-all text-white"
+              >
+                <span className="hidden sm:inline">Add Transfer</span>
+              </Button>
+            </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-semibold text-slate-700 mb-2">
-              Status
-            </label>
-            <Select
-              value={statusFilter}
-              onChange={onStatusChange}
-              placeholder="All Status"
-              className="w-full"
-              options={[
-                { label: "All Status", value: "all" },
+          {/* Collapsible/Desktop Responsive Filter Row */}
+          <div
+            className={`
+              grid grid-cols-1 sm:grid-cols-2 gap-3 w-full lg:flex lg:w-auto lg:items-center lg:gap-3
+              transition-all duration-300 ease-in-out
+              ${filtersVisible ? "max-h-40 opacity-100 mt-1 lg:mt-0" : "max-h-0 opacity-0 overflow-hidden lg:max-h-none lg:opacity-100 lg:overflow-visible"}
+            `}
+          >
+            {/* Status Filter */}
+            <div className="w-full lg:w-50">
+              <div className="lg:hidden text-[11px] font-semibold text-slate-400 mb-1 px-0.5">Status</div>
+              <div className="h-9 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 focus-within:border-indigo-500 flex items-center px-1 transition-all">
+                <Select
+                  variant="borderless"
+                  value={statusFilter}
+                  onChange={onStatusChange}
+                  placeholder="All Status"
+                  className="w-full text-slate-700"
+                  popupClassName="rounded-lg"
+                  options={[
+                    { label: "All Status", value: "all" },
+                    { label: "Scanning In Progress", value: "scanning_in_progress" },
+                    { label: "Pending DC Prep", value: "pending_dc_preparation" },
+                    { label: "Pending Receipt", value: "pending_receipt" },
+                    { label: "Receiving...", value: "receiving_in_progress" },
+                    { label: "Inward Completed", value: "inward_completed" },
+                  ]}
+                />
+              </div>
+            </div>
 
-                {
-                  label: "Scanning In Progress",
-                  value: "scanning_in_progress",
-                },
-
-                {
-                  label: "Pending DC Preparation",
-                  value: "pending_dc_preparation",
-                },
-
-                {
-                  label: "Pending Receipt",
-                  value: "pending_receipt",
-                },
-
-                {
-                  label: "Receiving In Progress",
-                  value: "receiving_in_progress",
-                },
-
-                {
-                  label: "Inward Completed",
-                  value: "inward_completed",
-                },
-              ]}
-            />
+            {/* Date Filter */}
+            <div className="w-full lg:w-44">
+              <div className="lg:hidden text-[11px] font-semibold text-slate-400 mb-1 px-0.5">Date</div>
+              <div className="h-9 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 focus-within:border-indigo-500 flex items-center px-1 transition-all">
+                <DatePicker
+                  variant="borderless"
+                  value={dateFilter ? dayjs(dateFilter) : null}
+                  onChange={(date) =>
+                    onDateChange(date ? date.format("YYYY-MM-DD") : null)
+                  }
+                  placeholder="Select date"
+                  className="w-full text-slate-700"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Location Filter */}
-          {/* <div className="lg:col-span-1">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              From Location
-            </label>
-            <Select
-              value={locationFilter}
-              onChange={onLocationChange}
-              placeholder="All Locations"
-              className="w-full"
-              showSearch
-              options={[
-                { label: "All Locations", value: "all" },
-                ...locations.map((loc) => ({ label: loc, value: loc })),
-              ]}
-            />
-          </div> */}
-
-          {/* Date Filter */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-semibold text-slate-700 mb-2">
-              Date Range
-            </label>
-            <DatePicker
-              value={dateFilter ? dayjs(dateFilter) : null}
-              onChange={(date) =>
-                onDateChange(date ? date.format("YYYY-MM-DD") : null)
-              }
-              placeholder="Select date"
-              className="w-full h-8"
-            />
-          </div>
-
-          {/* Action Button */}
-          <div className="lg:col-span-1 flex items-end">
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlusOutlined />}
-              onClick={onAddNew}
-              className="w-full h-8 font-semibold"
-            >
-              Add Transfer
-            </Button>
-          </div>
         </div>
       </div>
     );
@@ -518,6 +495,9 @@ const PendingTransferPage = memo(() => {
   const { transfers, loading } = useSelector((state) => state.warehouse);
   const [approvalOpen, setApprovalOpen] = useState(false);
   const dispatch = useDispatch();
+
+   const [openScanModal, setOpenScanModal] = useState(false);
+  const [openScanRefs, setOpenScanRefs] = useState([]);
 
   const formattedTransfers = useMemo(() => {
     return transfers.map((item) => ({
@@ -603,8 +583,20 @@ const PendingTransferPage = memo(() => {
   }, []);
 
   const handleAddNew = useCallback(() => {
-    console.log("Add new transfer");
-  }, []);
+    const inProgress = formattedTransfers.filter(
+      (t) => t.status === "scanning_in_progress"
+    );
+
+    if (inProgress.length > 0) {
+      setOpenScanRefs(inProgress.map((t) => t.id));
+      setOpenScanModal(true);
+      return;
+    }
+
+    navigate("/TTS/Warehouse/factory", {
+      state: { type: "SEND", mode: "NEW" },
+    });
+  }, [formattedTransfers, navigate]);
 
   const handleViewDetails = useCallback((transfer) => {
     setSelectedTransfer(transfer);
@@ -844,6 +836,39 @@ const PendingTransferPage = memo(() => {
         }}
       >
         <p>Do you want to approve this DC preparation?</p>
+      </Modal>
+      {/* Open Scan Guard Modal */}
+      <Modal
+        open={openScanModal}
+        title="Transfer Already In Progress"
+        onCancel={() => setOpenScanModal(false)}
+        onOk={() => {
+          setOpenScanModal(false);
+          navigate("/TTS/Warehouse/factory", {
+            state: { type: "SEND", mode: "NEW" },
+          });
+        }}
+        okText="Continue Anyway"
+        cancelText="Go Back"
+        okButtonProps={{ danger: true }}
+      >
+        <p className="text-slate-700 mb-3">
+          The following transfer{openScanRefs.length > 1 ? "s are" : " is"} currently open and scanning in progress:
+        </p>
+        <div className="space-y-2">
+          {openScanRefs.map((ref) => (
+            <div
+              key={ref}
+              className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg"
+            >
+              <WarningOutlined className="text-orange-500" />
+              <span className="font-semibold text-slate-900">{ref}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-slate-500 text-sm mt-3">
+          Do you still want to create a new transfer?
+        </p>
       </Modal>
 
       {/* Custom CSS */}

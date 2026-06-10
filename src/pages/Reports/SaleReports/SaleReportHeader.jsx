@@ -48,34 +48,60 @@ function SaleReportHeader({mode}) {
   const dispatch = useDispatch();
 
   const allTabs = [
-    {
-      label: "PowerBI Report",
-      permissionKey: "PowerBIReport",
-      path: `${basePath}/PowerBIReport`,
-      icon: <Search className="w-3.5 h-3.5" />,
-    },
-    {
-      label: "SaleOrder Report",
-      permissionKey: "SaleRepost",
-      path: `${basePath}/SaleRepost`,
-      icon: <Search className="w-3.5 h-3.5" />,
-    },
-    {
-      label: "Production Report",
-      permissionKey: "ProductionRepost",
-      path: `${basePath}/ProductionRepost`,
-      icon: <Search className="w-3.5 h-3.5" />,
-    },
-    {
-      label: " Master Report Generate",
-      permissionKey: "MasterRepost",
-      path: `${basePath}/MasterReportGeneration`,
-      icon: <Search className="w-3.5 h-3.5" />,
-    },
-  ];
+  {
+    label: "PowerBI Report",
+    path: `${basePath}/PowerBIReport`,
+    icon: <Search className="w-3.5 h-3.5" />,
+  },
+  {
+    label: "Sale Order Report",
+    path: `${basePath}/SaleRepost`,
+    icon: <Search className="w-3.5 h-3.5" />,
+  },
+  {
+    label: "Production Report",
+    path: `${basePath}/ProductionRepost`,
+    icon: <Search className="w-3.5 h-3.5" />,
+  },
+  {
+    label: "Master Report Generate",
+    path: `${basePath}/MasterReportGeneration`,
+    icon: <Search className="w-3.5 h-3.5" />,
+  },
+];
 
   const visibleTabs = allTabs.filter((tab) => hasPermission(menus, tab.path));
   console.log(mode);
+
+  const pageConfig = {
+  "/Reports/TTSReports/Sale/PowerBIReport": {
+    title: "Power BI Analytics",
+    subtitle: "Interactive business intelligence and analytics",
+    mode: "PowerBI",
+  },
+  "/Reports/TTSReports/Sale/SaleRepost": {
+    title: "Sales Dashboard",
+    subtitle: "Monitor and analyze sales performance",
+    mode: "SaleOrder",
+  },
+  "/Reports/TTSReports/Sale/ProductionRepost": {
+    title: "Production Dashboard",
+    subtitle: "Track production metrics and operational status",
+    mode: "SaleOrder",
+  },
+  "/Reports/TTSReports/Sale/MasterReportGeneration": {
+    title: "Master Report Generation",
+    subtitle: "Generate and manage consolidated reports",
+    mode: "SaleOrder",
+  },
+};
+
+const currentPage =
+  pageConfig[location.pathname] || {
+    title: "Sales Reports",
+    subtitle: "Report Management",
+    mode: "SaleOrder",
+  };
   
 
   return (
@@ -113,7 +139,17 @@ function SaleReportHeader({mode}) {
               <div style={{ width:32, height:32, borderRadius:10, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <Activity size={16} style={{ color:"#fff" }} />
               </div>
-              <h1 style={{ fontSize:20, fontWeight:800, color:"var(--tp)", margin:0, letterSpacing:"-0.02em" }}>Sales Dashboard</h1>
+              <h1
+  style={{
+    fontSize: 20,
+    fontWeight: 800,
+    color: "var(--tp)",
+    margin: 0,
+    letterSpacing: "-0.02em",
+  }}
+>
+  {currentPage.title}
+</h1>
             </div>
             <p style={{ fontSize:12, color:"var(--ts)", margin:0 }}>
               {new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}

@@ -80,6 +80,7 @@ import DCPreparationApproval from "../pages/TTS/Rim/DCPreparationApproval";
 import OrderCopy from "../pages/TTS/International/OrderProcess/OrderEntry/SaleOrderEntry";
 import MasterManagement from "../pages/Masters/MasterManagement/MasterManagement";
 import MasterCreationLayout from "../layout/MasterCreationLayout";
+import SaleReportRedirect from "../pages/Reports/SaleReports/SaleReportRedirect";
 
 export const router = createBrowserRouter([
   {
@@ -447,7 +448,7 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="SaleRepost" replace />,
+                    element: <SaleReportRedirect />,
                   },
                   { path: "PowerBIReport", element: <TTSPowerBIReports /> },
                   { path: "SaleRepost", element: <TyreSalesDashboard /> },

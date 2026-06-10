@@ -1620,32 +1620,32 @@ const ResponsiveFooter = memo(
             whileTap={{ scale: 0.95 }}
             style={{ flex: isMobile ? 1 : "auto", display: "flex" }}
           >
-            <Button
-              icon={<ClearOutlined />}
-              onClick={() => {
-                dispatch(setScannedTyres([]));
+              {/* <Button
+                icon={<ClearOutlined />}
+                onClick={() => {
+                  dispatch(setScannedTyres([]));
 
-                sessionStorage.removeItem("activeFactoryTransfer");
+                  sessionStorage.removeItem("activeFactoryTransfer");
 
-                setActiveTransactionId(null);
+                  setActiveTransactionId(null);
 
-                setIsTransactionLocked(false);
+                  setIsTransactionLocked(false);
 
-                dispatch(GetFactoryRefNo(transferPlan));
+                  dispatch(GetFactoryRefNo(transferPlan));
 
-                message.info("Cleared");
-              }}
-              disabled={scannedTyresCount === 0}
-              style={{
-                height: isDesktop ? 40 : 32,
-                borderRadius: 6,
-                width: isMobile ? "100%" : "auto",
-                fontSize: isDesktop ? 14 : 12,
-              }}
-              size={isDesktop ? "middle" : "small"}
-            >
-              {isMobile ? "Clear" : "Clear All"}
-            </Button>
+                  message.info("Cleared");
+                }}
+                disabled={scannedTyresCount === 0}
+                style={{
+                  height: isDesktop ? 40 : 32,
+                  borderRadius: 6,
+                  width: isMobile ? "100%" : "auto",
+                  fontSize: isDesktop ? 14 : 12,
+                }}
+                size={isDesktop ? "middle" : "small"}
+              >
+                {isMobile ? "Clear" : "Clear All"}
+              </Button> */}
           </motion.div>
 
           <motion.div

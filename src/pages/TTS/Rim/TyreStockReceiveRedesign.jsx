@@ -32,11 +32,9 @@ import {
 
 import {
   ScanOutlined,
-  DeleteOutlined,
   CheckCircleOutlined,
   BarcodeOutlined,
   TruckOutlined,
-  ClearOutlined,
   SendOutlined,
   RadarChartOutlined,
   ClockCircleOutlined,
@@ -123,7 +121,7 @@ const ResponsiveHeader = memo(
     warehouseDetails,
     refNumber,
     receiveData,
-    binLocations,
+    binLocations = [], // Default to empty array to prevent map errors
     selectedBinLocation,
     setSelectedBinLocation,
   }) => {
@@ -134,6 +132,9 @@ const ResponsiveHeader = memo(
     const { LocationDetails } = useSelector((state) => state.auth);
 
     const dispatch = useDispatch();
+
+    // Track what the user is typing so we can capture custom inputs
+    const [searchValue, setSearchValue] = useState("");
 
     useEffect(() => {
       if (LocationDetails?.length > 0 && !receivePlan) {
@@ -148,21 +149,47 @@ const ResponsiveHeader = memo(
     const selectContainerWidth = isDesktop
       ? "220px"
       : isTablet
-        ? "170px"
+        ? "180px"
         : "100%";
     const selectFontSize = isDesktop ? 14 : isTablet ? 13 : 11;
     const refFontSize = isDesktop ? 18 : isTablet ? 16 : 14;
+
+    // --- Helper logic for Free-Text Select ---
+    // If user typed something that isn't in the list, inject it as a valid option
+    const binOptions = [...binLocations];
+    if (searchValue && !binOptions.includes(searchValue)) {
+      binOptions.unshift(searchValue);
+    }
+    // Ensure currently selected custom value stays visible in the options list
+    if (selectedBinLocation && !binOptions.includes(selectedBinLocation)) {
+      binOptions.unshift(selectedBinLocation);
+    }
+
+    const formattedBinOptions = binOptions.map((item) => ({
+      value: item,
+      label: binLocations.includes(item) ? item : `New: ${item}`, 
+    }));
+
+    // Capture custom input when user presses Enter or leaves the field
+    const handleBinSearch = (value) => {
+      setSearchValue(value);
+    };
+
+    const handleBinChange = (value) => {
+      setSelectedBinLocation(value);
+      setSearchValue(""); // Reset search after selection
+    };
 
     return (
       <Header
         style={{
           background: "linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)",
           height: "auto",
-          minHeight: isMobile ? "auto" : "80px",
+          minHeight: isMobile ? "56px" : isTablet ? "68px" : "80px",
           padding: isMobile
-            ? "12px 16px"
+            ? "8px 10px 10px"
             : isTablet
-              ? "12px 20px"
+              ? "10px 12px"
               : "12px 28px",
           borderBottom: "1px solid #e2e8f0",
           boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
@@ -177,14 +204,14 @@ const ResponsiveHeader = memo(
         <Row
           justify="space-between"
           align="middle"
-          gutter={isMobile ? 8 : isTablet ? 10 : 14}
-          style={{ width: "100%" }}
-          wrap={false}
+          gutter={isMobile ? 6 : isTablet ? 8 : 14}
+          style={{ width: "100%", maxWidth: "100%" }}
+          wrap={isMobile || isTablet}
         >
           {/* Title Section */}
           <Col
-            flex={isMobile ? "auto" : isTablet ? "190px" : "170px"}
-            style={{ minWidth: 0, flexShrink: 0 }}
+            flex={isMobile ? "1 1 auto" : isTablet ? "1 1 180px" : "170px"}
+            style={{ minWidth: 0, flexShrink: 1 }}
           >
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -197,8 +224,8 @@ const ResponsiveHeader = memo(
                     margin: 0,
                     color: "#0f172a",
                     fontWeight: 700,
-                    fontSize: isMobile ? 15 : isTablet ? 17 : 19,
-                    lineHeight: 1.2,
+                    fontSize: isMobile ? 14 : isTablet ? 16 : 19,
+                    lineHeight: 1.1,
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -210,12 +237,12 @@ const ResponsiveHeader = memo(
                 <Text
                   type="secondary"
                   style={{
-                    fontSize: isMobile ? 10 : isTablet ? 11 : 12,
+                    fontSize: isMobile ? 9 : isTablet ? 10 : 12,
                     color: "#64748b",
                     letterSpacing: 0.2,
                     textTransform: "uppercase",
                     fontWeight: 500,
-                    marginTop: 2,
+                    marginTop: 1,
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -240,15 +267,17 @@ const ResponsiveHeader = memo(
                 gutter={isDesktop ? 12 : 10}
                 align="middle"
                 justify="flex-start"
-                wrap={false}
-                style={{ marginLeft: 0 }}
+                wrap={isTablet}
+                style={{ marginLeft: 0, width: "100%", maxWidth: "100%" }}
               >
+                {/* Warehouse Select */}
                 <Col
                   style={{
                     width: selectContainerWidth,
-                    minWidth: selectContainerWidth,
-                    maxWidth: selectContainerWidth,
-                    flexShrink: 0,
+                    minWidth: isTablet ? "150px" : "160px",
+                    maxWidth: isTablet ? "100%" : selectContainerWidth,
+                    flex: isTablet ? "1 1 180px" : "0 0 auto",
+                    flexShrink: 1,
                   }}
                 >
                   <Select
@@ -275,12 +304,15 @@ const ResponsiveHeader = memo(
                     }}
                   />
                 </Col>
+
+                {/* Send From Select */}
                 <Col
                   style={{
                     width: selectContainerWidth,
-                    minWidth: selectContainerWidth,
-                    maxWidth: selectContainerWidth,
-                    flexShrink: 0,
+                    minWidth: isTablet ? "150px" : "160px",
+                    maxWidth: isTablet ? "100%" : selectContainerWidth,
+                    flex: isTablet ? "1 1 180px" : "0 0 auto",
+                    flexShrink: 1,
                   }}
                 >
                   <Select
@@ -307,12 +339,15 @@ const ResponsiveHeader = memo(
                     }}
                   />
                 </Col>
+
+                {/* Receive At Select */}
                 <Col
                   style={{
                     width: selectContainerWidth,
-                    minWidth: selectContainerWidth,
-                    maxWidth: selectContainerWidth,
-                    flexShrink: 0,
+                    minWidth: isTablet ? "150px" : "160px",
+                    maxWidth: isTablet ? "100%" : selectContainerWidth,
+                    flex: isTablet ? "1 1 180px" : "0 0 auto",
+                    flexShrink: 1,
                   }}
                 >
                   <Select
@@ -339,15 +374,19 @@ const ResponsiveHeader = memo(
                     }}
                   />
                 </Col>
+
+                {/* Bin Location Combobox (Modified Section) */}
                 <Col
                   style={{
                     width: selectContainerWidth,
-                    minWidth: selectContainerWidth,
-                    maxWidth: selectContainerWidth,
-                    flexShrink: 0,
+                    minWidth: isTablet ? "150px" : "160px",
+                    maxWidth: isTablet ? "100%" : selectContainerWidth,
+                    flex: isTablet ? "1 1 220px" : "0 0 auto",
+                    flexShrink: 1,
                   }}
                 >
                   <Select
+                    showSearch
                     size="small"
                     placeholder="Bin Location"
                     style={{
@@ -356,12 +395,19 @@ const ResponsiveHeader = memo(
                       height: isDesktop ? 34 : 30,
                     }}
                     value={selectedBinLocation}
-                    onChange={setSelectedBinLocation}
-                    options={binLocations.map((item) => ({
-                      value: item,
-                      label: item,
-                    }))}
-                    showSearch
+                    onChange={handleBinChange}
+                    onSearch={handleBinSearch}
+                    searchValue={searchValue}
+                    options={formattedBinOptions}
+                    filterOption={(input, option) =>
+                      (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    onBlur={() => {
+                      // If user clicks away while typing a new item, auto-select it
+                      if (searchValue && !binLocations.includes(searchValue)) {
+                        handleBinChange(searchValue);
+                      }
+                    }}
                   />
                 </Col>
               </Row>
@@ -426,12 +472,12 @@ const ResponsiveHeader = memo(
 
           {/* Mobile Menu Button */}
           {isMobile && (
-            <Col style={{ flexShrink: 0 }}>
+            <Col style={{ flexShrink: 0, paddingLeft: 4 }}>
               <Button
                 type="text"
-                icon={<MenuOutlined style={{ fontSize: 20 }} />}
+                icon={<MenuOutlined style={{ fontSize: 18 }} />}
                 onClick={() => setMobileDrawerOpen(true)}
-                style={{ fontSize: 16 }}
+                style={{ fontSize: 14, padding: "4px 6px", height: 32 }}
               />
             </Col>
           )}
@@ -439,47 +485,69 @@ const ResponsiveHeader = memo(
 
         {/* Mobile Selects */}
         {isMobile && (
-          <Row
-            gutter={6}
-            style={{ marginTop: 10, width: "100%" }}
-            align="middle"
-            wrap={false}
-          >
-            <Col span={12} style={{ minWidth: 0 }}>
-              <Select
-                size="small"
-                placeholder="Warehouse"
-                disabled={true}
-                style={{ width: "100%", fontSize: 11 }}
-                value={receivePlan}
-                onChange={setReceivePlan}
-                options={warehouseDetails?.map((item) => ({
-                  value: item.plant,
-                  label: `${item.plant} - ${item.factoryDetails}`,
-                }))}
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ minWidth: "120px" }}
-              />
-            </Col>
-            <Col span={12} style={{ minWidth: 0 }}>
-              <Select
-                size="small"
-                placeholder="Receive At"
-                disabled={isTransactionLocked}
-                style={{ width: "100%", fontSize: 11 }}
-                value={receiveLocation}
-                onChange={setReceiveLocation}
-                options={
-                  selectedPlantDetails?.warehouses?.map((warehouse) => ({
-                    value: warehouse,
-                    label: warehouse,
-                  })) || []
-                }
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ minWidth: "120px" }}
-              />
-            </Col>
-          </Row>
+          <Space direction="vertical" style={{ width: "100%", marginTop: 6 }} size={4}>
+            <Row gutter={6} style={{ width: "100%" }} align="middle" wrap={false}>
+              <Col span={12} style={{ minWidth: 0 }}>
+                <Select
+                  size="small"
+                  placeholder="Warehouse"
+                  disabled={true}
+                  style={{ width: "100%", fontSize: 10, minHeight: 30 }}
+                  value={receivePlan}
+                  onChange={setReceivePlan}
+                  options={warehouseDetails?.map((item) => ({
+                    value: item.plant,
+                    label: `${item.plant} - ${item.factoryDetails}`,
+                  }))}
+                  dropdownMatchSelectWidth={false}
+                  dropdownStyle={{ minWidth: "120px" }}
+                />
+              </Col>
+              <Col span={12} style={{ minWidth: 0 }}>
+                <Select
+                  size="small"
+                  placeholder="Receive At"
+                  disabled={isTransactionLocked}
+                  style={{ width: "100%", fontSize: 10, minHeight: 30 }}
+                  value={receiveLocation}
+                  onChange={setReceiveLocation}
+                  options={
+                    selectedPlantDetails?.warehouses?.map((warehouse) => ({
+                      value: warehouse,
+                      label: warehouse,
+                    })) || []
+                  }
+                  dropdownMatchSelectWidth={false}
+                  dropdownStyle={{ minWidth: "120px" }}
+                />
+              </Col>
+            </Row>
+
+            {/* Mobile Bin Location row (Added for complete mobile responsive behavior) */}
+            <Row style={{ width: "100%" }}>
+              <Col span={24}>
+                <Select
+                  showSearch
+                  size="small"
+                  placeholder="Bin Location"
+                  style={{ width: "100%", fontSize: 10, minHeight: 30 }}
+                  value={selectedBinLocation}
+                  onChange={handleBinChange}
+                  onSearch={handleBinSearch}
+                  searchValue={searchValue}
+                  options={formattedBinOptions}
+                  filterOption={(input, option) =>
+                    (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  onBlur={() => {
+                    if (searchValue && !binLocations.includes(searchValue)) {
+                      handleBinChange(searchValue);
+                    }
+                  }}
+                />
+              </Col>
+            </Row>
+          </Space>
         )}
       </Header>
     );
@@ -519,9 +587,13 @@ const ResponsiveContent = memo(
           style={{
             flex: 1,
             padding: "8px",
-            overflow: "hidden",
+            overflowX: "hidden",
+            overflowY: "auto",
             display: "flex",
             flexDirection: "column",
+            minHeight: 0,
+            width: "100%",
+            maxWidth: "100vw",
           }}
         >
           <motion.div
@@ -543,6 +615,9 @@ const ResponsiveContent = memo(
                 boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
                 flex: previewTyre ? 0 : 1,
                 overflow: "hidden",
+                width: "100%",
+                maxWidth: "100%",
+                minWidth: 0,
               }}
               bodyStyle={{ padding: 12 }}
             >
@@ -660,6 +735,9 @@ const ResponsiveContent = memo(
                   display: "flex",
                   flexDirection: "column",
                   overflow: "hidden",
+                  width: "100%",
+                  maxWidth: "100%",
+                  minWidth: 0,
                 }}
                 bodyStyle={{
                   padding: 0,
@@ -696,6 +774,9 @@ const ResponsiveContent = memo(
                     pagination={false}
                     size="small"
                     showHeader={false}
+                    tableLayout="fixed"
+                    scroll={{ x: "100%" }}
+                    style={{ width: "100%", maxWidth: "100%" }}
                     locale={{
                       emptyText: (
                         <Empty
@@ -783,10 +864,13 @@ const ResponsiveContent = memo(
         style={{
           flex: 1,
           padding: isTablet ? "16px" : "24px 32px",
-          overflow: "hidden",
+          overflowX: "hidden",
+          overflowY: "auto",
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
+          width: "100%",
+          maxWidth: "100vw",
         }}
       >
         <Row gutter={isTablet ? 12 : 24} style={{ flex: 1, minHeight: 0 }}>
@@ -814,6 +898,9 @@ const ResponsiveContent = memo(
                   border: "1px solid #e2e8f0",
                   boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
                   overflow: "hidden",
+                  width: "100%",
+                  maxWidth: "100%",
+                  minWidth: 0,
                 }}
                 bodyStyle={{ padding: isTablet ? 8 : 12 }}
               >
@@ -1276,7 +1363,7 @@ const ResponsiveContent = memo(
             xs={24}
             sm={24}
             md={isTablet ? 14 : 16}
-            style={{ display: "flex", flexDirection: "column", minHeight: 0 }}
+            style={{ display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0, width: "100%" }}
           >
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -1379,9 +1466,13 @@ const ResponsiveContent = memo(
                     }))}
                     pagination={false}
                     size={isDesktop ? "middle" : "small"}
+                    tableLayout="auto"
+                    className="responsive-receive-table"
                     scroll={{
+                      x: "max-content",
                       y: `calc(100vh - ${isDesktop ? "320px" : isTablet ? "260px" : "280px"})`,
                     }}
+                    style={{ width: "100%", maxWidth: "100%" }}
                     locale={{
                       emptyText: (
                         <Empty
@@ -1468,30 +1559,7 @@ const ResponsiveFooter = memo(
         <div
           style={{ display: "flex", gap: 8, width: isMobile ? "100%" : "auto" }}
         >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            style={{ flex: isMobile ? 1 : "auto", display: "flex" }}
-          >
-            <Button
-              icon={<ClearOutlined />}
-              onClick={() => {
-                dispatch(setScannedTyres([]));
-                sessionStorage.removeItem("activeReceiveTransaction");
-                message.info("Cleared");
-              }}
-              disabled={scannedTyresCount === 0}
-              style={{
-                height: isDesktop ? 40 : 32,
-                borderRadius: 6,
-                width: isMobile ? "100%" : "auto",
-                fontSize: isDesktop ? 14 : 12,
-              }}
-              size={isDesktop ? "middle" : "small"}
-            >
-              {isMobile ? "Clear" : "Clear All"}
-            </Button>
-          </motion.div>
+          {/* Clear All removed from footer by design */}
 
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -1698,14 +1766,8 @@ export default function TyreStockReceiveRedesign() {
     dispatch,
   ]);
 
-  const deleteTyre = useCallback(
-    (index) => {
-      const updatedTyres = scannedTyres.filter((_, i) => i !== index);
-      dispatch(setScannedTyres(updatedTyres));
-      message.info("Tyre removed");
-    },
-    [scannedTyres],
-  );
+  // Removed per-row delete action (UI-only removal). Deleting items
+  // should remain possible via backend/submit flows if needed.
 
   const groupedTyres = useMemo(() => {
     const grouped = {};
@@ -1739,34 +1801,56 @@ export default function TyreStockReceiveRedesign() {
     if (isMobile || isTablet) {
       return [
         {
-          title: "Tyre",
-          dataIndex: "tyreNumber",
-          width: "60%",
-          render: (text, record) => (
-            <div>
-              <Text strong style={{ fontSize: isMobile ? 11 : 12 }}>
-                {text}
-              </Text>
-              <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>
-                {record.brand} • {record.tyreSize}
+          title: "Tyre Details",
+          dataIndex: "tyreDetails",
+          render: (_, record) => {
+            const details = [
+              record.config,
+              record.tyreSize,
+              record.tyreType,
+              record.rimSize,
+              record.brand,
+              record.sideWall,
+              record.processID,
+            ]
+              .filter(Boolean)
+              .join(" • ");
+
+            return (
+              <div
+                style={{
+                  display: "grid",
+                  gap: 4,
+                  width: "100%",
+                  minWidth: 0,
+                }}
+              >
+                <Text
+                  strong
+                  style={{
+                    fontSize: isMobile ? 12 : 13,
+                    lineHeight: 1.4,
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {details}
+                </Text>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  Qty: <Text strong style={{ color: "#0f172a" }}>{record.qty}</Text>
+                </div>
               </div>
-            </div>
-          ),
-        },
-        {
-          title: "Del",
-          width: "40%",
-          render: (_, __, index) => (
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                danger
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => deleteTyre(index)}
-              />
-            </motion.div>
-          ),
+            );
+          },
         },
       ];
     }
@@ -1868,7 +1952,7 @@ export default function TyreStockReceiveRedesign() {
         render: (text) => <Tag color="green">{text}</Tag>,
       },
     ];
-  }, [isMobile, isTablet, deleteTyre]);
+  }, [isMobile, isTablet]);
 
   const completionPercentage = Math.min(
     ((scannedTyres.length || 0) / Math.max(scannedTyres.length || 1, 10)) * 100,
@@ -2128,7 +2212,9 @@ export default function TyreStockReceiveRedesign() {
         .ant-table-row:hover { background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%) !important; }
         .ant-descriptions-item-label { background: #f8fafc; font-weight: 600; color: #0f172a; font-size: ${isDesktop ? "14px" : "11px"}; padding: ${isDesktop ? "12px 16px" : "4px 8px"} !important; }
         .ant-descriptions-item-content { color: #1e293b; font-size: ${isDesktop ? "14px" : "11px"}; padding: ${isDesktop ? "12px 16px" : "4px 8px"} !important; }
-        .ant-table-cell { padding: ${isDesktop ? "12px 16px" : "8px 12px"} !important; font-size: ${isDesktop ? "14px" : "12px"} !important; }
+        .ant-table-cell { padding: ${isDesktop ? "12px 16px" : "8px 12px"} !important; font-size: ${isDesktop ? "14px" : "12px"} !important; white-space: normal !important; word-break: break-word; }
+        .ant-table-wrapper { width: 100%; max-width: 100%; overflow-x: auto; }
+        .responsive-receive-table .ant-table { width: 100%; min-width: 640px; }
         .ant-card-body { padding: 12px !important; }
         @media (max-width: 768px) {
           .ant-card { border-radius: 8px !important; }

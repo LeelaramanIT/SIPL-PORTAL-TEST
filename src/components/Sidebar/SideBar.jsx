@@ -72,7 +72,7 @@ const SideBar = () => {
 
   const { open: isSidebarOpen, isDark } = useSelector((s) => s.global);
   const auth = useSelector((s) => s.auth);
-  console.log(auth);
+  // console.log(auth);
   
 
   // ✅ Create permissions array dynamically from menus
