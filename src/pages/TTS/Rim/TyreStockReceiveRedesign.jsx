@@ -1770,32 +1770,38 @@ export default function TyreStockReceiveRedesign() {
   // should remain possible via backend/submit flows if needed.
 
   const groupedTyres = useMemo(() => {
-    const grouped = {};
+  const grouped = {};
 
-    scannedTyres.forEach((item) => {
-      const key = item.processID;
+  scannedTyres.forEach((item) => {
+    const key = item.processID;
 
-      if (!grouped[key]) {
-        grouped[key] = {
-          config: item.config,
-          barcode: item.barcode,
-          stencilNo: item.stencilNo,
-          grade: item.grade,
-          sideWall: item.sideWall, // FIXED
-          processID: item.processID,
-          brand: item.brand,
-          tyreSize: item.tyreSize,
-          rimSize: item.rimSize,
-          tyreType: item.tyreType,
-          qty: 1,
-        };
-      } else {
-        grouped[key].qty += 1;
-      }
-    });
+    if (!grouped[key]) {
+      grouped[key] = {
+        config: item.config,
+        barcode: item.barcode,
+        stencilNo: item.stencilNo,
+        grade: item.grade,
+        sideWall: item.sideWall,
+        processID: item.processID,
+        brand: item.brand,
+        tyreSize: item.tyreSize,
+        rimSize: item.rimSize,
+        tyreType: item.tyreType,
+        qty: 0,
+        scannedQty: 0,
+      };
+    }
 
-    return Object.values(grouped);
-  }, [scannedTyres]);
+    grouped[key].qty += 1;
+
+    // Count scanned items
+    if (item.whstatus === true) {
+      grouped[key].scannedQty += 1;
+    }
+  });
+
+  return Object.values(grouped);
+}, [scannedTyres]);
 
   const columns = useMemo(() => {
     if (isMobile || isTablet) {
@@ -1837,17 +1843,31 @@ export default function TyreStockReceiveRedesign() {
                   {details}
                 </Text>
                 <div
-                  style={{
-                    fontSize: 11,
-                    color: "#64748b",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  Qty: <Text strong style={{ color: "#0f172a" }}>{record.qty}</Text>
-                </div>
+  style={{
+    fontSize: 11,
+    color: "#64748b",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  }}
+>
+  <span>
+    Qty: <Text strong>{record.qty}</Text>
+  </span>
+
+  <span>
+    Scanned: <Text strong style={{ color: "#16a34a" }}>
+      {record.scannedQty}
+    </Text>
+  </span>
+
+  <span>
+    Pending: <Text strong style={{ color: "#ea580c" }}>
+      {record.qty - record.scannedQty}
+    </Text>
+  </span>
+</div>
               </div>
             );
           },
@@ -1951,6 +1971,25 @@ export default function TyreStockReceiveRedesign() {
         width: 100,
         render: (text) => <Tag color="green">{text}</Tag>,
       },
+      {
+  title: "Scanned Qty",
+  dataIndex: "scannedQty",
+  width: 120,
+  render: (text) => (
+    <Tag color="green">
+      {text}
+    </Tag>
+  ),
+},
+{
+  title: "Pending Qty",
+  width: 120,
+  render: (_, record) => (
+    <Tag color="orange">
+      {record.qty - record.scannedQty}
+    </Tag>
+  ),
+},
     ];
   }, [isMobile, isTablet]);
 
