@@ -222,7 +222,7 @@ export default function SaleOrderEntry() {
   const [toast, setToast] = useState("");
   const [collapsed, setCollapsed] = useState({});
   const [selectorOpen, setSelectorOpen] = useState(false);
-  const [logistics, setLogistics] = useState({ preCarriageBy: "", finalDestination: "", containerType: "", packingMethod: "", incoterm: "", placeOfIncoterm: "", leadTime: "", validityDate: "", paymentTerms: "", remarks: "", });
+  const [logistics, setLogistics] = useState({ preCarriageBy: "", finalDestination: "", containerType: "", packingMethod: '', incoterm: "", placeOfIncoterm: "", leadTime: "", validityDate: "", paymentTerms: "", remarks: "", });
   const { loading, listOfCustomer, error, entityMaster , listOfItems } = useSelector((state) => state.orderProcess);
   const { master } = useSelector((state) => state.proformaInvoice);
   const [ordersOpen, setOrdersOpen] = useState(false);
@@ -552,12 +552,11 @@ const importPasted = () => {
     const rows = pasteText.trim().split(/\r?\n/).filter(Boolean);
     if (!rows.length) { notify("No pasted data found"); return; }
 
-    // Detect header row — skip if first column looks like a label
     const firstCell = rows[0].split(/\t|,/)[0].trim().toLowerCase();
     const hasHeader = firstCell === "processid" || firstCell === "process id" || firstCell === "id";
     const dataRows  = hasHeader ? rows.slice(1) : rows;
 
-    const results   = { added: [], invalid: [] };
+    const results = { added: [], invalid: [] };
 
     dataRows.forEach((row, i) => {
       const cols    = row.split(/\t|,/).map(c => c.trim());
@@ -568,22 +567,21 @@ const importPasted = () => {
 
       if (!resolved.valid) {
         results.invalid.push({ row: i + (hasHeader ? 2 : 1), code: rawCode, reason: resolved.message });
-results.added.push({
-  id:           nextId.current++,
-  code:         rawCode,
-  customerPartNo: "",
-  desc:         "—",
-  qty:          rawQty,
-  price:        0,
-  disc:         0,
-  tax:          0,
-  isInvalid:    true,
-  errorMessage: resolved.message,
-});
+        results.added.push({
+          id:           nextId.current++,
+          code:         rawCode,
+          customerPartNo: "",
+          desc:         "—",
+          qty:          rawQty,
+          price:        0,
+          disc:         0,
+          tax:          0,
+          isInvalid:    true,
+          errorMessage: resolved.message,
+        });
         return;
       }
 
-      // Use DB data — ignore any other columns from paste
       const { entry } = resolved;
       results.added.push({
         id:            nextId.current++,
@@ -598,21 +596,25 @@ results.added.push({
         _raw:          entry._raw,
       });
     });
-      setItems(prev => [...prev, ...results.added]);
-    setPasteText("");
-setPasteOpen(false);
 
-    // Build notification message
+    // ✅ 1. Add items first
+    setItems(prev => [...prev, ...results.added]);
+
+    // ✅ 2. Clear the textarea
+    setPasteText("");
+
+    // ✅ 3. Close modal on next tick — lets React flush the setItems
+    //       update before AnimatePresence unmounts the modal
+    setTimeout(() => setPasteOpen(false), 0);
+
+    // Notification
     if (results.invalid.length === 0) {
       notify(`📋 ${results.added.length} item(s) imported successfully`);
     } else {
       const errLines = results.invalid
         .map(e => `Row ${e.row}: "${e.code}" — ${e.reason}`)
         .join("\n");
-      notify(
-        `📋 ${results.added.length} imported, ${results.invalid.length} rejected:\n${errLines}`
-      );
-      // Also surface a more visible alert so errors aren't missed in toast
+      notify(`📋 ${results.added.length} imported, ${results.invalid.length} rejected:\n${errLines}`);
       console.warn("Import errors:\n" + errLines);
     }
 
@@ -1098,21 +1100,39 @@ results.added.push({
       </main>
 
       <AnimatePresence>
-        {pasteOpen && <PasteModal pasteText={pasteText} setPasteText={setPasteText} onClose={() => setPasteOpen(false)} onImport={importPasted} />}
-        {toast && <motion.div key="toast" {...rise} className="fixed bottom-5 left-1/2 z-[999] -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-800 shadow-2xl dark:border-slate-700 dark:bg-[#111318] dark:text-white">{toast}</motion.div>}
-        <ExistingOrdersModal
-          open={ordersOpen}
-          onClose={() => setOrdersOpen(false)}
-          onOpen={() => setOrdersOpen(false)}   // "New Order" button inside modal just closes it
-        />
-        {previewOpen && (
-          <PDFPreviewModal
-            open={previewOpen}
-            onClose={() => setPreviewOpen(false)}
-            data={mapFormToPDFData()}
-          />
-        )}
-      </AnimatePresence>
+  {pasteOpen && (
+    <PasteModal
+      key="paste-modal"
+      pasteText={pasteText}
+      setPasteText={setPasteText}
+      onClose={() => setPasteOpen(false)}
+      onImport={importPasted}
+    />
+  )}
+  {toast && (
+    <motion.div
+      key="toast"
+      {...rise}
+      className="fixed bottom-5 left-1/2 z-[999] -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-800 shadow-2xl dark:border-slate-700 dark:bg-[#111318] dark:text-white"
+    >
+      {toast}
+    </motion.div>
+  )}
+  <ExistingOrdersModal
+    key="orders-modal"
+    open={ordersOpen}
+    onClose={() => setOrdersOpen(false)}
+    onOpen={() => setOrdersOpen(false)}
+  />
+  {previewOpen && (
+    <PDFPreviewModal
+      key="pdf-preview-modal"
+      open={previewOpen}
+      onClose={() => setPreviewOpen(false)}
+      data={mapFormToPDFData()}
+    />
+  )}
+</AnimatePresence>
     </div>
   );
 }
@@ -1855,17 +1875,13 @@ function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
   return (
     <motion.div {...rise}><Panel section="logistics" title="Logistics & Financial Details" icon={ICONS.truck} badge="Before Discount" collapsed={collapsed} onToggle={onToggle}>
       <Divider className="mt-0"> Logistics Details </Divider> <Grid columns={4}><Field label="Pre-Carriage by" required><select value={logistics.preCarriageBy} onChange={(e) => updateField("preCarriageBy", e.target.value)} > <option value="">Select</option><option>By Road</option><option>By Air</option><option>By Sea</option><option>By Rail</option></select></Field>
-        <Field label="Final Destination" required><select
-          value={logistics.finalDestination}
-          onChange={(e) =>
-            updateField("finalDestination", e.target.value)}>
-          <option value="">Select</option>
-          <option>Chennai</option>
-          <option>Dubai</option>
-          <option>Singapore</option>
-          <option>USA</option>
-        </select>
-        </Field>
+        <Field label="Final Destination" required>
+  <input
+    value={logistics.finalDestination}
+    onChange={(e) => updateField("finalDestination", e.target.value)}
+    placeholder="Enter destination"
+  />
+</Field>
 
         <Field label="Container Type" required>
           <select
@@ -2027,9 +2043,10 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
               <Grid>
                 <Field label="Discount Type">
                   <select>
-                    <option>Trade Discount</option>
-                    <option>Cash Discount</option>
-                    <option>Loyalty Discount</option>
+                    <option value="">Select</option>
+                    <option>DISCOUNT</option>
+                    <option>CLAIM ADJUSTMENT</option>
+                    {/* <option>Loyalty Discount</option> */}
                   </select>
                 </Field>
                 <Field label="Discount Value">
@@ -2083,9 +2100,18 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
         <div className="space-y-2">
           {charges.map((charge) => (
             <motion.div layout key={charge.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
-              <Field label="Name">
-                <input value={charge.name} onChange={(event) => updateCharge(charge.id, "name", event.target.value)} />
-              </Field>
+              <Field label="Charge Type">
+  <select value={charge.name} onChange={(event) => updateCharge(charge.id, "name", event.target.value)}>
+    <option value="">Select</option>
+    <option>SURCHARGE</option>
+    <option>PALLET CHARGES</option>
+    <option>FREIGHT CHARGES</option>
+    <option>FUMIGATION</option>
+    <option>WRAPPING CHARGES</option>
+    <option>BRAND PLATE MAKING CHARGES</option>
+    <option>TARIFF</option>
+  </select>
+</Field>
               <Field label="Amount">
                 <input
                   inputMode="decimal"

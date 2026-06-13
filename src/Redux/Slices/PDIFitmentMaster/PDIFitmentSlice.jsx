@@ -9,6 +9,7 @@ const initialState = {
   loading: false,
   search: "",
   listOfFitmentData: [],
+  listOfStencilWiseData :[],
   FitmentDetails: null,
   scanSession: {
     tyre: null,
@@ -90,6 +91,12 @@ const PDIFitmentSlice = createSlice({
         rim: null,
         status: "WAITING"
       }
+    },
+    setStencilWiseData: (state, action) => {
+      state.listOfStencilWiseData = action.payload;
+    },
+    resetStencilWiseData: (state, action) => {
+      state.listOfStencilWiseData = [];
     }
   },
 })
@@ -291,7 +298,25 @@ export const SubmitFitmentInspection = (payload, setViewMode) => async (dispatch
     console.log(error);
   }
 }
+
+export const getStencilWiseData  = (payload) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true))
+    dispatch(resetStencilWiseData())
+    const res = await api.get(`/WheelAssemblies/GetRimFitment/${payload}`);
+    console.log(res.data)
+    if (res.status === 200) {
+      dispatch(setStencilWiseData(res?.data?.data))
+    }
+    dispatch(setLoading(false))
+  } catch (error) {
+    dispatch(setLoading(false))
+    console.log(error)
+    toast.error(error.message)
+  }
+}
+
 export const { setMode, setLoading, setSearch, setListOfFitmentData, resetAll, setFitmentDetails, setRimDetails, setTyreDetails
-  , resetRimDetails, resetTyreDetails, resetScanSession
+  , resetRimDetails, resetTyreDetails, resetScanSession , setStencilWiseData, resetStencilWiseData
 } = PDIFitmentSlice.actions;
 export default PDIFitmentSlice.reducer;

@@ -229,7 +229,7 @@ const DiscountRow = ({
   }, [total, invoiceIndex, setValue]);
 
   const discountOptions = [
-  "DISCOUNT",
+  "DISCOUNT", 
   "CLAIM ADJUSTMENT",
 ];
 

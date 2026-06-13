@@ -22,13 +22,14 @@ import {
 import { FitmrntSlider } from "./FitmentSlider";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import FitmentReportModal from "./FitmentReportModal";
 
 const TyreAndRimFitment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [localSearch, setLocalSearch] = useState("");
-  const { FitmentDetails, scanSession } = useSelector(
+  const { FitmentDetails, scanSession, listOfStencilWiseData } = useSelector(
     (state) => state.PDIFitment,
   );
   const { loading } = useSelector((state) => state.PDIFitment);
@@ -38,194 +39,247 @@ const TyreAndRimFitment = () => {
   const [viewMode, setViewMode] = useState("inventory");
   const [isValid, setIsValid] = useState(false);
   const [message, setMessage] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
   const clean = (val) => String(val ?? "").trim();
 
   const fadeUp = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
   };
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-const handleDownloadExcel = async () => {
-  if (!items || items.length === 0) {
-    toast.error("No data available to download");
-    return;
-  }
+  // ─── Helper: build the shared header block (logo + title + details) ───────────
+  const buildSheetHeader = async (worksheet, workbook, titleText) => {
+    // Page setup (A4 Landscape)
+    worksheet.pageSetup = {
+      paperSize: 9,
+      orientation: "landscape",
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 1,
+    };
 
-  const clean = (val) => String(val ?? "").trim();
+    // Logo
+    const getBase64 = async (url) => {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(",")[1]);
+        reader.readAsDataURL(blob);
+      });
+    };
 
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("Fitment Report");
-
-  // 🔥 PAGE SETUP (A4 Landscape)
-  worksheet.pageSetup = {
-    paperSize: 9,
-    orientation: "landscape",
-    fitToPage: true,
-    fitToWidth: 1,
-    fitToHeight: 1,
-  };
-
-  // 🔥 COLUMN WIDTH
-  worksheet.columns = [
-    { width: 18 }, { width: 18 }, { width: 20 }, { width: 10 },
-    { width: 12 }, { width: 18 }, { width: 16 },
-    { width: 14 }, { width: 14 }, { width: 14 },
-    { width: 12 }, { width: 14 }
-  ];
-
-  // 🔥 LOAD LOGO (from public folder)
-  const getBase64 = async (url) => {
-    const res = await fetch(url);
-    const blob = await res.blob();
-
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]);
-      reader.readAsDataURL(blob);
+    const logoBase64 = await getBase64("/SUN-TWS.png");
+    const imageId = workbook.addImage({ base64: logoBase64, extension: "png" });
+    worksheet.addImage(imageId, {
+      tl: { col: 0, row: 0 },
+      ext: { width: 140, height: 60 },
     });
-  };
 
-  const logoBase64 = await getBase64("/SUN-TWS.png"); // 👉 place logo in public folder
+    // Title
+    worksheet.mergeCells("A3:N3");
+    const titleCell = worksheet.getCell("A3");
+    titleCell.value = titleText;
+    titleCell.font = { bold: true, size: 18, color: { argb: "1F4E79" } };
+    titleCell.alignment = { horizontal: "center" };
 
-  const imageId = workbook.addImage({
-    base64: logoBase64,
-    extension: "png",
-  });
-
-  // 🔥 ADD LOGO
-  worksheet.addImage(imageId, {
-    tl: { col: 0, row: 0 },
-    ext: { width: 140, height: 60 },
-  });
-
-  // 🔥 TITLE
-  worksheet.mergeCells("A3:L3");
-  const titleCell = worksheet.getCell("A3");
-  titleCell.value = "FITMENT WORKORDER";
-  titleCell.font = { bold: true, size: 18, color: { argb: "1F4E79" } };
-  titleCell.alignment = { horizontal: "center" };
-
-  // 🔥 DETAILS SECTION
-  const details = [
-    ["Full Name", clean(FitmentDetails?.customerName)],
-    ["Order RefNo", clean(FitmentDetails?.orderRefNo)],
-    ["Work Order", clean(FitmentDetails?.workorderno)],
-    ["Order Date", clean(formatDateTime(FitmentDetails?.orderDate))],
-    ["Ship Date", clean(formatDateTime(FitmentDetails?.DesiredShipDate))]
-  ];
-
-  let rowStart = 5;
-
-  details.forEach(([label, value], i) => {
-    const row = worksheet.getRow(rowStart + i);
-
-    row.getCell(1).value = label;
-    row.getCell(2).value = ":";
-    row.getCell(3).value = value;
-
-    row.getCell(1).font = { bold: true };
-    row.getCell(1).alignment = { horizontal: "left" };
-    row.getCell(3).alignment = { horizontal: "left" };
-  });
-
-  // 🔥 TABLE HEADER
-  const headers = [
-    "Category", "Platform", "Tyre Size", "Rim",
-    "Type", "Brand", "Sidewall",
-    "ProcessID", "EDC_NO", "Directional",
-    "Total Qty", "Scanned Qty"
-  ];
-
-  const headerRowIndex = rowStart + details.length + 2;
-  const headerRow = worksheet.getRow(headerRowIndex);
-
-  headers.forEach((h, i) => {
-    const cell = headerRow.getCell(i + 1);
-    cell.value = h;
-
-    cell.font = { bold: true, color: { argb: "FFFFFF" } };
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1F4E79" }
-    };
-
-    cell.alignment = { horizontal: "center" };
-
-    cell.border = {
-      top: { style: "thin" },
-      bottom: { style: "thin" }
-    };
-  });
-
-  // 🔥 TABLE DATA
-  let totalQty = 0;
-  let scannedQty = 0;
-
-  let dataRowStart = headerRowIndex + 1;
-
-  items.forEach((item, idx) => {
-    const row = worksheet.getRow(dataRowStart + idx);
-
-    totalQty += item.itemQty || 0;
-    scannedQty += item.scannedQty || 0;
-
-    const rowData = [
-      clean(item.category),
-      clean(item.config),
-      clean(item.tyreSize),
-      clean(item.rimSize),
-      clean(item.tyreType),
-      clean(item.brand),
-      clean(item.sideWall),
-      clean(item.processId),
-      clean(item.edcNo),
-      clean(item.directional),
-      item.itemQty || 0,
-      item.scannedQty || 0,
+    // Details
+    const details = [
+      ["Full Name",   clean(FitmentDetails?.customerName)],
+      ["Order RefNo", clean(FitmentDetails?.orderRefNo)],
+      ["Work Order",  clean(FitmentDetails?.workorderno)],
+      ["Order Date",  clean(formatDateTime(FitmentDetails?.orderDate))],
+      ["Ship Date",   clean(formatDateTime(FitmentDetails?.DesiredShipDate))],
     ];
 
-    rowData.forEach((val, i) => {
-      const cell = row.getCell(i + 1);
-      cell.value = val;
-      cell.alignment = { horizontal: "center" };
-
-      // Only bottom border (clean look)
-      cell.border = {
-        bottom: { style: "thin" }
-      };
+    const rowStart = 5;
+    details.forEach(([label, value], i) => {
+      const row = worksheet.getRow(rowStart + i);
+      row.getCell(1).value = label;
+      row.getCell(2).value = ":";
+      row.getCell(3).value = value;
+      row.getCell(1).font = { bold: true };
+      row.getCell(1).alignment = { horizontal: "left" };
+      row.getCell(3).alignment = { horizontal: "left" };
     });
-  });
 
-  // 🔥 TOTAL ROW
-  const totalRow = worksheet.getRow(dataRowStart + items.length);
+    // Return the row index where the table header should start
+    return rowStart + details.length + 2; // = 12
+  };
 
-  totalRow.getCell(1).value = "TOTAL";
+  // ─── Helper: style a header row ───────────────────────────────────────────────
+  const styleHeaderRow = (row, colCount) => {
+    for (let i = 1; i <= colCount; i++) {
+      const cell = row.getCell(i);
+      cell.font = { bold: true, color: { argb: "FFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "1F4E79" } };
+      cell.alignment = { horizontal: "center" };
+      cell.border = { top: { style: "thin" }, bottom: { style: "thin" } };
+    }
+  };
 
-  totalRow.getCell(11).value = totalQty;
-  totalRow.getCell(12).value = scannedQty;
+  // ─── Helper: style a total row ────────────────────────────────────────────────
+  const styleTotalRow = (row, colCount) => {
+    for (let i = 1; i <= colCount; i++) {
+      const cell = row.getCell(i);
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "EAF4FF" } };
+      cell.alignment = { horizontal: "center" };
+      cell.font = { bold: true };
+    }
+  };
 
-  totalRow.font = { bold: true };
+  const handleDownloadExcel = async () => {
+    if (!items || items.length === 0) {
+      toast.error("No data available to download");
+      return;
+    }
 
-  totalRow.eachCell((cell) => {
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "EAF4FF" }
-    };
-    cell.alignment = { horizontal: "center" };
-  });
+    const workbook = new ExcelJS.Workbook();
 
-  // 🔥 DOWNLOAD
-  const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(
-    new Blob([buffer]),
-    `RIM_Fitment_${FitmentDetails?.workorderno}_${new Date().toISOString().slice(0, 10)}.xlsx`
-  );
-};
+    // ══════════════════════════════════════════════════════════════════════════
+    // PAGE 1 — FITMENT WORKORDER
+    // ══════════════════════════════════════════════════════════════════════════
+    const ws1 = workbook.addWorksheet("Fitment Workorder");
+
+    ws1.columns = [
+      { width: 18 }, { width: 18 }, { width: 20 }, { width: 10 },
+      { width: 12 }, { width: 18 }, { width: 16 },
+      { width: 14 }, { width: 14 }, { width: 14 },
+      { width: 12 }, { width: 14 },
+    ];
+
+    const headerRowIdx1 = await buildSheetHeader(ws1, workbook, "FITMENT WORKORDER");
+
+    const headers1 = [
+      "Category", "Platform", "Tyre Size", "Rim",
+      "Type", "Brand", "Sidewall",
+      "ProcessID", "EDC_NO", "Directional",
+      "Total Qty", "Scanned Qty",
+    ];
+
+    const headerRow1 = ws1.getRow(headerRowIdx1);
+    headers1.forEach((h, i) => { headerRow1.getCell(i + 1).value = h; });
+    styleHeaderRow(headerRow1, headers1.length);
+
+    let totalQty = 0;
+    let scannedQty = 0;
+    const dataStart1 = headerRowIdx1 + 1;
+
+    items.forEach((item, idx) => {
+      const row = ws1.getRow(dataStart1 + idx);
+      totalQty += item.itemQty || 0;
+      scannedQty += item.scannedQty || 0;
+
+      const rowData = [
+        clean(item.category),   clean(item.config),
+        clean(item.tyreSize),   clean(item.rimSize),
+        clean(item.tyreType),   clean(item.brand),
+        clean(item.sideWall),   clean(item.processId),
+        clean(item.edcNo),      clean(item.directional),
+        item.itemQty || 0,      item.scannedQty || 0,
+      ];
+
+      rowData.forEach((val, i) => {
+        const cell = row.getCell(i + 1);
+        cell.value = val;
+        cell.alignment = { horizontal: "center" };
+        cell.border = { bottom: { style: "thin" } };
+      });
+    });
+
+    // Total row — page 1
+    const totalRow1 = ws1.getRow(dataStart1 + items.length);
+    totalRow1.getCell(1).value = "TOTAL";
+    totalRow1.getCell(11).value = totalQty;
+    totalRow1.getCell(12).value = scannedQty;
+    styleTotalRow(totalRow1, headers1.length);
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // PAGE 2 — STENCIL WISE DATA
+    // ══════════════════════════════════════════════════════════════════════════
+    const stencilData = Array.isArray(listOfStencilWiseData) ? listOfStencilWiseData : [];
+
+    const ws2 = workbook.addWorksheet("Stencil Wise");
+
+    ws2.columns = [
+      { width: 18 }, // Stencil No
+      { width: 14 }, // Process ID
+      { width: 22 }, // Assembly Barcode
+      { width: 22 }, // Tyre Barcode
+      { width: 22 }, // Rim Barcode
+      { width: 14 }, // Config
+      { width: 14 }, // Category
+      { width: 16 }, // Tyre Size
+      { width: 12 }, // Rim Size
+      { width: 12 }, // Type
+      { width: 16 }, // Brand
+      { width: 14 }, // Side Wall
+      { width: 14 }, // EDC No
+    ];
+
+    const headerRowIdx2 = await buildSheetHeader(ws2, workbook, "STENCIL WISE DATA");
+
+    const headers2 = [
+      "Stencil No", "Process ID", "Assembly Barcode",
+      "Tyre Barcode", "Rim Barcode", "Config",
+      "Category", "Tyre Size", "Rim Size",
+      "Type", "Brand", "Side Wall", "EDC No",
+    ];
+
+    const headerRow2 = ws2.getRow(headerRowIdx2);
+    headers2.forEach((h, i) => { headerRow2.getCell(i + 1).value = h; });
+    styleHeaderRow(headerRow2, headers2.length);
+
+    const dataStart2 = headerRowIdx2 + 1;
+
+    if (stencilData.length === 0) {
+      // Graceful empty state
+      const emptyRow = ws2.getRow(dataStart2);
+      ws2.mergeCells(`A${dataStart2}:M${dataStart2}`);
+      emptyRow.getCell(1).value = "No stencil data available";
+      emptyRow.getCell(1).alignment = { horizontal: "center" };
+      emptyRow.getCell(1).font = { italic: true, color: { argb: "999999" } };
+    } else {
+      stencilData.forEach((item, idx) => {
+        const row = ws2.getRow(dataStart2 + idx);
+
+        const rowData = [
+          clean(item.stencilNo),       clean(item.processID),
+          clean(item.assemblyBarcode), clean(item.tyreBarcode),
+          clean(item.rimBarcode),      clean(item.config),
+          clean(item.category),        clean(item.tyreSize),
+          clean(item.rimSize),         clean(item.tyreType),
+          clean(item.brand),           clean(item.sideWall),
+          clean(item.edcNo),
+        ];
+
+        rowData.forEach((val, i) => {
+          const cell = row.getCell(i + 1);
+          cell.value = val;
+          cell.alignment = { horizontal: "center" };
+          cell.border = { bottom: { style: "thin" } };
+        });
+      });
+
+      // Total row — page 2
+      const totalRow2 = ws2.getRow(dataStart2 + stencilData.length);
+      totalRow2.getCell(1).value = "TOTAL";
+      totalRow2.getCell(2).value = `${stencilData.length} stencils`;
+      styleTotalRow(totalRow2, headers2.length);
+    }
+
+    // ── DOWNLOAD ──────────────────────────────────────────────────────────────
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(
+      new Blob([buffer]),
+      `RIM_Fitment_${FitmentDetails?.workorderno}_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+  };
+
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
@@ -235,35 +289,33 @@ const handleDownloadExcel = async () => {
   }, [open]);
 
   const items = useMemo(() => {
-  const rawItems = FitmentDetails?.items;
+    const rawItems = FitmentDetails?.items;
 
-  // Handle all possible cases safely
-  const safeItems = Array.isArray(rawItems)
-    ? rawItems
-    : Array.isArray(rawItems?.data)
-    ? rawItems.data
-    : [];
+    const safeItems = Array.isArray(rawItems)
+      ? rawItems
+      : Array.isArray(rawItems?.data)
+      ? rawItems.data
+      : [];
 
-  const term = localSearch.toLowerCase();
+    const term = localSearch.toLowerCase();
 
-  return safeItems.filter(
-    (item) =>
-      item.assY_PID?.toLowerCase()?.includes(term) ||
-      item.brand?.toLowerCase()?.includes(term) ||
-      item.config?.toLowerCase()?.includes(term) ||
-      item.directional?.toLowerCase()?.includes(term) ||
-      item.edcNo?.toLowerCase()?.includes(term) ||
-      item.edcRimSize?.toLowerCase()?.includes(term) ||
-      item.o_ID?.toString()?.includes(term) ||
-      item.o_ItemID?.toString()?.includes(term) ||
-      item.processId?.toLowerCase()?.includes(term) ||
-      item.rimSize?.toLowerCase()?.includes(term) ||
-      item.sideWall?.toLowerCase()?.includes(term) ||
-      item.tyreSize?.toLowerCase()?.includes(term) ||
-      item.tyreType?.toLowerCase()?.includes(term)
-  );
-}, [localSearch, FitmentDetails]);
-  // console.log(FitmentDetails);
+    return safeItems.filter(
+      (item) =>
+        item.assY_PID?.toLowerCase()?.includes(term) ||
+        item.brand?.toLowerCase()?.includes(term) ||
+        item.config?.toLowerCase()?.includes(term) ||
+        item.directional?.toLowerCase()?.includes(term) ||
+        item.edcNo?.toLowerCase()?.includes(term) ||
+        item.edcRimSize?.toLowerCase()?.includes(term) ||
+        item.o_ID?.toString()?.includes(term) ||
+        item.o_ItemID?.toString()?.includes(term) ||
+        item.processId?.toLowerCase()?.includes(term) ||
+        item.rimSize?.toLowerCase()?.includes(term) ||
+        item.sideWall?.toLowerCase()?.includes(term) ||
+        item.tyreSize?.toLowerCase()?.includes(term) ||
+        item.tyreType?.toLowerCase()?.includes(term),
+    );
+  }, [localSearch, FitmentDetails]);
 
   useEffect(() => {
     if (location.state) {
@@ -290,31 +342,29 @@ const handleDownloadExcel = async () => {
       return;
     }
 
-    // i want to validate for respective line items
-const cleanedBarcode = clean(barcode);
-const processID = cleanedBarcode.substring(0, 8);
+    const cleanedBarcode = clean(barcode);
+    const processID = cleanedBarcode.substring(0, 8);
     const isValid = FitmentDetails.items.some((v) =>
-  clean(v.processId) === processID ||
-  clean(v.edcNo) === processID
-);
+      clean(v.processId) === processID || clean(v.edcNo) === processID,
+    );
     if (!isValid) {
-        toast.error('Please scan valid barcode')
-        return
+      toast.error("Please scan valid barcode");
+      return;
     }
-    const O_ItemID = FitmentDetails.items.find((item) =>
-  clean(item.processId) === processID ||
-  clean(item.edcNo) === processID
-)?.o_ItemID;
+    const O_ItemID = FitmentDetails.items.find(
+      (item) =>
+        clean(item.processId) === processID || clean(item.edcNo) === processID,
+    )?.o_ItemID;
 
     const res = await dispatch(
-  PIDFitmentCheckBarcode({
-    barcode: cleanedBarcode,
-    PID: processID,
-    O_ID: FitmentDetails?.id,
-    O_ItemID: O_ItemID || 0,
-    plant: clean(FitmentDetails?.plant),
-  })
-);
+      PIDFitmentCheckBarcode({
+        barcode: cleanedBarcode,
+        PID: processID,
+        O_ID: FitmentDetails?.id,
+        O_ItemID: O_ItemID || 0,
+        plant: clean(FitmentDetails?.plant),
+      }),
+    );
     setViewMode("scan");
     setScanInput("");
     handleVerify();
@@ -338,9 +388,6 @@ const processID = cleanedBarcode.substring(0, 8);
 
       try {
         const res = await dispatch(verifyFitment(payload));
-
-        // console.log("verify response", res);
-
         setIsValid(res?.status);
         setMessage(res?.message);
       } catch (err) {
@@ -350,13 +397,10 @@ const processID = cleanedBarcode.substring(0, 8);
       }
     }
   };
-  // console.log(FitmentDetails);
 
   const safeItems = Array.isArray(FitmentDetails?.items)
-  ? FitmentDetails.items
-  : [];
-  // console.log(safeItems);
-  
+    ? FitmentDetails.items
+    : [];
 
   const scanedQty = safeItems?.reduce(
     (total, item) => total + item.scannedQty || 0,
@@ -369,12 +413,7 @@ const processID = cleanedBarcode.substring(0, 8);
   const percentage = totalQty > 0 ? (scanedQty / totalQty) * 100 : 0;
 
   const columns = [
-    {
-      header: "category ",
-      accessor: "category",
-      width: "0.8fr",
-      align: "center",
-    },
+    { header: "category ", accessor: "category", width: "0.8fr", align: "center" },
     { header: "PLATFORM", accessor: "config", width: "0.8fr", align: "center" },
     {
       header: "TYRE SIZE",
@@ -391,19 +430,9 @@ const processID = cleanedBarcode.substring(0, 8);
     { header: "TYPE", accessor: "tyreType", width: "0.5fr", align: "center" },
     { header: "BRAND", accessor: "brand", width: "1fr", align: "left" },
     { header: "sidewall", accessor: "sideWall", width: "1fr", align: "center" },
-    {
-      header: "ProcessID",
-      accessor: "processId",
-      width: "1fr",
-      align: "center",
-    },
+    { header: "ProcessID", accessor: "processId", width: "1fr", align: "center" },
     { header: "EDC_NO", accessor: "edcNo", width: "1fr", align: "center" },
-    {
-      header: "Directional",
-      accessor: "directional",
-      width: "1fr",
-      align: "center",
-    },
+    { header: "Directional", accessor: "directional", width: "1fr", align: "center" },
     { header: "TOTAL QTY", accessor: "itemQty", width: "1fr", align: "center" },
     {
       header: "SCANNED QTY",
@@ -555,7 +584,6 @@ const processID = cleanedBarcode.substring(0, 8);
               transition={{ delay: 0.2 }}
               className="relative bg-[var(--primary)] rounded-xl shadow-lg p-5 text-white overflow-hidden group"
             >
-              {/* Barcode Corner Brackets */}
               <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-white/60 rounded-tl" />
               <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-white/60 rounded-tr" />
               <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-white/60 rounded-bl" />
@@ -628,13 +656,11 @@ const processID = cleanedBarcode.substring(0, 8);
                     </div>
                   </div>
                 )}
-                {/* Header */}
                 {viewMode === "scan" && (
                   <div className="">
                     <h2 className="text-lg font-black uppercase tracking-wider text-slate-800 dark:text-white">
                       Fitment Verification
                     </h2>
-
                     {isValid && (
                       <p className="text-[12px] text-slate-400 uppercase tracking-widest">
                         Tyre & Rim Matching Verification -{" "}
@@ -661,16 +687,18 @@ const processID = cleanedBarcode.substring(0, 8);
                     </div>
                   )}
                   {viewMode === "inventory" && (
-                    <div className="w-full sm:w-24">
-                      <button
-                        className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
-                        type="button"
-                        onClick={handleDownloadExcel}
-                      >
-                        <FaDownload className="w-5 h-5 mr-2" />
-                        Download
-                      </button>
-                    </div>
+                    <>
+                      <div className="w-full sm:w-32">
+                        <button
+                          className="flex items-center cursor-pointer rounded bg-[var(--primary)] dark:bg-gray-700 py-1 px-2.5 border border-transparent text-[0.7rem] text-white transition-all shadow-sm hover:bg-[var(--primary-hover)] dark:hover:bg-gray-600"
+                          type="button"
+                          onClick={() => setReportOpen(true)}
+                        >
+                          <FaDownload className="w-5 h-5 mr-2" />
+                          Preview Report
+                        </button>
+                      </div>
+                    </>
                   )}
                   {/* View Toggle */}
                   <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
@@ -684,7 +712,6 @@ const processID = cleanedBarcode.substring(0, 8);
                     >
                       Inventory
                     </button>
-
                     <button
                       onClick={() => setViewMode("scan")}
                       className={`px-3 py-2 rounded-lg text-xs ${
@@ -723,6 +750,17 @@ const processID = cleanedBarcode.substring(0, 8);
                     setIsValid={setIsValid}
                     onSubmit={handleConfirmation}
                     setMessage={setMessage}
+                  />
+                )}
+
+                {reportOpen && (
+                  <FitmentReportModal
+                    open={reportOpen}
+                    onClose={() => setReportOpen(false)}
+                    FitmentDetails={FitmentDetails}
+                    items={items}
+                    onDownload={handleDownloadExcel}
+                    loading={loading}
                   />
                 )}
               </div>

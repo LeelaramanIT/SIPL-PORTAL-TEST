@@ -421,7 +421,7 @@ export default function DCPreparationApproval() {
       toast.success("DC Preparation Approved Successfully!");
       setIsModalOpen(false);
     } catch (error) {
-      toast.error("Failed to approve DC");
+      // toast.error("Failed to approve DC");
     } finally {
       setIsApproving(false);
     }
