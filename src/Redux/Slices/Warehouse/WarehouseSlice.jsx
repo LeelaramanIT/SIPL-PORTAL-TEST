@@ -140,7 +140,7 @@ export const GetTransactionById = (id, statusNo) => async (dispatch) => {
 export const UpdateLoadDone = (payload) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
-    const res = await api.put("/FactoryWarehouse/UpdateLoadDone", payload);
+    const res = await api.post("/FactoryWarehouse/UpdateLoadDone", payload);
     if (res.status === 200) {
       dispatch(setLoading(false));
     }
@@ -183,7 +183,7 @@ export const DCAapproval = (id) => async (dispatch) => {
     const url = `/FactoryWarehouse/dca-approval/${id}`;
     console.log(url);
 
-    const res = await api.put(`/FactoryWarehouse/dca-approval/${id}`);
+    const res = await api.post(`/FactoryWarehouse/dca-approval/${id}`);
     if (res.status === 200) {
       dispatch(setLoading(false));
     }
@@ -200,7 +200,7 @@ export const scanReceiveBarcode = (payload) => async (dispatch) => {
     dispatch(setLoading(true));
     console.log(payload);
     
-    const res = await api.put(
+    const res = await api.post(
       `/FactoryWarehouse/Warehouse/UpdateBinLocation`,
       payload,
     );
@@ -234,7 +234,7 @@ export const FinalSubmit = (id) => async (dispatch) => {
   try {
     console.log("called");
     
-    const res = await api.put(
+    const res = await api.post(
       `/FactoryWarehouse/Warehouse/finish/${id?.id}`,
     );
     console.log("resss",res);
