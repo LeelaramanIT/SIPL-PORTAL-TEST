@@ -167,7 +167,8 @@ export default function ItemSelectorDrawer({ open, onClose, onConfirm, nextId, n
             description:      item.piD_Details || "",
             finishedWt:       item.finishedWt ?? "—",
             rimWt:            "—",
-            price:            asmPriceMap[item.processID] ?? 0,
+            // price:            asmPriceMap[item.processID] ?? 0,
+            price: Number(item.price) || asmPriceMap[item.processID] || 0,  // ← fix
             uom:              "EA",
             originalData:     item,
         }));

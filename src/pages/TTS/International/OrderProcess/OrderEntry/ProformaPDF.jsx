@@ -916,6 +916,8 @@ const SignatureBlock = ({ data }) => (
 
 // ─── Main component ───────────────────────────────────────────────────────────
 const ProformaPDF = ({ data }) => {
+  console.log(data);
+  
   const showEdc = data?.items?.some((item) => item?.assyRimstatus === true);
   const showItemCode = data?.items?.some((item) => item?.partNumber);
   const PONumber = data?.items?.some((item) => item?.PONumber);

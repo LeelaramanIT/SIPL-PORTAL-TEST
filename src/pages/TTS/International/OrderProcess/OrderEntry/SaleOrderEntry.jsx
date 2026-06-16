@@ -8,6 +8,19 @@ import ExistingOrdersModal, { ExistingOrdersButton } from "./ExistingOrdersModal
 import { Document, PDFViewer } from "@react-pdf/renderer";
 import ProformaPDF from "./ProformaPDF";
 import { getMasterData } from "../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
+import {
+  SelectOrInput,
+  MasterDataField,
+  LogisticsPanel,         // full drop-in replacement
+  CARRIAGE_OPTIONS,
+  DESTINATION_OPTIONS,
+  CONTAINER_OPTIONS,
+  PACKING_OPTIONS,
+  INCOTERM_OPTIONS,
+  LEAD_TIME_OPTIONS,
+  PLACE_INCOTERM_OPTIONS,
+} from "./SelectOrInput";
+
 const ICONS = {
   entity: "\u{1F3E2}", order: "\u{1F4C4}", customer: "\u{1F464}", address: "\u{1F4CD}",
   plant: "\u{1F3ED}", item: "\u{1F4E6}", tag: "\u{1F3F7}", standard: "\u{1F4E6}",
@@ -144,6 +157,14 @@ function normalizeNumericInput(value) {
 
   return decimal === undefined ? normalizedWhole : `${normalizedWhole}.${decimal}`;
 }
+function resolveChargeAmount(value, base) {
+  const str = String(value ?? "").trim();
+  if (str.endsWith("%")) {
+    const pct = parseFloat(str) || 0;
+    return (base * pct) / 100;
+  }
+  return parseFloat(str) || 0;
+}
 
 function inputValueOrZero(value) {
   return value === "" || value === null || value === undefined ? "0" : value;
@@ -241,7 +262,8 @@ export default function SaleOrderEntry() {
     zip: "",
     country: "United States",
   });
-  console.log(master);
+  const [discountType, setDiscountType] = useState("");
+  // console.log(master);
   
   const config = orderType ? ORDER_TYPES[orderType] : null;
   const theme = THEME[orderType || "std"];
@@ -354,7 +376,7 @@ const resolveImportCode = (rawCode) => {
   }
 }, [customer?.custID, dispatch]);
 
-  console.log(entityMaster);
+  // console.log(entityMaster);
 
   const mappedEntities = (entityMaster || []).map((item) => ({
     ...item,
@@ -474,16 +496,17 @@ const resolveImportCode = (rawCode) => {
       currency: currencyCode,
     }).format(Number(number) || 0);
   const totals = useMemo(() => {
-    const gross = items.reduce((sum, item) => sum + item.qty * item.price, 0);
-    const lineDiscount = isExternal ? items.reduce((sum, item) => sum + item.qty * item.price * item.disc / 100, 0) : 0;
-    const net = gross - lineDiscount;
-    const docDiscountValue = Number(docDiscount) || 0;
-    const documentDiscount = !isExternal || discountMode === "none" ? 0 : discountMode === "pct" ? net * docDiscountValue / 100 : Math.min(net, docDiscountValue);
-    const taxable = net - documentDiscount;
-    const totalTax = isExternal ? taxes.reduce((sum, tax) => sum + taxable * (Number(tax.rate) || 0) / 100, 0) : 0;
-    const totalCharges = isExternal ? charges.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0) : 0;
-    return { gross, lineDiscount, net, documentDiscount, taxable, totalTax, totalCharges, grand: taxable + totalTax + totalCharges };
-  }, [items, isExternal, discountMode, docDiscount, taxes, charges]);
+  const gross = items.reduce((sum, item) => sum + item.qty * item.price, 0);
+  const lineDiscount = isExternal ? items.reduce((sum, item) => sum + item.qty * item.price * item.disc / 100, 0) : 0;
+  const net = gross - lineDiscount;
+  const docDiscountValue = Number(docDiscount) || 0;
+  const documentDiscount = !isExternal || discountMode === "none" ? 0 : discountMode === "pct" ? net * docDiscountValue / 100 : Math.min(net, docDiscountValue);
+  const netAfterDiscount = net - documentDiscount;
+  const totalCharges = isExternal ? charges.reduce((sum, charge) => sum + resolveChargeAmount(charge.amount, netAfterDiscount), 0) : 0;
+  const taxable = netAfterDiscount + totalCharges;  // ← charges added before tax
+  const totalTax = isExternal ? taxes.reduce((sum, tax) => sum + taxable * (Number(tax.rate) || 0) / 100, 0) : 0;
+  return { gross, lineDiscount, net, documentDiscount, netAfterDiscount, totalCharges, taxable, totalTax, grand: taxable + totalTax };
+}, [items, isExternal, discountMode, docDiscount, taxes, charges]);
 
   const notify = (message) => {
     setToast(message);
@@ -825,21 +848,42 @@ results.added.push({
         total: charges.reduce((sum, c) => sum + Number(c.amount || 0), 0),
         rows: charges.map(c => ({
           desc: c.name || "Charge",
-          value: Number(c.amount || 0),
+          value: resolveChargeAmount(c.amount, totals.taxable),
         })),
       }
     ];
 
     // Mapping discounts
-    const mappedDiscounts = [
-      {
-        total: totals.lineDiscount + totals.documentDiscount,
-        rows: [
-          ...(totals.lineDiscount > 0 ? [{ desc: "Line Discount", value: totals.lineDiscount }] : []),
-          ...(totals.documentDiscount > 0 ? [{ desc: discountMode === "pct" ? `Doc Discount (${docDiscount}%)` : "Doc Discount (Flat)", value: totals.documentDiscount }] : []),
-        ],
-      }
-    ];
+    // const mappedDiscounts = [
+    //   {
+    //     total: totals.lineDiscount + totals.documentDiscount,
+    //     rows: [
+    //       ...(totals.lineDiscount > 0 ? [{ desc: "Line Discount", value: totals.lineDiscount }] : []),
+    //       ...(totals.documentDiscount > 0 ? [{ desc: discountMode === "pct" ? `Doc Discount (${docDiscount}%)` : "Doc Discount (Flat)", value: totals.documentDiscount }] : []),
+    //     ],
+    //   }
+    // ];
+
+    const buildDiscLabel = () => {
+  const typePrefix = discountType ? discountType : "Doc Discount";
+  if (discountMode === "pct") return `${typePrefix} (${docDiscount}%)`;
+  if (discountMode === "flat") return `${typePrefix} (Flat)`;
+  return typePrefix;
+};
+
+const mappedDiscounts = [
+  {
+    total: totals.lineDiscount + totals.documentDiscount,
+    rows: [
+      ...(totals.lineDiscount > 0
+        ? [{ desc: "Line Discount", value: totals.lineDiscount }]
+        : []),
+      ...(totals.documentDiscount > 0
+        ? [{ desc: buildDiscLabel(), value: totals.documentDiscount }]
+        : []),
+    ],
+  }
+];
 
     // Selected plant
     const source = PLANTS.find((plant) => plant.id === sourcePlant);
@@ -1081,7 +1125,7 @@ results.added.push({
               {/* {isExternal && <DiscountPanel taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />} */}
               {isExternal && (
                 <> 
-                   <DiscountPanel taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />
+                   <DiscountPanel discountType={discountType} setDiscountType={setDiscountType} taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />
                    <LogisticsPanel logistics={logistics} setLogistics={setLogistics} collapsed={collapsed.logistics} onToggle={togglePanel} />
               </>)}
             </AnimatePresence>
@@ -1691,8 +1735,7 @@ function ItemsPanel({
               const tax      = Number(item.tax)    || 0;
               const subtotal = qty * price;
               const discount = isExternal ? subtotal * disc / 100 : 0;
-              const lineTax  = isExternal ? (subtotal - discount) * tax / 100 : 0;
-              const lineTotal = subtotal - discount + lineTax;
+              const lineTotal = subtotal - discount;
 
               // Catalogue autocomplete (uses CATALOG constant in OrderCopy)
               const searchTerm = (item.code || "").toLowerCase();
@@ -1870,137 +1913,137 @@ function ItemsPanel({
   );
 }
 
-function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
-  const updateField = (field, value) => { setLogistics((prev) => ({ ...prev, [field]: value, })); };
-  return (
-    <motion.div {...rise}><Panel section="logistics" title="Logistics & Financial Details" icon={ICONS.truck} badge="Before Discount" collapsed={collapsed} onToggle={onToggle}>
-      <Divider className="mt-0"> Logistics Details </Divider> <Grid columns={4}><Field label="Pre-Carriage by" required><select value={logistics.preCarriageBy} onChange={(e) => updateField("preCarriageBy", e.target.value)} > <option value="">Select</option><option>By Road</option><option>By Air</option><option>By Sea</option><option>By Rail</option></select></Field>
-        <Field label="Final Destination" required>
-  <input
-    value={logistics.finalDestination}
-    onChange={(e) => updateField("finalDestination", e.target.value)}
-    placeholder="Enter destination"
-  />
-</Field>
+// function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
+//   const updateField = (field, value) => { setLogistics((prev) => ({ ...prev, [field]: value, })); };
+//   return (
+//     <motion.div {...rise}><Panel section="logistics" title="Logistics & Financial Details" icon={ICONS.truck} badge="Before Discount" collapsed={collapsed} onToggle={onToggle}>
+//       <Divider className="mt-0"> Logistics Details </Divider> <Grid columns={4}><Field label="Pre-Carriage by" required><select value={logistics.preCarriageBy} onChange={(e) => updateField("preCarriageBy", e.target.value)} > <option value="">Select</option><option>By Road</option><option>By Air</option><option>By Sea</option><option>By Rail</option></select></Field>
+//         <Field label="Final Destination" required>
+//   <input
+//     value={logistics.finalDestination}
+//     onChange={(e) => updateField("finalDestination", e.target.value)}
+//     placeholder="Enter destination"
+//   />
+// </Field>
 
-        <Field label="Container Type" required>
-          <select
-            value={logistics.containerType}
-            onChange={(e) =>
-              updateField("containerType", e.target.value)
-            }
-          >
-            <option value="">Select</option>
-            <option>20 FT</option>
-            <option>40 FT</option>
-            <option>LCL</option>
-            <option>Open Top</option>
-          </select>
-        </Field>
+//         <Field label="Container Type" required>
+//           <select
+//             value={logistics.containerType}
+//             onChange={(e) =>
+//               updateField("containerType", e.target.value)
+//             }
+//           >
+//             <option value="">Select</option>
+//             <option>20 FT</option>
+//             <option>40 FT</option>
+//             <option>LCL</option>
+//             <option>Open Top</option>
+//           </select>
+//         </Field>
 
-        <Field label="Packing Method" required>
-          <select
-            value={logistics.packingMethod}
-            onChange={(e) =>
-              updateField("packingMethod", e.target.value)
-            }
-          >
-            <option value="">Select</option>
-            <option>Wooden Box</option>
-            <option>Pallet</option>
-            <option>Carton</option>
-            <option>Loose Packing</option>
-          </select>
-        </Field>
-      </Grid>
+//         <Field label="Packing Method" required>
+//           <select
+//             value={logistics.packingMethod}
+//             onChange={(e) =>
+//               updateField("packingMethod", e.target.value)
+//             }
+//           >
+//             <option value="">Select</option>
+//             <option>Wooden Box</option>
+//             <option>Pallet</option>
+//             <option>Carton</option>
+//             <option>Loose Packing</option>
+//           </select>
+//         </Field>
+//       </Grid>
 
-      <Divider>
-        Financials
-      </Divider>
+//       <Divider>
+//         Financials
+//       </Divider>
 
-      <Grid columns={3}>
-        <Field label="Incoterm">
-          <select
-            value={logistics.incoterm}
-            onChange={(e) =>
-              updateField("incoterm", e.target.value)
-            }
-          >
-            <option value="">Select</option>
-            <option>FOB</option>
-            <option>CIF</option>
-            <option>EXW</option>
-            <option>DDP</option>
-          </select>
-        </Field>
+//       <Grid columns={3}>
+//         <Field label="Incoterm">
+//           <select
+//             value={logistics.incoterm}
+//             onChange={(e) =>
+//               updateField("incoterm", e.target.value)
+//             }
+//           >
+//             <option value="">Select</option>
+//             <option>FOB</option>
+//             <option>CIF</option>
+//             <option>EXW</option>
+//             <option>DDP</option>
+//           </select>
+//         </Field>
 
-        <Field label="Place of Incoterm" required>
-          <input
-            value={logistics.placeOfIncoterm}
-            onChange={(e) =>
-              updateField("placeOfIncoterm", e.target.value)
-            }
-            placeholder="Enter place"
-          />
-        </Field>
+//         <Field label="Place of Incoterm" required>
+//           <input
+//             value={logistics.placeOfIncoterm}
+//             onChange={(e) =>
+//               updateField("placeOfIncoterm", e.target.value)
+//             }
+//             placeholder="Enter place"
+//           />
+//         </Field>
 
-        <Field label="Lead Time" required>
-          <select
-            value={logistics.leadTime}
-            onChange={(e) =>
-              updateField("leadTime", e.target.value)
-            }
-          >
-            <option value="">Select</option>
-            <option>1 Week</option>
-            <option>2 Weeks</option>
-            <option>1 Month</option>
-          </select>
-        </Field>
+//         <Field label="Lead Time" required>
+//           <select
+//             value={logistics.leadTime}
+//             onChange={(e) =>
+//               updateField("leadTime", e.target.value)
+//             }
+//           >
+//             <option value="">Select</option>
+//             <option>1 Week</option>
+//             <option>2 Weeks</option>
+//             <option>1 Month</option>
+//           </select>
+//         </Field>
 
-        <Field label="Validity Date" required>
-          <input
-            type="date"
-            value={logistics.validityDate}
-            onChange={(e) =>
-              updateField("validityDate", e.target.value)
-            }
-          />
-        </Field>
+//         <Field label="Validity Date" required>
+//           <input
+//             type="date"
+//             value={logistics.validityDate}
+//             onChange={(e) =>
+//               updateField("validityDate", e.target.value)
+//             }
+//           />
+//         </Field>
 
-        {/* <Field label="Payment Terms">
-          <select
-            value={logistics.paymentTerms}
-            onChange={(e) =>
-              updateField("paymentTerms", e.target.value)
-            }
-          >
-            <option value="">Select</option>
-            <option>Advance</option>
-            <option>Net 30</option>
-            <option>Net 45</option>
-            <option>COD</option>
-          </select>
-        </Field> */}
+//         {/* <Field label="Payment Terms">
+//           <select
+//             value={logistics.paymentTerms}
+//             onChange={(e) =>
+//               updateField("paymentTerms", e.target.value)
+//             }
+//           >
+//             <option value="">Select</option>
+//             <option>Advance</option>
+//             <option>Net 30</option>
+//             <option>Net 45</option>
+//             <option>COD</option>
+//           </select>
+//         </Field> */}
 
-        <Field label="Remarks" wide>
-          <textarea
-            className={INPUT}
-            rows={3}
-            value={logistics.remarks}
-            onChange={(e) =>
-              updateField("remarks", e.target.value)
-            }
-            placeholder="Enter remarks..."
-          />
-        </Field>
-      </Grid>
-    </Panel>
-    </motion.div>
-  );
-}
+//         <Field label="Remarks" wide>
+//           <textarea
+//             className={INPUT}
+//             rows={3}
+//             value={logistics.remarks}
+//             onChange={(e) =>
+//               updateField("remarks", e.target.value)
+//             }
+//             placeholder="Enter remarks..."
+//           />
+//         </Field>
+//       </Grid>
+//     </Panel>
+//     </motion.div>
+//   );
+// }
 
-function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, setDiscountMode, docDiscount, setDocDiscount, entity, totals, formatMoney, nextId, collapsed, onToggle }) {
+function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, setDiscountMode, docDiscount, setDocDiscount, entity, totals, formatMoney, nextId, collapsed, onToggle, discountType, setDiscountType }) {
   const updateTax = (id, field, value) => {
     setTaxes((current) => current.map((entry) => entry.id === id ? { ...entry, [field]: value } : entry));
   };
@@ -2008,27 +2051,36 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
     setCharges((current) => current.map((entry) => entry.id === id ? { ...entry, [field]: value } : entry));
   };
 
+  // Local state for discount type — lives here, not in logistics
+  // const [discountType, setDiscountType] = useState("");
+
+  const DISCOUNT_TYPE_OPTIONS = ["DISCOUNT", "CLAIM ADJUSTMENT", "LOYALTY DISCOUNT", "SEASONAL OFFER"];
+  const CHARGE_TYPE_OPTIONS   = ["SURCHARGE", "PALLET CHARGES", "FREIGHT CHARGES", "FUMIGATION", "WRAPPING CHARGES", "BRAND PLATE MAKING CHARGES", "TARIFF"];
+  const TAX_CODE_OPTIONS      = ["GST-9", "VAT-20", "EXEMPT", "CUSTOM", "IGST-18", "CGST-9", "SGST-9"];
+
   return (
     <motion.div {...rise}>
       <Panel section="discount" title="Document Discount & Tax" icon={ICONS.tag} badge="Applied after line items" collapsed={collapsed} onToggle={onToggle}>
+
+        {/* ── Document Discount ── */}
         <Divider className="mt-0">Document Discount</Divider>
         <div className="mb-3 flex flex-wrap gap-1.5">
           {[
-            ["pct", "% Percentage"],
+            ["pct",  "% Percentage"],
             ["flat", `${entity?.currency || ""} Flat Amount`],
             ["none", "No Discount"],
           ].map(([id, label]) => {
             const active = discountMode === id;
             return (
               <button
+                key={id}
+                type="button"
                 className={cx(
                   "rounded-full border px-3 py-1.5 text-[10px] font-semibold transition",
                   active
                     ? "border-amber-400 bg-amber-500 text-white shadow-sm shadow-amber-500/20"
                     : "border-slate-200 bg-slate-50 text-slate-500 hover:border-amber-300 hover:text-amber-500 dark:border-slate-700 dark:bg-slate-800"
                 )}
-                type="button"
-                key={id}
                 onClick={() => setDiscountMode(id)}
               >
                 {label}
@@ -2041,28 +2093,33 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
           {discountMode !== "none" && (
             <motion.div {...rise}>
               <Grid>
-                <Field label="Discount Type">
-                  <select>
-                    <option value="">Select</option>
-                    <option>DISCOUNT</option>
-                    <option>CLAIM ADJUSTMENT</option>
-                    {/* <option>Loyalty Discount</option> */}
-                  </select>
-                </Field>
+                {/* ✅ Discount Type — now a hybrid SelectOrInput */}
+                <MasterDataField
+                  label="Discount Type"
+                  value={discountType}
+                  onChange={setDiscountType}
+                  options={DISCOUNT_TYPE_OPTIONS}
+                  placeholder="Select or enter…"
+                />
+
                 <Field label="Discount Value">
                   <input
                     inputMode="decimal"
                     value={docDiscount}
-                    onChange={(event) => setDocDiscount(normalizeNumericInput(event.target.value))}
-                    onBlur={() => setDocDiscount((current) => inputValueOrZero(current))}
+                    onChange={(e) => setDocDiscount(normalizeNumericInput(e.target.value))}
+                    onBlur={() => setDocDiscount((c) => inputValueOrZero(c))}
                   />
                 </Field>
-                <Field label="Approval / Reason"><input defaultValue="LOYAL2026" /></Field>
+
+                <Field label="Approval / Reason">
+                  <input defaultValue="LOYAL2026" />
+                </Field>
               </Grid>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* ── Tax Components ── */}
         <Divider>Tax Components</Divider>
         <div className="space-y-2">
           {taxes.map((tax) => {
@@ -2070,68 +2127,95 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
             return (
               <motion.div layout key={tax.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
                 <Field label="Tax Name">
-                  <input value={tax.name} onChange={(event) => updateTax(tax.id, "name", event.target.value)} placeholder="Tax name" />
+                  <input
+                    value={tax.name}
+                    onChange={(e) => updateTax(tax.id, "name", e.target.value)}
+                    placeholder="Tax name"
+                  />
                 </Field>
-                <Field label="Code">
-                  <select value={tax.code} onChange={(event) => updateTax(tax.id, "code", event.target.value)}>
-                    <option>GST-9</option>
-                    <option>VAT-20</option>
-                    <option>EXEMPT</option>
-                    <option>CUSTOM</option>
-                  </select>
-                </Field>
+
+                {/* ✅ Tax Code — hybrid SelectOrInput */}
+                <MasterDataField
+                  label="Code"
+                  value={tax.code}
+                  onChange={(v) => updateTax(tax.id, "code", v)}
+                  options={TAX_CODE_OPTIONS}
+                  placeholder="Select or enter…"
+                />
+
                 <Field label="Rate / Value %">
                   <input
                     inputMode="decimal"
                     value={tax.rate}
-                    onChange={(event) => updateTax(tax.id, "rate", normalizeNumericInput(event.target.value))}
+                    onChange={(e) => updateTax(tax.id, "rate", normalizeNumericInput(e.target.value))}
                     onBlur={() => updateTax(tax.id, "rate", inputValueOrZero(tax.rate))}
                   />
                 </Field>
-                <Field label="Amount"><input readOnly value={formatMoney(totals.taxable * rate / 100)} /></Field>
-                <Remove onClick={() => setTaxes((current) => current.filter((entry) => entry.id !== tax.id))} />
+
+                <Field label="Amount">
+                  <input readOnly value={formatMoney(totals.taxable * rate / 100)} />
+                </Field>
+
+                <Remove onClick={() => setTaxes((c) => c.filter((e) => e.id !== tax.id))} />
               </motion.div>
             );
           })}
         </div>
-        <Add onClick={() => setTaxes((current) => [...current, { id: nextId.current++, name: "New Tax", code: "CUSTOM", rate: 0 }])}>Add Tax Component</Add>
+        <Add onClick={() => setTaxes((c) => [...c, { id: nextId.current++, name: "New Tax", code: "CUSTOM", rate: 0 }])}>
+          Add Tax Component
+        </Add>
 
+        {/* ── Additional Charges ── */}
         <Divider>Additional Charges</Divider>
         <div className="space-y-2">
           {charges.map((charge) => (
             <motion.div layout key={charge.id} className="grid items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
-              <Field label="Charge Type">
-  <select value={charge.name} onChange={(event) => updateCharge(charge.id, "name", event.target.value)}>
-    <option value="">Select</option>
-    <option>SURCHARGE</option>
-    <option>PALLET CHARGES</option>
-    <option>FREIGHT CHARGES</option>
-    <option>FUMIGATION</option>
-    <option>WRAPPING CHARGES</option>
-    <option>BRAND PLATE MAKING CHARGES</option>
-    <option>TARIFF</option>
-  </select>
-</Field>
+
+              {/* ✅ Charge Type — hybrid SelectOrInput */}
+              <MasterDataField
+                label="Charge Type"
+                value={charge.name}
+                onChange={(v) => updateCharge(charge.id, "name", v)}
+                options={CHARGE_TYPE_OPTIONS}
+                placeholder="Select or enter…"
+              />
+
               <Field label="Amount">
                 <input
                   inputMode="decimal"
                   value={charge.amount}
-                  onChange={(event) => updateCharge(charge.id, "amount", normalizeNumericInput(event.target.value))}
-                  onBlur={() => updateCharge(charge.id, "amount", inputValueOrZero(charge.amount))}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.%]/g, "");
+                    updateCharge(charge.id, "amount", raw);
+                  }}
+                  placeholder="e.g. 400 or 4%"
                 />
               </Field>
-              <Field label="Taxable">
-                <select value={charge.taxable} onChange={(event) => updateCharge(charge.id, "taxable", event.target.value)}>
+
+              {/* <Field label="Taxable">
+                <select
+                  value={charge.taxable}
+                  onChange={(e) => updateCharge(charge.id, "taxable", e.target.value)}
+                >
                   <option>Yes</option>
                   <option>No</option>
                 </select>
-              </Field>
-              <Remove onClick={() => setCharges((current) => current.filter((entry) => entry.id !== charge.id))} />
+              </Field> */}
+
+              {/* <Remove onClick={() => setCharges((c) => c.filter((e) => e.id !== charge.id))} /> */}
             </motion.div>
           ))}
         </div>
-        <Add onClick={() => setCharges((current) => [...current, { id: nextId.current++, name: "Insurance", amount: 0, taxable: "Yes" }])}>Add Charge</Add>
-        <Calculation totals={totals} format={formatMoney} discountMode={discountMode} docDiscount={Number(docDiscount) || 0} />
+        <Add onClick={() => setCharges((c) => [...c, { id: nextId.current++, name: "", amount: 0, taxable: "Yes" }])}>
+          Add Charge
+        </Add>
+
+        <Calculation
+          totals={totals}
+          format={formatMoney}
+          discountMode={discountMode}
+          docDiscount={Number(docDiscount) || 0}
+        />
       </Panel>
     </motion.div>
   );
@@ -2157,7 +2241,19 @@ function TrialFields() {
 }
 
 function Calculation({ totals, format, discountMode, docDiscount }) {
-  return <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800"><h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Calculation Breakdown</h4><Summary label="Gross Subtotal" value={format(totals.gross)} /><Summary label="Line Discounts" value={`-${format(totals.lineDiscount)}`} red /><Summary label="Net After Line Disc" value={format(totals.net)} /><Summary label={`Doc Discount ${discountMode === "pct" ? `(${docDiscount}%)` : "(Flat)"}`} value={`-${format(totals.documentDiscount)}`} red /><Summary label="Taxable Amount" value={format(totals.taxable)} /><Summary label="Tax" value={`+${format(totals.totalTax)}`} /><Summary label="Additional Charges" value={`+${format(totals.totalCharges)}`} /><Summary label="Grand Total" value={format(totals.grand)} accent total /></div>;
+  return (
+    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+      <h4 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Calculation Breakdown</h4>
+      <Summary label="Gross Subtotal" value={format(totals.gross)} />
+      <Summary label="Line Discounts" value={`-${format(totals.lineDiscount)}`} red />
+      <Summary label="Net After Line Disc" value={format(totals.net)} />
+      <Summary label={`Doc Discount ${discountMode === "pct" ? `(${docDiscount}%)` : "(Flat)"}`} value={`-${format(totals.documentDiscount)}`} red />
+      <Summary label="Additional Charges" value={`+${format(totals.totalCharges)}`} />
+      <Summary label="Taxable Amount" value={format(totals.taxable)} />
+      <Summary label="Tax" value={`+${format(totals.totalTax)}`} />
+      <Summary label="Grand Total" value={format(totals.grand)} accent total />
+    </div>
+  );
 }
 
 function PasteModal({ pasteText, setPasteText, onClose, onImport }) {
