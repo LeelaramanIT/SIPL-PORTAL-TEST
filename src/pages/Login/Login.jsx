@@ -21,19 +21,23 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { loading, error, loggedIn } = useSelector((state) => state.auth);
+  const { error, loggedIn } = useSelector((state) => state.auth);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      dispatch(
+      setLoading(true);
+      await dispatch(
         userLogin({
           username: username.current.value,
           password: password.current.value,
         }),
       );
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       console.log(error.message);
     }
   };
