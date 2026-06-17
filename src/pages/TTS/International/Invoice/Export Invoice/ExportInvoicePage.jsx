@@ -66,7 +66,7 @@ const ExportInvoice = () => {
 
   const tableData = useSelector((state) => state.invoice.exportInvoices.listOFInvoices);
 
-  const {menus} = useSelector((state)=> state.auth)
+  const {Menus} = useSelector((state)=> state.auth)
   console.log(tableData);
   
 
@@ -122,7 +122,7 @@ const handleToggle = (value) => {
   };
 
   const requiredMenu = menuMap[value];
-  const hasAccess = menus.some((menu) => menu.MenuName === requiredMenu);
+  const hasAccess = Menus.some((menu) => menu.menuName === requiredMenu);
 
   if (!hasAccess) {
     toast.error(`You don’t have access to ${value} invoices.`);

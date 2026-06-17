@@ -100,6 +100,43 @@ const useResponsive = () => {
   return screenSize;
 };
 
+const normalizeBinLocation = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const getCanonicalBinLocation = (value, locations = []) => {
+  const normalizedValue = normalizeBinLocation(value);
+  if (!normalizedValue) return "";
+
+  const match = locations.find(
+    (item) =>
+      normalizeBinLocation(item).toLowerCase() === normalizedValue.toLowerCase(),
+  );
+
+  return normalizeBinLocation(match || normalizedValue);
+};
+
+const buildUniqueBinLocations = (locations = []) => {
+  const seen = new Set();
+
+  return locations.reduce((acc, item) => {
+    const normalized = normalizeBinLocation(item);
+    if (!normalized) return acc;
+
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) return acc;
+
+    seen.add(key);
+    acc.push(normalized);
+    return acc;
+  }, []);
+};
+
+const RECEIVED_ITEMS_FILTERS = [
+  { value: "all", label: "All Items" },
+  { value: "pending", label: "Pending Scan" },
+  { value: "fully", label: "Fully Scanned" },
+];
+
 // ─────────────────────────────────────────────
 // HEADER
 // ─────────────────────────────────────────────
@@ -124,7 +161,6 @@ const ResponsiveHeader = memo(
   }) => {
     const { LocationDetails } = useSelector((s) => s.auth);
     const dispatch = useDispatch();
-    const [searchValue, setSearchValue] = useState("");
 
     useEffect(() => {
       if (LocationDetails?.length > 0 && !receivePlan) {
@@ -163,40 +199,48 @@ const ResponsiveHeader = memo(
     );
 
     const formattedBinOptions = useMemo(() => {
-      const opts = [...binLocations];
-      if (searchValue && !opts.includes(searchValue)) opts.unshift(searchValue);
-      if (selectedBinLocation && !opts.includes(selectedBinLocation))
-        opts.unshift(selectedBinLocation);
-      return opts.map((item) => ({
+      return buildUniqueBinLocations(binLocations).map((item) => ({
         value: item,
-        label: binLocations.includes(item) ? item : `New: ${item}`,
+        label: item,
       }));
-    }, [binLocations, searchValue, selectedBinLocation]);
+    }, [binLocations]);
 
-    const handleBinSearch = (value) => setSearchValue(value);
+    useEffect(() => {
+      if (!selectedBinLocation) return;
+
+      const canonicalValue = getCanonicalBinLocation(
+        selectedBinLocation,
+        binLocations,
+      );
+
+      if (canonicalValue && canonicalValue !== selectedBinLocation) {
+        setSelectedBinLocation(canonicalValue);
+      }
+    }, [binLocations, selectedBinLocation, setSelectedBinLocation]);
+
     const handleBinChange = (value) => {
-      setSelectedBinLocation(value);
-      setSearchValue("");
+      const nextValue = Array.isArray(value) ? value[value.length - 1] : value;
+      const canonicalValue = getCanonicalBinLocation(nextValue, binLocations);
+      setSelectedBinLocation(canonicalValue || null);
     };
 
     const BinSelect = ({ style }) => (
       <Select
         showSearch
+        mode="tags"
+        autoClearSearchValue
+        allowClear
         size="small"
         placeholder="Bin Location"
         style={{ width: "100%", fontSize: selectFontSize, ...style }}
-        value={selectedBinLocation}
+        value={selectedBinLocation ? [selectedBinLocation] : []}
         onChange={handleBinChange}
-        onSearch={handleBinSearch}
-        searchValue={searchValue}
         options={formattedBinOptions}
         filterOption={(input, option) =>
-          (option?.value ?? "").toLowerCase().includes(input.toLowerCase())
+          normalizeBinLocation(option?.value)
+            .toLowerCase()
+            .includes(normalizeBinLocation(input).toLowerCase())
         }
-        onBlur={() => {
-          if (searchValue && !binLocations.includes(searchValue))
-            handleBinChange(searchValue);
-        }}
       />
     );
 
@@ -416,7 +460,9 @@ const ResponsiveContent = memo(
     receivePlan,
     receiveLocation,
     selectedBinLocation,
-    groupedTyres,
+    visibleGroupedTyres,
+    itemsFilter,
+    setItemsFilter,
     tableLoading,
     lastScannedTyre,
     setLastScannedTyre,
@@ -644,9 +690,18 @@ const ResponsiveContent = memo(
                   flexWrap: "wrap",
                 }}
               >
-                <Text strong style={{ color: "white", fontSize: 13 }}>
-                  Received Items
-                </Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <Text strong style={{ color: "white", fontSize: 13 }}>
+                    Received Items
+                  </Text>
+                  <Select
+                    size="small"
+                    value={itemsFilter}
+                    onChange={setItemsFilter}
+                    options={RECEIVED_ITEMS_FILTERS}
+                    style={{ minWidth: 140 }}
+                  />
+                </div>
                 <div style={{ display: "flex", gap: 14 }}>
                   {[
                     { label: "TOTAL",   val: scannedTyres.length },
@@ -670,7 +725,7 @@ const ResponsiveContent = memo(
                 <Table
                   columns={columns}
                   loading={{ spinning: tableLoading, tip: "Loading..." }}
-                  dataSource={groupedTyres.map((item, i) => ({ ...item, key: i }))}
+                  dataSource={visibleGroupedTyres.map((item, i) => ({ ...item, key: i }))}
                   pagination={false}
                   size="small"
                   tableLayout="fixed"
@@ -1012,6 +1067,16 @@ const ResponsiveContent = memo(
                     </Text>
                   </div>
 
+                  <div style={{ minWidth: isDesktop ? 170 : 150, flex: "0 0 auto" }}>
+                    <Select
+                      size="small"
+                      value={itemsFilter}
+                      onChange={setItemsFilter}
+                      options={RECEIVED_ITEMS_FILTERS}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+
                   {[
                     { label: "TOTAL",   val: scannedTyres.length },
                     { label: "SCANNED", val: totalScannedQty },
@@ -1033,7 +1098,7 @@ const ResponsiveContent = memo(
                   <Table
                     columns={columns}
                     loading={{ spinning: tableLoading, tip: "Loading items..." }}
-                    dataSource={groupedTyres.map((item, i) => ({ ...item, key: i }))}
+                    dataSource={visibleGroupedTyres.map((item, i) => ({ ...item, key: i }))}
                     pagination={false}
                     size={isDesktop ? "middle" : "small"}
                     tableLayout="auto"
@@ -1176,6 +1241,7 @@ export default function TyreStockReceiveRedesign() {
   const [activeTransactionId, setActiveTransactionId] = useState(null);
   const [binLocations, setBinLocations]         = useState([]);
   const [selectedBinLocation, setSelectedBinLocation] = useState(null);
+  const [itemsFilter, setItemsFilter]           = useState("all");
   const [tableLoading, setTableLoading]         = useState(false);
   const [lastScannedTyre, setLastScannedTyre]   = useState(null);
 
@@ -1226,7 +1292,7 @@ export default function TyreStockReceiveRedesign() {
         const plantData = data.find(
           (item) => item.plant?.toLowerCase() === receivePlan?.toLowerCase(),
         );
-        if (plantData) setBinLocations(plantData.phyloc || []);
+        if (plantData) setBinLocations(buildUniqueBinLocations(plantData.phyloc || []));
       } catch (err) {
         console.log(err);
         message.error("Failed to load bin locations");
@@ -1262,7 +1328,7 @@ export default function TyreStockReceiveRedesign() {
 
     try {
       const payload = {
-        binLocation: selectedBinLocation,
+        binLocation: getCanonicalBinLocation(selectedBinLocation, binLocations),
         barcode: barcodeInput,
         plant: receivePlan,
         tM_ID: receiveData?.tM_ID,
@@ -1297,7 +1363,15 @@ export default function TyreStockReceiveRedesign() {
       // Re-focus input after every scan attempt
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [barcodeInput, receivePlan, receiveLocation, selectedBinLocation, receiveData, dispatch]);
+  }, [
+    barcodeInput,
+    receivePlan,
+    receiveLocation,
+    selectedBinLocation,
+    binLocations,
+    receiveData,
+    dispatch,
+  ]);
 
   const groupedTyres = useMemo(() => {
     const grouped = {};
@@ -1316,6 +1390,17 @@ export default function TyreStockReceiveRedesign() {
     });
     return Object.values(grouped);
   }, [scannedTyres]);
+
+  const visibleGroupedTyres = useMemo(() => {
+    switch (itemsFilter) {
+      case "pending":
+        return groupedTyres.filter((item) => (item.qty - item.scannedQty) > 0);
+      case "fully":
+        return groupedTyres.filter((item) => item.qty === item.scannedQty);
+      default:
+        return groupedTyres;
+    }
+  }, [groupedTyres, itemsFilter]);
 
   const columns = useMemo(() => {
     // ── Mobile: single stacked cell ──
@@ -1559,7 +1644,9 @@ if (isTablet) {
         receivePlan={receivePlan}
         receiveLocation={receiveLocation}
         selectedBinLocation={selectedBinLocation}
-        groupedTyres={groupedTyres}
+        visibleGroupedTyres={visibleGroupedTyres}
+        itemsFilter={itemsFilter}
+        setItemsFilter={setItemsFilter}
         tableLoading={tableLoading}
         lastScannedTyre={lastScannedTyre}
         setLastScannedTyre={setLastScannedTyre}

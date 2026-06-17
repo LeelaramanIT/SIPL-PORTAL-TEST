@@ -82,7 +82,7 @@ const authSlice = createSlice({
 });
 
 export const userLogin = (credentials) => async (dispatch) => {
-  dispatch(loginStart(true));
+  // dispatch(loginStart(true));
 
   try {
     const res = await api.post("/Auth/logins", credentials, {
@@ -91,10 +91,10 @@ export const userLogin = (credentials) => async (dispatch) => {
     if (res.status === 200) {
       const data = res.data;
       dispatch(loginSuccess(data));
-      dispatch(loginStart(false));
+      // dispatch(loginStart(false));
     }
   } catch (error) {
-    dispatch(loginStart(false));
+    // dispatch(loginStart(false));
 
     let message = "Login failed";
 

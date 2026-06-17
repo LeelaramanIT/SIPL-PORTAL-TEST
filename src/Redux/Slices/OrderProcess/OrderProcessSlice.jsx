@@ -33,10 +33,16 @@ const OrderProcessSlice = createSlice({
     setItemsList: (state, action) => {
       state.listOfItems = action.payload
     },
+    setSaveDraftLoading: (state, action) => {
+      state.saveDraftLoading = action.payload
+    },
+    setSaveDraftSuccess: (state, action) => {
+      state.saveDraftSuccess = action.payload
+    },
   },
 
 })
-export const { setLoading, setError, setCustList, setEntityMaster, setCustomerItems, setItemsList } = OrderProcessSlice.actions
+export const { setLoading, setError, setCustList, setEntityMaster, setCustomerItems, setItemsList,  setSaveDraftLoading, setSaveDraftSuccess } = OrderProcessSlice.actions
 
 export const getEntityMaster = () => async (dispatch) => {
   try {
@@ -117,6 +123,39 @@ export const getListOfItems = (payload) => async (dispatch) => {
     dispatch(setError(error?.response?.data?.message || error.message || String(error)));
   } finally {
     dispatch(setLoading(false));
+  }
+};
+
+export const saveDraft = (payload, typeID = 1) => async (dispatch) => {
+  try {
+    dispatch(setSaveDraftLoading(true));
+    dispatch(setError(null));
+
+    const res = await api.post(
+      `/OrderProcess/save?TypeID=${typeID}`,
+      payload
+    );
+
+    if (res.status === 200 || res.status === 201) {
+      dispatch(setSaveDraftSuccess(true));
+      return res.data; // useful if component wants response
+    } else {
+      throw new Error(`Unexpected response status: ${res.status}`);
+    }
+  } catch (error) {
+    console.error("Save draft failed:", error);
+
+    dispatch(
+      setError(
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to save draft"
+      )
+    );
+
+    throw error;
+  } finally {
+    dispatch(setSaveDraftLoading(false));
   }
 };
 

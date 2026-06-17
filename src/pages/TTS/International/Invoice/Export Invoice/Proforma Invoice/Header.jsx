@@ -11,8 +11,8 @@ function PIHeader({searchQuery,setSearchQuery}) {
   const diapatch = useDispatch();
   const { plant, custType } = useParams();
 
-  const { menus, roles } = useSelector(state => state.auth);
-  
+  const { Menus, roles } = useSelector(state => state.auth);
+
 
   const hasPermission = (menus, requiredMenuNameOrUrl) => {
     if (roles?.toLowerCase() === "admin") return true;
@@ -21,8 +21,8 @@ function PIHeader({searchQuery,setSearchQuery}) {
     const normalized = requiredMenuNameOrUrl.toLowerCase().trim();
 
     return menus.some(menu =>
-      menu.MenuName?.toLowerCase().trim() === normalized ||
-      menu.MenuUrl?.toLowerCase().trim() === normalized
+      menu.menuName?.toLowerCase().trim() === normalized ||
+      menu.menuUrl?.toLowerCase().trim() === normalized
     );
   };
   // const type = custType === "Domestic" ? "Domestic" : "International";
@@ -46,7 +46,7 @@ function PIHeader({searchQuery,setSearchQuery}) {
     ];
 
   const visibleTabs = allTabs.filter(tab =>
-    hasPermission(menus, tab.path)
+    hasPermission(Menus, tab.path)
   );
 
   return (

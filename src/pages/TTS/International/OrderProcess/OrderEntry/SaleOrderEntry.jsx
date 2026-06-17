@@ -2,10 +2,10 @@ import React, { cloneElement, useEffect, useMemo, useRef, useState } from "react
 import { AnimatePresence, motion } from "framer-motion";
 import * as XLSX from "xlsx";
 import { useDispatch, useSelector } from "react-redux";
-import { getListOfCustomer, getListOfItems } from "../../../../../Redux/Slices/OrderProcess/OrderProcessSlice";
+import { getListOfCustomer, getListOfItems, saveDraft } from "../../../../../Redux/Slices/OrderProcess/OrderProcessSlice";
 import ItemSelectorDrawer from "./ItemSelectorDrawer";
 import ExistingOrdersModal, { ExistingOrdersButton } from "./ExistingOrdersModal";
-import { Document, PDFViewer } from "@react-pdf/renderer";
+import { Document, PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import ProformaPDF from "./ProformaPDF";
 import { getMasterData } from "../../../../../Redux/Slices/ProformaInvoice/ProformaInvoiceSlice";
 import {
@@ -218,7 +218,7 @@ function Panel({ section, title, icon, badge, collapsed, onToggle, children }) {
 export default function SaleOrderEntry() {
   const nextId = useRef(20);
   const toastTimer = useRef(null);
-  const [entity, setEntity] = useState([]);
+  const [entity, setEntity] = useState(null);
   const [currency, setCurrency] = useState(null)
   const [orderType, setOrderType] = useState(null);
   const [customer, setCustomer] = useState(null);
@@ -263,7 +263,7 @@ export default function SaleOrderEntry() {
     country: "United States",
   });
   const [discountType, setDiscountType] = useState("");
-  // console.log(master);
+  console.log(listOfItems);
   
   const config = orderType ? ORDER_TYPES[orderType] : null;
   const theme = THEME[orderType || "std"];
@@ -289,77 +289,58 @@ export default function SaleOrderEntry() {
   const catalogueMap = useMemo(() => {
   const map = {};
 
+  // ── TYRE: price lives directly on the tyre object ──────────────────────
   (listOfItems?.data?.tyre || []).forEach(item => {
     if (!item.processID) return;
-    const pidStr = String(item.processID).trim().toLowerCase();
-    map[pidStr] = {
-      type:        "TYRE",
-      code:        String(item.processID),
-      desc:        item.piD_Details || "",
-      price:       0,                          // tyre price resolved below via assembly
-      _raw:        item,
+    const key = String(item.processID).trim().toLowerCase();
+    map[key] = {
+      type:  "TYRE",
+      code:  String(item.processID),
+      desc:  item.piD_Details || "",
+      price: Number(item.price) || 0,   // ← directly from tyre object
+      _raw:  item,
     };
   });
 
-  // Assembly prices also update the tyre entry price
+  // ── ASSEMBLY: keyed by assY_PID (e.g. "P001338A") ──────────────────────
   (listOfItems?.data?.assemblyTyre || []).forEach(item => {
-    // Assembly keyed by assY_PID
-    if (item.assY_PID) {
-      const assyPidStr = String(item.assY_PID).trim().toLowerCase();
-      map[assyPidStr] = {
-        type:        "ASSEMBLY",
-        code:        String(item.assY_PID),
-        desc:        item.piD_Details || "",
-        price:       Number(item.price) || 0,
-        _raw:        item,
-      };
-    }
-    // Also patch tyre entry price using processID match
-    if (item.processID) {
-      const pidStr = String(item.processID).trim().toLowerCase();
-      if (map[pidStr]) {
-        map[pidStr].price = Number(item.price) || 0;
-      }
-    }
-    // Also key by processID so user can type processID and get assembly data
-    if (item.processID) {
-      const pidStr = String(item.processID).trim().toLowerCase();
-      // Only set if not already set by a cleaner tyre entry
-      if (!map[pidStr] || map[pidStr].type === "TYRE") {
-        // Keep TYRE entry but upgrade the price
-        if (map[pidStr]) {
-          map[pidStr].price = Number(item.price) || 0;
-        }
-      }
-    }
+    if (!item.assY_PID) return;
+    const key = String(item.assY_PID).trim().toLowerCase();
+    map[key] = {
+      type:  "ASSEMBLY",
+      code:  String(item.assY_PID),
+      desc:  item.piD_Details || "",
+      price: Number(item.price) || 0,
+      _raw:  item,
+    };
   });
 
+  // ── RIM: keyed by edcno ────────────────────────────────────────────────
   (listOfItems?.data?.rim || []).forEach(item => {
     if (!item.edcno) return;
-    const edcStr = String(item.edcno).trim().toLowerCase();
-    map[edcStr] = {
-      type:        "RIM",
-      code:        String(item.edcno),
-      desc:        item.riM_Details || "",
-      price:       0,
-      _raw:        item,
+    const key = String(item.edcno).trim().toLowerCase();
+    map[key] = {
+      type:  "RIM",
+      code:  String(item.edcno),
+      desc:  item.riM_Details || "",
+      price: 0,
+      _raw:  item,
     };
   });
 
   return map;
 }, [listOfItems]);
 
+
+
 const resolveImportCode = (rawCode) => {
   if (!rawCode) return { valid: false, message: "Item code missing" };
 
-  const key = rawCode.trim().toLowerCase();
+  const key = String(rawCode).trim().toLowerCase();
   const entry = catalogueMap[key];
 
   if (!entry) {
-    return {
-      valid: false,
-      message: "Item not assigned to this customer",
-    };
+    return { valid: false, message: "No this item assign for this customer" };
   }
 
   return { valid: true, entry };
@@ -391,12 +372,6 @@ const resolveImportCode = (rawCode) => {
     tone: "blue",
     location: item.countryCode,
   }));
-  useEffect(() => {
-    if (mappedEntities.length > 0 && !entity) {
-      setEntity(mappedEntities[0]);
-    }
-  }, [mappedEntities, entity]);
-
   // ✅ ADD THIS ENTIRE useEffect BELOW:
   useEffect(() => {
     if (customer?.addresses?.length > 0) {
@@ -787,17 +762,37 @@ results.added.push({
       addresses: customer.addresses || [],
     };
   });
-  useEffect(() => {
-    if (mappedCustomers.length > 0 && !customer) {
-      setCustomer(mappedCustomers[0]);
-    }
-  }, [mappedCustomers, customer]);
-
   const filteredCustomers = mappedCustomers.filter((candidate) =>
     `${candidate.name} ${candidate.code}`
       .toLowerCase()
       .includes(customerSearch.toLowerCase())
   );
+
+  const validateOrderForSubmit = () => {
+    if (!entity) return "Please select a company entity";
+    if (!orderType) return "Please select an order type";
+    if (!orderDate) return "Please select an order date";
+    if (!desiredShipDate) return "Please select a desired ship date";
+
+    if (showCustomer && !customer) return "Please select a customer";
+
+    if (showAddress && showCustomer) {
+      if (!billAddress) return "Please select a billing address";
+      if (!shipAddress) return "Please select a shipping address";
+      if (!paymentTerm) return "Please select payment terms";
+    }
+
+    if (showPlant) {
+      if (!sourcePlant) return "Please select a source plant";
+      if (orderType === "ipt" && !destinationPlant) {
+        return "Please select a destination plant";
+      }
+    }
+
+    if (!items.length) return "Please add at least one line item";
+
+    return null;
+  };
 
   // Helper to map UI form states to the data structure expected by ProformaPDF
   const mapFormToPDFData = () => {
@@ -960,6 +955,167 @@ const mappedDiscounts = [
     };
   };
 
+  // ── Draft Payload Builder ───────────────────────────────────────────────────
+const buildDraftPayload = () => {
+  const activeShipAddr = customerAddresses.ship.find(a => a.id === shipAddress);
+  const activeBillAddr = customerAddresses.bill.find(a => a.id === billAddress);
+
+  return {
+    entityCode:       entity?.code        ?? "",
+    entityName:       entity?.name        ?? "",
+    orderType:        orderType           ?? "",
+    orderRefID:       "SO-2026-0413",
+    orderDate:        orderDate
+                        ? new Date(orderDate).toISOString()
+                        : new Date().toISOString(),
+    desiredShipDate:  desiredShipDate
+                        ? new Date(desiredShipDate).toISOString()
+                        : new Date().toISOString(),
+    customerPO:       customerPo          ?? "",
+    emailReference:   emailRef            ?? "",
+
+    customer: {
+      customerCode:   customer?.code      ?? "",
+      customerName:   customer?.name      ?? "",
+      contactPerson:  customer?.name      ?? "",   // no separate contactPerson field in UI
+      email:          customer?.email     ?? "",
+      phone:          customer?.custMobile ?? "",
+      salesRep:       customer?.lead      ?? "",
+      poDate:         new Date().toISOString(),    // no PO date input wired up yet
+      currency:       customer?.currency  ?? "",
+    },
+
+    billToAddress: {
+      addressType:    "BILL_TO",
+      addressLine1:   activeBillAddr?.first                    ?? "",
+      addressLine2:   activeBillAddr?.second                   ?? "",
+      city:           activeBillAddr?.original?.city           ?? "",
+      postalCode:     activeBillAddr?.original?.zipCode        ?? "",
+      country:        activeBillAddr?.original?.country        ?? "",
+    },
+
+    shipToAddress: {
+      addressType:    "SHIP_TO",
+      addressLine1:   activeShipAddr?.first                    ?? "",
+      addressLine2:   activeShipAddr?.second                   ?? "",
+      city:           activeShipAddr?.original?.city           ?? "",
+      postalCode:     activeShipAddr?.original?.zipCode        ?? "",
+      country:        activeShipAddr?.original?.country        ?? "",
+    },
+
+    payment: {
+      paymentMethod:  "",                          // Bank Account select not wired to state yet
+      paymentTerms:   paymentTerm                  ?? "",
+      bankName:       "",
+      accountNo:      "",
+      swiftCode:      "",
+      currency:       customer?.currency || entity?.currency || "",
+    },
+
+    logistics: {
+      preCarriageBy:    logistics.preCarriageBy    ?? "",
+      finalDestination: logistics.finalDestination ?? "",
+      containerType:    logistics.containerType    ?? "",
+      packingMethod:    logistics.packingMethod    ?? "",
+    },
+
+    financial: {
+      incoterm:         logistics.incoterm         ?? "",
+      placeOfIncoterm:  logistics.placeOfIncoterm  ?? "",
+      leadTime:         logistics.leadTime         ?? "",
+      validityDate:     logistics.validityDate
+                          ? new Date(logistics.validityDate).toISOString()
+                          : new Date().toISOString(),
+      paymentTerms:     logistics.paymentTerms || paymentTerm || "",
+      remarks:          logistics.remarks          ?? "",
+    },
+
+    documentDiscount: {
+      discountMode:    discountMode      ?? "none",
+      discountType:    discountType      ?? "",
+      discountValue:   Number(docDiscount) || 0,
+      approvalReason:  "LOYAL2026",                // hardcoded approval field in DiscountPanel
+    },
+
+    taxes: taxes.map(tax => ({
+      taxName:  tax.name                           ?? "",
+      taxCode:  tax.code                           ?? "",
+      rate:     Number(tax.rate)                   || 0,
+      amount:   Number(
+                  (totals.taxable * (Number(tax.rate) || 0)) / 100
+                ) || 0,
+    })),
+
+    additionalCharges: charges.map(charge => ({
+      chargeName: charge.name                      ?? "",
+      amount:     resolveChargeAmount(charge.amount, totals.netAfterDiscount),
+      taxable:    charge.taxable !== "No",         // defaults to true
+    })),
+
+    lineItems: items.map(item => {
+      const qty      = Number(item.qty)   || 0;
+      const price    = Number(item.price) || 0;
+      const disc     = Number(item.disc)  || 0;
+      const subtotal = qty * price;
+      const discount = isExternal ? subtotal * disc / 100 : 0;
+      return {
+        processID:       item.code             ?? "",
+        customerPartNo:  item.customerPartNo   ?? "",
+        description:     item.desc             ?? "",
+        qty,
+        unitPrice:       price,
+        discountPercent: disc,
+        lineTotal:       subtotal - discount,
+      };
+    }),
+  };
+};   
+
+const handleSaveDraft = async () => {
+  const payload = buildDraftPayload();
+
+  console.log("Draft payload ->", payload);
+
+  try {
+    await dispatch(saveDraft(payload, 1));
+
+    notify(`${ICONS.save} Draft saved successfully`);
+  } catch (err) {
+    notify("⚠️ Draft save failed");
+  }
+};
+
+const handleSubmitOrder = () => {
+  const validationMessage = validateOrderForSubmit();
+
+  if (validationMessage) {
+    notify(validationMessage);
+    return;
+  }
+
+  notify(`${ICONS.rocket} Order submitted successfully!`);
+};
+
+// const saveDraft = async () => {
+//   const payload = buildDraftPayload();
+//   console.log("Draft payload →", payload);         // inspect in DevTools
+
+//   try {
+//     // Replace this URL with your actual endpoint
+//     const res = await fetch("/api/OrderProcess/save", {
+//       method:  "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body:    JSON.stringify(payload),
+//     });
+
+//     if (!res.ok) throw new Error(`Server responded ${res.status}`);
+//     notify(`${ICONS.save} Draft saved — SO-2026-0413`);
+//   } catch (err) {
+//     console.error("Save draft failed:", err);
+//     notify("⚠️ Draft save failed — check console");
+//   }
+// };
+
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-800 dark:bg-[#0c0e13] dark:text-slate-100">
@@ -970,8 +1126,9 @@ const mappedDiscounts = [
             <div className="flex items-center gap-2">
                <ExistingOrdersButton onClick={() => setOrdersOpen(true)} />
               <code className="rounded-lg border border-[var(--border)] bg-[var(--primary)]/5 px-2 py-1.5 text-[14px] text-[var(--primary)]">REF# SO-2026-0413</code>
-              <button className={cx(MUTED, "hidden sm:block")} type="button" onClick={() => notify(`${ICONS.save} Draft saved - SO-2026-0413`)}>Save Draft</button>
-              <button className={PRIMARY} type="button" onClick={() => orderType ? notify(`${ICONS.rocket} Order submitted successfully!`) : notify("Please select an order type first")}>Submit</button>
+              {/* <button className={cx(MUTED, "hidden sm:block")} type="button" onClick={() => notify(`${ICONS.save} Draft saved - SO-2026-0413`)}>Save Draft</button> */}
+              <button className={cx(MUTED, "hidden sm:block")} type="button" onClick={handleSaveDraft}>Save Draft</button>
+              <button className={PRIMARY} type="button" onClick={handleSubmitOrder}>Submit</button>
             </div>
             {/* <Draft /> */}
           </div>
@@ -1116,6 +1273,7 @@ const mappedDiscounts = [
                 onToggle={togglePanel}
                 notifyParty={notifyParty}
                 setNotifyParty={setNotifyParty}
+                customerSelected={Boolean(customer)}
               />}
               {showPlant && <PlantPanel key="plant" type={orderType} sourcePlant={sourcePlant} destinationPlant={destinationPlant} setSourcePlant={setSourcePlant} setDestinationPlant={setDestinationPlant} notify={notify} collapsed={collapsed.plant} onToggle={togglePanel} />}
             </AnimatePresence>
@@ -1131,7 +1289,7 @@ const mappedDiscounts = [
             </AnimatePresence>
           </div>
 
-          <Sidebar config={config} theme={theme} entity={entity} customer={customer} showCustomer={showCustomer} showPlant={showPlant} source={source} destination={destination} orderType={orderType} isExternal={isExternal} items={items} totals={totals} formatMoney={formatMoney} notify={notify} onPreview={() => setPreviewOpen(true)} />
+          <Sidebar config={config} theme={theme} entity={entity} customer={customer} showCustomer={showCustomer} showPlant={showPlant} source={source} destination={destination} orderType={orderType} isExternal={isExternal} items={items} totals={totals} formatMoney={formatMoney} notify={notify} onPreview={() => setPreviewOpen(true)} saveDraft={handleSaveDraft} submitOrder={handleSubmitOrder} shipAddress={shipAddress} billAddress={billAddress} />
         </div>
         <ItemSelectorDrawer
           open={selectorOpen}
@@ -1187,8 +1345,15 @@ function CustomerPanel({ customer, entity, open, search, filtered, collapsed, on
       <Panel section="customer" title="Customer" icon={ICONS.customer} badge="Step 3" collapsed={collapsed} onToggle={onToggle}>
         <Field label="Customer Master" required>
           <div data-customer-picker className="relative">
-            <button type="button" className="flex w-full items-center gap-3 rounded-lg border border-emerald-500/30 bg-white p-3 text-left dark:bg-slate-800" onClick={onOpen}>
-              {customer && <Avatar item={customer} />}<span className="flex-1"><strong className="block text-xs text-slate-800 dark:text-slate-100">{customer?.name}</strong><small className="normal-case tracking-normal text-slate-500">{customer?.code} - {customer?.terms} - Credit {customer?.currency} {customer?.credit}</small></span><em className="text-[10px] not-italic text-slate-500">Change &gt;</em>
+            <button type="button" className={cx("flex w-full items-center gap-3 rounded-lg border bg-white p-3 text-left dark:bg-slate-800", customer ? "border-emerald-500/30" : "border-slate-300 dark:border-slate-700")} onClick={onOpen}>
+              {customer ? <Avatar item={customer} /> : <b className="mb-2 flex size-8 items-center justify-center rounded-lg bg-slate-200 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-300">?</b>}
+              <span className="flex-1">
+                <strong className="block text-xs text-slate-800 dark:text-slate-100">{customer?.name || "Select Customer"}</strong>
+                <small className="normal-case tracking-normal text-slate-500">
+                  {customer ? `${customer?.code} - ${customer?.terms} - Credit ${customer?.currency} ${customer?.credit}` : "Customer details will load after selection"}
+                </small>
+              </span>
+              <em className="text-[10px] not-italic text-slate-500">{customer ? "Change >" : "Choose >"}</em>
             </button>
             <AnimatePresence>{open && <motion.div {...rise} className="absolute left-0 right-0 top-[calc(100%+5px)] z-30 max-h-[350px] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
               <label className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">{ICONS.search}<input autoFocus value={search} placeholder="Search customer..." className="flex-1 bg-transparent text-xs text-slate-800 outline-none dark:text-white" onChange={(event) => onSearch(event.target.value)} /></label>
@@ -1213,16 +1378,20 @@ function AddressPanel({
   collapsed, onToggle,
   customerAddresses = { ship: [], bill: [] },
   notifyParty,
-  setNotifyParty
+  setNotifyParty,
+  customerSelected
 }) {
   return (
     <motion.div {...rise}>
       <Panel section="address" title="Ship / Bill / Payment" icon={ICONS.address} badge="Step 4" collapsed={collapsed} onToggle={onToggle}>
+        {!customerSelected ? (
+          <Info>Select a customer to load shipping addresses, billing addresses, and payment details.</Info>
+        ) : null}
         <div className="mb-3 flex gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-[#0c0e13]">
           {[["bill", `${ICONS.pay} Bill To`], ["ship", `${ICONS.truck} Ship To`], ["pay", `${ICONS.bank} Payment`]].map(([id, label]) => <button key={id} type="button" className={cx("flex-1 rounded-md py-2 text-xs font-semibold text-slate-500", tab === id && "bg-white text-slate-900 shadow dark:bg-[#111318] dark:text-white")} onClick={() => setTab(id)}>{label}</button>)}
         </div>
         <AnimatePresence mode="wait">
-          {tab === "ship" && <motion.div key="ship" {...rise}>
+          {tab === "ship" && customerSelected && <motion.div key="ship" {...rise}>
             {customerAddresses?.ship?.length > 0
               ? customerAddresses.ship
                 .filter((address) => !billAddress || Number(address.billID) === Number(billAddress))
@@ -1240,21 +1409,7 @@ function AddressPanel({
                     }}
                   />
                 ))
-              : ADDRESSES.map((address) => (
-                <Address
-                  key={address.id}
-                  selected={shipAddress === address.id}
-                  address={address}
-                  onClick={() => {
-                    setShipAddress(address.id);
-                    // Auto map bill address
-                    if (address.linkedBillAddress) {
-                      setBillAddress(address.linkedBillAddress.id);
-                    }
-                    notify(`${ICONS.address} Address selected`);
-                  }}
-                />
-              ))
+              : <p className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">No shipping addresses available for the selected customer.</p>
             }<Divider>Agent Or notify address</Divider>
             <Grid columns={3}>
               <Field label="Name">
@@ -1318,7 +1473,7 @@ function AddressPanel({
               </Field>
             </Grid>
           </motion.div>}
-          {tab === "bill" &&
+          {tab === "bill" && customerSelected &&
             <motion.div key="bill" {...rise}>
               {customerAddresses?.bill?.length > 0
                 ? customerAddresses.bill
@@ -1342,21 +1497,12 @@ function AddressPanel({
                       }}
                     />
                   ))
-                : <Address
-                  selected={billAddress === "default-bill"}
-                  address={{
-                    type: "Billing / Accounts",
-                    first: "456 Finance Avenue, Floor 8",
-                    second: "San Francisco, CA 94103 - USA",
-                    isDefault: true
-                  }}
-                  onClick={() => { setBillAddress("default-bill"); }}
-                />
+                : <p className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">No billing addresses available for the selected customer.</p>
               }
 
             </motion.div>}
 
-          {tab === "pay" && <motion.div key="pay" {...rise}><Divider className="mt-0">Payment Terms</Divider><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{PAYMENT_TERMS.map(([name, desc]) => <motion.button whileHover={{ y: -1 }} key={name} type="button" className={cx("rounded-lg border border-slate-200 bg-slate-50 p-2 text-center dark:border-slate-700 dark:bg-slate-800", paymentTerm === name && "border-purple-500 bg-purple-500/[.08]")} onClick={() => { setPaymentTerm(name); notify(`${ICONS.pay} Payment: ${name}`); }}>
+          {tab === "pay" && customerSelected && <motion.div key="pay" {...rise}><Divider className="mt-0">Payment Terms</Divider><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{PAYMENT_TERMS.map(([name, desc]) => <motion.button whileHover={{ y: -1 }} key={name} type="button" className={cx("rounded-lg border border-slate-200 bg-slate-50 p-2 text-center dark:border-slate-700 dark:bg-slate-800", paymentTerm === name && "border-purple-500 bg-purple-500/[.08]")} onClick={() => { setPaymentTerm(name); notify(`${ICONS.pay} Payment: ${name}`); }}>
             <strong className={cx("block text-xs", paymentTerm === name && "text-purple-500 dark:text-purple-400")}>{name}</strong>
             <small className="text-[9px] text-slate-500">{desc}</small></motion.button>)}</div><Grid columns={2} className="mt-3">
               {/* <Field label="Payment Method"><select><option>Bank Transfer</option><option>Cheque</option><option>Credit Card</option></select></Field> */}
@@ -2221,8 +2367,8 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
   );
 }
 
-function Sidebar({ config, theme, entity, customer, showCustomer, showPlant, source, destination, orderType, isExternal, items, totals, formatMoney, notify, onPreview }) {
-  return <aside className="lg:sticky lg:top-[68px]"><AnimatePresence>{config && <motion.div {...rise} className={cx("mb-2.5 grid grid-cols-[auto_1fr] items-center rounded-lg border px-3 py-2.5", theme.bg, theme.border, theme.text)}><span className="row-span-2 mr-2 text-lg">{config.icon}</span><strong className="text-xs">{config.name}</strong><small className="text-[10px] opacity-80">{config.showCustomer ? "External - Customer - Delivery" : "Internal - No customer - No delivery"}</small></motion.div>}</AnimatePresence><motion.div layout className={cx("mb-2.5 flex flex-col rounded-xl border p-4 text-center", theme.bg, theme.border, theme.text)}><small className="text-[10px] font-bold uppercase tracking-[.1em]">Grand Total</small><strong className="font-serif text-3xl font-normal">{formatMoney(totals.grand)}</strong><span className="font-mono text-[10px] text-slate-500">{customer?.currency} - SO-2026-0413</span></motion.div><SummaryCard title={<span className="flex w-full justify-between">Order Summary <Draft /></span>}><Summary label="Order #" value="SO-2026-0413" accent /><Summary label="Entity" value={entity.name} /><Summary label="Order Type" value={config?.name || "- not selected -"} />{showCustomer && <Summary label="Customer" value={customer?.name} green />}{showPlant && <Summary label="Plant" value={orderType === "ipt" ? `${source?.id} -> ${destination?.id}` : source?.name} amber />}<Summary label="Date" value="22 May 2026" /><Summary label="Items" value={`${items.length}`} blue />{isExternal && <Summary label="Subtotal" value={formatMoney(totals.gross)} />}{isExternal && <Summary label="Discounts" value={`-${formatMoney(totals.lineDiscount + totals.documentDiscount)}`} red />}{isExternal && <Summary label="Tax" value={`+${formatMoney(totals.totalTax)}`} />}<Summary label="Grand Total" value={formatMoney(totals.grand)} accent total /><div className="mt-3 flex flex-col gap-1.5 border-t border-slate-200 pt-3 dark:border-slate-800"><button className={PRIMARY} type="button" onClick={() => config ? notify(`${ICONS.rocket} Order submitted successfully!`) : notify("Please select an order type first")}>{ICONS.rocket} Submit Order</button><button className={MUTED} type="button" onClick={() => notify(`${ICONS.save} Draft saved - SO-2026-0413`)}>{ICONS.save} Save Draft</button><button className={MUTED} type="button" onClick={onPreview}>{ICONS.preview} Preview</button></div></SummaryCard><SummaryCard title="Checklist"><Checklist done label="Entity selected" /><Checklist done={Boolean(config)} label="Order type chosen" /><Checklist done={Boolean(config)} label={config?.showCustomer ? "Customer selected" : config?.showPlant ? "Plant set" : "Customer / Plant set"} /><Checklist done={Boolean(config?.showAddress)} na={Boolean(config && !config.showAddress)} label={config?.showAddress ? "Address set" : "Address not applicable"} /><Checklist done={items.length > 0} label="Line items added" /><Checklist done={Boolean(config?.showDiscTax)} na={Boolean(config && !config.showDiscTax)} label={config?.showDiscTax ? "Discount & Tax" : "Discount not applicable"} /></SummaryCard></aside>;
+function Sidebar({ config, theme, entity, customer, showCustomer, showPlant, source, destination, orderType, isExternal, items, totals, formatMoney, notify, onPreview, saveDraft, submitOrder, shipAddress, billAddress }) {
+  return <aside className="lg:sticky lg:top-[68px]"><AnimatePresence>{config && <motion.div {...rise} className={cx("mb-2.5 grid grid-cols-[auto_1fr] items-center rounded-lg border px-3 py-2.5", theme.bg, theme.border, theme.text)}><span className="row-span-2 mr-2 text-lg">{config.icon}</span><strong className="text-xs">{config.name}</strong><small className="text-[10px] opacity-80">{config.showCustomer ? "External - Customer - Delivery" : "Internal - No customer - No delivery"}</small></motion.div>}</AnimatePresence><motion.div layout className={cx("mb-2.5 flex flex-col rounded-xl border p-4 text-center", theme.bg, theme.border, theme.text)}><small className="text-[10px] font-bold uppercase tracking-[.1em]">Grand Total</small><strong className="font-serif text-3xl font-normal">{formatMoney(totals.grand)}</strong><span className="font-mono text-[10px] text-slate-500">{customer?.currency} - SO-2026-0413</span></motion.div><SummaryCard title={<span className="flex w-full justify-between">Order Summary <Draft /></span>}><Summary label="Order #" value="SO-2026-0413" accent /><Summary label="Entity" value={entity?.name || "- not selected -"} /><Summary label="Order Type" value={config?.name || "- not selected -"} />{showCustomer && <Summary label="Customer" value={customer?.name || "Select Customer"} green />}{showPlant && <Summary label="Plant" value={orderType === "ipt" ? `${source?.id} -> ${destination?.id}` : source?.name} amber />}<Summary label="Date" value="22 May 2026" /><Summary label="Items" value={`${items.length}`} blue />{isExternal && <Summary label="Subtotal" value={formatMoney(totals.gross)} />}{isExternal && <Summary label="Discounts" value={`-${formatMoney(totals.lineDiscount + totals.documentDiscount)}`} red />}{isExternal && <Summary label="Tax" value={`+${formatMoney(totals.totalTax)}`} />}<Summary label="Grand Total" value={formatMoney(totals.grand)} accent total /><div className="mt-3 flex flex-col gap-1.5 border-t border-slate-200 pt-3 dark:border-slate-800"><button className={PRIMARY} type="button" onClick={submitOrder}>{ICONS.rocket} Submit Order</button><button className={MUTED} type="button" onClick={saveDraft}>{ICONS.save} Save Draft</button><button className={MUTED} type="button" onClick={onPreview}>{ICONS.preview} Preview</button></div></SummaryCard><SummaryCard title="Checklist"><Checklist done={Boolean(entity)} label="Entity selected" /><Checklist done={Boolean(config)} label="Order type chosen" /><Checklist done={showCustomer ? Boolean(customer) : Boolean(config)} label={config?.showCustomer ? "Customer selected" : config?.showPlant ? "Plant set" : "Customer / Plant set"} /><Checklist done={config?.showAddress ? Boolean(customer) && Boolean(shipAddress) && Boolean(billAddress) : Boolean(config?.showAddress)} na={Boolean(config && !config.showAddress)} label={config?.showAddress ? "Address set" : "Address not applicable"} /><Checklist done={items.length > 0} label="Line items added" /><Checklist done={Boolean(config?.showDiscTax)} na={Boolean(config && !config.showDiscTax)} label={config?.showDiscTax ? "Discount & Tax" : "Discount not applicable"} /></SummaryCard></aside>;
 }
 
 function PlantChooser({ title, selected, onChoose, type }) {
@@ -2321,8 +2467,22 @@ function PDFPreviewModal({ open, onClose, data }) {
             &times;
           </button>
         </header>
-        <div className="flex-1 bg-slate-100 dark:bg-[#0c0e13]">
-          <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+        <div className="flex flex-1 flex-col bg-slate-100 dark:bg-[#0c0e13]">
+          <div className="flex items-center justify-between bg-blue-50 px-5 py-2.5 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+            <span>Having trouble viewing the PDF? If the PDF is not displayed, you can download it directly.</span>
+            <PDFDownloadLink
+              document={
+                <Document title={`Proforma Invoice - ${data?.orderRefNo || "SO-2026-0413"}`}>
+                  <ProformaPDF data={data} />
+                </Document>
+              }
+              fileName={`Proforma_Invoice_${data?.orderRefNo || "SO-2026-0413"}.pdf`}
+              className="rounded bg-blue-100 px-3 py-1 font-semibold hover:bg-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30"
+            >
+              {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
+            </PDFDownloadLink>
+          </div>
+          <PDFViewer style={{ width: "100%", flex: 1, border: "none" }}>
             <Document title={`Proforma Invoice - ${data?.orderRefNo || "SO-2026-0413"}`}>
               <ProformaPDF data={data} />
             </Document>
