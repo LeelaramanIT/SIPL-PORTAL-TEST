@@ -125,6 +125,22 @@ const PAYMENT_TERMS = [
   ["COD", "Cash on delivery"], ["Advance", "Pay before ship"], ["2/10 N30", "2% disc in 10d"], ["EOM", "End of month"],
 ];
 
+// ── TEMP: Entity export/authorised address lookup ──────────────────────────
+// entityMaster API does not currently return an address field, so this is a
+// stopgap keyed by entityCode. Remove this map once the backend adds a real
+// address field (e.g. entityAddress) to the entity master response, and
+// switch `exportAuthorisedAddress` below to read from `item` directly.
+function formatEntityDisplayAddress(item) {
+  return [
+    item?.name || item?.entityName || "",
+    item?.code || item?.entityCode ? `Code: ${item?.code || item?.entityCode}` : "",
+    item?.initials || item?.entityShortName ? `Short Name: ${item?.initials || item?.entityShortName}` : "",
+    item?.country || item?.countryCode || "",
+  ]
+    .filter(Boolean)
+    .join("~");
+}
+
 const THEME = {
   std: { text: "text-blue-400", border: "border-blue-500/35", bg: "bg-blue-500/[.07]", selected: "border-blue-500 bg-blue-500/[.07]" },
   blk: { text: "text-purple-400", border: "border-purple-500/35", bg: "bg-purple-500/[.07]", selected: "border-purple-500 bg-purple-500/[.07]" },
@@ -198,6 +214,82 @@ function Info({ tone = "blue", children }) {
 
 const MotionSection = motion.section;
 
+export function validateLineItems(items) {
+  const errors = [];
+  const duplicateRows = new Set();
+  const invalidRows = new Set();
+  
+  const occurrences = {};
+
+  items.forEach((item, index) => {
+    const rowId = item.id;
+    const lineNumber = index + 1;
+    
+    if (!item.code || String(item.code).trim() === "") {
+      errors.push({ id: rowId, type: "Missing Code", message: `Line ${lineNumber} - Missing item code` });
+      invalidRows.add(rowId);
+    }
+    
+    if (Number(item.qty) <= 0) {
+      errors.push({ id: rowId, type: "Invalid Quantity", message: `Line ${lineNumber} - Quantity must be greater than zero` });
+      invalidRows.add(rowId);
+    }
+    
+    if (!item.desc || String(item.desc).trim() === "") {
+      errors.push({ id: rowId, type: "Missing Description", message: `Line ${lineNumber} - Missing description` });
+      invalidRows.add(rowId);
+    }
+    
+    if (Number(item.price) < 0) {
+      errors.push({ id: rowId, type: "Negative Price", message: `Line ${lineNumber} - Price cannot be negative` });
+      invalidRows.add(rowId);
+    }
+    
+    if (item.isInvalid) {
+      errors.push({ id: rowId, type: "Invalid Assignment", message: `Line ${lineNumber} - ${item.errorMessage || "Invalid customer assignment"}` });
+      invalidRows.add(rowId);
+    }
+
+    const code = String(item.code || "").trim().toLowerCase();
+    const type = String(item._itemType || "").trim().toLowerCase();
+    const custPart = String(item.customerPartNo || item.customerPartNumber || item.custPartNo || "").trim().toLowerCase();
+    
+    if (code) {
+      const key = `${code}|${type}|${custPart}`;
+      if (!occurrences[key]) {
+        occurrences[key] = [];
+      }
+      occurrences[key].push({ id: rowId, line: lineNumber, code: item.code });
+    }
+  });
+
+  Object.values(occurrences).forEach((group) => {
+    if (group.length > 1) {
+      group.forEach((entry) => {
+        duplicateRows.add(entry.id);
+        errors.push({ 
+          id: entry.id, 
+          type: "Duplicate Item", 
+          message: `Line ${entry.line} - Duplicate Item Code ${entry.code}` 
+        });
+      });
+    }
+  });
+
+  errors.sort((a, b) => {
+    const lineA = parseInt(a.message.match(/\d+/)?.[0] || "0", 10);
+    const lineB = parseInt(b.message.match(/\d+/)?.[0] || "0", 10);
+    return lineA - lineB;
+  });
+
+  return {
+    hasErrors: errors.length > 0,
+    errors,
+    duplicateRows,
+    invalidRows
+  };
+}
+
 function Panel({ section, title, icon, badge, collapsed, onToggle, children }) {
   return (
     <MotionSection layout className="mb-3 overflow-visible rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#111318] dark:shadow-none">
@@ -221,6 +313,7 @@ export default function SaleOrderEntry() {
   const [entity, setEntity] = useState(null);
   const [currency, setCurrency] = useState(null)
   const [orderType, setOrderType] = useState(null);
+  const [orderTypeID, setOrderTypeID] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [customerOpen, setCustomerOpen] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
@@ -248,6 +341,8 @@ export default function SaleOrderEntry() {
   const { master } = useSelector((state) => state.proformaInvoice);
   const [ordersOpen, setOrdersOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [previewInstanceKey, setPreviewInstanceKey] = useState(0);
   const [orderDate, setOrderDate] = useState("2026-05-22");
   const [desiredShipDate, setDesiredShipDate] = useState("2026-06-05");
   const [customerPo, setCustomerPo] = useState("");
@@ -264,6 +359,10 @@ export default function SaleOrderEntry() {
   });
   const [discountType, setDiscountType] = useState("");
   console.log(listOfItems);
+
+  useEffect(() => {
+  if (entityMaster?.length) console.log("Entity sample:", entityMaster[0]);
+}, [entityMaster]);
   
   const config = orderType ? ORDER_TYPES[orderType] : null;
   const theme = THEME[orderType || "std"];
@@ -285,6 +384,8 @@ export default function SaleOrderEntry() {
       window.clearTimeout(toastTimer.current);
     };
   }, []);
+
+  const validation = useMemo(() => validateLineItems(items), [items]);
 
   const catalogueMap = useMemo(() => {
   const map = {};
@@ -331,8 +432,6 @@ export default function SaleOrderEntry() {
   return map;
 }, [listOfItems]);
 
-
-
 const resolveImportCode = (rawCode) => {
   if (!rawCode) return { valid: false, message: "Item code missing" };
 
@@ -369,6 +468,7 @@ const resolveImportCode = (rawCode) => {
     country: item.countryCode,
     taxRegion: item.taxRegion,
     // optional UI fields
+    exportAuthorisedAddress: formatEntityDisplayAddress(item),
     tone: "blue",
     location: item.countryCode,
   }));
@@ -493,7 +593,7 @@ const resolveImportCode = (rawCode) => {
   const updateItem = (id, field, value) => setItems((current) => current.map((item) => item.id === id ? { ...item, [field]: ["qty", "price", "disc", "tax"].includes(field) ? Number(value) || 0 : value } : item));
   const appendItem = (item) => setItems((current) => [...current, { id: nextId.current++, uom: "EA", qty: 1, price: 0, disc: 0, tax: 9, ...item }]);
   const chooseCatalogItem = (rowId, item) => {
-    setItems((current) => current.map((row) => row.id === rowId ? { ...row, code: item.code, desc: item.name, uom: item.uom || "EA", price: item.price, _itemType: item._itemType || row._itemType, isInvalid: false, errorMessage: "" } : row));
+    setItems((current) => current.map((row) => row.id === rowId ? { ...row, code: item.code, desc: item.name, uom: item.uom || "EA", price: item.price, _itemType: item._itemType || row._itemType, _raw: item._raw || row._raw, isInvalid: false, errorMessage: "" } : row));
     setCatalogRow(null);
     notify(`${ICONS.item} ${item.name || item.code} selected`);
   };
@@ -829,6 +929,8 @@ results.added.push({
         edcNo: item._raw?.edcNo || item._raw?.edcno || item.edcNo || "",
         color: item._raw?.color || item.color || "",
         des: item._raw?.des || item.des || "",
+        description: item.desc || item._raw?.piD_Details || item._raw?.riM_Details || "",
+        itemType: item._itemType || "",
         itemQty: Number(item.qty || 0),
         finishedWt: Number(item._raw?.finishedWt || item._raw?.finishedwt || item.finishedWt || 0),
         rimfinishedwt: Number(item._raw?.rimWt || item._raw?.rimfinishedwt || item.rimfinishedwt || 0),
@@ -886,9 +988,9 @@ const mappedDiscounts = [
     return {
       // ── Exporter / Entity details ──────────────────────────────────────────
       // Spreading item in mappedEntities preserves fields like exporterAddressFormatted
-      exportAuthorisedAddress: entity?.exporterAddressFormatted || entity?.exportAuthorisedAddress || entity?.exporterAuthorizedAddress || entity?.entityAddress || entity?.address || "SUNDARAM INDUSTRIES PRIVATE LIMITED\nMMN & PDK PLANT",
+      exportAuthorisedAddress: entity?.exportAuthorisedAddress || formatEntityDisplayAddress(entity) || "",
       plantAddress: source?.location || "",
-      authorisedSignature: entity?.entityName || "",
+      authorisedSignature: entity?.name || entity?.entityName || "",
       custFullName: customer?.name || "",
 
       // ── Billing Address ──────────────────────────────────────────────────────
@@ -961,9 +1063,11 @@ const buildDraftPayload = () => {
   const activeBillAddr = customerAddresses.bill.find(a => a.id === billAddress);
 
   return {
+    RecordStatus:'Draft',
     entityCode:       entity?.code        ?? "",
     entityName:       entity?.name        ?? "",
-    orderType:        orderType           ?? "",
+    // orderType:        orderType           ?? "",
+    orderType:        1           ?? "",
     orderRefID:       "SO-2026-0413",
     orderDate:        orderDate
                         ? new Date(orderDate).toISOString()
@@ -1072,6 +1176,9 @@ const buildDraftPayload = () => {
 };   
 
 const handleSaveDraft = async () => {
+  if (validation.hasErrors) {
+    notify(`⚠️ Saving draft with ${validation.errors.length} validation error(s).`);
+  }
   const payload = buildDraftPayload();
 
   console.log("Draft payload ->", payload);
@@ -1086,6 +1193,11 @@ const handleSaveDraft = async () => {
 };
 
 const handleSubmitOrder = () => {
+  if (validation.hasErrors) {
+    notify(`Cannot submit order. Please fix ${validation.errors.length} validation error(s).`);
+    return;
+  }
+
   const validationMessage = validateOrderForSubmit();
 
   if (validationMessage) {
@@ -1094,6 +1206,16 @@ const handleSubmitOrder = () => {
   }
 
   notify(`${ICONS.rocket} Order submitted successfully!`);
+};
+
+const handleOpenPreview = () => {
+  if (validation.hasErrors) {
+    notify(`Opening PDF with ${validation.errors.length} validation warning(s).`);
+  }
+
+  setPreviewData(mapFormToPDFData());
+  setPreviewInstanceKey((current) => current + 1);
+  setPreviewOpen(true);
 };
 
 // const saveDraft = async () => {
@@ -1233,6 +1355,7 @@ const handleSubmitOrder = () => {
                 </Field>
                 {!["mts", "tri", "ipt"].includes(orderType) && (
                   <>
+                    <Field label="PO Date"><input type="date" /></Field>
                     <Field label="Customer PO #">
                       <input
                         placeholder="Their reference"
@@ -1240,6 +1363,7 @@ const handleSubmitOrder = () => {
                         onChange={(e) => setCustomerPo(e.target.value)}
                       />
                     </Field>
+                    
                     <Field label="Email Reference #">
                       <input
                         placeholder="Email REF / Order ref"
@@ -1278,7 +1402,7 @@ const handleSubmitOrder = () => {
               {showPlant && <PlantPanel key="plant" type={orderType} sourcePlant={sourcePlant} destinationPlant={destinationPlant} setSourcePlant={setSourcePlant} setDestinationPlant={setDestinationPlant} notify={notify} collapsed={collapsed.plant} onToggle={togglePanel} />}
             </AnimatePresence>
 
-            <ItemsPanel config={config} items={items} isExternal={isExternal} catalogRow={catalogRow} setCatalogRow={setCatalogRow} updateItem={updateItem} chooseCatalogItem={chooseCatalogItem} appendItem={appendItem} setItems={setItems} formatMoney={formatMoney} simulateDocumentImport={simulateDocumentImport} setPasteOpen={setPasteOpen} downloadTemplate={downloadTemplate} notify={notify} collapsed={collapsed.items} onToggle={togglePanel} onOpenSelector={() => setSelectorOpen(true)} catalogueMap={catalogueMap} />
+            <ItemsPanel validation={validation} config={config} items={items} isExternal={isExternal} catalogRow={catalogRow} setCatalogRow={setCatalogRow} updateItem={updateItem} chooseCatalogItem={chooseCatalogItem} appendItem={appendItem} setItems={setItems} formatMoney={formatMoney} simulateDocumentImport={simulateDocumentImport} setPasteOpen={setPasteOpen} downloadTemplate={downloadTemplate} notify={notify} collapsed={collapsed.items} onToggle={togglePanel} onOpenSelector={() => setSelectorOpen(true)} catalogueMap={catalogueMap} />
             <AnimatePresence>
               {/* {isExternal && <DiscountPanel taxes={taxes} setTaxes={setTaxes} charges={charges} setCharges={setCharges} discountMode={discountMode} setDiscountMode={setDiscountMode} docDiscount={docDiscount} setDocDiscount={setDocDiscount} entity={entity} totals={totals} formatMoney={formatMoney} nextId={nextId} collapsed={collapsed.discount} onToggle={togglePanel} />} */}
               {isExternal && (
@@ -1289,7 +1413,7 @@ const handleSubmitOrder = () => {
             </AnimatePresence>
           </div>
 
-          <Sidebar config={config} theme={theme} entity={entity} customer={customer} showCustomer={showCustomer} showPlant={showPlant} source={source} destination={destination} orderType={orderType} isExternal={isExternal} items={items} totals={totals} formatMoney={formatMoney} notify={notify} onPreview={() => setPreviewOpen(true)} saveDraft={handleSaveDraft} submitOrder={handleSubmitOrder} shipAddress={shipAddress} billAddress={billAddress} />
+          <Sidebar config={config} theme={theme} entity={entity} customer={customer} showCustomer={showCustomer} showPlant={showPlant} source={source} destination={destination} orderType={orderType} isExternal={isExternal} items={items} totals={totals} formatMoney={formatMoney} notify={notify} onPreview={handleOpenPreview} saveDraft={handleSaveDraft} submitOrder={handleSubmitOrder} shipAddress={shipAddress} billAddress={billAddress} validation={validation} />
         </div>
         <ItemSelectorDrawer
           open={selectorOpen}
@@ -1326,12 +1450,13 @@ const handleSubmitOrder = () => {
     onClose={() => setOrdersOpen(false)}
     onOpen={() => setOrdersOpen(false)}
   />
-  {previewOpen && (
+  {previewOpen && previewData && (
     <PDFPreviewModal
-      key="pdf-preview-modal"
+      key={`pdf-preview-modal-${previewInstanceKey}`}
       open={previewOpen}
       onClose={() => setPreviewOpen(false)}
-      data={mapFormToPDFData()}
+      data={previewData}
+      previewInstanceKey={previewInstanceKey}
     />
   )}
 </AnimatePresence>
@@ -1361,8 +1486,9 @@ function CustomerPanel({ customer, entity, open, search, filtered, collapsed, on
             </motion.div>}</AnimatePresence>
           </div>
         </Field>
-        <Grid className="mt-3"><Field label="scot User ID"><input value={customer?.username || ""} readOnly /></Field><Field label="Email"><input type="email" value={customer?.email || ""} readOnly /></Field><Field label="Phone"><input value={customer?.custMobile} /></Field> <Field label="Sales Rep"><input value={customer?.lead || ""} readOnly /></Field><Field label="PO Date"><input type="date" /></Field>
+        <Grid className="mt-3"><Field label="scot User ID"><input value={customer?.username || ""} readOnly /></Field><Field label="Email"><input type="email" value={customer?.email || ""} readOnly /></Field><Field label="Phone"><input value={customer?.custMobile} /></Field> <Field label="Sales Rep"><input value={customer?.lead || ""} readOnly /></Field>
           {/* <Field label="Tax Reg #"><input placeholder="GST/VAT number" /></Field> */}<Field label="Currency"><input value={customer?.currency} readOnly /></Field>
+          {/*  */}
         </Grid>
       </Panel>
     </motion.div>
@@ -1541,6 +1667,7 @@ function ItemsPanel({
   notify, collapsed, onToggle,
   onOpenSelector,
   catalogueMap = {},           // ← ADD THIS
+  validation,
 }) {
   const tool =
     "relative flex min-w-[90px] flex-col items-center gap-1 rounded-lg border bg-slate-50 px-3 py-2 text-sm transition hover:-translate-y-0.5 dark:bg-slate-800";
@@ -1559,6 +1686,7 @@ function ItemsPanel({
   const [activeType,   setActiveType]   = useState("ALL");
   const [selectedRows, setSelectedRows] = useState(() => new Set());
   const [selectedOnly, setSelectedOnly] = useState(false);
+  const [showErrorsOnly, setShowErrorsOnly] = useState(false);
 
   const TYPE_STYLES = {
     ALL:      { bg: "bg-slate-500/10",   text: "text-slate-500",   border: "border-slate-400/50"  },
@@ -1581,11 +1709,12 @@ function ItemsPanel({
     const q = lineSearch.toLowerCase();
     return items.filter(item => {
       if (selectedOnly && !selectedRows.has(item.id)) return false;
+      if (showErrorsOnly && !(validation?.duplicateRows?.has(item.id) || validation?.invalidRows?.has(item.id))) return false;
       if (activeType !== "ALL" && (item._itemType || "ITEM") !== activeType) return false;
       if (!q) return true;
       return `${item.code} ${item.desc} ${item.customerPartNo || item.customerPartNumber || item.custPartNo || ""}`.toLowerCase().includes(q);
     });
-  }, [items, lineSearch, activeType, selectedOnly, selectedRows]);
+  }, [items, lineSearch, activeType, selectedOnly, selectedRows, showErrorsOnly, validation]);
 
   const hasCustomerPartNo = useMemo(
     () => items.some((item) => String(item.customerPartNo || item.customerPartNumber || item.custPartNo || "").trim()),
@@ -1654,6 +1783,27 @@ function ItemsPanel({
       collapsed={collapsed}
       onToggle={onToggle}
     >
+      {/* ── Validation Summary ── */}
+      {validation?.hasErrors && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/10">
+          <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-red-800 dark:text-red-400">
+            ⚠️ Validation Errors ({validation.errors.length})
+          </h4>
+          <ul className="max-h-32 overflow-y-auto space-y-1">
+            {validation.errors.map((error, idx) => (
+              <li key={idx} className="text-xs text-red-700 dark:text-red-300">
+                <button type="button" className="hover:underline text-left" onClick={() => {
+                  const row = document.getElementById(`row-${error.id}`);
+                  if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}>
+                  • {error.message}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* ── Toolbar ── */}
       <div className="mb-3 flex flex-wrap gap-2">
         <button type="button" className={cx(tool, "border-amber-500/25")} onClick={onOpenSelector}>
@@ -1736,6 +1886,16 @@ function ItemsPanel({
               </button>
             );
           })}
+          {/* Show Errors Only Filter */}
+          <label className="ml-2 flex items-center gap-2 cursor-pointer text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
+            <input 
+              type="checkbox" 
+              checked={showErrorsOnly} 
+              onChange={(e) => setShowErrorsOnly(e.target.checked)} 
+              className="accent-red-500 w-3 h-3"
+            />
+            Show Errors Only
+          </label>
         </div>
 
         {/* Result count */}
@@ -1809,6 +1969,7 @@ function ItemsPanel({
                   uom: "EA",
                   price: entry.price,
                   _itemType: entry.type,
+                  _raw: entry._raw,
                 })}
               >
                 <span>
@@ -2059,136 +2220,6 @@ function ItemsPanel({
   );
 }
 
-// function LogisticsPanel({ logistics, setLogistics, collapsed, onToggle, }) {
-//   const updateField = (field, value) => { setLogistics((prev) => ({ ...prev, [field]: value, })); };
-//   return (
-//     <motion.div {...rise}><Panel section="logistics" title="Logistics & Financial Details" icon={ICONS.truck} badge="Before Discount" collapsed={collapsed} onToggle={onToggle}>
-//       <Divider className="mt-0"> Logistics Details </Divider> <Grid columns={4}><Field label="Pre-Carriage by" required><select value={logistics.preCarriageBy} onChange={(e) => updateField("preCarriageBy", e.target.value)} > <option value="">Select</option><option>By Road</option><option>By Air</option><option>By Sea</option><option>By Rail</option></select></Field>
-//         <Field label="Final Destination" required>
-//   <input
-//     value={logistics.finalDestination}
-//     onChange={(e) => updateField("finalDestination", e.target.value)}
-//     placeholder="Enter destination"
-//   />
-// </Field>
-
-//         <Field label="Container Type" required>
-//           <select
-//             value={logistics.containerType}
-//             onChange={(e) =>
-//               updateField("containerType", e.target.value)
-//             }
-//           >
-//             <option value="">Select</option>
-//             <option>20 FT</option>
-//             <option>40 FT</option>
-//             <option>LCL</option>
-//             <option>Open Top</option>
-//           </select>
-//         </Field>
-
-//         <Field label="Packing Method" required>
-//           <select
-//             value={logistics.packingMethod}
-//             onChange={(e) =>
-//               updateField("packingMethod", e.target.value)
-//             }
-//           >
-//             <option value="">Select</option>
-//             <option>Wooden Box</option>
-//             <option>Pallet</option>
-//             <option>Carton</option>
-//             <option>Loose Packing</option>
-//           </select>
-//         </Field>
-//       </Grid>
-
-//       <Divider>
-//         Financials
-//       </Divider>
-
-//       <Grid columns={3}>
-//         <Field label="Incoterm">
-//           <select
-//             value={logistics.incoterm}
-//             onChange={(e) =>
-//               updateField("incoterm", e.target.value)
-//             }
-//           >
-//             <option value="">Select</option>
-//             <option>FOB</option>
-//             <option>CIF</option>
-//             <option>EXW</option>
-//             <option>DDP</option>
-//           </select>
-//         </Field>
-
-//         <Field label="Place of Incoterm" required>
-//           <input
-//             value={logistics.placeOfIncoterm}
-//             onChange={(e) =>
-//               updateField("placeOfIncoterm", e.target.value)
-//             }
-//             placeholder="Enter place"
-//           />
-//         </Field>
-
-//         <Field label="Lead Time" required>
-//           <select
-//             value={logistics.leadTime}
-//             onChange={(e) =>
-//               updateField("leadTime", e.target.value)
-//             }
-//           >
-//             <option value="">Select</option>
-//             <option>1 Week</option>
-//             <option>2 Weeks</option>
-//             <option>1 Month</option>
-//           </select>
-//         </Field>
-
-//         <Field label="Validity Date" required>
-//           <input
-//             type="date"
-//             value={logistics.validityDate}
-//             onChange={(e) =>
-//               updateField("validityDate", e.target.value)
-//             }
-//           />
-//         </Field>
-
-//         {/* <Field label="Payment Terms">
-//           <select
-//             value={logistics.paymentTerms}
-//             onChange={(e) =>
-//               updateField("paymentTerms", e.target.value)
-//             }
-//           >
-//             <option value="">Select</option>
-//             <option>Advance</option>
-//             <option>Net 30</option>
-//             <option>Net 45</option>
-//             <option>COD</option>
-//           </select>
-//         </Field> */}
-
-//         <Field label="Remarks" wide>
-//           <textarea
-//             className={INPUT}
-//             rows={3}
-//             value={logistics.remarks}
-//             onChange={(e) =>
-//               updateField("remarks", e.target.value)
-//             }
-//             placeholder="Enter remarks..."
-//           />
-//         </Field>
-//       </Grid>
-//     </Panel>
-//     </motion.div>
-//   );
-// }
-
 function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, setDiscountMode, docDiscount, setDocDiscount, entity, totals, formatMoney, nextId, collapsed, onToggle, discountType, setDiscountType }) {
   const updateTax = (id, field, value) => {
     setTaxes((current) => current.map((entry) => entry.id === id ? { ...entry, [field]: value } : entry));
@@ -2196,9 +2227,6 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
   const updateCharge = (id, field, value) => {
     setCharges((current) => current.map((entry) => entry.id === id ? { ...entry, [field]: value } : entry));
   };
-
-  // Local state for discount type — lives here, not in logistics
-  // const [discountType, setDiscountType] = useState("");
 
   const DISCOUNT_TYPE_OPTIONS = ["DISCOUNT", "CLAIM ADJUSTMENT", "LOYALTY DISCOUNT", "SEASONAL OFFER"];
   const CHARGE_TYPE_OPTIONS   = ["SURCHARGE", "PALLET CHARGES", "FREIGHT CHARGES", "FUMIGATION", "WRAPPING CHARGES", "BRAND PLATE MAKING CHARGES", "TARIFF"];
@@ -2348,7 +2376,7 @@ function DiscountPanel({ taxes, setTaxes, charges, setCharges, discountMode, set
                 </select>
               </Field> */}
 
-              {/* <Remove onClick={() => setCharges((c) => c.filter((e) => e.id !== charge.id))} /> */}
+              <Remove onClick={() => setCharges((c) => c.filter((e) => e.id !== charge.id))} />
             </motion.div>
           ))}
         </div>
@@ -2439,8 +2467,10 @@ function Add({ onClick, children }) {
   return <button className="mt-2 px-1 py-1 text-xs font-semibold text-blue-400 hover:text-blue-300" type="button" onClick={onClick}>+ {children}</button>;
 }
 
-function PDFPreviewModal({ open, onClose, data }) {
+function PDFPreviewModal({ open, onClose, data, previewInstanceKey }) {
   if (!open) return null;
+  const documentTitle = `Proforma Invoice - ${data?.orderRefNo || "SO-2026-0413"}`;
+  const fileName = `Proforma_Invoice_${data?.orderRefNo || "SO-2026-0413"}.pdf`;
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -2471,19 +2501,20 @@ function PDFPreviewModal({ open, onClose, data }) {
           <div className="flex items-center justify-between bg-blue-50 px-5 py-2.5 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
             <span>Having trouble viewing the PDF? If the PDF is not displayed, you can download it directly.</span>
             <PDFDownloadLink
+              key={`pdf-download-${previewInstanceKey}`}
               document={
-                <Document title={`Proforma Invoice - ${data?.orderRefNo || "SO-2026-0413"}`}>
+                <Document key={`pdf-download-document-${previewInstanceKey}`} title={documentTitle}>
                   <ProformaPDF data={data} />
                 </Document>
               }
-              fileName={`Proforma_Invoice_${data?.orderRefNo || "SO-2026-0413"}.pdf`}
+              fileName={fileName}
               className="rounded bg-blue-100 px-3 py-1 font-semibold hover:bg-blue-200 dark:bg-blue-500/20 dark:hover:bg-blue-500/30"
             >
               {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
             </PDFDownloadLink>
           </div>
-          <PDFViewer style={{ width: "100%", flex: 1, border: "none" }}>
-            <Document title={`Proforma Invoice - ${data?.orderRefNo || "SO-2026-0413"}`}>
+          <PDFViewer key={`pdf-viewer-${previewInstanceKey}`} style={{ width: "100%", flex: 1, border: "none" }}>
+            <Document key={`pdf-viewer-document-${previewInstanceKey}`} title={documentTitle}>
               <ProformaPDF data={data} />
             </Document>
           </PDFViewer>

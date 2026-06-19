@@ -10,18 +10,13 @@ const n  = (val) => String(Number(val) || 0);    // number → string
 const sf = (val, dec = 2) =>                     // number → fixed string
   (Number(val) || 0).toFixed(dec);
 
-// ── Font registration (once, guarded) ────────────────────────────────────────
-let _fontReady = false;
-function ensureFonts() {
-  if (_fontReady) return;
-  _fontReady = true;
-  Font.register({
-    family: "Roboto",
-    src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
-    fontWeight: "normal",
-  });
-  Font.registerHyphenationCallback((word) => [word]);
-}
+// ── Font registration (module level — must NOT be called during render) ───────
+Font.register({
+  family: "Roboto",
+  src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
+  fontWeight: "normal",
+});
+Font.registerHyphenationCallback((word) => [word]);
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const ITEMS_PER_PAGE       = 25;
@@ -236,10 +231,26 @@ const TableRows = ({ items, showEdc, showItemCode, showPONumber, startIndex = 0 
         const unitPx  = (Number(item?.basicPrice || 0) + Number(item?.rimUnitPrice || 0));
         const totalPx = unitPx * Number(item?.itemQty || 0);
 
-        // ✅ Description — always a string
-        const descText = item?.category === "SPLIT RIMS"
-          ? "SPLIT RIMS"
-          : `${s(item?.tyreSize)} / ${item?.tyreRim === "-" ? "0.00" : s(item?.tyreRim)} / ${s(item?.brand)} / ${s(item?.sidewall)} / ${s(item?.tyreType)} ${item?.assyRimstatus ? s(item?.edcNo) : ""} ${item?.color ? `${s(item.color)} ${s(item.des)}` : ""}`.trim();
+        // ✅ Description — format correctly for TYRE, RIM, or fallback to manual description
+        let descText = s(item?.description).trim();
+
+        if (item?.itemType === "RIM") {
+          const rimDetails = descText || s(item?.tyreRim);
+          if (item?.edcNo && !rimDetails.includes(item.edcNo)) {
+            descText = `${item.edcNo} ${rimDetails.startsWith("-") ? "" : "/ "}${rimDetails}`.trim();
+          } else {
+            descText = rimDetails || s(item?.edcNo);
+          }
+        } else if (item?.itemType === "TYRE" || item?.itemType === "ASSEMBLY" || (!descText && (item?.tyreSize || item?.brand))) {
+          const reconstructed = item?.category === "SPLIT RIMS"
+            ? "SPLIT RIMS"
+            : `${s(item?.tyreSize)} / ${item?.tyreRim === "-" ? "0.00" : s(item?.tyreRim)} / ${s(item?.brand)} / ${s(item?.sidewall)} / ${s(item?.tyreType)} ${item?.assyRimstatus ? s(item?.edcNo) : ""} ${item?.color ? `${s(item.color)} ${s(item.des)}` : ""}`.trim();
+          
+          const cleanReconstructed = reconstructed.replace(/[\/\s0.00]/g, "");
+          if (cleanReconstructed.length > 0) {
+            descText = reconstructed;
+          }
+        }
 
         return (
           <View key={index} style={styles.bodyRow}>
@@ -446,7 +457,8 @@ const SignatureBlock = ({ data }) => (
 
 // ── Main export ───────────────────────────────────────────────────────────────
 const ProformaPDF = ({ data }) => {
-  ensureFonts(); // ✅ called here, not at module level
+  console.log(data);
+
 
   const showEdc      = (data?.items || []).some((item) => item?.assyRimstatus === true);
   const showItemCode = (data?.items || []).some((item) => item?.partNumber);
