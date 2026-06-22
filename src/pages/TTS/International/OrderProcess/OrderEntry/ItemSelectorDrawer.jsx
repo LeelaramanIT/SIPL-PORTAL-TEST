@@ -32,6 +32,7 @@ const EMPTY_FILTERS = {
     processId: "",
     sidewall: "",
     brand: "",
+    tyreType: "",
     tyreSize: "",
     rimSize: "",
     edcNumber: "",
@@ -241,6 +242,8 @@ export default function ItemSelectorDrawer({ open, onClose, onConfirm, nextId, n
     const sidewallOptions = useMemo(() => [...new Set(catalogue.map(i => i.sidewall).filter(v => v && v !== "—"))], [catalogue]);
     const brandOptions    = useMemo(() => [...new Set(catalogue.map(i => i.brand).filter(v => v && v !== "—"))],    [catalogue]);
 
+    const tyreTypeOptions = useMemo(() => [...new Set(catalogue.map(i => i.tyreType).filter(v => v && v !== "â€”"))], [catalogue]);
+
     // Type counts
     const typeCounts = useMemo(() => ({
         ALL:      catalogue.length,
@@ -258,6 +261,7 @@ export default function ItemSelectorDrawer({ open, onClose, onConfirm, nextId, n
             if (filters.processId        && !item.processId.toLowerCase().includes(filters.processId.toLowerCase()))               return false;
             if (filters.sidewall         && item.sidewall  !== filters.sidewall)                                                   return false;
             if (filters.brand            && item.brand     !== filters.brand)                                                      return false;
+            if (filters.tyreType         && item.tyreType  !== filters.tyreType)                                                   return false;
             if (filters.tyreSize         && !item.tyreSize.toLowerCase().includes(filters.tyreSize.toLowerCase()))                 return false;
             if (filters.rimSize          && !item.rimSize.toLowerCase().includes(filters.rimSize.toLowerCase()))                   return false;
             if (filters.edcNumber        && !item.edcNumber.toLowerCase().includes(filters.edcNumber.toLowerCase()))               return false;
@@ -294,6 +298,7 @@ export default function ItemSelectorDrawer({ open, onClose, onConfirm, nextId, n
         { key: "processId",         label: "Process ID"         },
         { key: "sidewall",           label: "Sidewall"           },
         { key: "brand",             label: "Brand"              },
+        { key: "tyreType",          label: "Tyre Type"          },
         { key: "tyreSize",          label: "Tyre Size"          },
         { key: "rimSize",           label: "Rim Size"           },
         { key: "edcNumber",         label: "EDC Number"         },
@@ -490,6 +495,11 @@ export default function ItemSelectorDrawer({ open, onClose, onConfirm, nextId, n
                                                         <select value={filters.sidewall} onChange={e => setFilter("sidewall", e.target.value)} className={INPUT}>
                                                             <option value="">All</option>
                                                             {sidewallOptions.map(opt => <option key={opt}>{opt}</option>)}
+                                                        </select>
+                                                    ) : chip.key === "tyreType" ? (
+                                                        <select value={filters.tyreType} onChange={e => setFilter("tyreType", e.target.value)} className={INPUT}>
+                                                            <option value="">All</option>
+                                                            {tyreTypeOptions.map(opt => <option key={opt}>{opt}</option>)}
                                                         </select>
                                                     ) : chip.key === "brand" ? (
                                                         <select value={filters.brand} onChange={e => setFilter("brand", e.target.value)} className={INPUT}>

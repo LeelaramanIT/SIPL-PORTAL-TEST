@@ -34,14 +34,14 @@ const chunkItemsForPages = (items) => {
 
 const getColWidths = (showEdc, showItemCode, showPONumber) => {
   const base = {
-    srNo: 4, product: showItemCode ? 8 : 0, sunPart: 8,
-    po: showPONumber ? 6 : 0, description: showEdc ? 28 : 36,
+    srNo: 4, product: showItemCode ? 8 : 0, sunPart: 5,
+    po: showPONumber ? 13 : 0, description: showEdc ? 24 : 32,
     edc: showEdc ? 8 : 0, qty: 6, unitWt: 9, totalWt: 9,
     unitPrice: 8, totalPrice: 12,
   };
   let removed = 0;
   if (!showItemCode)  removed += 8;
-  if (!showPONumber)  removed += 6;
+  if (!showPONumber)  removed += 13;
   if (!showEdc)       removed += 8;
   ["description", "sunPart"].forEach((col) => { base[col] += removed / 2; });
   return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, `${v}%`]));
@@ -84,17 +84,20 @@ const AddressSection = ({ data }) => (
       {/* Exporter */}
       <View style={{ borderBottomWidth: 0.5, borderColor: "black", height: 77, padding: 2 }}>
         <Text style={{ ...styles.bodyText, fontWeight: "bold" }}>EXPORTER :</Text>
+        {/* {s(data?.legalEntityName).toUpperCase().split("~").map((line, i) => (
+          <Text key={i} style={{ fontSize: 6 }}>{line.trim()}</Text>
+        ))} */}
         {s(data?.exportAuthorisedAddress).toUpperCase().split("~").map((line, i) => (
           <Text key={i} style={{ fontSize: 6 }}>{line.trim()}</Text>
         ))}
-        {data?.plantAddress ? (
+        {/* {data?.plantAddress ? (
           <>
             <Text style={{ ...styles.text, fontWeight: "bold", marginTop: 2 }}>DELIVERY FROM :</Text>
             {s(data.plantAddress).toUpperCase().split("~").map((line, i) => (
               <Text key={i} style={{ fontSize: 6 }}>{line.trim()}</Text>
             ))}
           </>
-        ) : null}
+        ) : null} */}
       </View>
       {/* Buyer */}
       <View style={{ borderBottomWidth: 0.5, borderColor: "black", height: 56, padding: 2, gap: 1 }}>
@@ -136,9 +139,9 @@ const AddressSection = ({ data }) => (
         <View style={{ flexDirection: "row" }}>
           <Text style={styles.bodyText}>Other Reference(s): </Text>
           {/* ✅ No more bare conditionals — always a string */}
-          <Text style={styles.text}>{data?.EmailDate ? `EMAIL REF :${data.EmailDate} / ` : ""}</Text>
-          <Text style={styles.text}>{data?.orderRefNo ? s(data.orderRefNo) : ""}</Text>
-          <Text style={styles.text}>{data?.containerNo ? `/ CONTAINER NO ${data.containerNo}` : ""}</Text>
+          <Text style={styles.text}>{data?.EmailDate ? `EMAIL REF :${data.EmailDate}` : ""}</Text>
+          {/* <Text style={styles.text}>{data?.orderRefNo ? s(data.orderRefNo) : ""}</Text> */}
+          {/* <Text style={styles.text}>{data?.containerNo ? `/ CONTAINER NO ${data.containerNo}` : ""}</Text> */}
         </View>
       </View>
       {/* Ship + Notify */}
@@ -175,7 +178,7 @@ const AddressSection = ({ data }) => (
         <View>
           <Text style={styles.bodyText}>TERMS OF DELIVERY & PAYMENT:</Text>
           <Text style={styles.text}>
-            {`THE PRICES ARE ${s(data?.incoterm)} - ${s(data?.placeOfIncoterm).toUpperCase()} BY ${s(data?.preCarriageBy)}, IN ${s(data?.userCurrency).toUpperCase()}`}
+            {`THE PRICES ARE ${s(data?.incoterm)} - ${s(data?.placeOfIncoterm).toUpperCase()} ${s(data?.preCarriageBy)}, IN ${s(data?.userCurrency).toUpperCase()}`}
           </Text>
         </View>
         <Text style={[styles.bodyText, { fontWeight: "bold" }]}>
@@ -301,11 +304,48 @@ const TableRows = ({ items, showEdc, showItemCode, showPONumber, startIndex = 0 
 };
 
 // ── Summary ───────────────────────────────────────────────────────────────────
-const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, gstAmount, gstPercent }) => {
-  const gstData      = data?.gstCharges || {};
+const getTaxSummaryRows = (data, totalTax, fallbackPercent) => {
+  const explicitRows = Array.isArray(data?.taxSummary?.rows) ? data.taxSummary.rows : [];
+  if (explicitRows.length > 0) {
+    return explicitRows
+      .filter((row) => Number(row?.amount) > 0)
+      .map((row) => ({
+        label: s(row?.label).toUpperCase(),
+        amount: Number(row?.amount) || 0,
+      }));
+  }
+
+  const taxes = Array.isArray(data?.taxes) ? data.taxes.filter((tax) => Number(tax?.amount) > 0) : [];
+  if (taxes.length > 0) {
+    const hasSplitGst =
+      taxes.length === 2 &&
+      taxes.some((tax) => s(tax?.taxName).toUpperCase() === "CGST") &&
+      taxes.some((tax) => s(tax?.taxName).toUpperCase() === "SGST");
+
+    if (hasSplitGst) {
+      const cgst = taxes.find((tax) => s(tax?.taxName).toUpperCase() === "CGST");
+      const sgst = taxes.find((tax) => s(tax?.taxName).toUpperCase() === "SGST");
+      return [{
+        label: `CGST + SGST (${n(cgst?.rate)}% + ${n(sgst?.rate)}%)`,
+        amount: (Number(cgst?.amount) || 0) + (Number(sgst?.amount) || 0),
+      }];
+    }
+
+    return taxes.map((tax) => ({
+      label: `${s(tax?.taxName || "TAX").toUpperCase()} (${n(tax?.rate)}%)`,
+      amount: Number(tax?.amount) || 0,
+    }));
+  }
+
+  return fallbackPercent > 0
+    ? [{ label: `TAX (${fallbackPercent}%)`, amount: Number(totalTax) || 0 }]
+    : [];
+};
+
+const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, totalTax = 0, fallbackTaxPercent = 0 }) => {
   const otherCharges = data?.additionalCharges?.[0]?.rows || [];
   const discounts    = data?.discountDetails?.[0]?.rows   || [];
-  const gstType      = gstData.type || "BACKEND";
+  const taxSummaryRows = getTaxSummaryRows(data, totalTax, fallbackTaxPercent);
 
   // ✅ Always a string
   const amountInWords = s(numberToWords(grandTotalDDP, s(data?.userCurrency)));
@@ -337,10 +377,6 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, gstAmount, gstPercent 
   const qtyStyle   = (extra = {}) => ({ width: w.qty, borderRightWidth: 0.5, borderColor: "#000", justifyContent: "center", alignItems: "center", ...extra });
   const valueStyle = (extra = {}) => ({ width: w.totalPrice, justifyContent: "center", alignItems: "flex-end", paddingRight: 2, ...extra });
 
-  const gstLabel = gstType === "IGST"      ? `IGST (${gstPercent}%)`
-                 : gstType === "CGST_SGST" ? `CGST + SGST (${gstPercent}%)`
-                 : gstData.cgst > 0 || gstData.sgst > 0 ? `CGST + SGST (${gstPercent}%)` : `IGST (${gstPercent}%)`;
-
   return (
     <View wrap={false}>
       {/* Sub Total */}
@@ -352,16 +388,6 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, gstAmount, gstPercent 
         <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(subTotal)}</Text></View>
       </View>
 
-      {/* Other Charges */}
-      {otherCharges.filter((c) => Number(c?.value) > 0).map((charge, idx) => (
-        <View key={`c-${idx}`} style={styles.summaryRow}>
-          <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{s(charge.desc).toUpperCase()}</Text></View>
-          <View style={qtyStyle()} />
-          <BlankCells />
-          <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(charge.value)}</Text></View>
-        </View>
-      ))}
-
       {/* Discounts */}
       {discounts.filter((d) => Number(d?.value) > 0).map((disc, idx) => (
         <View key={`d-${idx}`} style={styles.summaryRow}>
@@ -372,21 +398,39 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, gstAmount, gstPercent 
         </View>
       ))}
 
-      {/* GST */}
-      {gstPercent > 0 && (
-        <View style={styles.summaryRow}>
-          <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{gstLabel}</Text></View>
+      {/* Other Charges */}
+      {otherCharges.filter((c) => Number(c?.value) > 0).map((charge, idx) => (
+        <View key={`c-${idx}`} style={styles.summaryRow}>
+          <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{s(charge.desc).toUpperCase()}</Text></View>
           <View style={qtyStyle()} />
           <BlankCells />
-          <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(gstAmount)}</Text></View>
+          <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(charge.value)}</Text></View>
         </View>
-      )}
+      ))}
+
+      {/* Tax Summary */}
+      {taxSummaryRows.map((tax, idx) => (
+        <View key={`t-${idx}`} style={styles.summaryRow}>
+          <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{tax.label}</Text></View>
+          <View style={qtyStyle()} />
+          <BlankCells />
+          <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(tax.amount)}</Text></View>
+        </View>
+      ))}
+      {/* {taxSummaryRows.length > 0 && (
+        <View style={styles.summaryRow}>
+          <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>TOTAL TAX</Text></View>
+          <View style={qtyStyle()} />
+          <BlankCells />
+          <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(totalTax)}</Text></View>
+        </View>
+      )} */}
 
       {/* Grand Total */}
       <View style={styles.grandTotalRow}>
         <View style={labelStyle({ borderTopWidth: 0.5 })}>
           <Text style={{ fontSize: 8, fontWeight: "bold" }}>
-            {`GRAND TOTAL ${s(data?.userCurrency).toUpperCase()} ${s(data?.incoterm).toUpperCase()} ${s(data?.placeOfIncoterm).toUpperCase()} BY ${s(data?.preCarriageBy).toUpperCase()}`}
+            {`GRAND TOTAL ${s(data?.userCurrency).toUpperCase()} ${s(data?.incoterm).toUpperCase()} ${s(data?.placeOfIncoterm).toUpperCase()} ${s(data?.preCarriageBy).toUpperCase()}`}
           </Text>
         </View>
         <View style={qtyStyle({ borderTopWidth: 0.5 })}>
@@ -412,7 +456,7 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, gstAmount, gstPercent 
         <Text style={{ fontSize: 7, fontWeight: "bold", textAlign: "center", marginBottom: 3 }}>TERMS & CONDITIONS</Text>
         {(() => {
           const fixedLines = [
-            `1. THE ABOVE PRICES ARE ${s(data?.userCurrency).toUpperCase()}, ${s(data?.incoterm).toUpperCase()} ${s(data?.placeOfIncoterm).toUpperCase()} (SHIPMENT BY ${s(data?.preCarriageBy)})`,
+            `1. THE ABOVE PRICES ARE ${s(data?.userCurrency).toUpperCase()}, ${s(data?.incoterm).toUpperCase()} ${s(data?.placeOfIncoterm).toUpperCase()} (SHIPMENT ${s(data?.preCarriageBy)})`,
             `2. PAYMENT: ${s(data?.paymentTerms)}`,
           ];
           const dynamicLines = data?.custInstruction
@@ -484,8 +528,11 @@ const ProformaPDF = ({ data }) => {
     gstPercent = bi > 0 ? bi : Number(data?.cgst || 0) + Number(data?.sgst || 0);
   }
 
-  const gstAmount    = taxable > 0 ? parseFloat(((taxable * gstPercent) / 100).toFixed(2)) : 0;
-  const grandTotalDDP = taxable + gstAmount;
+  const fallbackTaxAmount = taxable > 0 ? parseFloat(((taxable * gstPercent) / 100).toFixed(2)) : 0;
+  const totalTax = Array.isArray(data?.taxes) && data.taxes.length > 0
+    ? (data.taxes || []).reduce((sum, tax) => sum + (Number(tax?.amount) || 0), 0)
+    : fallbackTaxAmount;
+  const grandTotalDDP = taxable + totalTax;
 
   return (
     <>
@@ -500,7 +547,7 @@ const ProformaPDF = ({ data }) => {
                 <TableHeader data={data} showEdc={showEdc} showItemCode={showItemCode} showPONumber={PONumber} />
                 <TableRows items={pageItems} showEdc={showEdc} showItemCode={showItemCode} showPONumber={PONumber} startIndex={pageIndex * ITEMS_PER_PAGE} />
               </View>
-              {isLastPage && <SummaryRows data={data} subTotal={subTotal} grandTotalDDP={grandTotalDDP} gstAmount={gstAmount} gstPercent={gstPercent} />}
+              {isLastPage && <SummaryRows data={data} subTotal={subTotal} grandTotalDDP={grandTotalDDP} totalTax={totalTax} fallbackTaxPercent={gstPercent} />}
               {isLastPage && <SignatureBlock data={data} />}
             </View>
             <Text fixed render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} style={styles.pageNumber} />

@@ -33,6 +33,9 @@ const OrderProcessSlice = createSlice({
     setItemsList: (state, action) => {
       state.listOfItems = action.payload
     },
+    resetItemsList: (state, action) =>{
+      state.listOfItems = []
+    },
     setSaveDraftLoading: (state, action) => {
       state.saveDraftLoading = action.payload
     },
@@ -42,7 +45,7 @@ const OrderProcessSlice = createSlice({
   },
 
 })
-export const { setLoading, setError, setCustList, setEntityMaster, setCustomerItems, setItemsList,  setSaveDraftLoading, setSaveDraftSuccess } = OrderProcessSlice.actions
+export const { setLoading, setError, setCustList, setEntityMaster, setCustomerItems, setItemsList, resetItemsList, setSaveDraftLoading, setSaveDraftSuccess } = OrderProcessSlice.actions
 
 export const getEntityMaster = () => async (dispatch) => {
   try {
@@ -109,6 +112,7 @@ export const getCustomerItems = () => async (dispatch) => {
 export const getListOfItems = (payload) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
+    dispatch(resetItemsList());
 
     const res = await api.get(`/OrderProcess/customer-LineItems/${payload}`);
 

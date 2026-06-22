@@ -3,7 +3,7 @@ import { api } from "../../utils/axios";
 import { toast } from "react-hot-toast";
 
 const userData = JSON.parse(localStorage.getItem("user")) || {};
-console.log(userData);
+// console.log(userData);
 
 
 const initialState = {
