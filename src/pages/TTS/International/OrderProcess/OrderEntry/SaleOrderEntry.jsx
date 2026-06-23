@@ -448,13 +448,17 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState(null);
     const [previewInstanceKey, setPreviewInstanceKey] = useState(0);
-    const [orderDate, setOrderDate] = useState("2026-05-22");
-    const [desiredShipDate, setDesiredShipDate] = useState("2026-06-05");
+    const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
+    const [desiredShipDate, setDesiredShipDate] = useState(() => {
+  const date = new Date();
+  date.setDate(date.getDate() + 30);
+  return date.toISOString().slice(0, 10);
+});
     const [customerPo, setCustomerPo] = useState("");
     const [emailRef, setEmailRef] = useState("");
     const [notifyParty, setNotifyParty] = useState(DEFAULT_NOTIFY_PARTY);
     const [discountType, setDiscountType] = useState("");
-    // console.log(listOfItems); // cog 1
+    console.log(listOfItems); // cog 1
 
     useEffect(() => {
     if (entityMaster?.length) console.log("Entity sample:", entityMaster);
@@ -694,6 +698,7 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
     const totalTax = isExternal ? taxes.reduce((sum, tax) => sum + taxable * (Number(tax.rate) || 0) / 100, 0) : 0;
     return { gross, lineDiscount, net, documentDiscount, netAfterDiscount, totalCharges, taxable, totalTax, grand: taxable + totalTax };
   }, [items, isExternal, discountMode, docDiscount, taxes, charges]);
+console.log(items);
 
     const notify = (message) => {
       setToast(message);
@@ -770,6 +775,8 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
         setAddressTab("bill");
       }
       setCustomer(entry);
+      // Map any customer-level instruction into the Remarks field
+      setLogistics(prev => ({ ...prev, remarks: entry?.custInstruction || prev.remarks || "" }));
       setCustomerOpen(false);
       setCustomerSearch("");
       setPaymentTerm(entry?.terms || "Net 30");
@@ -1142,6 +1149,8 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
         lead: customer?.lead || "",
         city: billAddress?.city || "",
         phone: billAddress?.mobile || "",
+        // include any customer instruction text so selection can map it to Remarks
+        custInstruction: customer.custInstruction || customer.custinstruction || customer.cust_instruction || customer.cust_notes || "",
 
         billAddress,
         addresses: customer.addresses || [],
@@ -1220,8 +1229,17 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
           rimfinishedwt: Number(item._raw?.rimWt || item._raw?.rimfinishedwt || item.rimfinishedwt || 0),
           basicPrice: Number(item.price || 0),
           rimUnitPrice: Number(item.rimUnitPrice || 0),
+          typePosition: item?.typePosition ?? item._raw?.typePosition ?? 0,
+sizePosition: item?.sizePosition ?? item._raw?.sizePosition ?? 0,
         };
       });
+
+        // Sort items by typePosition then sizePosition so PDF reflects intended order
+        const sortedItems = mappedItems.slice().sort((a, b) => {
+          const t = (Number(a.typePosition) || 0) - (Number(b.typePosition) || 0);
+          if (t !== 0) return t;
+          return (Number(a.sizePosition) || 0) - (Number(b.sizePosition) || 0);
+        });
 
       // Mapping additional charges
   const mappedCharges = [
@@ -1338,7 +1356,7 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
         userCurrency: customer?.currency || entity?.currency || "USD",
 
         // ── Items, Charges, Discounts, Taxes ─────────────────────────────────────
-        items: mappedItems,
+        items: sortedItems,
         gstCharges,
         additionalCharges: mappedCharges,
         discountDetails: mappedDiscounts,
@@ -1406,14 +1424,13 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
 
     customerID: customer?.custID || 0,
 
-    orderType: Number(orderTypeID) || 0,
+    orderType: Number(orderTypeID) || 1,
 
       legalEntityName:  entity?.entityName || entity?.name || "",
       legalEntityCode:  entity?.entityCode || entity?.code || "",
       exportAuthorisedAddress: selectedEntityAddress?.exporterAddressFormatted || "",
       bankDetails:      selectedBank?.bankAddressFormatted || "",
       // orderType:        orderType           ?? "",
-      orderType:        1           ?? "",
       orderRefID:       "SO-2026-0413",
       orderDate:        orderDate
                           ? new Date(orderDate).toISOString()
@@ -3010,7 +3027,7 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
   }
 
   function Address({ selected, address, onClick }) {
-    return <motion.button whileHover={{ x: 2 }} type="button" className={cx("relative mb-2 flex w-full items-start gap-3 rounded-lg border bg-slate-50 p-3 text-left dark:bg-slate-800", selected ? "border-blue-500 bg-blue-500/[.05]" : "border-slate-200 dark:border-slate-700")} onClick={onClick}><i className={cx("mt-0.5 size-4 rounded-full border-2 border-slate-300 not-italic dark:border-slate-600", selected && "border-blue-500 bg-blue-500")} /><span><small className="block text-[9px] font-bold uppercase tracking-widest text-slate-500">{address.type}</small><strong className="block text-xs">{address.first}</strong><em className="text-[10px] not-italic text-slate-500 dark:text-slate-400">{address.second}</em></span>{address.isDefault && <b className="absolute right-2 top-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[8px] uppercase text-emerald-500 dark:text-emerald-400">Default</b>}</motion.button>;
+    return <motion.button whileHover={{ x: 2 }} type="button" className={cx("relative mb-2 flex w-full items-start gap-3 rounded-lg border bg-slate-50 p-3 text-left dark:bg-slate-800", selected ? "border-blue-500 bg-blue-500/[.05]" : "border-slate-200 dark:border-slate-700")} onClick={onClick}><i className={cx("mt-0.5 size-4 rounded-full border-2 border-slate-300 not-italic dark:border-slate-600", selected && "border-blue-500 bg-blue-500")} /><span><small className="block text-[9px] font-bold uppercase tracking-widest text-slate-500">{address.type}</small><strong className="block text-xs"><span className="font-bold">{address.original?.companyName || ""}</span>{address.first ? <><br />{address.first}</> : null}</strong><em className="text-[10px] not-italic text-slate-500 dark:text-slate-400">{address.second}</em></span>{address.isDefault && <b className="absolute right-2 top-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[8px] uppercase text-emerald-500 dark:text-emerald-400">Default</b>}</motion.button>;
   }
 
   function SummaryCard({ title, children }) {

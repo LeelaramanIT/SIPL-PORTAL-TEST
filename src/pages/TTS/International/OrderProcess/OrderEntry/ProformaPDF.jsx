@@ -32,19 +32,59 @@ const chunkItemsForPages = (items) => {
   return chunks;
 };
 
+// ── Sort helper ────────────────────────────────────────────────────────────
+// ── Sort helper ────────────────────────────────────────────────────────────
+// const sortItemsByPosition = (items) =>
+//   [...(items || [])].sort((a, b) => {
+//     const typeA = Number(a?.typePosition) || 0;
+//     const typeB = Number(b?.typePosition) || 0;
+//     if (typeA !== typeB) return typeA - typeB;
+
+//     const weightA = (Number(a?.finishedWt) || 0) + (Number(a?.rimfinishedwt) || 0);
+//     const weightB = (Number(b?.finishedWt) || 0) + (Number(b?.rimfinishedwt) || 0);
+//     return weightA - weightB;
+//   });
+
+  const ITEM_TYPE_ORDER = { TYRE:0, ASSEMBLY:1, RIM: 2 };
+
+const sortItemsByPosition = (items) =>
+  [...(items || [])].sort((a, b) => {
+    const rankA = ITEM_TYPE_ORDER[a?.itemType] ?? 99;
+    const rankB = ITEM_TYPE_ORDER[b?.itemType] ?? 99;
+    if (rankA !== rankB) return rankA - rankB;
+
+    const typeA = Number(a?.typePosition) || 0;
+    const typeB = Number(b?.typePosition) || 0;
+    if (typeA !== typeB) return typeA - typeB;
+
+    const weightA = (Number(a?.finishedWt) || 0) + (Number(a?.rimfinishedwt) || 0);
+    const weightB = (Number(b?.finishedWt) || 0) + (Number(b?.rimfinishedwt) || 0);
+    return weightA - weightB;
+  });
+
+
+// ✅ FIXED: `full` now sums to exactly 100. Previously it summed to 106,
+// so whenever EDC was shown the whole row overflowed and the renderer
+// squeezed CUSTOMER PART# / SUN PART# / PO# to make it fit. The "removed"
+// redistribution also compounded the error in the EDC-hidden case (114%).
+// Every combination below now sums to exactly 100.
 const getColWidths = (showEdc, showItemCode, showPONumber) => {
-  const base = {
-    srNo: 4, product: showItemCode ? 8 : 0, sunPart: 5,
-    po: showPONumber ? 13 : 0, description: showEdc ? 24 : 32,
-    edc: showEdc ? 8 : 0, qty: 6, unitWt: 9, totalWt: 9,
-    unitPrice: 8, totalPrice: 12,
+  const full = {
+    srNo: 4, product: 8, sunPart: 5, po: 12,
+    description: 23, edc: 8, qty: 6, unitWt: 9, totalWt: 9,
+    unitPrice: 8, totalPrice: 8,
   };
+
   let removed = 0;
-  if (!showItemCode)  removed += 8;
-  if (!showPONumber)  removed += 13;
-  if (!showEdc)       removed += 8;
-  ["description", "sunPart"].forEach((col) => { base[col] += removed / 2; });
-  return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, `${v}%`]));
+  const widths = { ...full };
+  if (!showItemCode) { removed += full.product; widths.product = 0; }
+  if (!showPONumber) { removed += full.po;       widths.po = 0; }
+  if (!showEdc)       { removed += full.edc;      widths.edc = 0; }
+
+  // Redistribute freed space into description + sunPart
+  ["description", "sunPart"].forEach((col) => { widths[col] += removed / 2; });
+
+  return Object.fromEntries(Object.entries(widths).map(([k, v]) => [k, `${v}%`]));
 };
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -84,20 +124,9 @@ const AddressSection = ({ data }) => (
       {/* Exporter */}
       <View style={{ borderBottomWidth: 0.5, borderColor: "black", height: 77, padding: 2 }}>
         <Text style={{ ...styles.bodyText, fontWeight: "bold" }}>EXPORTER :</Text>
-        {/* {s(data?.legalEntityName).toUpperCase().split("~").map((line, i) => (
-          <Text key={i} style={{ fontSize: 6 }}>{line.trim()}</Text>
-        ))} */}
         {s(data?.exportAuthorisedAddress).toUpperCase().split("~").map((line, i) => (
           <Text key={i} style={{ fontSize: 6 }}>{line.trim()}</Text>
         ))}
-        {/* {data?.plantAddress ? (
-          <>
-            <Text style={{ ...styles.text, fontWeight: "bold", marginTop: 2 }}>DELIVERY FROM :</Text>
-            {s(data.plantAddress).toUpperCase().split("~").map((line, i) => (
-              <Text key={i} style={{ fontSize: 6 }}>{line.trim()}</Text>
-            ))}
-          </>
-        ) : null} */}
       </View>
       {/* Buyer */}
       <View style={{ borderBottomWidth: 0.5, borderColor: "black", height: 56, padding: 2, gap: 1 }}>
@@ -138,10 +167,7 @@ const AddressSection = ({ data }) => (
         ) : null}
         <View style={{ flexDirection: "row" }}>
           <Text style={styles.bodyText}>Other Reference(s): </Text>
-          {/* ✅ No more bare conditionals — always a string */}
           <Text style={styles.text}>{data?.EmailDate ? `EMAIL REF :${data.EmailDate}` : ""}</Text>
-          {/* <Text style={styles.text}>{data?.orderRefNo ? s(data.orderRefNo) : ""}</Text> */}
-          {/* <Text style={styles.text}>{data?.containerNo ? `/ CONTAINER NO ${data.containerNo}` : ""}</Text> */}
         </View>
       </View>
       {/* Ship + Notify */}
@@ -184,7 +210,6 @@ const AddressSection = ({ data }) => (
         <Text style={[styles.bodyText, { fontWeight: "bold" }]}>
           PAYMENT TERMS: <Text style={styles.text}>{s(data?.paymentTerms)}</Text>
         </Text>
-        {/* ✅ bankDetails: split("~").join() prevents array-as-child crash */}
         <Text style={{ ...styles.bodyText, fontWeight: "bold" }}>
           BANK DETAILS: <Text style={styles.text}>{s(data?.bankDetails).toUpperCase().split("~").join(" | ")}</Text>
         </Text>
@@ -225,6 +250,8 @@ const TableHeader = ({ data, showEdc, showItemCode, showPONumber }) => {
 
 // ── Table Rows ────────────────────────────────────────────────────────────────
 const TableRows = ({ items, showEdc, showItemCode, showPONumber, startIndex = 0 }) => {
+  console.log("items",items);
+  
   const w = getColWidths(showEdc, showItemCode, showPONumber);
   return (
     <>
@@ -235,25 +262,38 @@ const TableRows = ({ items, showEdc, showItemCode, showPONumber, startIndex = 0 
         const totalPx = unitPx * Number(item?.itemQty || 0);
 
         // ✅ Description — format correctly for TYRE, RIM, or fallback to manual description
-        let descText = s(item?.description).trim();
+        // ✅ Description — itemType determines how we resolve descText.
+// Source `description` is trusted first; reconstruction only fires if it's empty.
+let descText = s(item?.description).trim();
 
-        if (item?.itemType === "RIM") {
-          const rimDetails = descText || s(item?.tyreRim);
-          if (item?.edcNo && !rimDetails.includes(item.edcNo)) {
-            descText = `${item.edcNo} ${rimDetails.startsWith("-") ? "" : "/ "}${rimDetails}`.trim();
-          } else {
-            descText = rimDetails || s(item?.edcNo);
-          }
-        } else if (item?.itemType === "TYRE" || item?.itemType === "ASSEMBLY" || (!descText && (item?.tyreSize || item?.brand))) {
-          const reconstructed = item?.category === "SPLIT RIMS"
-            ? "SPLIT RIMS"
-            : `${s(item?.tyreSize)} / ${item?.tyreRim === "-" ? "0.00" : s(item?.tyreRim)} / ${s(item?.brand)} / ${s(item?.sidewall)} / ${s(item?.tyreType)} ${item?.assyRimstatus ? s(item?.edcNo) : ""} ${item?.color ? `${s(item.color)} ${s(item.des)}` : ""}`.trim();
-          
-          const cleanReconstructed = reconstructed.replace(/[\/\s0.00]/g, "");
-          if (cleanReconstructed.length > 0) {
-            descText = reconstructed;
-          }
-        }
+if (!descText) {
+  if (item?.itemType === "RIM") {
+    const rimDetails = s(item?.tyreRim);
+    descText = item?.edcNo
+      ? `${item.edcNo}${rimDetails ? ` / ${rimDetails}` : ""}`
+      : rimDetails;
+  } else if (item?.itemType === "TYRE" || item?.itemType === "ASSEMBLY") {
+    descText = item?.category === "SPLIT RIMS"
+      ? "SPLIT RIMS"
+      : `${s(item?.tyreSize)} / ${item?.tyreRim === "-" ? "0.00" : s(item?.tyreRim)} / ${s(item?.brand)} / ${s(item?.sidewall)} / ${s(item?.tyreType)} ${item?.assyRimstatus ? s(item?.edcNo) : ""} ${item?.color ? `${s(item.color)} ${s(item.des)}` : ""}`.trim();
+  } else {
+    descText = s(item?.tyreSize) || s(item?.brand) || "";
+  }
+}
+
+const showExtraDetails = ["TYRE", "ASSEMBLY"].includes(
+  item?.itemType?.toUpperCase()
+);
+
+const description = showExtraDetails
+  ? [
+      descText,
+      item?.des,
+      item?.color,
+    ]
+      .filter(Boolean)
+      .join(" | ")
+  : descText;
 
         return (
           <View key={index} style={styles.bodyRow}>
@@ -274,8 +314,8 @@ const TableRows = ({ items, showEdc, showItemCode, showPONumber, startIndex = 0 
               </View>
             )}
             <View style={[styles.bodyCell, { width: w.description }]}>
-              <Text style={styles.bodyText}>{descText}</Text>
-            </View>
+  <Text style={styles.bodyText}>{description}</Text>
+</View>
             {showEdc && (
               <View style={[styles.bodyCell, { width: w.edc }]}>
                 <Text style={[styles.bodyText, { textAlign: "right" }]}>{s(item.edcNo)}</Text>
@@ -347,10 +387,8 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, totalTax = 0, fallback
   const discounts    = data?.discountDetails?.[0]?.rows   || [];
   const taxSummaryRows = getTaxSummaryRows(data, totalTax, fallbackTaxPercent);
 
-  // ✅ Always a string
   const amountInWords = s(numberToWords(grandTotalDDP, s(data?.userCurrency)));
 
-  // ✅ Always numbers → strings via n()
   const totalQty = (data?.items || []).reduce((acc, it) => acc + Number(it.itemQty || 0), 0);
   const totalWgt = (data?.items || []).reduce(
     (acc, it) => acc + (Number(it.finishedWt || 0) + Number(it.rimfinishedwt || 0)) * Number(it.itemQty || 0), 0
@@ -382,7 +420,6 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, totalTax = 0, fallback
       {/* Sub Total */}
       <View style={styles.summaryRow}>
         <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>SUB TOTAL</Text></View>
-        {/* ✅ n() converts number to string */}
         <View style={qtyStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{n(totalQty)}</Text></View>
         <BlankCells />
         <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(subTotal)}</Text></View>
@@ -417,14 +454,6 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, totalTax = 0, fallback
           <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(tax.amount)}</Text></View>
         </View>
       ))}
-      {/* {taxSummaryRows.length > 0 && (
-        <View style={styles.summaryRow}>
-          <View style={labelStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>TOTAL TAX</Text></View>
-          <View style={qtyStyle()} />
-          <BlankCells />
-          <View style={valueStyle()}><Text style={{ fontSize: 7, fontWeight: "bold" }}>{sf(totalTax)}</Text></View>
-        </View>
-      )} */}
 
       {/* Grand Total */}
       <View style={styles.grandTotalRow}>
@@ -501,13 +530,12 @@ const SignatureBlock = ({ data }) => (
 
 // ── Main export ───────────────────────────────────────────────────────────────
 const ProformaPDF = ({ data }) => {
-  console.log(data);
-
-
+  const sortedItems  = sortItemsByPosition(data?.items);
   const showEdc      = (data?.items || []).some((item) => item?.assyRimstatus === true);
   const showItemCode = (data?.items || []).some((item) => item?.partNumber);
   const PONumber     = (data?.items || []).some((item) => item?.PONumber);
-  const itemChunks   = chunkItemsForPages(data?.items);
+  const itemChunks   = chunkItemsForPages(sortedItems);
+  console.log("pdfdata",itemChunks);
 
   const subTotal       = (data?.items || []).reduce((acc, it) => acc + (Number(it?.basicPrice || 0) + Number(it?.rimUnitPrice || 0)) * Number(it?.itemQty || 0), 0);
   const totalCharges   = Number(data?.additionalCharges?.[0]?.total || 0);
@@ -547,7 +575,7 @@ const ProformaPDF = ({ data }) => {
                 <TableHeader data={data} showEdc={showEdc} showItemCode={showItemCode} showPONumber={PONumber} />
                 <TableRows items={pageItems} showEdc={showEdc} showItemCode={showItemCode} showPONumber={PONumber} startIndex={pageIndex * ITEMS_PER_PAGE} />
               </View>
-              {isLastPage && <SummaryRows data={data} subTotal={subTotal} grandTotalDDP={grandTotalDDP} totalTax={totalTax} fallbackTaxPercent={gstPercent} />}
+              {isLastPage && <SummaryRows data={{ ...data, items: sortedItems }} subTotal={subTotal} grandTotalDDP={grandTotalDDP} totalTax={totalTax} fallbackTaxPercent={gstPercent} />}
               {isLastPage && <SignatureBlock data={data} />}
             </View>
             <Text fixed render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} style={styles.pageNumber} />
