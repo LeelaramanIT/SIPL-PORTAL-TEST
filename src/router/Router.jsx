@@ -78,9 +78,13 @@ import PendingTransferPage from "../pages/TTS/Rim/PendingTransferPage";
 import TyreStockReceiveRedesign from "../pages/TTS/Rim/TyreStockReceiveRedesign";
 import DCPreparationApproval from "../pages/TTS/Rim/DCPreparationApproval";
 import OrderCopy from "../pages/TTS/International/OrderProcess/OrderEntry/SaleOrderEntry";
-import MasterManagement from "../pages/Masters/MasterManagement/MasterManagement";
+import MasterManagement from "../pages/Masters/MasterManagement/MasterCreationHome";
 import MasterCreationLayout from "../layout/MasterCreationLayout";
 import SaleReportRedirect from "../pages/Reports/SaleReports/SaleReportRedirect";
+import LegalEntityMaster from "../pages/Masters/MasterManagement/LegalEntityMaster";
+import MasterCreationHome from "../pages/Masters/MasterManagement/MasterCreationHome";
+import MenuAccessManager1 from "../pages/MenuAccess/MenuAccessManager1.JSX";
+import ReportMasterManagement from "../pages/Masters/MasterManagement/Reportmastermanagement";
 
 export const router = createBrowserRouter([
   {
@@ -113,7 +117,9 @@ export const router = createBrowserRouter([
                 path: "/Masters/Master-creation",
                 element: <MasterCreationLayout />,
                 children: [
-                  { index: true, element: <MasterManagement /> },
+                  { index: true, element: <MasterCreationHome /> },
+                  { path:'legal-entity', element: <LegalEntityMaster /> },
+                  { path:'reports-master', element: <ReportMasterManagement /> },
                 ],
               },
               {
@@ -505,7 +511,8 @@ export const router = createBrowserRouter([
               { index: true, element: <UserList /> },
               { path: "user-list", element: <UserList /> },
               { path: "user-creation", element: <UserCreation /> },
-              { path: "menuaccess", element: <MenuAccessManager /> },
+              // { path: "menuaccess", element: <MenuAccessManager /> },
+              { path: "menuaccess", element: <MenuAccessManager1 /> },
             ],
           },
         ],

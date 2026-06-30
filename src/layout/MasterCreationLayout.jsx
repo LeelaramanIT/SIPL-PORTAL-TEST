@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Menu, Button, Tooltip, ConfigProvider } from "antd";
+import { Menu, Button, ConfigProvider } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
   PlusCircleOutlined,
-  //   ShieldCheckOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
-import { CgMenuGridR } from "react-icons/cg";
+import { FcAbout } from "react-icons/fc";
+import { LayoutGrid } from "lucide-react";
 
 const MasterCreationLayout = () => {
   const location = useLocation();
@@ -16,24 +17,30 @@ const MasterCreationLayout = () => {
 
   const menuItems = [
     {
-      key: "/Masters/Master-creation",
+  key: "/Masters/Master-creation",
+  icon: <LayoutGrid style={{ fontSize: "18px" }} />,
+  label: <Link to="/Masters/Master-creation">Master Hub</Link>,
+},
+    {
+      key: "/Masters/Master-creation/legal-entity",
       icon: <UserOutlined style={{ fontSize: "18px" }} />,
-      label: <Link to="/Masters/Master-creation">Company Config Master</Link>,
+      label: <Link to="/Masters/Master-creation/legal-entity">Legal Entity Master</Link>,
+    },
+     {
+      key: "/Masters/Master-creation/reports-Master",
+      icon: <UserOutlined style={{ fontSize: "18px" }} />,
+      label: <Link to="/Masters/Master-creation/reports-master">Reports Master</Link>,
     },
     {
       key: "/Masters/Usermaster",
       icon: <PlusCircleOutlined style={{ fontSize: "18px" }} />,
       label: <Link to="/Masters/Usermaster">User Creation</Link>,
     },
+    // Uncomment once the route is wired up:
     // {
-    //   key: "/UserMaster/Menuaccess",
-    //   icon: <CgMenuGridR style={{ fontSize: "18px" }} />,
-    //   label: <Link to="/UserMaster/Menuaccess">Menu Access</Link>,
-    // },
-    // {
-    //   key: "/UserMaster/MasterManagement",
-    //   icon: <CgMenuGridR style={{ fontSize: "18px" }} />,
-    //   label: <Link to="/UserMaster/MasterManagement">Master Management</Link>,
+    //   key: "/Masters/MasterManagement",
+    //   icon: <AppstoreOutlined style={{ fontSize: "18px" }} />,
+    //   label: <Link to="/Masters/MasterManagement">Master Management</Link>,
     // },
   ];
 
@@ -45,7 +52,7 @@ const MasterCreationLayout = () => {
           borderRadius: 8,
         },
         components: {
-          Menu: { 
+          Menu: {
             itemBg: "transparent",
             itemSelectedBg: "#3b82f6",
             itemSelectedColor: "#ffffff",
@@ -57,11 +64,13 @@ const MasterCreationLayout = () => {
         },
       }}
     >
-      <div className="flex h-[calc(100vh-62px)] w-full bg-[var(--card)] p-3 gap-3 overflow-hidden font-sans">
-        {/* --- Modern Sidebar --- */}
+      {/* h-full instead of h-[calc(100vh-62px)]: lets the parent route/page own
+          the height math (e.g. below a 62px Navbar) instead of hardcoding it here. */}
+      <div className="flex h-full w-full bg-[var(--card)] p-3 gap-3 overflow-hidden font-sans">
+        {/* --- Sidebar --- */}
         <aside
           className={`
-            relative flex flex-col bg-[var(--background)] 
+            relative flex flex-col bg-[var(--background)]
             border border-[var(--border)] rounded-2xl shadow-sm
             transition-all duration-300 ease-in-out overflow-hidden
             ${collapsed ? "w-[70px]" : "w-[260px]"}
@@ -80,6 +89,7 @@ const MasterCreationLayout = () => {
               type="text"
               onClick={() => setCollapsed(!collapsed)}
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               className="hover:!bg-blue-50 !flex items-center justify-center text-gray-500"
             />
           </div>
@@ -96,7 +106,7 @@ const MasterCreationLayout = () => {
             />
           </div>
 
-          {/* Optional Footer/Profile placeholder */}
+          {/* Footer / profile placeholder */}
           <div className="p-4 border-t border-[var(--border)] mt-auto">
             <div
               className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}
@@ -109,9 +119,13 @@ const MasterCreationLayout = () => {
           </div>
         </aside>
 
-        {/* --- Main Content Area --- */}
-        <main className="flex-1 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-sm overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-scroll custom-scrollbar">
+        {/* --- Main Content Area ---
+            min-h-0 is required on a flex child that needs to scroll internally;
+            without it, the child refuses to shrink below its content height and
+            the scroll container never actually clips. This is what was fighting
+            against LegalEntityMaster's own min-h-screen + sticky header. */}
+        <main className="flex-1 min-h-0 min-w-0 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-sm overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             <Outlet />
           </div>
         </main>
