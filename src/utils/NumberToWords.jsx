@@ -17,7 +17,15 @@ export function numberToWords(num, currencyCode) {
     KRW: { mainUnit: { singular: "won", plural: "won" }, subUnit: { singular: "", plural: "" } },
     CHF: { mainUnit: { singular: "franc", plural: "francs" }, subUnit: { singular: "rappen", plural: "rappen" } },
     SAR: { mainUnit: { singular: "riyal", plural: "riyals" }, subUnit: { singular: "halala", plural: "halalas" } },
+    PKR: { mainUnit: { singular: "rupee", plural: "rupees" }, subUnit: { singular: "paisa", plural: "paise" } },
+    NPR: { mainUnit: { singular: "rupee", plural: "rupees" }, subUnit: { singular: "paisa", plural: "paise" } },
+    BDT: { mainUnit: { singular: "taka", plural: "taka" }, subUnit: { singular: "paisa", plural: "paise" } },
+    LKR: { mainUnit: { singular: "rupee", plural: "rupees" }, subUnit: { singular: "cent", plural: "cents" } },
   };
+
+  // Currencies that use the Indian numbering system (lakh / crore)
+  // instead of the international system (thousand / million / billion)
+  const indianNumberingCurrencies = ["INR", "PKR", "NPR", "BDT", "LKR"];
 
   const safeCurrencyCode = currencyCode || "USD"; // fallback
   const currency = currencyMap[safeCurrencyCode];
@@ -79,7 +87,8 @@ export function numberToWords(num, currencyCode) {
     return str;
   };
 
-  const convert = (n) => {
+  // International system: thousand / million / billion
+  const convertInternational = (n) => {
     if (n === 0) return "zero ";
     let str = "";
 
@@ -99,6 +108,31 @@ export function numberToWords(num, currencyCode) {
 
     return str;
   };
+
+  // Indian system: thousand / lakh / crore
+  const convertIndian = (n) => {
+    if (n === 0) return "zero ";
+    let str = "";
+
+    const crore = Math.floor(n / 10000000);
+    n %= 10000000;
+    if (crore) str += convertHundreds(crore) + "crore ";
+
+    const lakh = Math.floor(n / 100000);
+    n %= 100000;
+    if (lakh) str += convertHundreds(lakh) + "lakh ";
+
+    const thousand = Math.floor(n / 1000);
+    n %= 1000;
+    if (thousand) str += convertHundreds(thousand) + "thousand ";
+
+    if (n) str += convertHundreds(n);
+
+    return str;
+  };
+
+  const useIndianSystem = indianNumberingCurrencies.includes(safeCurrencyCode);
+  const convert = useIndianSystem ? convertIndian : convertInternational;
 
   const [mainPart, decimalPart] = Number(num).toFixed(2).split(".");
   const mainNumber = parseInt(mainPart, 10);

@@ -322,18 +322,16 @@ const AdditionalCustDetailsForm = ({
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const formatPaymentTerms = (htmlContent) => {
-    if (!htmlContent) return "";
-    const parser = new DOMParser();
-    const decoded =
-      parser.parseFromString(htmlContent, "text/html").body.textContent || "";
-    const numberedSections = decoded.match(/(?:\d{2}\..*?)(?=\d{2}\.|$)/gs);
-    if (numberedSections?.length) {
-      return numberedSections
-        .map((s) => s.replace(/~+/g, "\n").trim())
-        .join("\n");
-    }
-    return decoded.replace(/~+/g, "\n").trim();
-  };
+  if (!htmlContent) return "";
+  const parser = new DOMParser();
+  const decoded =
+    parser.parseFromString(htmlContent, "text/html").body.textContent || "";
+  return decoded
+    .split("~")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join("\n");
+};
 
   const formatMultilineText = (text) => (text ? text.replace(/~/g, "\n") : "");
 
