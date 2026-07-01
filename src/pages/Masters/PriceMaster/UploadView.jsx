@@ -25,6 +25,7 @@ import {
   setGeneratedId,
   setExistingSheets,
   setDates,
+  // setRemark,
 } from "../../../Redux/Slices/PriceMasterSlice";
 import { IoMdWarning } from "react-icons/io";
 export default function UploadView() {
@@ -47,6 +48,7 @@ export default function UploadView() {
     existingSheets,
     startDate,
     endDate,
+    // remark = "",
   } = useSelector((state) => state.priceMaster || {});
   const deferredSearch = useDeferredValue(search);
 
@@ -107,18 +109,33 @@ export default function UploadView() {
   };
 
   const handleModeChange = async (mode) => {
-    dispatch(setSheetMode(mode));
-    if (mode === "new") {
-      if (!generatedId) {
-        await fetchNextSheetID();
-      }
-      dispatch(setPriceSheetRef(generatedId));
+  dispatch(setSheetMode(mode));
+
+  if (mode === "new") {
+    // dispatch(setRemark(""));
+
+    // Reset dates for new sheet
+    const today = new Date().toISOString().split("T")[0];
+
+    dispatch(
+      setDates({
+        start: today,
+        end: "",
+      })
+    );
+
+    if (!generatedId) {
+      await fetchNextSheetID();
     }
-    if (mode === "existing") {
-      dispatch(setPriceSheetRef(""));
-      fetchExistingSheets();
-    }
-  };
+
+    dispatch(setPriceSheetRef(generatedId));
+  }
+
+  if (mode === "existing") {
+    dispatch(setPriceSheetRef(""));
+    fetchExistingSheets();
+  }
+};
 
   useEffect(() => {
     setVisibleRows(50);
@@ -216,7 +233,6 @@ export default function UploadView() {
       toast.error(
         `Price Sheet expired on ${endDate}. Please update end date before upload.`,
       );
-
       e.target.value = null;
       return;
     }
@@ -230,7 +246,6 @@ export default function UploadView() {
       e.target.value = null; // Reset file input
       return;
     }
-
     dispatch(setExcelFileName(file.name));
     setIsProcessing(true);
 
@@ -448,6 +463,7 @@ export default function UploadView() {
       type: category,
       startDate,
       endDate,
+      // remark: remark?.trim() || null,
       priceDetails: excelJson
         .filter((item) => !item.isDuplicate) // optional, if needed
         .map((item) => ({
@@ -479,6 +495,7 @@ export default function UploadView() {
         dispatch(setSearch(""));
         dispatch(setErrorFilter("All"));
         dispatch(setSelectedUpdateCustomer("All Customers"));
+        // dispatch(setRemark(""));
         // setPriceSheetRef("PS-" + Math.floor(100000 + Math.random() * 900000));
       }
     } catch (error) {
@@ -741,6 +758,8 @@ export default function UploadView() {
                             const selectedSheet = existingSheets.find(
                               (s) => s.priceSheetRefNo === value,
                             );
+                            // console.log(selectedSheet);
+                            
 
                             if (selectedSheet) {
                               const start = selectedSheet.startDate
@@ -751,6 +770,8 @@ export default function UploadView() {
                                 : "";
 
                               dispatch(setDates({ start, end }));
+                              // Set existing remark
+                              // dispatch(setRemark(selectedSheet.remarks || ""));
                             }
                           }}
                           loading={isLoadingList}
@@ -874,6 +895,7 @@ export default function UploadView() {
                     >
                       <Option value="Tyre">Tyre</Option>
                       <Option value="Rim">Rim</Option>
+                      <Option value="Rim">Assembly</Option>
                     </Select>
 
                     {/* Custom Arrow Icon */}
@@ -882,6 +904,21 @@ export default function UploadView() {
                     </div>
                   </div>
                 </div>
+
+                {/* Remarks */}
+                {/* <div>
+                  <label className="block text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Remarks (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={remark}
+                    onChange={(e) => dispatch(setRemark(e.target.value))}
+                    placeholder="Optional notes for this sheet"
+                    maxLength={250}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[0.8rem] rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                  />
+                </div> */}
               </div>
 
               {/* File Upload Area */}
@@ -1030,7 +1067,13 @@ export default function UploadView() {
                 </span>
               </div>
             )}
-
+            {/* {remark && (
+              <div className="mb- bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-2 flex items-center gap-3 text-red-700 dark:text-red-300">
+                <span className="text-[0.7rem] font-medium">
+                  <strong>Remarks: {remark}</strong>
+                </span>
+              </div>
+            )} */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-3 mb-1">
               <div className="shrink-0">
                 <h3 className="text-md font-bold text-slate-700 dark:text-slate-200">
@@ -1267,6 +1310,6 @@ export default function UploadView() {
           border-radius: 10px;
         }
       `}</style>
-    </div>
+    </div>  
   );
 }

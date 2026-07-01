@@ -494,13 +494,13 @@ export default function ManageView({ }) {
       {/* 2. Body: Data Grid */}
       <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[0.7rem]">
         {/* Start Date */}
-        <span className="text-slate-300">Start:</span>
+        <span className="text-slate-300">Start :</span>
         <span className="text-slate-200 text-right font-mono">
           {formatDate(currentSheet?.startDate)}
         </span>
 
         {/* End Date */}
-        <span className="text-slate-300">End:</span>
+        <span className="text-slate-300">End :</span>
         <span className="text-slate-200 text-right font-mono">
           {formatDate(currentSheet?.endDate)}
         </span>
@@ -509,7 +509,7 @@ export default function ManageView({ }) {
         <div className="col-span-2 border-t border-slate-700 my-1"></div>
 
         {/* Created By */}
-        <span className="text-slate-300">Created:</span>
+        <span className="text-slate-300">Created :</span>
         <div className="text-right flex flex-col">
           <span className="text-slate-200">{currentSheet?.createdBy}</span>
           <span className="text-[10px] text-slate-300">
@@ -520,7 +520,7 @@ export default function ManageView({ }) {
         {/* Update Info (Only show if updated) */}
         {currentSheet?.updateBy && (
           <>
-            <span className="text-slate-300">Updated:</span>
+            <span className="text-slate-300">Updated :</span>
             <div className="text-right flex flex-col">
               <span className="text-slate-200">{currentSheet?.updateBy}</span>
               <span className="text-[10px] text-slate-300">
@@ -529,6 +529,17 @@ export default function ManageView({ }) {
             </div>
           </>
         )}
+      {/* {console.log(currentSheet)}
+        {currentSheet?.remarks && (
+          <>
+            <div className="mt-3 pt-2 border-t border-slate-600 text-[10px] text-white leading-tight">
+        <span className="text-slate-300">REMARKS :</span>
+        <div className="text-right flex flex-col">
+         <span>{currentSheet?.remarks} </span>
+        </div>
+      </div>
+          </>
+        )} */}
       </div>
 
       {/* 3. Footer: Warning Message */}

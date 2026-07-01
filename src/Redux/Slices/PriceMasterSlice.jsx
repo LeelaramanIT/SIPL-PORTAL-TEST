@@ -7,6 +7,7 @@ const initialState = {
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     category: "Tyre",
+    // remark: "",
     mode: 'upload',
     isUploading: false,
     moduleOn: true,
@@ -138,6 +139,9 @@ const priceMasterSlice = createSlice({
         setVisibleRows: (state, action) => {
             state.visibleRows = action.payload;
         },
+        // setRemark: (state, action) => {
+        //     state.remark = action.payload;
+        // },
     }
 })
 export const { updateGlobalSheetStatus, setMode, setModuleOn, setSelectedCustomer, setExcelData, setDates, setCategory, resetUploadState, setSelectedSheet, setSheetOptions, setItems, setLoading, resetAll,
@@ -145,5 +149,6 @@ export const { updateGlobalSheetStatus, setMode, setModuleOn, setSelectedCustome
     setGeneratedId, setSheetMode, setPriceSheetRef, setSearch, setExistingSheets,
     setErrorFilter, setIsUploading, setIsLoadingList, setSelectedUpdateCustomer, setExcelFileName,
     setActiveTab,setVisibleRows,
+    // setRemark
 } = priceMasterSlice.actions;
 export default priceMasterSlice.reducer
