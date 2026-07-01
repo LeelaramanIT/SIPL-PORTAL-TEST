@@ -43,6 +43,12 @@ const groupItemsByTyreType = (items) => {
   // tyreType first showed up in the original items array.
   const grouped = [];
   for (const [, groupItems] of groups) {
+    // ✅ Sort within each tyreType group by total weight (ascending)
+    groupItems.sort((a, b) => {
+      const weightA = (a?.finishedWt || 0) + (a?.rimfinishedwt || 0);
+      const weightB = (b?.finishedWt || 0) + (b?.rimfinishedwt || 0);
+      return weightA - weightB;
+    });
     grouped.push(...groupItems);
   }
 
