@@ -18,9 +18,6 @@ import {
   Skeleton,
   Empty,
   Space,
-  Tag,
-  Slider,
-  Radio,
   DatePicker,
   message
 } from "antd";
@@ -42,7 +39,6 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 
 const FILTER_TYPES = {
   TEXT: "text",
@@ -76,178 +72,172 @@ const detectColumnType = (values) => {
   return FILTER_TYPES.TEXT;
 };
 
-// ==================== ENHANCED FILTER COMPONENTS ====================
-const TextFilter = ({
+// ==================== EXCEL-STYLE VALUE FORMATTING/SORTING ====================
+// These only affect how a value is *displayed* and *ordered* inside the
+// filter checkbox list — every column still gets the exact same UI.
+const formatFilterLabel = (value, type) => {
+  switch (type) {
+    case FILTER_TYPES.NUMBER:
+      return Number(value).toLocaleString();
+    case FILTER_TYPES.DATE: {
+      const d = dayjs(value);
+      return d.isValid() ? d.format("DD-MM-YYYY") : String(value);
+    }
+    case FILTER_TYPES.BOOLEAN:
+      return value === true || value === "true" ? "True" : "False";
+    default:
+      return String(value);
+  }
+};
+
+const getSortedFilterOptions = (info) => {
+  const raws = info?.uniqueValues || [];
+  const sorted = [...raws];
+
+  switch (info?.type) {
+    case FILTER_TYPES.NUMBER:
+      sorted.sort((a, b) => Number(a) - Number(b));
+      break;
+    case FILTER_TYPES.DATE:
+      sorted.sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf());
+      break;
+    case FILTER_TYPES.BOOLEAN:
+      sorted.sort((a, b) => (a === b ? 0 : a ? -1 : 1));
+      break;
+    default:
+      sorted.sort((a, b) => String(a).localeCompare(String(b)));
+  }
+
+  return sorted.map((value) => ({
+    value,
+    label: formatFilterLabel(value, info?.type),
+  }));
+};
+
+// ==================== EXCEL-STYLE FILTER DROPDOWN (single, reusable) ====================
+// Used for every column regardless of detected data type — text, numbers,
+// dates, booleans, IDs, codes all get the same search + checkbox-list UI.
+const FILTER_ROW_HEIGHT = 28;
+const FILTER_LIST_HEIGHT = 240;
+const FILTER_LIST_OVERSCAN = 6;
+
+const ExcelFilterDropdown = ({
   columnKey,
-  values,
-  selectedValues,
-  onChange,
+  options,
+  pendingValues,
+  searchText,
+  onSearchChange,
+  onToggleValue,
+  onToggleSelectAll,
+  onApply,
   onClear,
+  onCancel,
 }) => {
-  const [search, setSearch] = useState("");
-  const filtered = useMemo(
-    () =>
-      values.filter((v) =>
-        String(v || "")
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-      ),
-    [values, search],
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef(null);
+
+  // Jump back to the top of the list whenever the search narrows/widens it.
+  useEffect(() => {
+    setScrollTop(0);
+    if (containerRef.current) containerRef.current.scrollTop = 0;
+  }, [searchText]);
+
+  const filteredOptions = useMemo(() => {
+    if (!searchText.trim()) return options;
+    const lower = searchText.toLowerCase();
+    return options.filter((opt) => opt.label.toLowerCase().includes(lower));
+  }, [options, searchText]);
+
+  const totalCount = filteredOptions.length;
+  const allSelected =
+    totalCount > 0 &&
+    filteredOptions.every((opt) => pendingValues.includes(opt.value));
+  const someSelected =
+    !allSelected &&
+    filteredOptions.some((opt) => pendingValues.includes(opt.value));
+
+  // Lightweight manual virtualization so lists with thousands of unique
+  // values (e.g. IDs, invoice numbers) stay smooth without extra deps.
+  const startIndex = Math.max(
+    0,
+    Math.floor(scrollTop / FILTER_ROW_HEIGHT) - FILTER_LIST_OVERSCAN,
   );
+  const visibleCount =
+    Math.ceil(FILTER_LIST_HEIGHT / FILTER_ROW_HEIGHT) + FILTER_LIST_OVERSCAN * 2;
+  const endIndex = Math.min(totalCount, startIndex + visibleCount);
+  const visibleOptions = filteredOptions.slice(startIndex, endIndex);
+  const topPadding = startIndex * FILTER_ROW_HEIGHT;
+  const bottomPadding = (totalCount - endIndex) * FILTER_ROW_HEIGHT;
 
   return (
-    <div className="p-3 space-y-2 w-80">
-      <Input
-        placeholder="Search values..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        prefix={<SearchOutlined />}
-        size="small"
-      />
-      <div className="max-h-48 overflow-auto space-y-1">
-        {filtered.slice(0, 20).map((value, idx) => (
-          <Tag
-            key={idx}
-            className={`cursor-pointer ${selectedValues.includes(value) ? "bg-blue-500" : "bg-gray-100 hover:bg-gray-200"}`}
-            onClick={() => {
-              const next = selectedValues.includes(value)
-                ? selectedValues.filter((v) => v !== value)
-                : [...selectedValues, value];
-              onChange(columnKey, next);
-            }}
-          >
-            {String(value)}
-          </Tag>
-        ))}
+    <div
+      className="bg-white rounded-lg shadow-lg border border-gray-200"
+      style={{ width: 260 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="p-2 border-b border-gray-100">
+        <Input
+          placeholder="Search..."
+          size="small"
+          allowClear
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
       </div>
-      <div className="flex justify-between pt-2 border-t">
-        <Button size="small" onClick={() => onClear(columnKey)}>
-          Clear
-        </Button>
-        <Button type="primary" size="small">
-          Apply
-        </Button>
-      </div>
-    </div>
-  );
-};
 
-const NumberFilter = ({
-  columnKey,
-  values,
-  selectedRange,
-  onChange,
-  onClear,
-}) => {
-  const minVal = Math.min(...values.filter(Number));
-  const maxVal = Math.max(...values.filter(Number));
-
-  return (
-    <div className="p-3 w-72 space-y-3">
-      <Slider
-        range
-        min={minVal}
-        max={maxVal}
-        value={selectedRange}
-        onChange={(range) => onChange(columnKey, range)}
-        tooltip={{ formatter: (value) => `${value.toLocaleString()}` }}
-      />
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>{minVal.toLocaleString()}</span>
-        <span>{maxVal.toLocaleString()}</span>
+      <div className="px-3 py-1.5 border-b border-gray-100">
+        <Checkbox
+          checked={allSelected}
+          indeterminate={someSelected}
+          onChange={(e) => onToggleSelectAll(filteredOptions, e.target.checked)}
+        >
+          Select All
+        </Checkbox>
       </div>
-      <div className="flex justify-between pt-2 border-t">
-        <Button size="small" onClick={() => onClear(columnKey)}>
-          Clear
-        </Button>
-        <Button type="primary" size="small">
-          Apply
-        </Button>
-      </div>
-    </div>
-  );
-};
 
-const DateFilter = ({ columnKey, selectedRange, onChange, onClear }) => {
-  return (
-    <div className="p-3 w-72 space-y-3">
-      <RangePicker
-        value={selectedRange?.map((d) => dayjs(d))}
-        onChange={(dates) =>
-          onChange(columnKey, dates?.map((d) => d.toISOString()) || [])
-        }
-        className="w-full"
-      />
-      <div className="flex justify-between pt-2 border-t">
-        <Button size="small" onClick={() => onClear(columnKey)}>
-          Clear
-        </Button>
-        <Button type="primary" size="small">
-          Apply
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const BooleanFilter = ({ columnKey, onChange, selectedValue, onClear }) => {
-  return (
-    <div className="p-3 w-64 space-y-2">
-      <Radio.Group
-        value={selectedValue}
-        onChange={(e) => onChange(columnKey, e.target.value)}
-        className="space-y-2"
+      <div
+        ref={containerRef}
+        className="overflow-auto"
+        style={{ height: FILTER_LIST_HEIGHT }}
+        onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       >
-        <Radio value={true}>True</Radio>
-        <Radio value={false}>False</Radio>
-        <Radio value={null}>All</Radio>
-      </Radio.Group>
-      <div className="flex justify-between pt-2 border-t">
-        <Button size="small" onClick={() => onClear(columnKey)}>
-          Clear
-        </Button>
-        <Button type="primary" size="small">
-          Apply
-        </Button>
+        {totalCount === 0 ? (
+          <div className="px-3 py-6 text-xs text-gray-400 text-center">
+            No matching values
+          </div>
+        ) : (
+          <div style={{ paddingTop: topPadding, paddingBottom: bottomPadding }}>
+            {visibleOptions.map((opt, idx) => (
+              <div
+                key={`${columnKey}-${startIndex + idx}`}
+                className="flex items-center px-3 hover:bg-gray-50"
+                style={{ height: FILTER_ROW_HEIGHT }}
+              >
+                <Checkbox
+                  checked={pendingValues.includes(opt.value)}
+                  onChange={() => onToggleValue(opt.value)}
+                >
+                  {opt.label}
+                </Checkbox>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
-  );
-};
 
-const SelectFilter = ({
-  columnKey,
-  uniqueValues,
-  selectedValues,
-  multiple,
-  onChange,
-  onClear,
-}) => {
-  return (
-    <div className="p-3 w-72 space-y-2">
-      <Select
-        mode={multiple ? "multiple" : "single"}
-        value={selectedValues}
-        onChange={(values) =>
-          onChange(columnKey, Array.isArray(values) ? values : [values])
-        }
-        style={{ width: "100%" }}
-        placeholder="Select values..."
-        size="small"
-        maxTagCount={3}
-      >
-        {uniqueValues.map((value, idx) => (
-          <Option key={idx} value={value}>
-            {String(value)}
-          </Option>
-        ))}
-      </Select>
-      <div className="flex justify-between pt-2 border-t">
-        <Button size="small" onClick={() => onClear(columnKey)}>
-          Clear
+      <div className="flex justify-between items-center gap-2 px-3 py-2 border-t border-gray-100">
+        <Button size="small" onClick={onClear}>
+          Clear Filter
         </Button>
-        <Button type="primary" size="small">
-          Apply
-        </Button>
+        <div className="flex gap-2">
+          <Button size="small" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="primary" size="small" onClick={onApply}>
+            Apply
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -277,6 +267,18 @@ const MasterReportGenerationPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // Column visibility panel: temporary/pending selection state so the table
+  // and export only react once the user clicks "Apply".
+  const [pendingColumns, setPendingColumns] = useState([]);
+  const [columnDropdownOpen, setColumnDropdownOpen] = useState(false);
+
+  // Excel-style column filter panel: only one column's filter dropdown is
+  // open at a time. `pendingFilterValues` holds the in-progress checkbox
+  // selection until the user clicks Apply — nothing filters until then.
+  const [activeFilterColumn, setActiveFilterColumn] = useState(null);
+  const [pendingFilterValues, setPendingFilterValues] = useState([]);
+  const [filterSearchText, setFilterSearchText] = useState("");
 
   // Column metadata
   const [columnMetadata, setColumnMetadata] = useState({});
@@ -452,7 +454,9 @@ const MasterReportGenerationPage = () => {
       setColumnMetadata(metadata);
 
       // Reset visible columns for new dataset
-      setVisibleColumns(Object.keys(metadata));
+      const allKeys = Object.keys(metadata);
+      setVisibleColumns(allKeys);
+      setPendingColumns(allKeys);
 
       // Reset filters because columns changed
       setColumnFilters({});
@@ -463,6 +467,7 @@ const MasterReportGenerationPage = () => {
       // Clear everything when no data
       setColumnMetadata({});
       setVisibleColumns([]);
+      setPendingColumns([]);
     }
   }, [data, analyzeColumns]);
 
@@ -487,53 +492,23 @@ const MasterReportGenerationPage = () => {
       );
     }
 
-    // Column filters
-    Object.entries(columnFilters).forEach(([columnKey, filterValue]) => {
-      if (
-        !filterValue ||
-        (Array.isArray(filterValue) && filterValue.length === 0)
-      )
-        return;
-
-      filtered = filtered.filter((row) => {
-        const rowValue = row[columnKey];
-
-        switch (columnMetadata[columnKey]?.type) {
-          case FILTER_TYPES.NUMBER:
-            if (Array.isArray(filterValue) && filterValue.length === 2) {
-              const numValue = Number(rowValue);
-              return numValue >= filterValue[0] && numValue <= filterValue[1];
-            }
-            break;
-
-          case FILTER_TYPES.DATE:
-            if (Array.isArray(filterValue) && filterValue.length === 2) {
-              const dateValue = dayjs(rowValue);
-              const startDate = dayjs(filterValue[0]);
-              const endDate = dayjs(filterValue[1]);
-              return (
-                dateValue.isValid() &&
-                dateValue.isAfter(startDate) &&
-                dateValue.isBefore(endDate)
-              );
-            }
-            break;
-
-          case FILTER_TYPES.BOOLEAN:
-            return rowValue === filterValue;
-
-          default:
-            // Multi-select or text filter
-            return filterValue.includes(rowValue);
-        }
-        return true;
-      });
+    // Column filters — Excel-style: every column (text, number, date,
+    // boolean, ID) is filtered the same way, by an explicit set of selected
+    // raw values. A key is only present in columnFilters once the user has
+    // applied a narrowed-down selection, so presence == "filter active".
+    Object.entries(columnFilters).forEach(([columnKey, selectedValues]) => {
+      if (!Array.isArray(selectedValues)) return;
+      filtered = filtered.filter((row) =>
+        selectedValues.includes(row[columnKey]),
+      );
     });
 
     return filtered;
-  }, [data, globalSearch, columnFilters, columnMetadata]);
+  }, [data, globalSearch, columnFilters]);
 
   // Dynamic table columns
+  // NOTE: this is the single source of truth for column order used both by
+  // the <Table> and by the Excel export, so the two can never drift apart.
   const tableColumns = useMemo(() => {
     if (!columnMetadata || Object.keys(columnMetadata).length === 0) return [];
 
@@ -556,86 +531,39 @@ const MasterReportGenerationPage = () => {
           }
           return String(aVal).localeCompare(String(bVal));
         },
-        filterDropdown: ({ confirm, clearFilters }) => {
-          const filterValue = columnFilters[key] || [];
-          const handleFilterChange = (colKey, value) => {
-            setColumnFilters((prev) => ({
-              ...prev,
-              [colKey]: value,
-            }));
-            confirm({ closeDropdown: false });
-          };
+        filterDropdown: () => {
+          const filterOptions = getSortedFilterOptions(info);
+          const allRawValues = filterOptions.map((opt) => opt.value);
+          const isActiveColumn = activeFilterColumn === key;
 
-          const handleClear = () => {
-            setColumnFilters((prev) => {
-              const newFilters = { ...prev };
-              delete newFilters[key];
-              return newFilters;
-            });
-            clearFilters();
-          };
-
-          const renderFilter = () => {
-            switch (info.type) {
-              case FILTER_TYPES.NUMBER:
-                return (
-                  <NumberFilter
-                    columnKey={key}
-                    values={info.sampleValues.map(Number)}
-                    selectedRange={
-                      Array.isArray(filterValue) && filterValue.length === 2
-                        ? filterValue
-                        : [0, 100]
-                    }
-                    onChange={handleFilterChange}
-                    onClear={handleClear}
-                  />
-                );
-              case FILTER_TYPES.DATE:
-                return (
-                  <DateFilter
-                    columnKey={key}
-                    selectedRange={filterValue}
-                    onChange={handleFilterChange}
-                    onClear={handleClear}
-                  />
-                );
-              case FILTER_TYPES.BOOLEAN:
-                return (
-                  <BooleanFilter
-                    columnKey={key}
-                    selectedValue={filterValue[0] || null}
-                    onChange={handleFilterChange}
-                    onClear={handleClear}
-                  />
-                );
-              case FILTER_TYPES.SINGLE_SELECT:
-                return (
-                  <SelectFilter
-                    columnKey={key}
-                    uniqueValues={info.uniqueValues}
-                    selectedValues={filterValue}
-                    multiple={false}
-                    onChange={handleFilterChange}
-                    onClear={handleClear}
-                  />
-                );
-              default:
-                return (
-                  <SelectFilter
-                    columnKey={key}
-                    uniqueValues={info.uniqueValues.slice(0, 50)}
-                    selectedValues={filterValue}
-                    multiple={true}
-                    onChange={handleFilterChange}
-                    onClear={handleClear}
-                  />
-                );
-            }
-          };
-
-          return <div className="p-2">{renderFilter()}</div>;
+          return (
+            <ExcelFilterDropdown
+              columnKey={key}
+              options={filterOptions}
+              pendingValues={
+                isActiveColumn
+                  ? pendingFilterValues
+                  : columnFilters[key] || allRawValues
+              }
+              searchText={isActiveColumn ? filterSearchText : ""}
+              onSearchChange={setFilterSearchText}
+              onToggleValue={(value) => toggleFilterValue(value)}
+              onToggleSelectAll={(visibleOpts, checked) =>
+                toggleSelectAllFiltered(visibleOpts, checked)
+              }
+              onApply={() => applyColumnFilter(key, allRawValues)}
+              onClear={() => clearColumnFilter(key)}
+              onCancel={() => cancelColumnFilter()}
+            />
+          );
         },
+        filterDropdownOpen: activeFilterColumn === key,
+        onFilterDropdownOpenChange: (open) =>
+          handleFilterDropdownOpenChange(
+            key,
+            open,
+            getSortedFilterOptions(info).map((opt) => opt.value),
+          ),
         filterIcon: () => (
           <FilterOutlined
             style={{
@@ -670,43 +598,179 @@ const MasterReportGenerationPage = () => {
           }
         },
       }));
-  }, [columnMetadata, visibleColumns, columnFilters]);
+  }, [
+    columnMetadata,
+    visibleColumns,
+    columnFilters,
+    activeFilterColumn,
+    pendingFilterValues,
+    filterSearchText,
+  ]);
 
   // Filter management
   const clearAllFilters = () => {
     setColumnFilters({});
     setGlobalSearch("");
+    setActiveFilterColumn(null);
+    setPendingFilterValues([]);
+    setFilterSearchText("");
   };
 
-  const activeFilterCount = Object.values(columnFilters).filter(
-    (f) => f && f.length > 0,
-  ).length;
+  // A column key is only ever present in columnFilters once a narrowed
+  // selection has been applied, so presence itself means "active".
+  const activeFilterCount = Object.keys(columnFilters).length;
+
+  // ---- Excel-style column filter panel handlers ----
+  const toggleFilterValue = (value) => {
+    setPendingFilterValues((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
+  // "Select All" only affects whatever is currently visible under the
+  // search box, matching Excel's behavior when a search is active.
+  const toggleSelectAllFiltered = (visibleOptions, checked) => {
+    const visibleValues = visibleOptions.map((opt) => opt.value);
+    setPendingFilterValues((prev) => {
+      if (checked) {
+        const merged = new Set(prev);
+        visibleValues.forEach((v) => merged.add(v));
+        return Array.from(merged);
+      }
+      const toRemove = new Set(visibleValues);
+      return prev.filter((v) => !toRemove.has(v));
+    });
+  };
+
+  const applyColumnFilter = (key, allRawValues) => {
+    setColumnFilters((prev) => {
+      const next = { ...prev };
+      if (pendingFilterValues.length === allRawValues.length) {
+        // Everything selected is equivalent to no filter — keep state tidy
+        // so the filter icon/badge only lights up when it's meaningful.
+        delete next[key];
+      } else {
+        next[key] = [...pendingFilterValues];
+      }
+      return next;
+    });
+    setActiveFilterColumn(null);
+    setPendingFilterValues([]);
+    setFilterSearchText("");
+  };
+
+  const clearColumnFilter = (key) => {
+    setColumnFilters((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setActiveFilterColumn(null);
+    setPendingFilterValues([]);
+    setFilterSearchText("");
+  };
+
+  const cancelColumnFilter = () => {
+    // Discard in-progress checkbox changes; nothing was applied.
+    setActiveFilterColumn(null);
+    setPendingFilterValues([]);
+    setFilterSearchText("");
+  };
+
+  const handleFilterDropdownOpenChange = (key, open, allRawValues) => {
+    if (open) {
+      setActiveFilterColumn(key);
+      setFilterSearchText("");
+      // Seed the pending selection from whatever is already applied, or
+      // default to "everything selected" (Excel's default state).
+      setPendingFilterValues(
+        columnFilters[key] ? [...columnFilters[key]] : [...allRawValues],
+      );
+    } else {
+      // Outside click / escape behaves like Cancel.
+      setActiveFilterColumn(null);
+      setPendingFilterValues([]);
+      setFilterSearchText("");
+    }
+  };
 
   // UI handlers
   const handleRefresh = () => executeReport();
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
-  const toggleColumn = (columnKey) => {
-    setVisibleColumns((prev) =>
+
+  // ---- Column visibility panel handlers (operate on the *pending* selection) ----
+  const togglePendingColumn = (columnKey) => {
+    setPendingColumns((prev) =>
       prev.includes(columnKey)
         ? prev.filter((k) => k !== columnKey)
         : [...prev, columnKey],
     );
   };
+
+  const handleSelectAllColumns = () => {
+    setPendingColumns(Object.keys(columnMetadata));
+  };
+
+  const handleClearAllColumns = () => {
+    setPendingColumns([]);
+  };
+
+  const handleApplyColumns = () => {
+    // Commit the pending selection as the single source of truth.
+    // Both the <Table> and the Excel export read from `visibleColumns`.
+    setVisibleColumns(pendingColumns);
+    setColumnDropdownOpen(false);
+  };
+
+  const handleCancelColumns = () => {
+    // Discard any in-progress changes; revert pending back to what's applied.
+    setPendingColumns(visibleColumns);
+    setColumnDropdownOpen(false);
+  };
+
+  const handleColumnDropdownOpenChange = (open) => {
+    if (open) {
+      // Re-seed the pending selection with whatever is currently applied
+      // every time the panel is opened, so reopening retains prior choices.
+      setPendingColumns(visibleColumns);
+      setColumnDropdownOpen(true);
+    } else {
+      // Clicking outside behaves like Cancel — no partial commits.
+      setPendingColumns(visibleColumns);
+      setColumnDropdownOpen(false);
+    }
+  };
+
   const handleExportExcel = () => {
     if (!fullyFilteredData || fullyFilteredData.length === 0) return;
 
-    // Remove internal rowKey
-    const cleanedData = fullyFilteredData.map(({ rowKey, ...rest }) => rest);
+    // Single source of truth: export exactly the columns (and order) shown
+    // in the table right now. tableColumns is already filtered/ordered by
+    // visibleColumns, so this can never drift from what the user sees.
+    const exportKeys = tableColumns.map((col) => col.key);
 
-    // Create worksheet
-    const worksheet = XLSX.utils.json_to_sheet(cleanedData);
+    if (exportKeys.length === 0) return;
 
-    // Auto column width
-    const columnWidths = Object.keys(cleanedData[0] || {}).map((key) => ({
+    const cleanedData = fullyFilteredData.map((row) => {
+      const obj = {};
+      exportKeys.forEach((key) => {
+        obj[key] = row[key] ?? "";
+      });
+      return obj;
+    });
+
+    // Create worksheet, explicitly pinning header order to exportKeys so
+    // hidden columns can never leak in and order always matches the table.
+    const worksheet = XLSX.utils.json_to_sheet(cleanedData, {
+      header: exportKeys,
+    });
+
+    // Auto column width (computed only over the exported columns)
+    const columnWidths = exportKeys.map((key) => ({
       wch: Math.max(
         key.length,
-        ...cleanedData.map((row) => String(row[key] || "").length),
+        ...cleanedData.map((row) => String(row[key] ?? "").length),
       ),
     }));
 
@@ -721,8 +785,6 @@ const MasterReportGenerationPage = () => {
       worksheet,
       sheetName,
     );
-
-
 
     // Generate excel buffer
     const excelBuffer = XLSX.write(workbook, {
@@ -902,26 +964,67 @@ const MasterReportGenerationPage = () => {
             >
               Export
             </Button>
-            {/* Column Visibility - Fixed Position */}
+            {/* Column Visibility - multi-select panel with Select All / Clear All / Apply / Cancel */}
             <Dropdown
-              menu={{
-                items: Object.entries(columnMetadata).map(([key, info]) => ({
-                  key,
-                  label: (
-                    <div className="flex items-center p-2">
-                      <Checkbox
-                        checked={visibleColumns.includes(key)}
-                        onChange={(e) => toggleColumn(key)}
-                      >
-                        {info.title}
-                      </Checkbox>
-                    </div>
-                  ),
-                })),
-              }}
+              open={columnDropdownOpen}
+              onOpenChange={handleColumnDropdownOpenChange}
               trigger={["click"]}
               placement="topRight"
-
+              dropdownRender={() => (
+                <div
+                  className="bg-white rounded-lg shadow-lg border border-gray-200"
+                  style={{ width: 260 }}
+                  // Prevent AntD's internal click-outside handling from
+                  // treating a click inside the panel as an "outside" click.
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100">
+                    <Button
+                      type="link"
+                      size="small"
+                      style={{ padding: 0 }}
+                      onClick={handleSelectAllColumns}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      type="link"
+                      size="small"
+                      style={{ padding: 0 }}
+                      onClick={handleClearAllColumns}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  <div className="max-h-64 overflow-auto py-1">
+                    {Object.entries(columnMetadata).map(([key, info]) => (
+                      <div
+                        key={key}
+                        className="flex items-center px-3 py-1.5 hover:bg-gray-50"
+                      >
+                        <Checkbox
+                          checked={pendingColumns.includes(key)}
+                          onChange={() => togglePendingColumn(key)}
+                        >
+                          {info.title}
+                        </Checkbox>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end gap-2 px-3 py-2 border-t border-gray-100">
+                    <Button size="small" onClick={handleCancelColumns}>
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={handleApplyColumns}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+              )}
             >
               <Button icon={<SettingOutlined />} style={{
                 backgroundColor: "var(--primary-light)",
