@@ -39,6 +39,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const FILTER_TYPES = {
   TEXT: "text",
@@ -112,6 +113,32 @@ const getSortedFilterOptions = (info) => {
     value,
     label: formatFilterLabel(value, info?.type),
   }));
+};
+
+// ==================== DATE-ONLY FILTER (range picker) ====================
+// Kept as the old-style filter, used ONLY for columns auto-detected as
+// dates. Every other column type still uses the Excel-style checkbox list.
+const DateFilter = ({ columnKey, selectedRange, onChange, onClear }) => {
+  return (
+    <div className="p-3 w-72 space-y-3">
+      <RangePicker
+        value={
+          Array.isArray(selectedRange) && selectedRange.length === 2
+            ? selectedRange.map((d) => dayjs(d))
+            : null
+        }
+        onChange={(dates) =>
+          onChange(columnKey, dates?.map((d) => d.toISOString()) || [])
+        }
+        className="w-full"
+      />
+      <div className="flex justify-end pt-2 border-t">
+        <Button size="small" onClick={() => onClear(columnKey)}>
+          Clear
+        </Button>
+      </div>
+    </div>
+  );
 };
 
 // ==================== EXCEL-STYLE FILTER DROPDOWN (single, reusable) ====================
@@ -492,19 +519,38 @@ const MasterReportGenerationPage = () => {
       );
     }
 
-    // Column filters — Excel-style: every column (text, number, date,
-    // boolean, ID) is filtered the same way, by an explicit set of selected
-    // raw values. A key is only present in columnFilters once the user has
-    // applied a narrowed-down selection, so presence == "filter active".
-    Object.entries(columnFilters).forEach(([columnKey, selectedValues]) => {
-      if (!Array.isArray(selectedValues)) return;
-      filtered = filtered.filter((row) =>
-        selectedValues.includes(row[columnKey]),
-      );
+    // Column filters — date columns use a start/end range (old-style range
+    // picker); every other column type uses the Excel-style "selected raw
+    // values" rule, uniformly.
+    Object.entries(columnFilters).forEach(([columnKey, filterValue]) => {
+      if (!filterValue) return;
+      const colType = columnMetadata[columnKey]?.type;
+
+      if (colType === FILTER_TYPES.DATE) {
+        if (Array.isArray(filterValue) && filterValue.length === 2) {
+          const startDate = dayjs(filterValue[0]).startOf("day");
+          const endDate = dayjs(filterValue[1]).endOf("day");
+          filtered = filtered.filter((row) => {
+            const dateValue = dayjs(row[columnKey]);
+            return (
+              dateValue.isValid() &&
+              !dateValue.isBefore(startDate) &&
+              !dateValue.isAfter(endDate)
+            );
+          });
+        }
+        return;
+      }
+
+      if (Array.isArray(filterValue)) {
+        filtered = filtered.filter((row) =>
+          filterValue.includes(row[columnKey]),
+        );
+      }
     });
 
     return filtered;
-  }, [data, globalSearch, columnFilters]);
+  }, [data, globalSearch, columnFilters, columnMetadata]);
 
   // Dynamic table columns
   // NOTE: this is the single source of truth for column order used both by
@@ -514,24 +560,47 @@ const MasterReportGenerationPage = () => {
 
     return Object.entries(columnMetadata)
       .filter(([key]) => visibleColumns.includes(key))
-      .map(([key, info]) => ({
-        title: info.title,
-        dataIndex: key,
-        key,
-        width: Math.min(Math.max(info.title.length * 8, 120), 300),
-        sorter: (a, b) => {
-          const aVal = a[key];
-          const bVal = b[key];
-          if (aVal == null && bVal == null) return 0;
-          if (aVal == null) return 1;
-          if (bVal == null) return -1;
+      .map(([key, info]) => {
+        const isDateColumn = info.type === FILTER_TYPES.DATE;
 
-          if (info.type === FILTER_TYPES.NUMBER) {
-            return Number(aVal) - Number(bVal);
-          }
-          return String(aVal).localeCompare(String(bVal));
-        },
-        filterDropdown: () => {
+        const dateFilterDropdown = ({ confirm, clearFilters }) => {
+          const filterValue = columnFilters[key] || [];
+
+          const handleDateChange = (colKey, value) => {
+            setColumnFilters((prev) => {
+              const next = { ...prev };
+              if (!value || value.length === 0) {
+                delete next[colKey];
+              } else {
+                next[colKey] = value;
+              }
+              return next;
+            });
+            confirm({ closeDropdown: false });
+          };
+
+          const handleDateClear = () => {
+            setColumnFilters((prev) => {
+              const next = { ...prev };
+              delete next[key];
+              return next;
+            });
+            clearFilters();
+          };
+
+          return (
+            <div className="p-2">
+              <DateFilter
+                columnKey={key}
+                selectedRange={filterValue}
+                onChange={handleDateChange}
+                onClear={handleDateClear}
+              />
+            </div>
+          );
+        };
+
+        const excelFilterDropdown = () => {
           const filterOptions = getSortedFilterOptions(info);
           const allRawValues = filterOptions.map((opt) => opt.value);
           const isActiveColumn = activeFilterColumn === key;
@@ -556,48 +625,72 @@ const MasterReportGenerationPage = () => {
               onCancel={() => cancelColumnFilter()}
             />
           );
-        },
-        filterDropdownOpen: activeFilterColumn === key,
-        onFilterDropdownOpenChange: (open) =>
-          handleFilterDropdownOpenChange(
-            key,
-            open,
-            getSortedFilterOptions(info).map((opt) => opt.value),
-          ),
-        filterIcon: () => (
-          <FilterOutlined
-            style={{
-              color: columnFilters[key] ? "#1890ff" : undefined,
-            }}
-          />
-        ),
-        render: (value, record) => {
-          if (value == null || value === "") {
-            return <span className="text-gray-400">-</span>;
-          }
+        };
 
-          const colInfo = columnMetadata[key];
-          switch (colInfo?.type) {
-            case FILTER_TYPES.NUMBER:
-              return (
-                <span className="font-mono">
-                  {Number(value).toLocaleString()}
-                </span>
-              );
-            case FILTER_TYPES.DATE:
-              return dayjs(value).format("DD MMM YYYY");
-            case FILTER_TYPES.BOOLEAN:
-              return (
-                <Badge
-                  status={value ? "success" : "default"}
-                  text={value ? "Yes" : "No"}
-                />
-              );
-            default:
-              return String(value);
-          }
-        },
-      }));
+        return {
+          title: info.title,
+          dataIndex: key,
+          key,
+          width: Math.min(Math.max(info.title.length * 8, 120), 300),
+          sorter: (a, b) => {
+            const aVal = a[key];
+            const bVal = b[key];
+            if (aVal == null && bVal == null) return 0;
+            if (aVal == null) return 1;
+            if (bVal == null) return -1;
+
+            if (info.type === FILTER_TYPES.NUMBER) {
+              return Number(aVal) - Number(bVal);
+            }
+            return String(aVal).localeCompare(String(bVal));
+          },
+          filterDropdown: isDateColumn ? dateFilterDropdown : excelFilterDropdown,
+          // Date columns manage their own popup visibility (old behavior);
+          // only the Excel-style panel needs the controlled Apply/Cancel flow.
+          ...(!isDateColumn && {
+            filterDropdownOpen: activeFilterColumn === key,
+            onFilterDropdownOpenChange: (open) =>
+              handleFilterDropdownOpenChange(
+                key,
+                open,
+                getSortedFilterOptions(info).map((opt) => opt.value),
+              ),
+          }),
+          filterIcon: () => (
+            <FilterOutlined
+              style={{
+                color: columnFilters[key] ? "#1890ff" : undefined,
+              }}
+            />
+          ),
+          render: (value, record) => {
+            if (value == null || value === "") {
+              return <span className="text-gray-400">-</span>;
+            }
+
+            const colInfo = columnMetadata[key];
+            switch (colInfo?.type) {
+              case FILTER_TYPES.NUMBER:
+                return (
+                  <span className="font-mono">
+                    {Number(value).toLocaleString()}
+                  </span>
+                );
+              case FILTER_TYPES.DATE:
+                return dayjs(value).format("DD MMM YYYY");
+              case FILTER_TYPES.BOOLEAN:
+                return (
+                  <Badge
+                    status={value ? "success" : "default"}
+                    text={value ? "Yes" : "No"}
+                  />
+                );
+              default:
+                return String(value);
+            }
+          },
+        };
+      });
   }, [
     columnMetadata,
     visibleColumns,
