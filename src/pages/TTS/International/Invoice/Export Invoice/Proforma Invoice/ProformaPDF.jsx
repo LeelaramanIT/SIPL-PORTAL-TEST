@@ -27,6 +27,28 @@ const chunkItemsForPages = (items) => {
   return chunks;
 };
 
+// ─── Group items by tyreType, preserving order within each group ────────────
+const groupItemsByTyreType = (items) => {
+  if (!items || items.length === 0) return [];
+
+  const groups = new Map();
+
+  items.forEach((item) => {
+    const key = item?.tyreType || "UNSPECIFIED";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+
+  // Map preserves insertion order, so groups appear in the order their
+  // tyreType first showed up in the original items array.
+  const grouped = [];
+  for (const [, groupItems] of groups) {
+    grouped.push(...groupItems);
+  }
+
+  return grouped;
+};
+
 // ─── Column widths ────────────────────────────────────────────────────────────
 // Column order: srNo | product | sunPart | po | description | edc | qty | unitWt | totalWt | unitPrice | totalPrice
 // EDC width increased from 6 → 8, totalPrice reduced from 14 → 12 (same total budget)
@@ -919,7 +941,8 @@ const ProformaPDF = ({ data }) => {
   const showEdc = data?.items?.some((item) => item?.assyRimstatus === true);
   const showItemCode = data?.items?.some((item) => item?.partNumber);
   const PONumber = data?.items?.some((item) => item?.PONumber);
-  const itemChunks = chunkItemsForPages(data?.items);
+  // const itemChunks = chunkItemsForPages(data?.items);
+  const itemChunks = chunkItemsForPages(groupItemsByTyreType(data?.items));
 
   const subTotal = (data?.items || []).reduce(
     (s, it) =>
