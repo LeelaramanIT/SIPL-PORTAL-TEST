@@ -4,12 +4,15 @@ import { IoHome, IoSettingsOutline, IoPieChartSharp } from "react-icons/io5";
 import { GoSidebarCollapse, GoSidebarExpand } from "react-icons/go";
 import { RxDashboard } from "react-icons/rx";
 import {
+  MdInventory2,
   MdOutlineAssignmentTurnedIn,
   MdOutlineManageAccounts,
   MdOutlineManageSearch,
+  MdOutlinePeopleAlt,
   MdOutlineQrCode,
   MdOutlineReceipt,
   MdOutlineTimeline,
+  MdSettingsApplications,
   MdTireRepair,
 } from "react-icons/md";
 import { SiAwsorganizations, SiGoogledocs } from "react-icons/si";
@@ -322,35 +325,32 @@ const SideBar = () => {
       ],
     },
     {
-      key: "Masters",
-      icon: <MdOutlineManageAccounts />,
-      label: "Masters",
-      children: [
-        {
-          key: "UserMaster",
-          label: "User Master",
-          children: [
-            { key: "/Masters/UserMaster/AllUsers", label: "All Users" },
-            { key: "/Masters/UserMaster/CreateUser", label: "Create User" },
-          ],
-        },
-        {
-          key: "/Masters/PriceMaster",
-          label: "Price Master",
-          icon: <MdOutlinePriceChange />,
-        },
-        {
-          key: "/Masters/ItemIDMaster",
-          label: "Item Master Creation",
-          icon: <MdOutlinePriceChange />,
-        },
-        {
-          key: "/Masters/Master-creation",
-          label: "Master Creation",
-          icon: <MdOutlinePriceChange />,
-        },
-      ],
+  key: "Masters",
+  icon: <MdOutlineManageAccounts size={20} />,
+  label: "Masters",
+  children: [
+    {
+      key: "/Masters/CustomerMaster",
+      label: "Customer Master",
+      icon: <MdOutlinePeopleAlt size={18} />,
     },
+    {
+      key: "/Masters/PriceMaster",
+      label: "Price Master",
+      icon: <MdOutlinePriceChange size={18} />,
+    },
+    {
+      key: "/Masters/ItemIDMaster",
+      label: "Item Master Creation",
+      icon: <MdInventory2 size={18} />,
+    },
+    {
+      key: "/Masters/Master-creation",
+      label: "Master Creation",
+      icon: <MdSettingsApplications size={18} />,
+    },
+  ],
+},
     {
       key: "Pages",
       icon: <RiPagesLine />,
@@ -555,7 +555,11 @@ const SideBar = () => {
         width={240}
         collapsedWidth={isMobile ? 0 : 80}
         style={{
-          height: "100vh",
+          // Mobile height comes from the dvh-aware `.sidebar-mobile-viewport`
+          // class below — 100vh here would be sized against the browser's
+          // largest (toolbar-hidden) viewport, leaving a gap once the real
+          // visible viewport is shorter (address bar visible).
+          ...(isMobile ? {} : { height: "100vh" }),
           overflow: "auto",
           position: isMobile ? "fixed" : "relative",
           left: 0,
@@ -570,7 +574,9 @@ const SideBar = () => {
           display: "flex",
           flexDirection: "column",
         }}
-        className="dark:bg-gray-900 custom-scrollbar sidebar-transition"
+        className={`dark:bg-gray-900 custom-scrollbar sidebar-transition ${
+          isMobile ? "sidebar-mobile-viewport" : ""
+        }`}
         trigger={null}
       >
         {/* Logo & Toggle */}
@@ -651,7 +657,7 @@ const SideBar = () => {
         </div>
 
         {/* Theme Toggle */}
-        <div className="p-1 mt-auto flex justify-center">
+        <div className="p-1 mt-auto flex justify-center ">
           <ThemeSwitcher />
         </div>
       </Sider>

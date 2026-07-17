@@ -540,7 +540,7 @@ const ScanForInspectionDetails = () => {
                 <DynamicDataTable
                   columns={columns}
                   data={items}
-                  headerClassName="bg-[var(--primary)] text-white text-[0.8rem] dark:bg-slate-950 shadow-sm"
+                  headerClassName="!bg-[var(--primary)] !text-white text-[0.8rem] !dark:bg-slate-950 !shadow-sm"
                   loading={loading}
                   cellClassName="text-[0.77rem] font-bold"
                   rowClassName={(row) => {

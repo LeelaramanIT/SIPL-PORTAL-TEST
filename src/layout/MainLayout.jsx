@@ -19,13 +19,13 @@ const MainLayout = () => {
   <SideBar />
 
   <div
-    className="flex-1 flex flex-col transition-all duration-300"
+    className="flex-1 min-w-0 flex flex-col transition-all duration-300"
   >
     <Navbar />
 
     <div
   ref={scrollRef}
-  className="flex-1 h-[calc(100vh-62px)] layout-scroll overflow-y-auto overflow-x-hidden rounded-none lg:rounded-t-2xl dark:bg-gray-800 custom-scrollbar"
+  className="flex-1 min-w-0 h-[calc(100vh-62px)] layout-scroll overflow-y-auto overflow-x-hidden rounded-none lg:rounded-t-2xl dark:bg-gray-800 custom-scrollbar"
 >
   <Outlet />
 </div>

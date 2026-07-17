@@ -454,6 +454,7 @@ const handleChange = (e) => {
                   columns={uploadColumns}
                   data={finalTableData}
                   headerClassName='bg-slate-100 text-[var(--text-color)] text-[10px] uppercase font-bold'
+                  // headerClassName="!bg-[var(--primary)] !text-white"
                 />
               </div>
             </motion.div>

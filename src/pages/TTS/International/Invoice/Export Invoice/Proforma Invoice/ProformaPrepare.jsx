@@ -447,7 +447,7 @@ const ProformaPrepare = () => {
             data={filteredItems || []}
             columns={columns}
             // 4. Ensure the background color is solid (no transparency) so text doesn't bleed through while scrolling
-            headerClassName="dark:bg-slate-800 bg-[var(--primary)]/90 text-gray-900 dark:text-white sticky top-0 z-20 shadow-sm"
+            headerClassName="!dark:bg-slate-800 !bg-[var(--primary)]/90 !text-gray-900 !dark:text-white sticky top-0 z-20 shadow-sm"
           />
         </div>
 

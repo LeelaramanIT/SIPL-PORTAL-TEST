@@ -117,8 +117,9 @@
 }
 
 .ant-layout-sider {
-  position: relative !important;
-  z-index: 1050 !important; /* Higher than most Ant Design elements */
+  /* position & z-index are controlled inline by SideBar.jsx (fixed on
+     mobile for the overlay drawer, relative on desktop) — do not force
+     them here, it silently breaks the mobile "position: fixed" drawer. */
   box-shadow: 1px 0 1px rgba(0, 0, 0, 0.25);
    /* Soft shadow for elevation */
   background-clip: padding-box;
@@ -128,12 +129,19 @@
 @media (max-width: 1024px) {
   /* 🔹 Sidebar stays on top of page content */
 .ant-layout-sider {
-  position: relative !important;
-  z-index: 10 !important; /* Enough to appear above main content but below modals */
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.15); /* Optional subtle elevation */
   background-clip: padding-box;
 }
 
+  /* Dynamic-viewport-aware height so mobile browser toolbar show/hide
+     (which changes the *visual* viewport without firing resize on some
+     browsers) never leaves the fixed drawer taller/shorter than what's
+     actually visible. 100vh is kept first as a fallback for browsers
+     without dvh support; 100dvh overrides it where supported. */
+  .sidebar-mobile-viewport {
+    height: 100vh;
+    height: 100dvh;
+  }
 
   /* Dim background overlay (optional if you already use backdrop div) */
   .sidebar-overlay {

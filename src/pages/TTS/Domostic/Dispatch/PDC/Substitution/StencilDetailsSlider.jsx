@@ -234,7 +234,7 @@ export const StencilDetailsSlider = ({ isOpen = false, onClose, data = {} }) => 
                             >
                                 <DynamicDataTable
                                     columns={columns}
-                                    headerClassName="bg-[var(--primary)] text-[var(--text)] text-[10px] uppercase tracking-widest border-b border-slate-100 dark:border-slate-800"
+                                    headerClassName="!bg-[var(--primary)] !text-[var(--text)] !text-[10px] !uppercase !tracking-widest !border-b !border-slate-100 !dark:border-slate-800"
                                     data={stencilList}
                                     loading={false}
                                     visibleRows={stencilList.length} // Let the container handle the scroll

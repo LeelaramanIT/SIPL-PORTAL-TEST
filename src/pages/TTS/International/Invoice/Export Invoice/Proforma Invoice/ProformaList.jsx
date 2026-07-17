@@ -210,7 +210,7 @@ const ProformaList = () => {
               columns={columns}
               loading={loading}
               data={filteredData}
-              headerClassName="bg-[var(--primary)]  text-[var(--text)] text-[10px] uppercase font-bold"
+              headerClassName="!bg-[var(--primary)]  !text-[var(--text)] !text-[10px] !uppercase !font-bold"
               visibleRows={visibleRows}
               onLoadMore={() =>
                 setVisibleRows((prev) =>

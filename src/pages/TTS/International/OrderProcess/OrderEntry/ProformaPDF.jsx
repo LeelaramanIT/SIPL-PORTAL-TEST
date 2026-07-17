@@ -13,7 +13,7 @@ const sf = (val, dec = 2) =>                     // number → fixed string
 // ── Font registration (module level — must NOT be called during render) ───────
 Font.register({
   family: "Roboto",
-  src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
+  src: "/fonts/Roboto-Regular.ttf",
   fontWeight: "normal",
 });
 Font.registerHyphenationCallback((word) => [word]);
@@ -107,7 +107,9 @@ const styles = StyleSheet.create({
 const HeaderSection = ({ data }) => (
   <View style={{ flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderColor: "black", height: 35, paddingHorizontal: 10 }}>
     <View style={{ width: "20%", justifyContent: "center" }}>
-      <Image src={LOGO} style={{ width: 100, height: 35 }} />
+     {LOGO ? (
+        <Image src={LOGO} style={{ width: 100, height: 35 }} />
+      ) : null}
     </View>
     <View style={{ width: "60%", alignItems: "center", justifyContent: "center" }}>
       <Text style={{ fontSize: 8, fontWeight: "bold", textTransform: "uppercase" }}>CUSTOMER INVOICE</Text>
@@ -298,7 +300,7 @@ const description = showExtraDetails
         return (
           <View key={index} style={styles.bodyRow}>
             <View style={[styles.bodyCell, { width: w.srNo }]}>
-              <Text style={styles.bodyText}>{n(item.srNo ?? startIndex + index + 1)}</Text>
+              <Text style={styles.bodyText}>{n(startIndex + index + 1)}</Text>
             </View>
             {showItemCode && (
               <View style={[styles.bodyCell, { width: w.product }]}>
@@ -387,7 +389,11 @@ const SummaryRows = ({ data, subTotal, grandTotalDDP = 0, totalTax = 0, fallback
   const discounts    = data?.discountDetails?.[0]?.rows   || [];
   const taxSummaryRows = getTaxSummaryRows(data, totalTax, fallbackTaxPercent);
 
-  const amountInWords = s(numberToWords(grandTotalDDP, s(data?.userCurrency)));
+  const amountInWords = s(
+  typeof numberToWords === "function"
+    ? numberToWords(grandTotalDDP, s(data?.userCurrency))
+    : ""
+);
 
   const totalQty = (data?.items || []).reduce((acc, it) => acc + Number(it.itemQty || 0), 0);
   const totalWgt = (data?.items || []).reduce(
@@ -578,7 +584,7 @@ const ProformaPDF = ({ data }) => {
               {isLastPage && <SummaryRows data={{ ...data, items: sortedItems }} subTotal={subTotal} grandTotalDDP={grandTotalDDP} totalTax={totalTax} fallbackTaxPercent={gstPercent} />}
               {isLastPage && <SignatureBlock data={data} />}
             </View>
-            <Text fixed render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} style={styles.pageNumber} />
+           <Text fixed render={({ pageNumber, totalPages }) => `Page ${n(pageNumber)} / ${n(totalPages)}`} style={styles.pageNumber} />
           </Page>
         );
       })}

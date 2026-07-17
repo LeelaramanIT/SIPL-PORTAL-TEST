@@ -732,7 +732,7 @@ const TyreAndRimFitment = () => {
                   <DynamicDataTable
                     columns={columns}
                     data={items}
-                    headerClassName="bg-[var(--primary)] text-white dark:bg-slate-950 shadow-sm"
+                    headerClassName="!bg-[var(--primary)] !text-white !dark:bg-slate-950 !shadow-sm"
                     loading={loading}
                   />
                 )}

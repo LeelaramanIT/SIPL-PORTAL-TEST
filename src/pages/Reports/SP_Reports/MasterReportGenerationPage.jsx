@@ -199,7 +199,7 @@ const ExcelFilterDropdown = ({
 
   return (
     <div
-      className="bg-white rounded-lg shadow-lg border border-gray-200"
+      className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-[90vw]"
       style={{ width: 220 }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -469,6 +469,16 @@ const MasterReportGenerationPage = () => {
       info.uniqueValues = Array.from(info.values);
       info.type = detectColumnType(info.sampleValues);
       info.title = formatColumnTitle(key);
+
+      // ProcessID is an opaque string identifier (e.g. "P-002364"), not a
+      // date — the generic dayjs-based heuristic in detectColumnType can
+      // still misclassify it as FILTER_TYPES.DATE if enough sampled values
+      // happen to satisfy dayjs's lenient native Date-parsing fallback.
+      // Force it back to TEXT so it always renders/filters/sorts as a
+      // plain string, without touching detection for any other column.
+      if (key === "ProcessID") {
+        info.type = FILTER_TYPES.TEXT;
+      }
     });
 
     return columnInfo;
@@ -498,6 +508,27 @@ const MasterReportGenerationPage = () => {
       setPendingColumns([]);
     }
   }, [data, analyzeColumns]);
+
+  const tableWrapperRef = useRef(null);
+
+useEffect(() => {
+  const el = tableWrapperRef.current;
+  if (!el) return;
+
+  let rafId;
+  const observer = new ResizeObserver(() => {
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  });
+
+  observer.observe(el);
+  return () => {
+    cancelAnimationFrame(rafId);
+    observer.disconnect();
+  };
+}, []);
 
 
 
@@ -674,7 +705,7 @@ const MasterReportGenerationPage = () => {
               case FILTER_TYPES.NUMBER:
                 return (
                   <span className="font-mono">
-                    {Number(value).toLocaleString()}
+                    {value}
                   </span>
                 );
               case FILTER_TYPES.DATE:
@@ -898,20 +929,20 @@ const MasterReportGenerationPage = () => {
   };
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-4 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
+      className={`min-h-screen w-full min-w-0 overflow-x-hidden bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-3 sm:p-4 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
     >
       {/* Header */}
-      <div className={`${isFullscreen ? "max-w-7xl" : "max-w-[87rem]"} mx-auto space-y-2`}>
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-base font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:text-white bg-clip-text text-transparent">
+      <div className={`${isFullscreen ? "max-w-7xl" : "max-w-[87rem]"} w-full min-w-0 mx-auto space-y-2`}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:text-white bg-clip-text text-transparent truncate">
               Advanced Report Viewer
             </h1>
-            <p className="text-gray-600 text-xs mt-0.5">
+            <p className="text-gray-600 text-xs mt-0.5 break-words">
               Dynamic data analysis with smart filtering
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Button size="small" icon={<FullscreenOutlined />} onClick={toggleFullscreen} style={{
               backgroundColor: "var(--primary)",
               borderColor: "var(--primary)",
@@ -930,18 +961,22 @@ const MasterReportGenerationPage = () => {
                 backgroundColor: "var(--primary)",
                 borderColor: "var(--primary)",
                 color: "#fff",
+                maxWidth: "100%",
               }}
             />
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2 items-end">
+        {/* Toolbar — filters/search cluster grows & wraps on the left,
+            action buttons stay grouped and fixed-size on the right. */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          {/* Filters + search */}
+          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           <Select
             placeholder="Report Type"
             value={selectedType}
             onChange={handleTypeChange}
-            className="w-full"
+            className="w-full sm:w-auto sm:min-w-[170px]"
             size="middle"
           >
             {reportTypes.map((type) => (
@@ -956,7 +991,7 @@ const MasterReportGenerationPage = () => {
             value={selectedReport}
             onChange={handleReportChange}
             disabled={!selectedType}
-            className="w-full"
+            className="w-full sm:w-auto sm:min-w-[170px]"
             size="middle"
           >
             {reports.map((report) => (
@@ -975,7 +1010,7 @@ const MasterReportGenerationPage = () => {
     return (
       <Select
         key={key}
-        className="w-full"
+        className="w-full sm:w-auto sm:min-w-[150px]"
         size="middle"
         placeholder={`Select ${key}`}
         value={value}
@@ -1004,6 +1039,7 @@ const MasterReportGenerationPage = () => {
       return (
         <Input
           key={key}
+          className="w-full sm:w-auto sm:min-w-[150px]"
           size="middle"
           placeholder={`Enter ${key}`}
           value={value}
@@ -1029,7 +1065,7 @@ const MasterReportGenerationPage = () => {
       return (
         <InputNumber
           key={key}
-          className="w-full"
+          className="w-full sm:w-auto sm:min-w-[150px]"
           size="middle"
           placeholder={`Enter ${key}`}
           value={value}
@@ -1046,7 +1082,7 @@ const MasterReportGenerationPage = () => {
       return (
         <DatePicker
           key={key}
-          className="w-full"
+          className="w-full sm:w-auto sm:min-w-[150px]"
           size="middle"
           placeholder={`Select ${key}`}
           value={value ? dayjs(value) : null}
@@ -1068,7 +1104,7 @@ const MasterReportGenerationPage = () => {
       return (
         <DatePicker
           key={key}
-          className="w-full"
+          className="w-full sm:w-auto sm:min-w-[150px]"
           size="middle"
           showTime
           placeholder={`Select ${key}`}
@@ -1091,7 +1127,7 @@ const MasterReportGenerationPage = () => {
       return (
         <TimePicker
           key={key}
-          className="w-full"
+          className="w-full sm:w-auto sm:min-w-[150px]"
           size="middle"
           placeholder={`Select ${key}`}
           value={value ? dayjs(value, "HH:mm:ss") : null}
@@ -1111,7 +1147,7 @@ const MasterReportGenerationPage = () => {
       return (
         <div
           key={key}
-          className="flex items-center justify-between border rounded-lg px-2.5 h-8 text-sm"
+          className="w-full sm:w-auto sm:min-w-[150px] flex items-center justify-between border rounded-lg px-2.5 h-8 text-sm"
         >
           <span>{key}</span>
 
@@ -1131,6 +1167,7 @@ const MasterReportGenerationPage = () => {
       return (
         <Input
           key={key}
+          className="w-full sm:w-auto sm:min-w-[150px]"
           size="middle"
           placeholder={`Enter ${key}`}
           value={value}
@@ -1147,17 +1184,20 @@ const MasterReportGenerationPage = () => {
             prefix={<SearchOutlined />}
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
-            className="w-full"
+            className="w-full sm:flex-1 sm:min-w-[200px]"
             size="middle"
           />
+          </div>
 
-          <div className="flex gap-2">
+          {/* Action buttons — grouped, fixed-size, never grows */}
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
             <Button
               size="middle"
               icon={<ReloadOutlined />}
               onClick={executeReport}
               loading={loading}
               disabled={!selectedReport}
+              className="w-full sm:w-auto"
               style={{
                 backgroundColor: "var(--primary-light)",
                 borderColor: "var(--primary)",
@@ -1172,6 +1212,7 @@ const MasterReportGenerationPage = () => {
               type="primary"
               onClick={handleExportExcel}
               disabled={fullyFilteredData.length === 0}
+              className="w-full sm:w-auto"
               style={{
                 backgroundColor: "var(--primary)",
                 borderColor: "var(--primary)",
@@ -1188,7 +1229,7 @@ const MasterReportGenerationPage = () => {
               placement="topRight"
               dropdownRender={() => (
                 <div
-                  className="bg-white rounded-lg shadow-lg border border-gray-200"
+                  className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-[90vw]"
                   style={{ width: 220 }}
                   // Prevent AntD's internal click-outside handling from
                   // treating a click inside the panel as an "outside" click.
@@ -1242,11 +1283,16 @@ const MasterReportGenerationPage = () => {
                 </div>
               )}
             >
-              <Button size="middle" icon={<SettingOutlined />} style={{
-                backgroundColor: "var(--primary-light)",
-                borderColor: "var(--primary)",
-                color: "var(--primary)",
-              }}>
+              <Button
+                size="middle"
+                icon={<SettingOutlined />}
+                className="w-full sm:w-auto"
+                style={{
+                  backgroundColor: "var(--primary-light)",
+                  borderColor: "var(--primary)",
+                  color: "var(--primary)",
+                }}
+              >
                 Columns ({visibleColumns.length})
               </Button>
             </Dropdown>
@@ -1255,7 +1301,7 @@ const MasterReportGenerationPage = () => {
 
         {/* Stats & Filters */}
         {fullyFilteredData.length > 0 && (
-          <div className="flex flex-wrap items-center gap-3 bg-[var(--background)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm text-xs">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 bg-[var(--background)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm text-xs">
             <div className="flex items-center gap-1.5">
               <span className="font-medium">Records:</span>
               <Badge count={fullyFilteredData.length.toLocaleString()} />
@@ -1267,7 +1313,7 @@ const MasterReportGenerationPage = () => {
               />
             </div>
             {activeFilterCount > 0 && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center flex-wrap gap-1.5">
                 <span className="font-medium">Filters:</span>
                 <Badge count={activeFilterCount} color="blue" />
                 <Button size="small" onClick={clearAllFilters}>
@@ -1279,14 +1325,16 @@ const MasterReportGenerationPage = () => {
         )}
 
         {/* Table */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-[var(--primary)] overflow-hidden">
+        <div
+          ref={tableWrapperRef}
+          className="w-full min-w-0 bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-[var(--primary)] overflow-hidden">
           {loading ? (
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               <Skeleton active paragraph={{ rows: 12 }} />
             </div>
           ) : fullyFilteredData.length === 0 ? (
             <Empty
-              className="p-16 font-medium text-sm"
+              className="px-4 py-10 sm:p-16 font-medium text-sm"
               description={
                 <span style={{ color: "var(--primary)" }}>
                   {!selectedReport
@@ -1349,6 +1397,24 @@ const MasterReportGenerationPage = () => {
         }
         .custom-report-table :global(.ant-table-pagination) {
           margin: 8px 0 !important;
+          flex-wrap: wrap !important;
+          row-gap: 6px;
+        }
+        /* Long option labels wrap/truncate instead of pushing the
+           select or its dropdown wider than the viewport. */
+        :global(.ant-select-selection-item),
+        :global(.ant-select-item-option-content) {
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+        @media (max-width: 767px) {
+          .custom-report-table :global(.ant-table-pagination) {
+            justify-content: center !important;
+          }
+          .custom-report-table :global(.ant-pagination-options) {
+            margin-inline-start: 0 !important;
+          }
         }
       `}</style>
     </div>

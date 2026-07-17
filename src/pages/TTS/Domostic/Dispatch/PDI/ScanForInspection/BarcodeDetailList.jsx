@@ -825,7 +825,7 @@ const BarcodeDetailList = () => {
         <div className="w-full min-w-[480px] sm:min-w-[640px] md:min-w-full h-full">
           <DynamicDataTable
             columns={activeColumns}
-            headerClassName="bg-[var(--primary)] text-white dark:bg-slate-950 shadow-sm"
+            headerClassName="!bg-[var(--primary)] !text-white !dark:bg-slate-950 !shadow-sm"
             data={filteredData}
             visibleRows={visibleRows}
             loading={mode === "barcode" ? loadingBarcode : false}

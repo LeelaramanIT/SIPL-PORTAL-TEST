@@ -371,7 +371,7 @@ const SubstitutionDetails = () => {
                                     <DynamicDataTable
                                         columns={columns}
                                         data={items}
-                                        headerClassName='bg-[var(--primary)] text-white dark:bg-slate-950 shadow-md'
+                                        headerClassName='!bg-[var(--primary)] !text-white !dark:bg-slate-950 !shadow-md'
                                         loading={loading}
                                     />
                                 </div>

@@ -36,6 +36,9 @@ import WarehouseReducer from "../Slices/Warehouse/WarehouseSlice";
 
 import ReportMasterReducer from '../Slices/Master/ReportMasterCreation/ReportMasterCreationSlice';
 
+// customer masters
+import CustomerMaster from '../Slices/Master/CustomerMaster/CustomerMasterSlice'
+
 
 // Encryption config
 const encryptor = encryptTransform({
@@ -185,6 +188,12 @@ const ReportMasterConfig = {
   storage: storageSession
 }
 
+const CustomerMasterConfig = {
+  key: 'customerMaster',
+  version:1,
+  storage:storageSession
+}
+
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedProformaInvoiceReducer = persistReducer(proformaInvoiceConfig, proformaInvoice);
@@ -208,6 +217,7 @@ const presistedUserMasterReducer = persistReducer(UserMastertConfig,UserMasterRe
 const persistedWarehouseReducer = persistReducer(WarehouseReducerConfig,WarehouseReducer)
 const persistedOrderProcessReducer = persistReducer(OrderProcessConfig,OrderProcessReducer)
 const persistedReportMasterReducer = persistReducer(ReportMasterConfig,ReportMasterReducer)
+const persistedCustomerMasterReducer = persistReducer(CustomerMasterConfig,CustomerMaster)
 
 
 
@@ -235,7 +245,8 @@ const rootReducer = combineReducers({
   Sprint:persistedSprintReducer,
   warehouse:persistedWarehouseReducer,
   orderProcess:persistedOrderProcessReducer,
-  reportMaster:persistedReportMasterReducer
+  reportMaster:persistedReportMasterReducer,
+  customerMaster: persistedCustomerMasterReducer,
 });
 
 // Store setup

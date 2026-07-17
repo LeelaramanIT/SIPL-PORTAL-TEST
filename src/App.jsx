@@ -37,7 +37,9 @@ function ThemedApp() {
   return (
     <>
       <RouterProvider router={router} />
+      <div className="hidden md:block">
       <ThemeSwitcher variant="floating" />
+      </div>
     </>
   );
 }

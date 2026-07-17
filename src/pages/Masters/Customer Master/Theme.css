@@ -1,0 +1,196 @@
+/* ============================================================
+   Customer Module — Theme
+   Aesthetic: "Workshop Ledger" — an industrial-editorial system
+   built for a tyre trading ERP. Warm paper canvas, graphite ink,
+   copper accent. Serif display for structure, geometric sans for
+   body, mono for data/metrics — like a well-kept trading ledger.
+   ============================================================ */
+
+/* @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap'); */
+
+:root {
+  /* Canvas & ink */
+  --canvas: #faf7f2;
+  --canvas-raised: #ffffff;
+  --ink-950: #171310;
+  --ink-900: #231e19;
+  --ink-700: #574d43;
+  --ink-500: #8a7d70;
+  --ink-300: #ddd3c6;
+  --ink-200: #ebe3d8;
+  --ink-100: #f3ede4;
+
+  /* Copper accent (primary) */
+  --copper-700: #9a4a1e;
+  --copper-600: #b85c22;
+  --copper-500: #d3722e;
+  --copper-100: #f7e2cd;
+  --copper-50: #fcf1e6;
+
+  /* Section accents — warm, muted, distinct from each other */
+  --clay-600: #b1503f;
+  --clay-100: #f6e0da;
+  --moss-600: #5c7a4f;
+  --moss-100: #e4ecdd;
+  --ochre-600: #a5791b;
+  --ochre-100: #f3e6c8;
+  --plum-600: #7a4f6b;
+  --plum-100: #ecdfe7;
+  --slate-600: #46617a;
+  --slate-100: #dfe6ec;
+
+  /* Semantic */
+  --success: #4a7c3f;
+  --danger: #a5342a;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow-card: 0 1px 2px rgba(23, 19, 16, 0.04), 0 8px 24px -12px rgba(23, 19, 16, 0.12);
+  --shadow-raised: 0 4px 16px -4px rgba(23, 19, 16, 0.18), 0 12px 40px -16px rgba(23, 19, 16, 0.16);
+}
+
+/* Subtle paper grain — applied once to the app shell */
+.cm-grain {
+  position: relative;
+  background-color: var(--canvas);
+  background-image:
+    radial-gradient(rgba(35, 30, 25, 0.05) 0.6px, transparent 0.6px);
+  background-size: 14px 14px;
+}
+
+.cm-serif {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+.cm-sans {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.cm-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ---------------- Ant Design overrides ---------------- */
+
+.cm-scope .ant-form-item-label > label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+  height: auto;
+}
+
+.cm-scope .ant-input,
+.cm-scope .ant-select-selector,
+.cm-scope .ant-input-number,
+.cm-scope textarea.ant-input {
+  border-color: var(--ink-200) !important;
+  background-color: var(--canvas-raised) !important;
+  font-family: 'Manrope', sans-serif;
+}
+
+.cm-scope .ant-input:hover,
+.cm-scope .ant-select-selector:hover,
+.cm-scope .ant-input-number:hover {
+  border-color: var(--copper-500) !important;
+}
+
+.cm-scope .ant-input:focus,
+.cm-scope .ant-input-focused,
+.cm-scope .ant-select-focused .ant-select-selector,
+.cm-scope .ant-input-number-focused {
+  border-color: var(--copper-600) !important;
+  box-shadow: 0 0 0 3px var(--copper-100) !important;
+}
+
+.cm-scope .ant-radio-button-wrapper {
+  border-color: var(--ink-200);
+  color: var(--ink-700);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.cm-scope .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  background: var(--ink-950) !important;
+  border-color: var(--ink-950) !important;
+  color: #fff !important;
+}
+
+.cm-scope .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
+  background-color: var(--ink-950) !important;
+}
+
+.cm-scope .ant-segmented {
+  background-color: var(--ink-100);
+  padding: 3px;
+  border-radius: 10px;
+}
+
+.cm-scope .ant-segmented-item {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--ink-500);
+  border-radius: 8px;
+}
+
+.cm-scope .ant-segmented-item-selected {
+  background-color: var(--ink-950) !important;
+  color: #fff !important;
+}
+
+.cm-scope .ant-btn {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+.cm-scope .ant-btn-primary {
+  background: var(--ink-950);
+  border-color: var(--ink-950);
+}
+
+.cm-scope .ant-btn-primary:hover {
+  background: var(--copper-700) !important;
+  border-color: var(--copper-700) !important;
+}
+
+.cm-scope .ant-btn-dangerous {
+  color: var(--danger);
+  border-color: var(--ink-200);
+}
+
+.cm-scope .ant-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Tabs (module shell) */
+.cm-tabs .ant-tabs-nav::before {
+  border-color: var(--ink-200) !important;
+}
+
+.cm-tabs .ant-tabs-tab {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-500) !important;
+  padding: 16px 4px !important;
+}
+
+.cm-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--ink-950) !important;
+}
+
+.cm-tabs .ant-tabs-ink-bar {
+  background: var(--copper-600) !important;
+  height: 3px !important;
+  border-radius: 3px;
+}

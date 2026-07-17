@@ -20,6 +20,7 @@
     LEAD_TIME_OPTIONS,
     PLACE_INCOTERM_OPTIONS,
   } from "./SelectOrInput";
+import PDFErrorBoundary from "../PDFErrorBoundary";
 
   const ICONS = {
     entity: "\u{1F3E2}", order: "\u{1F4C4}", customer: "\u{1F464}", address: "\u{1F4CD}",
@@ -586,6 +587,9 @@ function buildTaxSummaryRows(taxType, taxes, taxable) {
       tone: "blue",
       location: item.countryCode,
     }));
+
+    console.log(mappedEntities);
+    
     // ✅ ADD THIS ENTIRE useEffect BELOW:
     useEffect(() => {
       if (customer?.addresses?.length > 0) {
@@ -1826,7 +1830,10 @@ sizePosition: item?.sizePosition ?? item._raw?.sizePosition ?? 0,
                         {item.initials}
                       </b>
 
-                            <strong className="block text-xs">{item.initials} - {item.name}</strong>
+                            <strong className="block text-xs">{item.name}</strong>
+                            <div>
+                              <small className="text-[10px] text-slate-600">{item.code}</small>
+                            </div>
                             <small className="text-[10px] text-slate-600">{item.location}</small>
                     </motion.button>
                   ))}
@@ -3105,11 +3112,13 @@ sizePosition: item?.sizePosition ?? item._raw?.sizePosition ?? 0,
                 {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
               </PDFDownloadLink>
             </div>
+            <PDFErrorBoundary debugData={data}>
             <PDFViewer key={`pdf-viewer-${previewInstanceKey}`} style={{ width: "100%", flex: 1, border: "none" }}>
               <Document key={`pdf-viewer-document-${previewInstanceKey}`} title={documentTitle}>
                 <ProformaPDF data={data} />
               </Document>
             </PDFViewer>
+            </PDFErrorBoundary>
           </div>
           <footer className="flex justify-end border-t border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-800 dark:bg-[#161820]">
             <button
@@ -3124,3 +3133,5 @@ sizePosition: item?.sizePosition ?? item._raw?.sizePosition ?? 0,
       </motion.div>
     );
   }
+
+

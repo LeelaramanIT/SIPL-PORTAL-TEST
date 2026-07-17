@@ -585,7 +585,7 @@ export default function DCPreparationApproval() {
                 ? "bg-red-50/30 dark:bg-red-900/10 border-red-100 dark:border-red-900/30"
                 : undefined
             }
-            headerClassName="bg-[var(--primary)] text-slate-900 dark:text-white font-semibold"
+            headerClassName="!bg-[var(--primary)] !text-slate-900 !dark:text-white !font-semibold"
           />
         </div>
       </div>

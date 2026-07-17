@@ -85,6 +85,13 @@ import LegalEntityMaster from "../pages/Masters/MasterManagement/LegalEntityMast
 import MasterCreationHome from "../pages/Masters/MasterManagement/MasterCreationHome";
 import MenuAccessManager1 from "../pages/MenuAccess/MenuAccessManager1.JSX";
 import ReportMasterManagement from "../pages/Masters/MasterManagement/Reportmastermanagement";
+import CustomerMasterPage from "../pages/Masters/Customer Master/Customermasterpage";
+import CustomerHubHome from "../pages/Masters/Customer Master/CustomerMasterHome";
+import CustomerModule from "../pages/Masters/Customer Master/Customermodule";
+import CustomerModule1 from "../pages/Masters/Customer Master/CustomerModule1";
+import CustomerModule2 from "../pages/Masters/Customer Master/CustomerrModule2";
+import CRMReports from "../pages/Reports/CRMReports/CRMReports";
+import PlannerWorkspace from "../pages/Dashboard/Plannerworkspace";
 
 export const router = createBrowserRouter([
   {
@@ -101,7 +108,8 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Home /> },
           { path: "Dashboard", element: <Dashboard /> },
-          { path: "Barcode", element: <Barcode /> },
+          // { path: "Barcode", element: <Barcode /> },
+          { path: "Barcode", element: <PlannerWorkspace /> },
           {
             path: "Masters",
             element: <MasterLayout />,
@@ -109,13 +117,19 @@ export const router = createBrowserRouter([
               { path: "UserMaster/UserCreate", element: <UserCreate /> },
               { path: "/Masters/UserMaster/AllUsers", element: <AllUSers /> },
               { path: "/Masters/PriceMaster", element: <PriceMaster /> },
-              // {
-              //   path: "/Masters/Master-creation",
-              //   element: <MasterManagement />,
-              // },
+              { path: "/Masters/CustomerMaster", element: <MasterCreationLayout type={'CustomerMaster'} />,
+                children: [
+                  { index: true, element: <CustomerHubHome /> },
+                  { path:'customer-home', element: <CustomerHubHome /> },
+                  { path: "Creation" ,element: <CustomerModule /> },
+                  { path: "Creation1" ,element: <CustomerModule1 /> },
+                  { path: "Creation2" ,element: <CustomerModule2 /> },
+                ],
+               },
+    
               {
                 path: "/Masters/Master-creation",
-                element: <MasterCreationLayout />,
+                element: <MasterCreationLayout type={"MasterCreation"}/>,
                 children: [
                   { index: true, element: <MasterCreationHome /> },
                   { path:'legal-entity', element: <LegalEntityMaster /> },
@@ -461,6 +475,10 @@ export const router = createBrowserRouter([
                   {
                     path: "ProductionRepost",
                     element: <ProductionDashboard />,
+                  },
+                  {
+                    path: "DomesticsReport",
+                    element: <CRMReports />,
                   },
                   {
                     path: "MasterReportGeneration",

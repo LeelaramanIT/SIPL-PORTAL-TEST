@@ -168,7 +168,8 @@ console.log(filteredInspectionData)
             </p>
           </motion.div>) : (
             <DynamicDataTable columns={uploadColumns} data={filteredInspectionData} visibleRows={visibleRows} onLoadMore={() =>
-                setVisibleRows(prev => Math.min(prev + 50, filteredInspectionData.length))} headerClassName='bg-[var(--primary)]/85 text-[var(--text)] dark:bg-slate-900' />
+                setVisibleRows(prev => Math.min(prev + 50, filteredInspectionData.length))}
+                 headerClassName='!bg-[var(--primary)]/85 !text-[var(--text)] !dark:bg-slate-900' />
           )}
         </div>
     )
