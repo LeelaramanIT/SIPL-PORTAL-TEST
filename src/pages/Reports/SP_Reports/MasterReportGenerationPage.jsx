@@ -19,7 +19,8 @@ import {
   Empty,
   Space,
   DatePicker,
-  message
+  message,
+  InputNumber
 } from "antd";
 import {
   SearchOutlined,
@@ -144,8 +145,8 @@ const DateFilter = ({ columnKey, selectedRange, onChange, onClear }) => {
 // ==================== EXCEL-STYLE FILTER DROPDOWN (single, reusable) ====================
 // Used for every column regardless of detected data type — text, numbers,
 // dates, booleans, IDs, codes all get the same search + checkbox-list UI.
-const FILTER_ROW_HEIGHT = 28;
-const FILTER_LIST_HEIGHT = 240;
+const FILTER_ROW_HEIGHT = 24;
+const FILTER_LIST_HEIGHT = 200;
 const FILTER_LIST_OVERSCAN = 6;
 
 const ExcelFilterDropdown = ({
@@ -199,10 +200,10 @@ const ExcelFilterDropdown = ({
   return (
     <div
       className="bg-white rounded-lg shadow-lg border border-gray-200"
-      style={{ width: 260 }}
+      style={{ width: 220 }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="p-2 border-b border-gray-100">
+      <div className="p-1.5 border-b border-gray-100">
         <Input
           placeholder="Search..."
           size="small"
@@ -213,7 +214,7 @@ const ExcelFilterDropdown = ({
         />
       </div>
 
-      <div className="px-3 py-1.5 border-b border-gray-100">
+      <div className="px-2 py-1 border-b border-gray-100">
         <Checkbox
           checked={allSelected}
           indeterminate={someSelected}
@@ -238,7 +239,7 @@ const ExcelFilterDropdown = ({
             {visibleOptions.map((opt, idx) => (
               <div
                 key={`${columnKey}-${startIndex + idx}`}
-                className="flex items-center px-3 hover:bg-gray-50"
+                className="flex items-center px-2 hover:bg-gray-50"
                 style={{ height: FILTER_ROW_HEIGHT }}
               >
                 <Checkbox
@@ -253,7 +254,7 @@ const ExcelFilterDropdown = ({
         )}
       </div>
 
-      <div className="flex justify-between items-center gap-2 px-3 py-2 border-t border-gray-100">
+      <div className="flex justify-between items-center gap-2 px-2 py-1.5 border-t border-gray-100">
         <Button size="small" onClick={onClear}>
           Clear Filter
         </Button>
@@ -897,26 +898,27 @@ const MasterReportGenerationPage = () => {
   };
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-6 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
+      className={`min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-4 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
     >
       {/* Header */}
-      <div className={`${isFullscreen ? "max-w-7xl" : "max-w-[87rem]"} mx-auto space-y-3`}>
+      <div className={`${isFullscreen ? "max-w-7xl" : "max-w-[87rem]"} mx-auto space-y-2`}>
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:text-white bg-clip-text text-transparent">
+            <h1 className="text-base font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:text-white bg-clip-text text-transparent">
               Advanced Report Viewer
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 text-xs mt-0.5">
               Dynamic data analysis with smart filtering
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button icon={<FullscreenOutlined />} onClick={toggleFullscreen} style={{
+            <Button size="small" icon={<FullscreenOutlined />} onClick={toggleFullscreen} style={{
               backgroundColor: "var(--primary)",
               borderColor: "var(--primary)",
               color: "#fff",
             }} />
             <Segmented
+              size="small"
               options={[
                 { label: "Compact", value: "small" },
                 { label: "Default", value: "default" },
@@ -934,13 +936,13 @@ const MasterReportGenerationPage = () => {
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2 items-end">
           <Select
             placeholder="Report Type"
             value={selectedType}
             onChange={handleTypeChange}
             className="w-full"
-            size="large"
+            size="middle"
           >
             {reportTypes.map((type) => (
               <Option key={type.typeId} value={type.typeId} >
@@ -955,7 +957,7 @@ const MasterReportGenerationPage = () => {
             onChange={handleReportChange}
             disabled={!selectedType}
             className="w-full"
-            size="large"
+            size="middle"
           >
             {reports.map((report) => (
               <Option key={report.reportId} value={report.reportId}>
@@ -964,62 +966,181 @@ const MasterReportGenerationPage = () => {
             ))}
           </Select>
           {/* Dynamic Params */}
-          {reportParams.map((param) => (
-            <div key={param.paramName}>
-              {param.options ? (
-                <Select
-                  placeholder={`Select ${param.paramName}`}
-                  value={paramValues[param.paramName]}
-                  onChange={(value) =>
-                    handleParamChange(param.paramName, value)
-                  }
-                  className="w-full"
-                  size="large"
-                >
-                  {param.options.map((option) => (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                </Select>
-              ) : param.dataType === "datetime" ? (
-                <DatePicker
-                  className="w-full"
-                  size="large"
-                  placeholder={`Select ${param.paramName}`}
-                  value={
-                    paramValues[param.paramName]
-                      ? dayjs(paramValues[param.paramName])
-                      : null
-                  }
-                  onChange={(date) =>
-                    handleParamChange(
-                      param.paramName,
-                      date ? dayjs(date).format("YYYY-MM-DD") : null
-                    )
-                  }
-                />
-              ) : (
-                <Select
-                  placeholder={`Select ${param.paramName}`}
-                  value={paramValues[param.paramName]}
-                  onChange={(value) =>
-                    handleParamChange(param.paramName, value)
-                  }
-                  className="w-full"
-                  size="large"
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {(param.values || []).map((option) => (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                </Select>
-              )}
-            </div>
-          ))}
+          {reportParams.map((param) => {
+  const key = param.paramName;
+  const value = paramValues[key];
+
+  // If options exist always show dropdown
+  if (param.options?.length > 0) {
+    return (
+      <Select
+        key={key}
+        className="w-full"
+        size="middle"
+        placeholder={`Select ${key}`}
+        value={value}
+        onChange={(val) => handleParamChange(key, val)}
+      >
+        {param.options.map((option) => (
+          <Select.Option key={option} value={option}>
+            {option}
+          </Select.Option>
+        ))}
+      </Select>
+    );
+  }
+
+  switch (param.dataType?.toLowerCase()) {
+    // =========================
+    // Text
+    // =========================
+    case "nvarchar":
+    case "varchar":
+    case "char":
+    case "nchar":
+    case "text":
+    case "ntext":
+    case "uniqueidentifier":
+      return (
+        <Input
+          key={key}
+          size="middle"
+          placeholder={`Enter ${key}`}
+          value={value}
+          onChange={(e) =>
+            handleParamChange(key, e.target.value)
+          }
+        />
+      );
+
+    // =========================
+    // Numbers
+    // =========================
+    case "int":
+    case "bigint":
+    case "smallint":
+    case "tinyint":
+    case "decimal":
+    case "numeric":
+    case "money":
+    case "smallmoney":
+    case "float":
+    case "real":
+      return (
+        <InputNumber
+          key={key}
+          className="w-full"
+          size="middle"
+          placeholder={`Enter ${key}`}
+          value={value}
+          onChange={(val) =>
+            handleParamChange(key, val)
+          }
+        />
+      );
+
+    // =========================
+    // Date
+    // =========================
+    case "date":
+      return (
+        <DatePicker
+          key={key}
+          className="w-full"
+          size="middle"
+          placeholder={`Select ${key}`}
+          value={value ? dayjs(value) : null}
+          onChange={(date) =>
+            handleParamChange(
+              key,
+              date ? date.format("YYYY-MM-DD") : null
+            )
+          }
+        />
+      );
+
+    // =========================
+    // DateTime
+    // =========================
+    case "datetime":
+    case "datetime2":
+    case "smalldatetime":
+      return (
+        <DatePicker
+          key={key}
+          className="w-full"
+          size="middle"
+          showTime
+          placeholder={`Select ${key}`}
+          value={value ? dayjs(value) : null}
+          onChange={(date) =>
+            handleParamChange(
+              key,
+              date
+                ? date.format("YYYY-MM-DD HH:mm:ss")
+                : null
+            )
+          }
+        />
+      );
+
+    // =========================
+    // Time
+    // =========================
+    case "time":
+      return (
+        <TimePicker
+          key={key}
+          className="w-full"
+          size="middle"
+          placeholder={`Select ${key}`}
+          value={value ? dayjs(value, "HH:mm:ss") : null}
+          onChange={(time) =>
+            handleParamChange(
+              key,
+              time ? time.format("HH:mm:ss") : null
+            )
+          }
+        />
+      );
+
+    // =========================
+    // Boolean
+    // =========================
+    case "bit":
+      return (
+        <div
+          key={key}
+          className="flex items-center justify-between border rounded-lg px-2.5 h-8 text-sm"
+        >
+          <span>{key}</span>
+
+          <Switch
+            checked={!!value}
+            onChange={(checked) =>
+              handleParamChange(key, checked)
+            }
+          />
+        </div>
+      );
+
+    // =========================
+    // Default
+    // =========================
+    default:
+      return (
+        <Input
+          key={key}
+          size="middle"
+          placeholder={`Enter ${key}`}
+          value={value}
+          onChange={(e) =>
+            handleParamChange(key, e.target.value)
+          }
+        />
+      );
+  }
+})}
 
           <Input
             placeholder="Global Search..."
@@ -1027,11 +1148,12 @@ const MasterReportGenerationPage = () => {
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
             className="w-full"
-            size="large"
+            size="middle"
           />
 
           <div className="flex gap-2">
             <Button
+              size="middle"
               icon={<ReloadOutlined />}
               onClick={executeReport}
               loading={loading}
@@ -1045,6 +1167,7 @@ const MasterReportGenerationPage = () => {
               Refresh
             </Button>
             <Button
+              size="middle"
               icon={<DownloadOutlined />}
               type="primary"
               onClick={handleExportExcel}
@@ -1066,12 +1189,12 @@ const MasterReportGenerationPage = () => {
               dropdownRender={() => (
                 <div
                   className="bg-white rounded-lg shadow-lg border border-gray-200"
-                  style={{ width: 260 }}
+                  style={{ width: 220 }}
                   // Prevent AntD's internal click-outside handling from
                   // treating a click inside the panel as an "outside" click.
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100">
+                  <div className="flex justify-between items-center px-2 py-1.5 border-b border-gray-100">
                     <Button
                       type="link"
                       size="small"
@@ -1089,11 +1212,11 @@ const MasterReportGenerationPage = () => {
                       Clear All
                     </Button>
                   </div>
-                  <div className="max-h-64 overflow-auto py-1">
+                  <div className="max-h-56 overflow-auto py-1">
                     {Object.entries(columnMetadata).map(([key, info]) => (
                       <div
                         key={key}
-                        className="flex items-center px-3 py-1.5 hover:bg-gray-50"
+                        className="flex items-center px-2 py-1 hover:bg-gray-50"
                       >
                         <Checkbox
                           checked={pendingColumns.includes(key)}
@@ -1104,7 +1227,7 @@ const MasterReportGenerationPage = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-end gap-2 px-3 py-2 border-t border-gray-100">
+                  <div className="flex justify-end gap-2 px-2 py-1.5 border-t border-gray-100">
                     <Button size="small" onClick={handleCancelColumns}>
                       Cancel
                     </Button>
@@ -1119,7 +1242,7 @@ const MasterReportGenerationPage = () => {
                 </div>
               )}
             >
-              <Button icon={<SettingOutlined />} style={{
+              <Button size="middle" icon={<SettingOutlined />} style={{
                 backgroundColor: "var(--primary-light)",
                 borderColor: "var(--primary)",
                 color: "var(--primary)",
@@ -1132,19 +1255,19 @@ const MasterReportGenerationPage = () => {
 
         {/* Stats & Filters */}
         {fullyFilteredData.length > 0 && (
-          <div className="flex flex-wrap items-center gap-4 bg-[var(--background)] rounded-lg p-3 border border-[var(--border)] shadow-sm">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3 bg-[var(--background)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm text-xs">
+            <div className="flex items-center gap-1.5">
               <span className="font-medium">Records:</span>
               <Badge count={fullyFilteredData.length.toLocaleString()} />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <span className="font-medium">Columns:</span>
               <Badge
                 count={`${visibleColumns.length}/${Object.keys(columnMetadata).length}`}
               />
             </div>
             {activeFilterCount > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <span className="font-medium">Filters:</span>
                 <Badge count={activeFilterCount} color="blue" />
                 <Button size="small" onClick={clearAllFilters}>
@@ -1158,12 +1281,12 @@ const MasterReportGenerationPage = () => {
         {/* Table */}
         <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-[var(--primary)] overflow-hidden">
           {loading ? (
-            <div className="p-12">
+            <div className="p-8">
               <Skeleton active paragraph={{ rows: 12 }} />
             </div>
           ) : fullyFilteredData.length === 0 ? (
             <Empty
-              className="p-24 font-medium text-base"
+              className="p-16 font-medium text-sm"
               description={
                 <span style={{ color: "var(--primary)" }}>
                   {!selectedReport
@@ -1207,6 +1330,9 @@ const MasterReportGenerationPage = () => {
           ) !important;
           font-weight: 600 !important;
           border-bottom: 2px solid #e2e8f0 !important;
+          padding-top: 6px !important;
+          padding-bottom: 6px !important;
+          font-size: 12px !important;
         }
         .dark .custom-report-table :global(.ant-table-thead) th {
           background: linear-gradient(
@@ -1215,6 +1341,14 @@ const MasterReportGenerationPage = () => {
             #1e293b 100%
           ) !important;
           color: #e2e8f0 !important;
+        }
+        .custom-report-table :global(.ant-table-tbody) > tr > td {
+          padding-top: 5px !important;
+          padding-bottom: 5px !important;
+          font-size: 12px !important;
+        }
+        .custom-report-table :global(.ant-table-pagination) {
+          margin: 8px 0 !important;
         }
       `}</style>
     </div>

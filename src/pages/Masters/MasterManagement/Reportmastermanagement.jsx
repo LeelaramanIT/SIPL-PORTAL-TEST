@@ -1053,9 +1053,9 @@ function ReportConfigurationTab() {
     } else if (!SP_NAME_REGEX.test(storedProc.trim())) {
       nextErrors.storedProc = "Only letters, numbers, and underscores are allowed.";
     }
-    if (params.length === 0) {
-      nextErrors.params = "At least one parameter must exist.";
-    }
+    // if (params.length === 0) {
+    //   nextErrors.params = "At least one parameter must exist.";
+    // }
 
     const paramErrorMap = {};
     const nameCount = {};
