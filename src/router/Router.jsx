@@ -92,6 +92,7 @@ import CustomerModule1 from "../pages/Masters/Customer Master/CustomerModule1";
 import CustomerModule2 from "../pages/Masters/Customer Master/CustomerrModule2";
 import CRMReports from "../pages/Reports/CRMReports/CRMReports";
 import PlannerWorkspace from "../pages/Dashboard/Plannerworkspace";
+import WorkOrderPlanning from "../pages/Dashboard/PlantAssign";
 
 export const router = createBrowserRouter([
   {
@@ -109,7 +110,8 @@ export const router = createBrowserRouter([
           { index: true, element: <Home /> },
           { path: "Dashboard", element: <Dashboard /> },
           // { path: "Barcode", element: <Barcode /> },
-          { path: "Barcode", element: <PlannerWorkspace /> },
+          // { path: "Barcode", element: <PlannerWorkspace /> },
+          { path: "Barcode", element: <WorkOrderPlanning /> },
           {
             path: "Masters",
             element: <MasterLayout />,
