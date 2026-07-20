@@ -3,7 +3,7 @@ import { ConfigProvider, theme as antTheme, InputNumber, Input, Select, Modal, m
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers, Search, Sun, Moon, ChevronRight, Factory, Package, AlertTriangle,
-  Check, ShieldCheck, Undo2, Zap, ClipboardList, CircleDot,
+  Check, ShieldCheck, Undo2, ClipboardList, CircleDot,
   Boxes, CalendarClock, Flame, Eye, Users, Maximize2, Minimize2,
 } from "lucide-react";
 
@@ -11,26 +11,27 @@ import {
 /*  DATA — replace with API data (unchanged business data & rules)     */
 /* ================================================================== */
 
+/* Plant capacity management will be added in a future update. */
 const PLANTS = [
-  { id:1, code: "MMN", name: "Maraimalai Nagar", capacity: 1500, available: 600 },
-  { id:2, code: "PDK", name: "Pudhupettai", capacity: 1200, available: 700 },
-  { id:3, code: "SITL", name: "SITL Sri Lanka", capacity: 800, available: 500 },
-  { id:4, code: "SLTL", name: "SLTL Sri Lanka", capacity: 600, available: 500 },
+  { code: "MMN", name: "Maraimalai Nagar" },
+  { code: "PDK", name: "Pudhupettai" },
+  { code: "SITL", name: "SITL Sri Lanka" },
+  { code: "SLTL", name: "SLTL Sri Lanka" },
 ];
 
 const ORDER_HEADERS = [
-  { id: 1001, customer: "Apex Motors", priority: "High", dest: "Domestic", orderDateOffset: -35 },
-  { id: 1032, customer: "Apex Motors", priority: "Routine", dest: "Domestic", orderDateOffset: -20 },
-  { id: 1080, customer: "Apex Motors", priority: "Routine", dest: "Domestic", orderDateOffset: -10 },
-  { id: 1105, customer: "Continental Traders", priority: "High", dest: "Export", orderDateOffset: -25 },
-  { id: 1110, customer: "Continental Traders", priority: "Routine", dest: "Export", orderDateOffset: -12 },
-  { id: 1122, customer: "Silverline Tyres", priority: "High", dest: "Domestic", orderDateOffset: -30 },
-  { id: 1130, customer: "Metro Wheels Inc", priority: "Routine", dest: "Domestic", orderDateOffset: -15 },
-  { id: 1145, customer: "Metro Wheels Inc", priority: "Routine", dest: "Domestic", orderDateOffset: -8 },
-  { id: 1160, customer: "Vantage Auto Parts", priority: "High", dest: "Export", orderDateOffset: -22 },
-  { id: 1172, customer: "Global Rubber Co", priority: "Routine", dest: "Export", orderDateOffset: -5 },
-  { id: 1188, customer: "Silverline Tyres", priority: "Routine", dest: "Domestic", orderDateOffset: -18 },
-  { id: 1201, customer: "Apex Motors", priority: "High", dest: "Domestic", orderDateOffset: -6 },
+  { id: 1001, customer: "SUN-TWS AMERCIA INC", priority: "High", dest: "Export", orderDateOffset: -35 },
+  { id: 1032, customer: "SUN-TWS AMERCIA INC", priority: "Routine", dest: "Export", orderDateOffset: -20 },
+  { id: 1080, customer: "SUN-TWS AMERCIA INC", priority: "Routine", dest: "Export", orderDateOffset: -10 },
+  { id: 1105, customer: "INDUSTRIAL TYRE NETWORK LTD", priority: "High", dest: "Export", orderDateOffset: -25 },
+  { id: 1110, customer: "INDUSTRIAL TYRE NETWORK LTD", priority: "Routine", dest: "Export", orderDateOffset: -12 },
+  { id: 1122, customer: "PROFESSIONAL INDUSTRIAL TIRE CO,INC", priority: "High", dest: "Export", orderDateOffset: -30 },
+  { id: 1130, customer: "TVH PARTS CO", priority: "Routine", dest: "Export", orderDateOffset: -15 },
+  { id: 1145, customer: "TVH PARTS CO", priority: "Routine", dest: "Export", orderDateOffset: -8 },
+  { id: 1160, customer: "PANAMA FORKLIFT COMPANY, INC", priority: "High", dest: "Export", orderDateOffset: -22 },
+  { id: 1172, customer: "NEXEN CORP", priority: "Routine", dest: "Export", orderDateOffset: -5 },
+  { id: 1188, customer: "PROFESSIONAL INDUSTRIAL TIRE CO,INC", priority: "Routine", dest: "Export", orderDateOffset: -18 },
+  { id: 1201, customer: "SUN-TWS AMERCIA INC", priority: "High", dest: "Export", orderDateOffset: -6 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -91,24 +92,29 @@ const productDisplay = (p) => {
   return { item: parts[2] || "—", brand: parts[4] || "—", sidewall: parts[5] || "—" };
 };
 
-/* PO line items reference Product Master by ProcessID: [soId, processId, qty, deliveryOffset] */
-const RAW_LINES = [
-  [1001, "P-004331", 500, 12],
-  [1032, "P-004331", 800, 40],
-  [1032, "P-008741", 150, 40],
-  [1080, "P-004331", 700, 55],
-  [1105, "P189658A", 300, 8],
-  [1105, "P189658C", 150, 8],
-  [1110, "P-008886", 450, 20],
-  [1122, "P009664A", 600, 5],
-  [1130, "00350R01", 250, 33],
-  [1145, "00350R01", 400, 47],
-  [1145, "P-004335", 100, 47],
-  [1160, "P009665A", 900, 18],
-  [1172, "P-004332", 350, 60],
-  [1188, "P193538A", 500, 27],
-  [1201, "P189658B", 200, 10],
-];
+/* ------------------------------------------------------------------ */
+/*  SAMPLE PO LINE ITEMS                                               */
+/*  [soId, processId, qty, deliveryOffset] — deterministic generator:  */
+/*  every PO gets 10–40 lines with a mix of Tyres, Assemblies and      */
+/*  Split Rims, using only ProcessIDs from the Product Master.         */
+/* ------------------------------------------------------------------ */
+const TYRE_IDS = PRODUCT_MASTER.filter((p) => p.AssemblyStatus === 0 && p.RimStatus === 0).map((p) => p.ProcessID);
+const RIM_IDS = PRODUCT_MASTER.filter((p) => p.RimStatus === 1).map((p) => p.ProcessID);
+const ASSEMBLY_IDS = PRODUCT_MASTER.filter((p) => p.AssemblyStatus === 1).map((p) => p.ProcessID);
+
+const QTY_STEPS = [50, 100, 150, 200, 250, 300, 400, 500, 600, 750, 1000];
+const PO_DELIVERY_OFFSET = { 1001: 12, 1032: 40, 1080: 55, 1105: 8, 1110: 20, 1122: 5, 1130: 33, 1145: 47, 1160: 18, 1172: 60, 1188: 27, 1201: 10 };
+
+const RAW_LINES = ORDER_HEADERS.flatMap((h, hi) => {
+  const count = 10 + ((hi * 9 + 3) % 31); // 10..40, varied per PO
+  return Array.from({ length: count }, (_, i) => {
+    /* Pattern: tyre, tyre, assembly, rim → ~50/25/25 mix in every PO */
+    const pool = i % 4 === 2 ? ASSEMBLY_IDS : i % 4 === 3 ? RIM_IDS : TYRE_IDS;
+    const pid = pool[(hi * 3 + i) % pool.length];
+    const qty = QTY_STEPS[(hi * 5 + i * 3) % QTY_STEPS.length];
+    return [h.id, pid, qty, PO_DELIVERY_OFFSET[h.id]];
+  });
+});
 
 const addDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
 const fmtDate = (d) => d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -149,36 +155,19 @@ RAW_LINES.forEach(([soId, , qty]) => {
 /* The same customer may appear in multiple groups — render each entry    */
 /* as-is, never merge, never explain the separation.                      */
 const CUSTOMER_GROUPS = [
-  { groupId: "CG-01", customer: "Apex Motors", poIds: [1001, 1032, 1080] },
-  { groupId: "CG-02", customer: "Apex Motors", poIds: [1201] },
-  { groupId: "CG-03", customer: "Continental Traders", poIds: [1105, 1110] },
-  { groupId: "CG-04", customer: "Silverline Tyres", poIds: [1122, 1188] },
-  { groupId: "CG-05", customer: "Metro Wheels Inc", poIds: [1130, 1145] },
-  { groupId: "CG-06", customer: "Vantage Auto Parts", poIds: [1160] },
-  { groupId: "CG-07", customer: "Global Rubber Co", poIds: [1172] },
+  { groupId: "CG-01", customer: "SUN-TWS AMERCIA INC", poIds: [1001, 1032, 1080] },
+  { groupId: "CG-02", customer: "SUN-TWS AMERCIA INC", poIds: [1201] },
+  { groupId: "CG-03", customer: "INDUSTRIAL TYRE NETWORK LTD", poIds: [1105, 1110] },
+  { groupId: "CG-04", customer: "PROFESSIONAL INDUSTRIAL TIRE CO,INC", poIds: [1122, 1188] },
+  { groupId: "CG-05", customer: "TVH PARTS CO", poIds: [1130, 1145] },
+  { groupId: "CG-06", customer: "PANAMA FORKLIFT COMPANY, INC", poIds: [1160] },
+  { groupId: "CG-07", customer: "NEXEN CORP", poIds: [1172] },
 ];
 const GROUP_BY_PO = {};
 CUSTOMER_GROUPS.forEach((g) => g.poIds.forEach((id) => (GROUP_BY_PO[id] = g.groupId)));
 const groupById = (id) => CUSTOMER_GROUPS.find((g) => g.groupId === id) || null;
 
 const customerCode = (name) => name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 3);
-
-/* Auto-assign one line item across all plants by remaining capacity.     */
-/* Never exceeds plant capacity — any un-placeable remainder is left      */
-/* unassigned for the planner to see.                                     */
-function autoAssignLine(commit, capacityLeft) {
-  const asg = {};
-  let rest = commit;
-  const plants = PLANTS
-    .map((p) => ({ code: p.code, left: Math.max(0, capacityLeft[p.code] || 0) }))
-    .sort((a, b) => b.left - a.left);
-  for (const p of plants) {
-    if (rest <= 0) break;
-    const take = Math.min(p.left, rest);
-    if (take > 0) { asg[p.code] = take; rest -= take; }
-  }
-  return asg;
-}
 
 const sumAsg = (asg) => Object.values(asg || {}).reduce((a, b) => a + (b || 0), 0);
 
@@ -481,7 +470,7 @@ function StatRow({ label, value, tone, first }) {
   );
 }
 
-function LineAssignmentCard({ line, commit, asg, availLeft, onChange, onAuto }) {
+function LineAssignmentCard({ line, commit, asg, onChange }) {
   const t = useT();
   const [open, setOpen] = useState(true);
   const assigned = sumAsg(asg);
@@ -519,40 +508,24 @@ function LineAssignmentCard({ line, commit, asg, availLeft, onChange, onAuto }) 
                 {line.brand} · {line.sidewall} · <span className="font-mono">{line.description}</span>
               </div>
 
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-[9.5px] font-bold uppercase tracking-[0.08em]" style={{ color: t.faint }}>
-                  Plant assignment
-                </span>
-                <button onClick={onAuto}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold"
-                  style={{ background: t.primarySoft, color: t.primary }}>
-                  <Zap size={10} /> Auto assign
-                </button>
+              <div className="mt-2 text-[9.5px] font-bold uppercase tracking-[0.08em]" style={{ color: t.faint }}>
+                Plant split
               </div>
 
               <div className="mt-1.5 grid grid-cols-2 gap-2">
                 {PLANTS.map((plant) => {
                   const code = plant.code;
                   const val = asg[code] || 0;
-                  const left = Math.max(0, availLeft[code] ?? 0);
-                  const over = val > left;
                   return (
-                    <div key={code} className="rounded-lg border p-2"
-                      style={{ borderColor: over ? t.danger : t.border, background: t.surface }}>
+                    <div key={code} className="rounded-lg border p-2" style={{ borderColor: t.border, background: t.surface }}>
                       <div className="flex items-center justify-between">
                         <span className="inline-flex items-center gap-1 text-[10.5px] font-bold" style={{ color: t.text }}>
                           <Factory size={10} style={{ color: t.faint }} /> {code}
                         </span>
-                        <span className="font-mono text-[9px]" style={{ color: t.faint }}>avail {left.toLocaleString()}</span>
                       </div>
-                      <div className="truncate text-[8.5px]" style={{ color: t.faint }}>{plant?.name}</div>
-                      <InputNumber size="small" min={0} controls={false} value={val}
-                        onChange={(v) => onChange(code, Math.max(0, v || 0))} className="mt-1 w-full font-mono" />
-                      {over && (
-                        <div className="mt-1 flex items-center gap-1 text-[9px] font-semibold" style={{ color: t.danger }}>
-                          <AlertTriangle size={9} /> Exceeds capacity by {(val - left).toLocaleString()}
-                        </div>
-                      )}
+                      <div className="truncate text-[8.5px]" style={{ color: t.faint }}>{plant.name}</div>
+                      <InputNumber size="small" min={0} max={commit} controls={false} value={val}
+                        onChange={(v) => onChange(code, clamp(v, 0, commit))} className="mt-1 w-full font-mono" />
                     </div>
                   );
                 })}
@@ -572,19 +545,73 @@ function LineAssignmentCard({ line, commit, asg, availLeft, onChange, onAuto }) 
   );
 }
 
-function PlantAssignment({ lines, committedByKey, lineAlloc, availLeftFor, onChange, onAutoLine }) {
+function PlantAssignment({ lines, committedByKey, lineAlloc, mode, onMode, directPlant, onDirectPlant, onChange }) {
   const t = useT();
+  const total = lines.reduce((a, l) => a + committedByKey[l.key], 0);
   return (
     <div className="rounded-xl border p-3.5" style={{ background: t.surface, borderColor: t.border, boxShadow: t.shadow }}>
-      <SectionLabel>Plant Assignment · per line item</SectionLabel>
-      <div className="flex flex-col gap-2">
-        {lines.map((l) => (
-          <LineAssignmentCard key={l.key} line={l} commit={committedByKey[l.key]}
-            asg={lineAlloc[l.key] || {}} availLeft={availLeftFor(l.key)}
-            onChange={(code, v) => onChange(l.key, code, v)}
-            onAuto={() => onAutoLine(l.key)} />
-        ))}
-      </div>
+      <SectionLabel right={
+        <div className="flex rounded-lg p-0.5" style={{ background: t.inset }}>
+          {["direct", "combination"].map((m) => (
+            <button key={m} onClick={() => onMode(m)}
+              className="rounded-md px-2.5 py-1 text-[10px] font-bold capitalize transition-colors"
+              style={{
+                background: mode === m ? t.surface : "transparent",
+                color: mode === m ? t.primary : t.faint,
+                boxShadow: mode === m ? t.shadow : "none",
+              }}>
+              {m}
+            </button>
+          ))}
+        </div>
+      }>Plant Assignment</SectionLabel>
+
+      {mode === "direct" ? (
+        <>
+          <Select value={directPlant} onChange={onDirectPlant} placeholder="Select plant"
+            className="w-full" options={PLANTS.map((p) => ({ value: p.code, label: `${p.code} — ${p.name}` }))} />
+          {directPlant ? (
+            <>
+              <div className="mt-2.5 flex flex-col gap-1.5">
+                {lines.map((l) => (
+                  <div key={l.key} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2"
+                    style={{ borderColor: t.border, background: t.surfaceAlt }}>
+                    <div className="min-w-0">
+                      <div className="font-mono text-[11px] font-bold" style={{ color: t.text }}>
+                        PO-{l.soId} · L{l.lineNo} · {l.processId}
+                      </div>
+                      <div className="mt-0.5 truncate font-mono text-[10px]" style={{ color: t.sub }} title={l.description}>
+                        {l.description}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 font-mono text-[11px] font-bold" style={{ color: t.text }}>
+                      {committedByKey[l.key].toLocaleString()}
+                      <Pill tone="primary" icon={Factory}>{directPlant}</Pill>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2.5 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold"
+                style={{ background: t.successSoft, color: t.success }}>
+                <Check size={12} /> All {lines.length} line item{lines.length !== 1 ? "s" : ""} → {directPlant} · {total.toLocaleString()} qty
+              </div>
+            </>
+          ) : (
+            <div className="mt-2.5 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold"
+              style={{ background: t.warnSoft, color: t.warn }}>
+              <AlertTriangle size={12} /> Select a plant to assign all committed quantities
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {lines.map((l) => (
+            <LineAssignmentCard key={l.key} line={l} commit={committedByKey[l.key]}
+              asg={lineAlloc[l.key] || {}}
+              onChange={(code, v) => onChange(l.key, code, v)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -717,6 +744,8 @@ export default function WorkOrderPlanning() {
   const [commitQty, setCommitQty] = useState({});
   const [reviewOpen, setReviewOpen] = useState(false);
   const [lineAlloc, setLineAlloc] = useState({}); // { [lineKey]: { [plantCode]: qty } }
+  const [assignMode, setAssignMode] = useState("direct"); // "direct" | "combination"
+  const [directPlant, setDirectPlant] = useState(null);
   const [customerSearch, setCustomerSearch] = useState("");
   const [poSearch, setPoSearch] = useState("");
   const [lineSearch, setLineSearch] = useState("");
@@ -814,26 +843,24 @@ export default function WorkOrderPlanning() {
     };
   }, [selectedKeys, commitQty, lineItems]);
 
-  const existingAlloc = useMemo(() => {
-    const m = {};
-    PLANTS.forEach((p) => (m[p.code] = workOrders.reduce((s, w) => s + (w.allocations[p.code] || 0), 0)));
-    return m;
-  }, [workOrders]);
-
-  /* No auto-assignment — every plant starts at 0 and the planner enters   */
-  /* quantities manually. This effect only keeps the assignment map in     */
-  /* sync with the selection (adds new lines at 0, drops deselected ones)  */
-  /* while preserving values the planner already typed.                    */
+  /* Keeps the assignment map in sync with the selection.                  */
+  /* Direct mode: every line gets 100% of its commit qty on the selected   */
+  /* plant. Combination mode: lines start at 0 and the planner enters the  */
+  /* split manually; typed values are preserved. No capacity checks.       */
   const draftSig = draft.active.map((l) => `${l.key}:${draft.committedByKey[l.key]}`).join("|");
   useEffect(() => {
     if (!reviewOpen) return;
     setLineAlloc((prev) => {
       const next = {};
-      draft.active.forEach((l) => (next[l.key] = prev[l.key] || {}));
+      draft.active.forEach((l) => {
+        next[l.key] = assignMode === "direct" && directPlant
+          ? { [directPlant]: draft.committedByKey[l.key] }
+          : prev[l.key] || {};
+      });
       return next;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftSig, reviewOpen]);
+  }, [draftSig, reviewOpen, assignMode, directPlant]);
 
   /* Basket grouped by PO for the review popup — rows shaped for LineRow reuse. */
   const basketPOGroups = useMemo(() => {
@@ -850,7 +877,7 @@ export default function WorkOrderPlanning() {
     });
   }, [draft.picked]);
 
-  /* Aggregated draft load per plant (for capacity display, preview, est. production). */
+  /* Aggregated draft totals per plant (preview chips, WO allocations). */
   const draftPlantTotals = useMemo(() => {
     const m = {};
     PLANTS.forEach((p) => (m[p.code] = 0));
@@ -860,25 +887,8 @@ export default function WorkOrderPlanning() {
     return m;
   }, [draft.active, lineAlloc]);
 
-  /* Remaining capacity a given line can still use per plant (excludes its own assignment). */
-  const availLeftFor = (key) => {
-    const m = {};
-    PLANTS.forEach((p) => {
-      const others = (draftPlantTotals[p.code] || 0) - ((lineAlloc[key] || {})[p.code] || 0);
-      m[p.code] = p.available - (existingAlloc[p.code] || 0) - others;
-    });
-    return m;
-  };
-
   const setAssignQty = (key, code, v) =>
     setLineAlloc((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), [code]: Math.max(0, v || 0) } }));
-
-  /* Auto-assign a single line only, within the remaining capacity of all plants. */
-  const autoAssignOne = (key) => {
-    if (!draft.active.some((l) => l.key === key)) return;
-    const capLeft = availLeftFor(key);
-    setLineAlloc((prev) => ({ ...prev, [key]: autoAssignLine(draft.committedByKey[key], capLeft) }));
-  };
 
   /* Every selected line must be fully assigned: assigned qty === commit qty, per line. */
   const allAssigned = draft.active.length > 0 &&
@@ -983,15 +993,8 @@ export default function WorkOrderPlanning() {
   const commitAll = () => {
     setWorkOrders((prev) => prev.map((w) => ({ ...w, committed: true })));
     setCommitAllOpen(false);
-    message.success("Plan committed · stock, capacity and PO statuses locked");
+    message.success("Plan committed · work orders and PO statuses locked");
   };
-
-  const estDays = useMemo(() => {
-    if (draft.deficit === 0) return 0;
-    return Math.max(...PLANTS.map((p) =>
-      (draftPlantTotals[p.code] || 0) > 0 ? Math.ceil((draftPlantTotals[p.code] || 0) / (p.capacity / 30)) : 0
-    ), 1);
-  }, [draftPlantTotals, draft.deficit]);
 
   const hasSelection = selectedKeys.length > 0;
 
@@ -1281,7 +1284,7 @@ export default function WorkOrderPlanning() {
                   </motion.div>
                   <div className="text-center">
                     <div className="font-mono text-[16px] font-bold" style={{ color: t.text }}>{flash} created</div>
-                    <div className="mt-0.5 text-[11.5px]" style={{ color: t.sub }}>PO quantities and plant capacity updated</div>
+                    <div className="mt-0.5 text-[11.5px]" style={{ color: t.sub }}>PO quantities and plant assignments updated</div>
                   </div>
                 </motion.div>
               </motion.div>
@@ -1305,9 +1308,9 @@ export default function WorkOrderPlanning() {
                 <button onClick={() => setReviewOpen(false)}
                   className="rounded-lg border px-3.5 py-1.5 text-[12px] font-bold"
                   style={{ borderColor: t.border, color: t.sub }}>Cancel</button>
-                <button onClick={() => { setReviewOpen(false); message.success("Draft saved · selection and assignments kept"); }}
+                {/* <button onClick={() => { setReviewOpen(false); message.success("Draft saved · selection and assignments kept"); }}
                   className="rounded-lg border px-3.5 py-1.5 text-[12px] font-bold"
-                  style={{ borderColor: t.primaryBorder, color: t.primary }}>Save Draft</button>
+                  style={{ borderColor: t.primaryBorder, color: t.primary }}>Save Draft</button> */}
                 <button onClick={generateWO} disabled={!allAssigned}
                   className="flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[12px] font-bold transition-opacity disabled:cursor-not-allowed disabled:opacity-45"
                   style={{ background: t.success, color: mode === "light" ? "#fff" : "#06281a" }}>
@@ -1346,8 +1349,9 @@ export default function WorkOrderPlanning() {
               {/* Sections 3 & 4 — existing plant assignment + preview */}
               <div className="flex flex-col gap-3">
                 <PlantAssignment lines={draft.active} committedByKey={draft.committedByKey}
-                  lineAlloc={lineAlloc} availLeftFor={availLeftFor}
-                  onChange={setAssignQty} onAutoLine={autoAssignOne} />
+                  lineAlloc={lineAlloc} mode={assignMode} onMode={setAssignMode}
+                  directPlant={directPlant} onDirectPlant={setDirectPlant}
+                  onChange={setAssignQty} />
 
                 <div className="rounded-xl border p-4"
                   style={{ background: t.surface, borderColor: t.primaryBorder, boxShadow: t.shadow }}>
@@ -1369,7 +1373,7 @@ export default function WorkOrderPlanning() {
                   <div className="mt-2.5 grid grid-cols-2 gap-2 text-center">
                     {[
                       ["To manufacture", draft.deficit.toLocaleString(), t.warn],
-                      ["Est. production", draft.deficit > 0 ? `~${estDays}d` : "—", t.sub],
+                      ["Plants used", PLANTS.filter((p) => (draftPlantTotals[p.code] || 0) > 0).length, t.sub],
                     ].map(([lab, v, c]) => (
                       <div key={lab} className="rounded-lg py-1.5" style={{ background: t.surfaceAlt }}>
                         <div className="font-mono text-[12.5px] font-bold" style={{ color: c }}>{v}</div>

@@ -29,6 +29,7 @@ import {
   FaExchangeAlt,
   FaProjectDiagram,
   FaClipboardList,
+  FaIndustry,
 } from "react-icons/fa";
 import { TfiBarChartAlt } from "react-icons/tfi";
 import { VscCalendar, VscGraphLine } from "react-icons/vsc";
@@ -63,8 +64,8 @@ import {
   HiOutlineCube, // Masters
 } from "react-icons/hi";
 import { HiOutlineArchiveBox } from "react-icons/hi2";
-import { TbRouteAltLeft } from "react-icons/tb";
-import { FiPackage } from "react-icons/fi";
+import { TbBuildingFactory, TbRouteAltLeft } from "react-icons/tb";
+import { FiClipboard, FiFilePlus, FiPackage } from "react-icons/fi";
 
 const { Sider } = Layout;
 
@@ -200,10 +201,22 @@ const SideBar = () => {
           label: "International",
           children: [
             {
-              key: "/TTS/International/OrderProcess",
-              icon: <FiPackage   />,
-              label: "Order Process",
-            },
+  key: "/TTS/International/OrderProcess",
+  icon: <FiClipboard />,
+  label: "Order Processing",
+  children: [
+    {
+      key: "/TTS/International/OrderProcess/OrderEntry",
+      icon: <FiFilePlus />,
+      label: "Order Creation",
+    },
+    {
+      key: "/TTS/International/OrderProcess/PlantAssign",
+      icon: <TbBuildingFactory />,
+      label: "Plant Assignment",
+    },
+  ],
+},
             {
               key: "InternationalInvoice",
               icon: <FaFileInvoiceDollar />,

@@ -299,7 +299,8 @@ export const router = createBrowserRouter([
             element: <InvoiceLayout />,
             children: [
               // Order Process
-              { path: "OrderProcess", element: <OrderCopy /> },
+              { path: "OrderProcess/OrderEntry", element: <OrderCopy /> },
+              { path: "OrderProcess/PlantAssign", element: <WorkOrderPlanning /> },
               // { path: "OrderProcesscopy", element: <OrderEntryCopy /> },
               // { path: "OrderProcess1", element: <SalesOrderPage /> },
               // invoice
