@@ -92,7 +92,9 @@ import CustomerModule1 from "../pages/Masters/Customer Master/CustomerModule1";
 import CustomerModule2 from "../pages/Masters/Customer Master/CustomerrModule2";
 import CRMReports from "../pages/Reports/CRMReports/CRMReports";
 import PlannerWorkspace from "../pages/Dashboard/Plannerworkspace";
-import WorkOrderPlanning from "../pages/Dashboard/PlantAssign";
+import WorkOrderPlanning from "../pages/TTS/International/OrderProcess/PlantAssign/PlantAssign";
+import ManufacturingPlanningRevision from "../pages/TTS/International/OrderProcess/Manufacturingplanningrevision/Manufacturingplanningrevision";
+// import WorkOrderPlanning from "../pages/Dashboard/PlantAssign";
 
 export const router = createBrowserRouter([
   {
@@ -111,7 +113,7 @@ export const router = createBrowserRouter([
           { path: "Dashboard", element: <Dashboard /> },
           // { path: "Barcode", element: <Barcode /> },
           // { path: "Barcode", element: <PlannerWorkspace /> },
-          { path: "Barcode", element: <WorkOrderPlanning /> },
+          { path: "Barcode", element: <ManufacturingPlanningRevision /> },
           {
             path: "Masters",
             element: <MasterLayout />,
@@ -300,7 +302,7 @@ export const router = createBrowserRouter([
             children: [
               // Order Process
               { path: "OrderProcess/OrderEntry", element: <OrderCopy /> },
-              { path: "OrderProcess/PlantAssign", element: <WorkOrderPlanning /> },
+              { path: "OrderProcess/OrderFulfillment", element: <WorkOrderPlanning /> },
               // { path: "OrderProcesscopy", element: <OrderEntryCopy /> },
               // { path: "OrderProcess1", element: <SalesOrderPage /> },
               // invoice

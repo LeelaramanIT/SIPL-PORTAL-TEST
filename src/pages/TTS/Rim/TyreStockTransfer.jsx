@@ -21,7 +21,9 @@ import {
   RadarChartOutlined,
   ClockCircleOutlined,
   MenuOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
+
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -166,9 +168,33 @@ const TwButton = ({
 
 // ─── Tailwind Input ───────────────────────────────────────────────────────────
 
+// const TwInput = React.forwardRef(({
+//   value, onChange, onPressEnter, placeholder, prefix, suffix,
+//   maxLength, className = "", style = {}, size = "md",
+// }, ref) => {
+//   const sizeMap = { sm: "h-8 text-xs", md: "h-10 text-sm", lg: "h-12 text-base" };
+//   return (
+//     <div className={`relative flex items-center border border-slate-200 rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400 transition ${sizeMap[size]}`} style={style}>
+//       {prefix && <span className="pl-3 pr-1 text-slate-400 flex-shrink-0">{prefix}</span>}
+//       <input
+//         ref={ref}
+//         value={value}
+//         onChange={onChange}
+//         placeholder={placeholder}
+//         maxLength={maxLength}
+//         onKeyDown={(e) => e.key === "Enter" && onPressEnter?.()}
+//         className={`flex-1 h-full bg-transparent outline-none px-2 font-mono font-medium text-slate-800 placeholder-slate-400 ${className}`}
+//       />
+//       {suffix && <span className="pr-3 pl-1 flex-shrink-0">{suffix}</span>}
+//     </div>
+//   );
+// });
+
+// ─── Tailwind Input ───────────────────────────────────────────────────────────
+
 const TwInput = React.forwardRef(({
   value, onChange, onPressEnter, placeholder, prefix, suffix,
-  maxLength, className = "", style = {}, size = "md",
+  maxLength, className = "", style = {}, size = "md", inputMode, ...rest
 }, ref) => {
   const sizeMap = { sm: "h-8 text-xs", md: "h-10 text-sm", lg: "h-12 text-base" };
   return (
@@ -180,17 +206,76 @@ const TwInput = React.forwardRef(({
         onChange={onChange}
         placeholder={placeholder}
         maxLength={maxLength}
+        inputMode={inputMode}
         onKeyDown={(e) => e.key === "Enter" && onPressEnter?.()}
         className={`flex-1 h-full bg-transparent outline-none px-2 font-mono font-medium text-slate-800 placeholder-slate-400 ${className}`}
+        {...rest}
       />
       {suffix && <span className="pr-3 pl-1 flex-shrink-0">{suffix}</span>}
     </div>
   );
 });
 
+// ─── Header Search ────────────────────────────────────────────────────────────
+// Standalone text field — deliberately does NOT reuse any scanner input props
+// (no inputMode="none", no readOnly) so the native keyboard opens on tap.
+
+const HeaderSearch = React.forwardRef(({
+  value, onChange, dark = false, isDesktop = true, placeholder = "Search...",
+  onFocus, onBlur, onSearchDone,
+}, ref) => (
+  <div
+    className={`flex items-center gap-1.5 rounded-lg px-2.5 transition-all ${
+      dark
+        ? "bg-white/10 border border-white/15 focus-within:bg-white/15 focus-within:border-white/25"
+        : "bg-white border border-slate-200 focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400"
+    }`}
+    style={{ height: isDesktop ? 32 : 28 }}
+  >
+    <SearchOutlined style={{ fontSize: isDesktop ? 13 : 11, color: dark ? "rgba(255,255,255,0.5)" : "#94a3b8", flexShrink: 0 }} />
+    <input
+      ref={ref}
+      type="text"
+      inputMode="search"
+      enterKeyHint="search"
+      autoComplete="off"
+      autoCorrect="off"
+      autoCapitalize="none"
+      spellCheck={false}
+      readOnly={false}
+      disabled={false}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+          onSearchDone?.();
+        }
+      }}
+      placeholder={placeholder}
+      className={`bg-transparent outline-none border-none text-xs font-medium w-full min-w-0 ${
+        dark ? "text-white placeholder-white/40" : "text-slate-700 placeholder-slate-400"
+      }`}
+      style={{ width: isDesktop ? 140 : 100, pointerEvents: "auto" }}
+    />
+    {value && (
+      <button
+        onClick={() => { onChange(""); onSearchDone?.(); }}
+        className={`flex-shrink-0 ${dark ? "text-white/50 hover:text-white" : "text-slate-400 hover:text-slate-600"}`}
+      >
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    )}
+  </div>
+));
+
 // ─── Custom Table ─────────────────────────────────────────────────────────────
 
-const TwTable = ({ columns, dataSource, loading, size = "md", scroll, className = "", rowClassName }) => {
+const TwTable = ({ columns, dataSource, loading, size = "md", scroll, className = "", rowClassName, emptyText = "No items scanned yet" }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-slate-400 gap-2">
@@ -233,7 +318,7 @@ const TwTable = ({ columns, dataSource, loading, size = "md", scroll, className 
           {dataSource?.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="text-center py-12 text-slate-400 text-sm">
-                No items scanned yet
+                {emptyText}
               </td>
             </tr>
           ) : (
@@ -245,7 +330,7 @@ const TwTable = ({ columns, dataSource, loading, size = "md", scroll, className 
                 {columns.map((col, cIdx) => (
                   <td
                     key={cIdx}
-                    className={`${cellPad} text-slate-700`}
+                    className={`${cellPad} text-slate-700 whitespace-nowrap`}
                     style={{
                       textAlign: col.align || "left",
                       ...(col.fixed === "right" ? { position: "sticky", right: 0, background: "white", boxShadow: "-2px 0 4px rgba(0,0,0,0.05)" } : {}),
@@ -326,7 +411,7 @@ const TwDrawer = ({ open, onClose, title, children }) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 35 }}
-            className="fixed top-0 right-0 h-full w-72 bg-white shadow-2xl z-50 flex flex-col"
+            className="fixed top-0 right-0 h-full w-72 bg-white shadow-2xl z-500 flex flex-col"
           >
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <span className="font-semibold text-slate-800 text-base">{title}</span>
@@ -588,25 +673,54 @@ const PreviewCard = ({ previewTyre, setPreviewTyre, saveTyre, addLoading, isDesk
 
 // ─── ResponsiveContent ────────────────────────────────────────────────────────
 
-const ResponsiveContent = memo(({
+const   ResponsiveContent = memo(({
   isMobile, isTablet, isDesktop,
   scanStatus, barcodeInput, setBarcodeInput, handleScan, isScanning,
   lastScannedTime, inputRef, previewTyre, setPreviewTyre, saveTyre,
   scannedTyres, setShowConfirmModal, columns,
   transferPlan, transferFrom, transferTo,
   groupedTyres, tableLoading, addLoading,
+  searchQuery, setSearchQuery, filteredGroupedTyres, filteredScannedTyres,
 }) => {
   const isSelectionMissing = !transferPlan || !transferFrom || !transferTo;
+  const totalQty = useMemo(
+    () => groupedTyres.reduce((sum, item) => sum + (item.qty || 1), 0),
+    [groupedTyres]
+  );
+
+  // Tracks whether the Header Search field currently owns focus, so the
+  // scanner's auto-focus never fights the user while they're typing a search.
+  const isSearchFocusedRef = useRef(false);
+
+  const focusScanner = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (!isSearchFocusedRef.current) inputRef.current?.focus();
+    });
+  }, [inputRef]);
+
+  const handleSearchFocus = useCallback(() => {
+    isSearchFocusedRef.current = true;
+  }, []);
+
+  const handleSearchBlur = useCallback(() => {
+    isSearchFocusedRef.current = false;
+    focusScanner();
+  }, [focusScanner]);
+
+  const handleSearchDone = useCallback(() => {
+    isSearchFocusedRef.current = false;
+    focusScanner();
+  }, [focusScanner]);
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   if (isMobile) {
     return (
-      <main className="flex-1 p-2 overflow-hidden flex flex-col">
+      <main className="flex-1 min-h-0 p-2 overflow-hidden flex flex-col">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="flex flex-col gap-3 h-full">
+          className="flex flex-col gap-3 h-full min-h-0">
 
           {/* Scanner Card */}
-          <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 shadow-sm p-3">
+          <div className="flex-shrink-0 bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 shadow-sm p-3">
             <div className="mb-2.5">
               <ScanStatusBar scanStatus={scanStatus} compact />
             </div>
@@ -619,6 +733,7 @@ const ResponsiveContent = memo(({
               onChange={(e) => setBarcodeInput(e.target.value)}
               size="md"
               className="mb-2.5 font-mono"
+              inputMode="none"
             />
             <TwButton type="primary" block onClick={handleScan} loading={isScanning} disabled={isSelectionMissing}
               size="lg"
@@ -632,74 +747,42 @@ const ResponsiveContent = memo(({
             )}
           </div>
 
-          {/* Preview */}
+          {/* Preview (reuses the same PreviewCard as desktop/tablet — no duplicate JSX) */}
           <AnimatePresence>
             {previewTyre && (
-              <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-                <div className="rounded-xl border-2 border-blue-500 bg-gradient-to-br from-slate-50 to-white shadow-xl overflow-hidden">
-                  <div className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-800 flex justify-between items-center">
-                    <span className="text-white font-semibold text-xs">Details</span>
-                    <Tag color="gold" className="text-[10px]">Pending</Tag>
-                  </div>
-                  <div className="p-3 space-y-2">
-                    {[
-                      { label: "Brand",    value: previewTyre.brand },
-                      { label: "Size",     value: previewTyre.size },
-                      { label: "Category", value: previewTyre.category },
-                    ].map(({ label, value }, i) => (
-                      <div key={i}>
-                        <span className="text-slate-400 text-[10px]">{label}</span>
-                        <strong className="block text-sm text-slate-800">{value}</strong>
-                      </div>
-                    ))}
-                    <div className="flex gap-1.5 mt-3">
-                      <TwButton block onClick={() => setPreviewTyre(null)} size="sm" className="flex-1">Discard</TwButton>
-                      <TwButton type="primary" block onClick={saveTyre} loading={addLoading} size="sm" className="flex-1"
-                        style={{ background: "linear-gradient(135deg,#10b981 0%,#059669 100%)", border: "none" }}>
-                        Add
-                      </TwButton>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+              <PreviewCard
+                previewTyre={previewTyre}
+                setPreviewTyre={setPreviewTyre}
+                saveTyre={saveTyre}
+                addLoading={addLoading}
+                isDesktop={false}
+                isTablet={false}
+              />
             )}
           </AnimatePresence>
 
-          {/* Table */}
+          {/* Table — the only scrollable region on mobile */}
           {scannedTyres.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 flex flex-col flex-[2] overflow-hidden">
-              <div className="px-3 py-2 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
-                <span className="text-xs font-semibold text-slate-700">Items ({scannedTyres.length})</span>
+            <div className="bg-white rounded-xl border border-slate-200 flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="px-3 py-2 bg-slate-100 border-b border-slate-200 flex justify-between items-center gap-2 flex-shrink-0">
+                <span className="text-xs font-semibold text-slate-700 flex-shrink-0">
+                  Items ({groupedTyres.length}) &middot; Qty ({totalQty})
+                </span>
+                <HeaderSearch
+                  value={searchQuery} onChange={setSearchQuery} isDesktop={false} placeholder="Search..."
+                  onFocus={handleSearchFocus} onBlur={handleSearchBlur} onSearchDone={handleSearchDone}
+                />
               </div>
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 min-h-0 overflow-auto">
                 <TwTable
                   className="responsive-transfer-table"
                   loading={tableLoading}
                   columns={columns}
-                  dataSource={(Array.isArray(scannedTyres) ? scannedTyres : []).map((t, i) => ({ ...t, key: i }))}
+                  dataSource={(Array.isArray(filteredGroupedTyres) ? filteredGroupedTyres : []).map((item, i) => ({ ...item, key: i }))}
                   size="small"
                   scroll={{ x: 1060 }}
+                  emptyText={searchQuery ? "No items match your search" : "No items scanned yet"}
                 />
-              </div>
-            </div>
-          )}
-
-          {/* Submit bar */}
-          {scannedTyres.length > 0 && (
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl px-3 py-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-white/60 text-[10px] block">READY</span>
-                  <strong className="text-white text-base">{scannedTyres.length} items</strong>
-                </div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <TwButton type="primary" icon={<SendOutlined />} onClick={() => setShowConfirmModal(true)}
-                    size="md"
-                    style={{ background: "#10b981", border: "none" }}>
-                    Submit
-                  </TwButton>
-                </motion.div>
               </div>
             </div>
           )}
@@ -710,11 +793,11 @@ const ResponsiveContent = memo(({
 
   // ── Desktop / Tablet layout ────────────────────────────────────────────────
   return (
-    <main className={`flex-1 flex overflow-hidden min-h-0 ${isTablet ? "p-4" : "p-6 px-8"}`}>
-      <div className={`flex gap-${isTablet ? "3" : "6"} w-full min-h-0`}>
+    <main className={`flex-1 flex overflow-hidden min-h-0 min-w-0 ${isTablet ? "p-4" : "p-6 px-8"}`}>
+      <div className={`flex gap-${isTablet ? "3" : "6"} w-full min-h-0 min-w-0`}>
 
         {/* Left column */}
-        <div className={`flex flex-col gap-${isTablet ? "3" : "5"} min-h-0 ${isTablet ? "w-[42%]" : "w-[33%]"}`}>
+        <div className={`flex flex-col gap-${isTablet ? "3" : "5"} min-h-0 flex-shrink-0 ${isTablet ? "w-[42%]" : "w-[33%]"}`}>
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
             <div className={`bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 shadow-sm ${isTablet ? "p-2" : "p-3"}`}>
               <div className="mb-3">
@@ -729,6 +812,7 @@ const ResponsiveContent = memo(({
                   onPressEnter={handleScan}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   size={isDesktop ? "md" : "sm"}
+                  inputMode="none"
                   style={{ fontFamily: "monospace", fontSize: isDesktop ? 16 : 12, fontWeight: 500 }}
                   suffix={isScanning ? (
                     <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
@@ -754,7 +838,7 @@ const ResponsiveContent = memo(({
             </div>
           </motion.div>
 
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
             <AnimatePresence mode="wait">
               {previewTyre ? (
                 <PreviewCard
@@ -780,39 +864,47 @@ const ResponsiveContent = memo(({
         </div>
 
         {/* Right column */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-            className="flex-1 flex flex-col min-h-0">
-            <div className={`flex flex-col flex-1 min-h-0 rounded-${isTablet ? "xl" : "2xl"} border border-slate-200 shadow-sm overflow-hidden bg-gradient-to-br from-white to-slate-50`}>
+            className="flex-1 flex flex-col min-h-0 min-w-0">
+            <div className={`flex flex-col flex-1 min-h-0 min-w-0 rounded-${isTablet ? "xl" : "2xl"} border border-slate-200 shadow-sm overflow-hidden bg-gradient-to-br from-white to-slate-50`}>
 
               {/* Table header */}
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 flex items-center justify-between rounded-t-xl flex-shrink-0">
-                <div>
-                  <h2 className={`text-white font-bold m-0 ${isDesktop ? "text-[18px]" : "text-sm"}`}>Transfer List</h2>
-                  <p className="text-white/60 text-[11px] mt-0.5 m-0">
-                    {scannedTyres.length} item{scannedTyres.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-white/60 text-[10px] block mb-0.5">TOTAL</span>
-                  <strong className={`text-white ${isDesktop ? "text-[22px]" : "text-base"}`}>{scannedTyres.length}</strong>
-                </div>
-              </div>
+              <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 flex items-center justify-between gap-3 rounded-t-xl flex-shrink-0 flex-wrap">
+  <div className="min-w-0">
+    <h2 className={`text-white font-bold m-0 ${isDesktop ? "text-[18px]" : "text-sm"}`}>Transfer List</h2>
+    <p className="text-white/60 text-[11px] mt-0.5 m-0">
+      {groupedTyres.length} line{groupedTyres.length !== 1 ? "s" : ""}
+    </p>
+  </div>
+  <div className="flex items-center gap-3 flex-shrink-0">
+    <HeaderSearch
+      value={searchQuery} onChange={setSearchQuery} dark isDesktop={isDesktop} placeholder="Search items..."
+      onFocus={handleSearchFocus} onBlur={handleSearchBlur} onSearchDone={handleSearchDone}
+    />
+    <div className={`flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 font-semibold text-white ${isDesktop ? "text-sm" : "text-xs"}`}>
+      <span>ITEMS ({groupedTyres.length})</span>
+      <span className="text-white/40">&middot;</span>
+      <span>QTY ({totalQty})</span>
+    </div>
+  </div>
+</div>
 
-              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+              <div className="flex-1 overflow-hidden flex flex-col min-h-0 min-w-0">
                 <TwTable
-                  className="responsive-transfer-table"
-                  loading={tableLoading}
-                  columns={columns}
-                  dataSource={groupedTyres.map((item, i) => ({ ...item, key: i }))}
-                  size={isDesktop ? "md" : "small"}
-                  scroll={
-                    isDesktop
-                      ? { y: "calc(100vh - 320px)" }
-                      : { x: 1060, y: `calc(100vh - ${isTablet ? "260px" : "280px"})` }
-                  }
-                  rowClassName={(_, index) => (index === 0 ? "row-highlight" : "")}
-                />
+  className="responsive-transfer-table overflow-x-auto overflow-y-auto"
+  loading={tableLoading}
+  columns={columns}
+  dataSource={filteredGroupedTyres.map((item, i) => ({ ...item, key: i }))}
+  size={isDesktop ? "md" : "small"}
+  scroll={
+    isDesktop
+      ? { y: "calc(100vh - 320px)" }
+      : { x: 1060, y: `calc(100vh - ${isTablet ? "260px" : "280px"})` }
+  }
+  rowClassName={(_, index) => (index === 0 ? "row-highlight" : "")}
+  emptyText={searchQuery ? "No items match your search" : "No items scanned yet"}
+/>
               </div>
             </div>
           </motion.div>
@@ -1037,26 +1129,49 @@ export default function TyreStockTransferRedesign() {
   }, [scannedTyres]);
 
   const groupedTyres = useMemo(() => {
-    const grouped = {};
-    console.log("------------------------------", scannedTyres);
-    scannedTyres.forEach((item) => {
-      const key = item.processID;
-      if (!grouped[key]) {
-        grouped[key] = {
-          config: item.config, barcode: item.barcode, stencilNo: item.stencilNo,
-          grade: item.grade, sideWall: item.sideWall, processID: item.processID,
-          brand: item.brand, tyreSize: item.tyreSize, rimSize: item.rimSize,
-          tyreType: item.tyreType, qty: 1,
-        };
-      } else {
-        grouped[key].qty += 1;
-      }
-    });
-    return Object.values(grouped);
-  }, [scannedTyres]);
+  const grouped = {};
+
+  scannedTyres.forEach((item) => {
+    const key = [
+      item.processID,
+      item.config,
+      item.brand,
+      item.sideWall,
+      item.tyreSize,
+      item.rimSize,
+      item.tyreType,
+      item.grade,
+    ].join("|");
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        config: item.config, barcode: item.barcode, stencilNo: item.stencilNo,
+        grade: item.grade, sideWall: item.sideWall, processID: item.processID,
+        brand: item.brand, tyreSize: item.tyreSize, rimSize: item.rimSize,
+        tyreType: item.tyreType, qty: 1,
+      };
+    } else {
+      grouped[key].qty += 1;
+    }
+  });
+
+  return Object.values(grouped);
+}, [scannedTyres]);
+const [searchQuery, setSearchQuery] = useState("");
+const filterBySearch = useCallback((list) => {
+  const q = searchQuery.trim().toLowerCase();
+  if (!q) return list;
+  return list.filter((item) =>
+    [item.barcode, item.processID, item.brand, item.tyreSize, item.rimSize, item.tyreType, item.grade, item.config, item.sideWall]
+      .some((field) => field && String(field).toLowerCase().includes(q))
+  );
+}, [searchQuery]);
+
+const filteredGroupedTyres = useMemo(() => filterBySearch(groupedTyres), [groupedTyres, filterBySearch]);
+const filteredScannedTyres = useMemo(() => filterBySearch(scannedTyres), [scannedTyres, filterBySearch]);
 
   const columns = useMemo(() => {
-    const tw = { fontSize: isDesktop ? 14 : 11, wordBreak: "break-word", lineHeight: 1.35 };
+    const tw = { fontSize: isDesktop ? 14 : 11, whiteSpace: "nowrap", lineHeight: 1.35 };
     return [
       { title: "Platform",   dataIndex: "config",    width: 140, render: (t) => <strong style={tw}>{t}</strong> },
       { title: "Brand",      dataIndex: "brand",     width: 100, render: (t) => <Tag color="blue" style={{ fontSize: isDesktop ? 13 : 10 }}>{t}</Tag> },
@@ -1135,7 +1250,7 @@ export default function TyreStockTransferRedesign() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
       <ResponsiveHeader
         isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop}
         scannedTyresCount={scannedTyres.length}
@@ -1148,18 +1263,20 @@ export default function TyreStockTransferRedesign() {
       />
 
       <ResponsiveContent
-        isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop}
-        scanStatus={scanStatus}
-        barcodeInput={barcodeInput} setBarcodeInput={setBarcodeInput}
-        handleScan={handleScan} isScanning={isScanning}
-        lastScannedTime={lastScannedTime} inputRef={inputRef}
-        previewTyre={previewTyre} setPreviewTyre={setPreviewTyre}
-        saveTyre={saveTyre}
-        scannedTyres={scannedTyres} setShowConfirmModal={setShowConfirmModal}
-        columns={columns}
-        transferPlan={transferPlan} transferFrom={transferFrom} transferTo={transferTo}
-        groupedTyres={groupedTyres} tableLoading={tableLoading} addLoading={addLoading}
-      />
+  isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop}
+  scanStatus={scanStatus}
+  barcodeInput={barcodeInput} setBarcodeInput={setBarcodeInput}
+  handleScan={handleScan} isScanning={isScanning}
+  lastScannedTime={lastScannedTime} inputRef={inputRef}
+  previewTyre={previewTyre} setPreviewTyre={setPreviewTyre}
+  saveTyre={saveTyre}
+  scannedTyres={scannedTyres} setShowConfirmModal={setShowConfirmModal}
+  columns={columns}
+  transferPlan={transferPlan} transferFrom={transferFrom} transferTo={transferTo}
+  groupedTyres={groupedTyres} tableLoading={tableLoading} addLoading={addLoading}
+  searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+  filteredGroupedTyres={filteredGroupedTyres} filteredScannedTyres={filteredScannedTyres}
+/>
 
       <ResponsiveFooter
         isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop}
@@ -1238,11 +1355,11 @@ export default function TyreStockTransferRedesign() {
           to   { opacity:1; transform:translateX(0); }
         }
         .responsive-transfer-table tbody tr:hover td { background: rgba(59,130,246,0.04) !important; }
+        .responsive-transfer-table td, .responsive-transfer-table th {
+          white-space:nowrap !important;
+        }
         @media (max-width:768px) {
           .responsive-transfer-table { overflow-x:auto; }
-          .responsive-transfer-table td, .responsive-transfer-table th {
-            white-space:normal !important; word-break:break-word !important; vertical-align:top !important;
-          }
         }
         @media (hover:none) and (pointer:coarse) {
           button, input { min-height:36px; }

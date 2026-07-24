@@ -62,17 +62,36 @@ const ScanForInspectionDetails = () => {
     setShowCheckStencil(false);
   };
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+ const focusScanInput = () => {
+  const active = document.activeElement;
+  if (
+    active &&
+    active !== inputRef.current &&
+    (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
+  ) {
+    return;
+  }
+  const el = inputRef.current;
+  if (!el) return;
+  el.setAttribute("readonly", "readonly");
+  el.focus({ preventScroll: true });
+  setTimeout(() => el.removeAttribute("readonly"), 100);
+};
 
-  useEffect(() => {
-    if (!open) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 200);
-    }
-  }, [open]);
+ useEffect(() => {
+  focusScanInput();
+}, []);
+
+ const wasOpenRef = useRef(false);
+
+useEffect(() => {
+  if (wasOpenRef.current && !open) {
+    setTimeout(() => {
+      focusScanInput();
+    }, 200);
+  }
+  wasOpenRef.current = open;
+}, [open]);
 
   const items = useMemo(() => {
     if (!InspectionDetails?.items) return [];
@@ -425,16 +444,25 @@ const ScanForInspectionDetails = () => {
 
                 <div className="relative">
                   <input
-                    ref={inputRef}
-                    type="text"
-                    maxLength={19}
-                    disabled={isProcessingScan || open}
-                    value={scanInput}
-                    onChange={(e) => setScanInput(e.target.value)}
-                    onKeyDown={handleScan}
-                    placeholder="Scan barcode..."
-                    className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                  />
+  ref={inputRef}
+  type="text"
+  inputMode="none"
+  autoComplete="off"
+  autoCorrect="off"
+  autoCapitalize="off"
+  spellCheck={false}
+  maxLength={19}
+  disabled={isProcessingScan || open}
+  value={scanInput}
+  onChange={(e) => setScanInput(e.target.value)}
+  onKeyDown={handleScan}
+  onFocus={(e) => {
+    e.target.setAttribute("readonly", "readonly");
+    setTimeout(() => e.target.removeAttribute("readonly"), 100);
+  }}
+  placeholder="Scan barcode..."
+  className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+/>
                 </div>
                 <div className="mt-3">
                   {error ? (
@@ -546,16 +574,16 @@ const ScanForInspectionDetails = () => {
                   rowClassName={(row) => {
                     // FULLY SCANNED
                     if (row.scannedQty >= row.totalItemQty) {
-                      return "bg-green-100 dark:bg-green-900/30 border-green-500";
+                      return "!bg-green-100 dark:!bg-green-900/30 !border-green-500";
                     }
 
                     // PARTIALLY SCANNED
                     if (row.scannedQty > 0) {
-                      return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400";
+                      return "!bg-yellow-50 dark:!bg-yellow-900/20 !border-yellow-400";
                     }
 
                     // NOT SCANNED
-                    return "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700";
+                    return "!bg-white dark:!bg-slate-800 border-slate-100 !dark:border-slate-700";
                   }}
                 />
               </div>

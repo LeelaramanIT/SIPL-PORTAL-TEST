@@ -39,6 +39,7 @@ import {
   RadarChartOutlined,
   ClockCircleOutlined,
   MenuOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -466,10 +467,50 @@ const ResponsiveContent = memo(
     tableLoading,
     lastScannedTyre,
     setLastScannedTyre,
+    searchQuery,
+    setSearchQuery,
+    searchedGroupedTyres,
   }) => {
     const totalScannedQty = scannedTyres?.[0]?.whScannedQty || 0;
     const user = useSelector((s) => s.auth);
     const disableCopyPaste = user?.roles !== "admin";
+
+    // Guards manual typing in the barcode field for non-admin users while
+    // still letting a hardware scanner's rapid keystrokes pass through.
+    const lastKeyTimeRef = useRef(null);
+    const lastManualEntryToastRef = useRef(0);
+
+    const guardManualBarcodeEntry = useCallback(
+      (e) => {
+        if (disableCopyPaste && e.ctrlKey && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+          e.preventDefault();
+          toast.error("Copy and Paste are not allowed.");
+          return;
+        }
+
+        if (!disableCopyPaste) return;
+
+        if (e.key === "Enter") {
+          lastKeyTimeRef.current = null;
+          return;
+        }
+
+        if (e.key.length === 1) {
+          const now = Date.now();
+          const gap = lastKeyTimeRef.current === null ? 0 : now - lastKeyTimeRef.current;
+          lastKeyTimeRef.current = now;
+
+          if (gap > 50) {
+            e.preventDefault();
+            if (now - lastManualEntryToastRef.current > 1500) {
+              toast.error("Manual entry is not allowed. Please use the scanner.");
+              lastManualEntryToastRef.current = now;
+            }
+          }
+        }
+      },
+      [disableCopyPaste],
+    );
 
     const isSelectionMissing = !receivePlan || !receiveLocation || !selectedBinLocation;
 
@@ -544,21 +585,13 @@ const ResponsiveContent = memo(
               <Input
                 ref={inputRef}
                 size="large"
+                inputMode="none"
                 value={barcodeInput}
                 placeholder="Scan or enter barcode..."
                 prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
                 onPressEnter={handleScan}
                 onChange={(e) => setBarcodeInput(e.target.value.slice(0, 19))}
-                onKeyDown={(e) => {
-                  if (
-                    disableCopyPaste &&
-                    e.ctrlKey &&
-                    ["c", "v", "x"].includes(e.key.toLowerCase())
-                  ) {
-                    e.preventDefault();
-                    toast.error("Copy and Paste are not allowed.");
-                  }
-                }}
+                onKeyDown={guardManualBarcodeEntry}
                 onCopy={(e) => {
                   if (disableCopyPaste) { e.preventDefault(); toast.error("Copy is not allowed."); }
                 }}
@@ -682,41 +715,83 @@ const ResponsiveContent = memo(
               <div
                 style={{
                   background: "linear-gradient(135deg,#10b981 0%,#059669 100%)",
-                  padding: "10px 14px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                  flexWrap: "wrap",
+                  padding: "10px 12px",
+                  borderRadius: "12px 12px 0 0",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <Text strong style={{ color: "white", fontSize: 13 }}>
+                {/* Row 1 — Title + stat chips */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Text strong style={{ color: "white", fontSize: 13, flexShrink: 0 }}>
                     Received Items
                   </Text>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "nowrap", flexShrink: 0 }}>
+                    {[
+                      { label: "TOTAL",   val: scannedTyres.length },
+                      { label: "SCANNED", val: totalScannedQty },
+                      { label: "PENDING", val: scannedTyres.length - totalScannedQty },
+                    ].map(({ label, val }) => (
+                      <div
+                        key={label}
+                        style={{
+                          display: "flex",
+                          alignItems: "baseline",
+                          gap: 4,
+                          background: "rgba(255,255,255,0.15)",
+                          borderRadius: 6,
+                          padding: "2px 8px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: 9,
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.2,
+                          }}
+                        >
+                          {label}
+                        </Text>
+                        <Text strong style={{ color: "white", fontSize: 14, lineHeight: 1.2 }}>
+                          {val}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Row 2 — Filter + Search */}
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
                   <Select
                     size="small"
                     value={itemsFilter}
                     onChange={setItemsFilter}
                     options={RECEIVED_ITEMS_FILTERS}
-                    style={{ minWidth: 140 }}
+                    style={{ flex: 1, minWidth: 0 }}
                   />
-                </div>
-                <div style={{ display: "flex", gap: 14 }}>
-                  {[
-                    { label: "TOTAL",   val: scannedTyres.length },
-                    { label: "SCANNED", val: totalScannedQty },
-                    { label: "PENDING", val: scannedTyres.length - totalScannedQty },
-                  ].map(({ label, val }) => (
-                    <div key={label} style={{ textAlign: "center" }}>
-                      <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 9, display: "block" }}>
-                        {label}
-                      </Text>
-                      <Text strong style={{ color: "white", fontSize: 15, lineHeight: 1.2 }}>
-                        {val}
-                      </Text>
-                    </div>
-                  ))}
+                  <Input
+                    allowClear
+                    size="small"
+                    prefix={<SearchOutlined style={{ color: "#059669" }} />}
+                    placeholder="Search items..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      background: "rgba(255,255,255,0.9)",
+                      borderRadius: 4,
+                      border: "none",
+                    }}
+                  />
                 </div>
               </div>
 
@@ -725,7 +800,7 @@ const ResponsiveContent = memo(
                 <Table
                   columns={columns}
                   loading={{ spinning: tableLoading, tip: "Loading..." }}
-                  dataSource={visibleGroupedTyres.map((item, i) => ({ ...item, key: i }))}
+                  dataSource={searchedGroupedTyres.map((item, i) => ({ ...item, key: i }))}
                   pagination={false}
                   size="small"
                   tableLayout="fixed"
@@ -734,7 +809,11 @@ const ResponsiveContent = memo(
                     emptyText: (
                       <Empty
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description={<Text style={{ fontSize: 11 }}>No items scanned yet</Text>}
+                        description={
+                          <Text style={{ fontSize: 11 }}>
+                            {searchQuery ? "No items match your search" : "No items scanned yet"}
+                          </Text>
+                        }
                       />
                     ),
                   }}
@@ -857,22 +936,14 @@ const ResponsiveContent = memo(
 
                 <Input
                   ref={inputRef}
+                  inputMode="none"
                   value={barcodeInput}
                   placeholder="Scan barcode..."
                   maxLength={19}
                   style={{ marginBottom: 12 }}
                   onChange={(e) => setBarcodeInput(e.target.value.slice(0, 19))}
                   onPressEnter={handleScan}
-                  onKeyDown={(e) => {
-                    if (
-                      disableCopyPaste &&
-                      e.ctrlKey &&
-                      ["c", "v", "x"].includes(e.key.toLowerCase())
-                    ) {
-                      e.preventDefault();
-                      toast.error("Copy and Paste are not allowed.");
-                    }
-                  }}
+                  onKeyDown={guardManualBarcodeEntry}
                   onCopy={(e) => {
                     if (disableCopyPaste) { e.preventDefault(); toast.error("Copy is not allowed."); }
                   }}
@@ -1077,6 +1148,23 @@ const ResponsiveContent = memo(
                     />
                   </div>
 
+                  <div style={{ minWidth: isDesktop ? 200 : 160, flex: "0 0 auto" }}>
+                    <Input
+                      allowClear
+                      size="small"
+                      prefix={<SearchOutlined style={{ color: "#059669" }} />}
+                      placeholder="Search items..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{
+                        width: "100%",
+                        background: "rgba(255,255,255,0.9)",
+                        borderRadius: 6,
+                        border: "none",
+                      }}
+                    />
+                  </div>
+
                   {[
                     { label: "TOTAL",   val: scannedTyres.length },
                     { label: "SCANNED", val: totalScannedQty },
@@ -1098,7 +1186,7 @@ const ResponsiveContent = memo(
                   <Table
                     columns={columns}
                     loading={{ spinning: tableLoading, tip: "Loading items..." }}
-                    dataSource={visibleGroupedTyres.map((item, i) => ({ ...item, key: i }))}
+                    dataSource={searchedGroupedTyres.map((item, i) => ({ ...item, key: i }))}
                     pagination={false}
                     size={isDesktop ? "middle" : "small"}
                     tableLayout="auto"
@@ -1114,7 +1202,7 @@ const ResponsiveContent = memo(
                           image={Empty.PRESENTED_IMAGE_SIMPLE}
                           description={
                             <Text type="secondary" style={{ fontSize: isDesktop ? 14 : 12 }}>
-                              No items received yet
+                              {searchQuery ? "No items match your search" : "No items received yet"}
                             </Text>
                           }
                         />
@@ -1244,6 +1332,7 @@ export default function TyreStockReceiveRedesign() {
   const [itemsFilter, setItemsFilter]           = useState("all");
   const [tableLoading, setTableLoading]         = useState(false);
   const [lastScannedTyre, setLastScannedTyre]   = useState(null);
+  const [searchQuery, setSearchQuery]           = useState("");
 
   const { state }           = useLocation();
   const { LocationDetails } = useSelector((s) => s.auth);
@@ -1376,7 +1465,16 @@ export default function TyreStockReceiveRedesign() {
   const groupedTyres = useMemo(() => {
     const grouped = {};
     scannedTyres.forEach((item) => {
-      const key = item.processID;
+      const key = [
+        item.processID,
+        item.config,
+        item.brand,
+        item.sideWall,
+        item.tyreSize,
+        item.rimSize,
+        item.tyreType,
+        item.grade,
+      ].join("|");
       if (!grouped[key]) {
         grouped[key] = {
           config: item.config, barcode: item.barcode, stencilNo: item.stencilNo,
@@ -1401,6 +1499,16 @@ export default function TyreStockReceiveRedesign() {
         return groupedTyres;
     }
   }, [groupedTyres, itemsFilter]);
+
+  const searchedGroupedTyres = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return visibleGroupedTyres;
+    return visibleGroupedTyres.filter((item) =>
+      [item.processID, item.brand, item.config, item.sideWall, item.tyreSize,
+       item.rimSize, item.tyreType, item.grade, item.barcode, item.stencilNo]
+        .some((f) => f && String(f).toLowerCase().includes(q))
+    );
+  }, [visibleGroupedTyres, searchQuery]);
 
   const columns = useMemo(() => {
     // ── Mobile: single stacked cell ──
@@ -1650,6 +1758,9 @@ if (isTablet) {
         tableLoading={tableLoading}
         lastScannedTyre={lastScannedTyre}
         setLastScannedTyre={setLastScannedTyre}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchedGroupedTyres={searchedGroupedTyres}
       />
 
       <ResponsiveFooter

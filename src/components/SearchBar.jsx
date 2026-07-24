@@ -5,6 +5,9 @@ const SearchBar = ({ placeholder = "Search...", onSearch, value, onChange ,class
   return (
     <div className={`relative flex items-center ${className}`}>
       <input
+        type="search"
+        inputMode="search"
+        autoComplete="off"
         onKeyDown={(e) => {
           if (e.key === "Enter") onSearch?.();
         }}

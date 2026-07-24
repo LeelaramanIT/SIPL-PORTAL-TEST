@@ -211,9 +211,9 @@ const SideBar = () => {
       label: "Order Creation",
     },
     {
-      key: "/TTS/International/OrderProcess/PlantAssign",
+      key: "/TTS/International/OrderProcess/OrderFulfillment",
       icon: <TbBuildingFactory />,
-      label: "Plant Assignment",
+      label: "Order Fulfillment",
     },
   ],
 },
