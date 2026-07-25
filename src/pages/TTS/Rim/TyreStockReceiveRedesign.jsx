@@ -585,7 +585,7 @@ const ResponsiveContent = memo(
               <Input
                 ref={inputRef}
                 size="large"
-                inputMode="none"
+                // inputMode="none"
                 value={barcodeInput}
                 placeholder="Scan or enter barcode..."
                 prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
@@ -936,7 +936,7 @@ const ResponsiveContent = memo(
 
                 <Input
                   ref={inputRef}
-                  inputMode="none"
+                  // inputMode="none"
                   value={barcodeInput}
                   placeholder="Scan barcode..."
                   maxLength={19}

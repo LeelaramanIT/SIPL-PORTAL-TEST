@@ -32,6 +32,7 @@ import BarcodeDetailList from "./BarcodeDetailList";
 import CheckStencil from "./CheckStencil";
 import InfoTooltip from "../../../../../../components/InfoTooltip";
 import { Tooltip } from "antd";
+
 const ScanForInspectionDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,6 +51,10 @@ const ScanForInspectionDetails = () => {
   const [showCheckStencil, setShowCheckStencil] = useState(false);
   const [isProcessingScan, setIsProcessingScan] = useState(false);
 
+  // Synchronous guard: prevents double-fire when a scanner sends
+  // 19 chars (onChange trigger) AND an Enter suffix (keydown trigger)
+  const processingRef = useRef(false);
+
   const fadeUp = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
@@ -62,36 +67,18 @@ const ScanForInspectionDetails = () => {
     setShowCheckStencil(false);
   };
 
- const focusScanInput = () => {
-  const active = document.activeElement;
-  if (
-    active &&
-    active !== inputRef.current &&
-    (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
-  ) {
-    return;
-  }
-  const el = inputRef.current;
-  if (!el) return;
-  el.setAttribute("readonly", "readonly");
-  el.focus({ preventScroll: true });
-  setTimeout(() => el.removeAttribute("readonly"), 100);
-};
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
- useEffect(() => {
-  focusScanInput();
-}, []);
-
- const wasOpenRef = useRef(false);
-
-useEffect(() => {
-  if (wasOpenRef.current && !open) {
-    setTimeout(() => {
-      focusScanInput();
-    }, 200);
-  }
-  wasOpenRef.current = open;
-}, [open]);
+  useEffect(() => {
+    if (!open) {
+      processingRef.current = false;
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 200);
+    }
+  }, [open]);
 
   const items = useMemo(() => {
     if (!InspectionDetails?.items) return [];
@@ -113,49 +100,44 @@ useEffect(() => {
     }
   }, [location.state, dispatch]);
 
- const handleScan = (e) => {
-  if (e.key === "Enter" && scanInput.trim()) {
-    if (isProcessingScan || open) {
+  // Same logic as before, extracted so BOTH Enter (desktop scanner)
+  // and onChange at 19 chars (mobile/tablet scanner) can trigger it
+  const processBarcode = (rawValue) => {
+    const trimmedBarcode = rawValue.trim();
+    if (!trimmedBarcode) return;
+
+    if (processingRef.current || isProcessingScan || open) {
       toast.error("Previous tyre verification pending");
       return;
     }
-
-    const trimmedBarcode = scanInput.trim();
 
     // ❌ Block spaces + special characters
     const invalidCharRegex = /[\s_!@#$%^&*()+~`]/;
 
     if (invalidCharRegex.test(trimmedBarcode)) {
       setError("Spaces and special characters are not allowed");
-
       setTimeout(() => setError(""), 2000);
-
       toast.error("Spaces and special characters are not allowed", {
         position: "top-center",
       });
-
       setScanInput("");
       return;
     }
 
     // ✅ Validate barcode format
-    if (
-      trimmedBarcode.length === 19 &&
-      trimmedBarcode.startsWith("P")
-    ) {
+    if (trimmedBarcode.length === 19 && trimmedBarcode.startsWith("P")) {
       const processID = trimmedBarcode.substring(0, 8);
       const stencilNo = trimmedBarcode.substring(8, 18);
 
-      const matchedItem = InspectionDetails.items.find(
+      const matchedItem = InspectionDetails?.items?.find(
         (item) => item.processID === processID,
       );
-
-      console.log(matchedItem);
 
       if (!matchedItem) {
         toast.error("No item found for this Order", {
           position: "top-center",
         });
+        setScanInput("");
         return;
       }
 
@@ -167,6 +149,7 @@ useEffect(() => {
             position: "top-center",
           },
         );
+        setScanInput("");
         return;
       }
 
@@ -178,6 +161,7 @@ useEffect(() => {
         o_ItemID: matchedItem.o_ItemID,
       };
 
+      processingRef.current = true;
       setIsProcessingScan(true);
       dispatch(resetBarcodeDetails());
       dispatch(PDICheckBarcode(payload));
@@ -187,17 +171,30 @@ useEffect(() => {
       setError(
         'Invalid Barcode. Length must be 19 characters and start with "P"',
       );
-
       setTimeout(() => setError(""), 2000);
-
       toast.error("Invalid Barcode.", {
         position: "top-center",
       });
-
       setScanInput("");
     }
-  }
-};
+  };
+
+  // Desktop scanners: Enter suffix (works exactly like before)
+  const handleScan = (e) => {
+    if (e.key === "Enter") {
+      processBarcode(scanInput);
+    }
+  };
+
+  // Mobile/tablet scanners: no Enter key — auto-trigger at 19 chars
+  const handleScanChange = (e) => {
+    const value = e.target.value;
+    setScanInput(value);
+    if (value.trim().length === 19) {
+      processBarcode(value);
+    }
+  };
+
   const successAudio = useMemo(() => new Audio("/sounds/ok.mp3"), []);
 
   const scanedQty = InspectionDetails?.items?.reduce(
@@ -259,9 +256,9 @@ useEffect(() => {
       successAudio.currentTime = 0;
       successAudio.play();
       setOpen(false);
+      processingRef.current = false;
       setIsProcessingScan(false);
     }
-    // setOpen(false);
   };
 
   const handleBarcodeOpen = () => {
@@ -444,25 +441,20 @@ useEffect(() => {
 
                 <div className="relative">
                   <input
-  ref={inputRef}
-  type="text"
-  inputMode="none"
-  autoComplete="off"
-  autoCorrect="off"
-  autoCapitalize="off"
-  spellCheck={false}
-  maxLength={19}
-  disabled={isProcessingScan || open}
-  value={scanInput}
-  onChange={(e) => setScanInput(e.target.value)}
-  onKeyDown={handleScan}
-  onFocus={(e) => {
-    e.target.setAttribute("readonly", "readonly");
-    setTimeout(() => e.target.removeAttribute("readonly"), 100);
-  }}
-  placeholder="Scan barcode..."
-  className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-/>
+                    ref={inputRef}
+                    type="text"
+                    maxLength={19}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    disabled={isProcessingScan || open}
+                    value={scanInput}
+                    onChange={handleScanChange}
+                    onKeyDown={handleScan}
+                    placeholder="Scan barcode..."
+                    className="w-full bg-black/20 border border-white/30 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                  />
                 </div>
                 <div className="mt-3">
                   {error ? (
@@ -574,16 +566,16 @@ useEffect(() => {
                   rowClassName={(row) => {
                     // FULLY SCANNED
                     if (row.scannedQty >= row.totalItemQty) {
-                      return "!bg-green-100 dark:!bg-green-900/30 !border-green-500";
+                      return "!bg-green-100 dark:!bg-green-900/30 border-green-500";
                     }
 
                     // PARTIALLY SCANNED
                     if (row.scannedQty > 0) {
-                      return "!bg-yellow-50 dark:!bg-yellow-900/20 !border-yellow-400";
+                      return "!bg-yellow-50 dark:!bg-yellow-900/20 border-yellow-400";
                     }
 
                     // NOT SCANNED
-                    return "!bg-white dark:!bg-slate-800 border-slate-100 !dark:border-slate-700";
+                    return "!bg-white dark:!bg-slate-800 border-slate-100 dark:border-slate-700";
                   }}
                 />
               </div>
@@ -596,6 +588,7 @@ useEffect(() => {
         isOpen={open}
         onClose={() => {
           setOpen(false);
+          processingRef.current = false;
           setIsProcessingScan(false);
         }}
         data={barcodeDetails}

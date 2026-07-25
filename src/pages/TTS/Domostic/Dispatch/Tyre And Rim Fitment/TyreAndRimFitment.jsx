@@ -608,7 +608,6 @@ const TyreAndRimFitment = () => {
                   <input
                     ref={inputRef}
                     type="text"
-                    inputMode="none"
                     maxLength={19}
                     value={scanInput}
                     onChange={(e) => setScanInput(e.target.value.trimStart())}

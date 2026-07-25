@@ -733,7 +733,7 @@ const   ResponsiveContent = memo(({
               onChange={(e) => setBarcodeInput(e.target.value)}
               size="md"
               className="mb-2.5 font-mono"
-              inputMode="none"
+              // inputMode="none"
             />
             <TwButton type="primary" block onClick={handleScan} loading={isScanning} disabled={isSelectionMissing}
               size="lg"
@@ -812,7 +812,7 @@ const   ResponsiveContent = memo(({
                   onPressEnter={handleScan}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   size={isDesktop ? "md" : "sm"}
-                  inputMode="none"
+                  // inputMode="none"
                   style={{ fontFamily: "monospace", fontSize: isDesktop ? 16 : 12, fontWeight: 500 }}
                   suffix={isScanning ? (
                     <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
