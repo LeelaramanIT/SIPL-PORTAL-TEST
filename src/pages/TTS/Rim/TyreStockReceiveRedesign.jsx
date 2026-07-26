@@ -15,7 +15,6 @@ import {
   Input,
   Button,
   Table,
-  Badge,
   Tag,
   Modal,
   Form,
@@ -24,14 +23,12 @@ import {
   Divider,
   Empty,
   Space,
-  Descriptions,
   Progress,
   Drawer,
   Select,
 } from "antd";
 
 import {
-  ScanOutlined,
   CheckCircleOutlined,
   BarcodeOutlined,
   TruckOutlined,
@@ -40,15 +37,13 @@ import {
   ClockCircleOutlined,
   MenuOutlined,
   SearchOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { CloseOutlined } from "@ant-design/icons";
 import {
-  scanFactoryBarcode,
   scanReceiveBarcode,
   setScannedTyres,
-  UpdateLoadDone,
   GetTransactionById,
   GetFactoryWarehouseDetails,
   GetBinLocationMaster,
@@ -56,7 +51,7 @@ import {
 } from "../../../Redux/Slices/Warehouse/WarehouseSlice";
 import toast from "react-hot-toast";
 
-const { Header, Content, Footer } = Layout;
+const { Content } = Layout;
 const { Title, Text } = Typography;
 
 const getStatusColor = (status) => {
@@ -64,6 +59,7 @@ const getStatusColor = (status) => {
     case "success":   return "#10b981";
     case "scanning":  return "#3b82f6";
     case "duplicate": return "#ef4444";
+    case "error":     return "#ef4444";
     default:          return "#6b7280";
   }
 };
@@ -73,6 +69,7 @@ const getStatusLabel = (status) => {
     case "success":   return "✓ Ready";
     case "scanning":  return "◈ Scanning";
     case "duplicate": return "⚠ Duplicate";
+    case "error":     return "⚠ Error";
     default:          return "● Ready";
   }
 };
@@ -151,7 +148,6 @@ const ResponsiveHeader = memo(
     setReceivePlan,
     receiveLocation,
     setReceiveLocation,
-    state,
     isTransactionLocked,
     warehouseDetails,
     refNumber,
@@ -160,15 +156,6 @@ const ResponsiveHeader = memo(
     selectedBinLocation,
     setSelectedBinLocation,
   }) => {
-    const { LocationDetails } = useSelector((s) => s.auth);
-    const dispatch = useDispatch();
-
-    useEffect(() => {
-      if (LocationDetails?.length > 0 && !receivePlan) {
-        setReceivePlan(LocationDetails[0].locationName);
-      }
-    }, [LocationDetails, receivePlan, setReceivePlan]);
-
     const selectedPlantDetails = useMemo(
       () => warehouseDetails?.find((item) => item.plant === receivePlan),
       [warehouseDetails, receivePlan],
@@ -456,12 +443,11 @@ const ResponsiveContent = memo(
     lastScannedTime,
     inputRef,
     scannedTyres,
-    setShowConfirmModal,
+    onFinalize,
     columns,
     receivePlan,
     receiveLocation,
     selectedBinLocation,
-    visibleGroupedTyres,
     itemsFilter,
     setItemsFilter,
     tableLoading,
@@ -475,42 +461,55 @@ const ResponsiveContent = memo(
     const user = useSelector((s) => s.auth);
     const disableCopyPaste = user?.roles !== "admin";
 
-    // Guards manual typing in the barcode field for non-admin users while
-    // still letting a hardware scanner's rapid keystrokes pass through.
-    const lastKeyTimeRef = useRef(null);
-    const lastManualEntryToastRef = useRef(0);
+    // Manual-entry guard for non-admin users. All keystrokes are allowed
+    // through; entry speed is validated once at submit time in
+    // validateAndScan, so hardware scanners are never blocked mid-scan.
+    const scanStartTimeRef = useRef(null);
 
     const guardManualBarcodeEntry = useCallback(
       (e) => {
-        if (disableCopyPaste && e.ctrlKey && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+        if (
+          disableCopyPaste &&
+          e.ctrlKey &&
+          ["c", "v", "x"].includes(e.key.toLowerCase())
+        ) {
           e.preventDefault();
           toast.error("Copy and Paste are not allowed.");
-          return;
-        }
-
-        if (!disableCopyPaste) return;
-
-        if (e.key === "Enter") {
-          lastKeyTimeRef.current = null;
-          return;
-        }
-
-        if (e.key.length === 1) {
-          const now = Date.now();
-          const gap = lastKeyTimeRef.current === null ? 0 : now - lastKeyTimeRef.current;
-          lastKeyTimeRef.current = now;
-
-          if (gap > 50) {
-            e.preventDefault();
-            if (now - lastManualEntryToastRef.current > 1500) {
-              toast.error("Manual entry is not allowed. Please use the scanner.");
-              lastManualEntryToastRef.current = now;
-            }
-          }
         }
       },
       [disableCopyPaste],
     );
+
+    const handleBarcodeChange = (e) => {
+      const value = e.target.value.slice(0, 19);
+      if (!barcodeInput && value) scanStartTimeRef.current = Date.now();
+      if (!value) scanStartTimeRef.current = null;
+      setBarcodeInput(value);
+    };
+
+    const validateAndScan = () => {
+      // Ignore Enter while a scan API call is in-flight so a rapid second
+      // scan cannot trigger a concurrent request; its barcode stays intact
+      // in the input and can be submitted once the current scan finishes.
+      if (isScanning) return;
+
+      if (
+        disableCopyPaste &&
+        scanStartTimeRef.current !== null &&
+        barcodeInput.length > 1
+      ) {
+        const duration = Date.now() - scanStartTimeRef.current;
+        const msPerChar = duration / barcodeInput.length;
+        if (msPerChar > 120) {
+          scanStartTimeRef.current = null;
+          setBarcodeInput("");
+          toast.error("Manual entry is not allowed. Please use the scanner.");
+          return;
+        }
+      }
+      scanStartTimeRef.current = null;
+      handleScan();
+    };
 
     const isSelectionMissing = !receivePlan || !receiveLocation || !selectedBinLocation;
 
@@ -561,7 +560,7 @@ const ResponsiveContent = memo(
                       ? "#eff6ff"
                       : scanStatus === "success"
                         ? "#ecfdf5"
-                        : scanStatus === "duplicate"
+                        : scanStatus === "duplicate" || scanStatus === "error"
                           ? "#fef2f2"
                           : "#f1f5f9",
                   border: `1px solid ${getStatusColor(scanStatus)}`,
@@ -585,12 +584,11 @@ const ResponsiveContent = memo(
               <Input
                 ref={inputRef}
                 size="large"
-                // inputMode="none"
                 value={barcodeInput}
                 placeholder="Scan or enter barcode..."
                 prefix={<BarcodeOutlined style={{ color: "#64748b" }} />}
-                onPressEnter={handleScan}
-                onChange={(e) => setBarcodeInput(e.target.value.slice(0, 19))}
+                onChange={handleBarcodeChange}
+                onPressEnter={validateAndScan}
                 onKeyDown={guardManualBarcodeEntry}
                 onCopy={(e) => {
                   if (disableCopyPaste) { e.preventDefault(); toast.error("Copy is not allowed."); }
@@ -606,7 +604,7 @@ const ResponsiveContent = memo(
                 type="primary"
                 block
                 size="large"
-                onClick={handleScan}
+                onClick={validateAndScan}
                 loading={isScanning}
                 disabled={isSelectionMissing}
                 style={{
@@ -834,7 +832,7 @@ const ResponsiveContent = memo(
                 type="primary"
                 block
                 icon={<SendOutlined />}
-                onClick={() => setShowConfirmModal(true)}
+                onClick={onFinalize}
                 style={{
                   background: "linear-gradient(135deg,#10b981 0%,#059669 100%)",
                   border: "none",
@@ -914,7 +912,7 @@ const ResponsiveContent = memo(
                         ? "#eff6ff"
                         : scanStatus === "success"
                           ? "#ecfdf5"
-                          : scanStatus === "duplicate"
+                          : scanStatus === "duplicate" || scanStatus === "error"
                             ? "#fef2f2"
                             : "#f1f5f9",
                     border: `1px solid ${getStatusColor(scanStatus)}`,
@@ -936,13 +934,12 @@ const ResponsiveContent = memo(
 
                 <Input
                   ref={inputRef}
-                  // inputMode="none"
                   value={barcodeInput}
                   placeholder="Scan barcode..."
                   maxLength={19}
                   style={{ marginBottom: 12 }}
-                  onChange={(e) => setBarcodeInput(e.target.value.slice(0, 19))}
-                  onPressEnter={handleScan}
+                  onChange={handleBarcodeChange}
+                  onPressEnter={validateAndScan}
                   onKeyDown={guardManualBarcodeEntry}
                   onCopy={(e) => {
                     if (disableCopyPaste) { e.preventDefault(); toast.error("Copy is not allowed."); }
@@ -957,7 +954,7 @@ const ResponsiveContent = memo(
                     type="primary"
                     block
                     size={isDesktop ? "large" : "middle"}
-                    onClick={handleScan}
+                    onClick={validateAndScan}
                     loading={isScanning}
                     disabled={isSelectionMissing}
                     style={{
@@ -1224,15 +1221,7 @@ const ResponsiveContent = memo(
 // FOOTER
 // ─────────────────────────────────────────────
 const ResponsiveFooter = memo(
-  ({
-    isMobile,
-    isTablet,
-    isDesktop,
-    scannedTyresCount,
-    setScannedTyres,
-    groupedTyres,
-    setShowConfirmModal,
-  }) => {
+  ({ isMobile, isTablet, isDesktop, scannedTyresCount, onFinalize }) => {
     // On mobile the finalize button lives inside ResponsiveContent,
     // so we hide this footer on mobile to avoid duplication.
     if (isMobile) return null;
@@ -1277,17 +1266,7 @@ const ResponsiveFooter = memo(
           <Button
             type="primary"
             icon={<SendOutlined />}
-            onClick={() => {
-              const totalQty   = groupedTyres.reduce((s, i) => s + i.qty, 0);
-              const scannedQty = groupedTyres.reduce((s, i) => s + i.scannedQty, 0);
-              const pending    = totalQty - scannedQty;
-              if (pending > 0) {
-                message.warning(`Please scan all tyres before finalizing. Pending Qty: ${pending}`);
-                toast.error(`Please scan all tyres before finalizing. Pending Qty: ${pending}`);
-                return;
-              }
-              setShowConfirmModal(true);
-            }}
+            onClick={onFinalize}
             disabled={scannedTyresCount === 0}
             style={{
               background:
@@ -1326,7 +1305,6 @@ export default function TyreStockReceiveRedesign() {
   const [receivePlan, setReceivePlan]           = useState(null);
   const [receiveLocation, setReceiveLocation]   = useState(null);
   const [isTransactionLocked, setIsTransactionLocked] = useState(false);
-  const [activeTransactionId, setActiveTransactionId] = useState(null);
   const [binLocations, setBinLocations]         = useState([]);
   const [selectedBinLocation, setSelectedBinLocation] = useState(null);
   const [itemsFilter, setItemsFilter]           = useState("all");
@@ -1360,12 +1338,10 @@ export default function TyreStockReceiveRedesign() {
       const load = async () => {
         try {
           setIsTransactionLocked(true);
-          setActiveTransactionId(receiveData.tM_ID);
           const res   = await dispatch(GetTransactionById(receiveData.tM_ID, receiveData.statusNo));
           const items = res?.data?.data || [];
           dispatch(setScannedTyres(items));
         } catch (err) {
-          console.log(err);
           message.error("Failed to load transaction");
         }
       };
@@ -1383,7 +1359,6 @@ export default function TyreStockReceiveRedesign() {
         );
         if (plantData) setBinLocations(buildUniqueBinLocations(plantData.phyloc || []));
       } catch (err) {
-        console.log(err);
         message.error("Failed to load bin locations");
       }
     };
@@ -1411,6 +1386,11 @@ export default function TyreStockReceiveRedesign() {
       message.error("Please scan a barcode"); toast.error("Please scan a barcode"); return;
     }
 
+    // Capture the barcode and clear the input immediately so the next
+    // scan lands in a clean field even while this API call is in-flight.
+    const barcode = barcodeInput.trim();
+    setBarcodeInput("");
+
     setScanStatus("scanning");
     setIsScanning(true);
     setTableLoading(true);
@@ -1418,7 +1398,7 @@ export default function TyreStockReceiveRedesign() {
     try {
       const payload = {
         binLocation: getCanonicalBinLocation(selectedBinLocation, binLocations),
-        barcode: barcodeInput,
+        barcode,
         plant: receivePlan,
         tM_ID: receiveData?.tM_ID,
       };
@@ -1430,10 +1410,9 @@ export default function TyreStockReceiveRedesign() {
 
       dispatch(setScannedTyres(updatedList));
 
-      const currentTyre = updatedList.find((item) => item.barcode === barcodeInput);
+      const currentTyre = updatedList.find((item) => item.barcode === barcode);
       if (currentTyre) setLastScannedTyre(currentTyre);
 
-      setBarcodeInput("");
       setLastScannedTime(new Date());
       setScanStatus("success");
       message.success("Barcode scanned successfully");
@@ -1441,8 +1420,7 @@ export default function TyreStockReceiveRedesign() {
 
       setTimeout(() => setScanStatus("ready"), 1500);
     } catch (err) {
-      console.log(err);
-      setScanStatus("duplicate");
+      setScanStatus("error");
       const errMsg = err?.response?.data?.message || "Scan failed";
       message.error(errMsg); toast.error(errMsg);
       setTimeout(() => setScanStatus("ready"), 1500);
@@ -1488,6 +1466,21 @@ export default function TyreStockReceiveRedesign() {
     });
     return Object.values(grouped);
   }, [scannedTyres]);
+
+  // Single finalize gate used by the desktop footer, the mobile finalize
+  // button, and the mobile drawer, so the pending-qty check always runs.
+  const requestFinalize = useCallback(() => {
+    const totalQty   = groupedTyres.reduce((s, i) => s + i.qty, 0);
+    const scannedQty = groupedTyres.reduce((s, i) => s + i.scannedQty, 0);
+    const pending    = totalQty - scannedQty;
+    if (pending > 0) {
+      const msg = `Please scan all tyres before finalizing. Pending Qty: ${pending}`;
+      message.warning(msg);
+      toast.error(msg);
+      return;
+    }
+    setShowConfirmModal(true);
+  }, [groupedTyres]);
 
   const visibleGroupedTyres = useMemo(() => {
     switch (itemsFilter) {
@@ -1574,115 +1567,85 @@ export default function TyreStockReceiveRedesign() {
       ];
     }
 
-    // ── Tablet: compact columns ──
- // ── Tablet: Same as Mobile with slightly larger sizing ──
-if (isTablet) {
-  return [
-    {
-      title: "Tyre Details",
-      dataIndex: "tyreDetails",
-      render: (_, record) => (
-        <div style={{ padding: "4px 0" }}>
-          {/* Description */}
-          <Text
-            strong
-            style={{
-              fontSize: 13,
-              display: "block",
-              marginBottom: 6,
-              lineHeight: 1.5,
-              wordBreak: "break-word",
-            }}
-          >
-            {[
-              record.config,
-              record.brand,
-              record.sideWall,
-              record.tyreSize,
-              record.tyreType,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </Text>
-
-          {/* Tags */}
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              flexWrap: "wrap",
-              marginBottom: 6,
-            }}
-          >
-            {record.processID && (
-              <Tag
+    // ── Tablet: same as Mobile with slightly larger sizing ──
+    if (isTablet) {
+      return [
+        {
+          title: "Tyre Details",
+          dataIndex: "tyreDetails",
+          render: (_, record) => (
+            <div style={{ padding: "4px 0" }}>
+              <Text
+                strong
                 style={{
-                  fontSize: 11,
-                  margin: 0,
-                  lineHeight: "20px",
+                  fontSize: 13,
+                  display: "block",
+                  marginBottom: 6,
+                  lineHeight: 1.5,
+                  wordBreak: "break-word",
                 }}
               >
-                {record.processID}
-              </Tag>
-            )}
-
-            {record.grade && (
-              <Tag
-                color={record.grade === "A" ? "green" : "orange"}
-                style={{
-                  fontSize: 11,
-                  margin: 0,
-                  lineHeight: "20px",
-                }}
-              >
-                {record.grade}
-              </Tag>
-            )}
-
-            {record.rimSize && (
-              <Tag
-                style={{
-                  fontSize: 11,
-                  margin: 0,
-                  lineHeight: "20px",
-                }}
-              >
-                Rim {record.rimSize}
-              </Tag>
-            )}
-          </div>
-
-          {/* Qty Details */}
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              flexWrap: "wrap",
-            }}
-          >
-            <span style={{ fontSize: 12, color: "#64748b" }}>
-              Total: <Text strong>{record.qty}</Text>
-            </span>
-
-            <span style={{ fontSize: 12, color: "#16a34a" }}>
-              Scanned:{" "}
-              <Text strong style={{ color: "#16a34a" }}>
-                {record.scannedQty}
+                {[
+                  record.config,
+                  record.brand,
+                  record.sideWall,
+                  record.tyreSize,
+                  record.tyreType,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </Text>
-            </span>
 
-            <span style={{ fontSize: 12, color: "#ea580c" }}>
-              Pending:{" "}
-              <Text strong style={{ color: "#ea580c" }}>
-                {record.qty - record.scannedQty}
-              </Text>
-            </span>
-          </div>
-        </div>
-      ),
-    },
-  ];
-}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 6,
+                  flexWrap: "wrap",
+                  marginBottom: 6,
+                }}
+              >
+                {record.processID && (
+                  <Tag style={{ fontSize: 11, margin: 0, lineHeight: "20px" }}>
+                    {record.processID}
+                  </Tag>
+                )}
+                {record.grade && (
+                  <Tag
+                    color={record.grade === "A" ? "green" : "orange"}
+                    style={{ fontSize: 11, margin: 0, lineHeight: "20px" }}
+                  >
+                    {record.grade}
+                  </Tag>
+                )}
+                {record.rimSize && (
+                  <Tag style={{ fontSize: 11, margin: 0, lineHeight: "20px" }}>
+                    Rim {record.rimSize}
+                  </Tag>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#64748b" }}>
+                  Total: <Text strong>{record.qty}</Text>
+                </span>
+                <span style={{ fontSize: 12, color: "#16a34a" }}>
+                  Scanned:{" "}
+                  <Text strong style={{ color: "#16a34a" }}>
+                    {record.scannedQty}
+                  </Text>
+                </span>
+                <span style={{ fontSize: 12, color: "#ea580c" }}>
+                  Pending:{" "}
+                  <Text strong style={{ color: "#ea580c" }}>
+                    {record.qty - record.scannedQty}
+                  </Text>
+                </span>
+              </div>
+            </div>
+          ),
+        },
+      ];
+    }
 
     // ── Desktop: full columns ──
     return [
@@ -1700,10 +1663,10 @@ if (isTablet) {
     ];
   }, [isMobile, isTablet, isDesktop]);
 
-  const completionPercentage = Math.min(
-    ((scannedTyres.length || 0) / Math.max(scannedTyres.length || 1, 10)) * 100,
-    100,
-  );
+  const totalScannedQty = scannedTyres?.[0]?.whScannedQty || 0;
+  const completionPercentage = scannedTyres.length
+    ? Math.min(Math.round((totalScannedQty / scannedTyres.length) * 100), 100)
+    : 0;
 
   return (
     <Layout
@@ -1718,14 +1681,11 @@ if (isTablet) {
         isMobile={isMobile}
         isTablet={isTablet}
         isDesktop={isDesktop}
-        scannedTyresCount={scannedTyres.length}
-        completionPercentage={completionPercentage}
         setMobileDrawerOpen={setMobileDrawerOpen}
         receivePlan={receivePlan}
         setReceivePlan={setReceivePlan}
         receiveLocation={receiveLocation}
         setReceiveLocation={setReceiveLocation}
-        state={state}
         isTransactionLocked={isTransactionLocked}
         warehouseDetails={factoryWarehouseDetails || []}
         refNumber={refNumber}
@@ -1747,12 +1707,11 @@ if (isTablet) {
         lastScannedTime={lastScannedTime}
         inputRef={inputRef}
         scannedTyres={scannedTyres}
-        setShowConfirmModal={setShowConfirmModal}
+        onFinalize={requestFinalize}
         columns={columns}
         receivePlan={receivePlan}
         receiveLocation={receiveLocation}
         selectedBinLocation={selectedBinLocation}
-        visibleGroupedTyres={visibleGroupedTyres}
         itemsFilter={itemsFilter}
         setItemsFilter={setItemsFilter}
         tableLoading={tableLoading}
@@ -1768,9 +1727,7 @@ if (isTablet) {
         isTablet={isTablet}
         isDesktop={isDesktop}
         scannedTyresCount={scannedTyres.length}
-        groupedTyres={groupedTyres}
-        setScannedTyres={setScannedTyres}
-        setShowConfirmModal={setShowConfirmModal}
+        onFinalize={requestFinalize}
       />
 
       {/* Mobile info drawer */}
@@ -1791,14 +1748,14 @@ if (isTablet) {
               <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>PROGRESS</Text>
               <Progress percent={completionPercentage} style={{ marginTop: 8 }} />
               <Text style={{ fontSize: 12, marginTop: 8, display: "block" }}>
-                {scannedTyres.length} items received
+                {totalScannedQty} of {scannedTyres.length} items scanned
               </Text>
             </div>
             <Divider />
             <Button
               type="primary"
               block
-              onClick={() => { setShowConfirmModal(true); setMobileDrawerOpen(false); }}
+              onClick={() => { setMobileDrawerOpen(false); requestFinalize(); }}
               disabled={scannedTyres.length === 0}
               style={{
                 background: "linear-gradient(135deg,#10b981 0%,#059669 100%)",
@@ -1855,12 +1812,10 @@ if (isTablet) {
               message.success(res?.data?.message || "✓ Receipt completed successfully");
               dispatch(setScannedTyres([]));
               sessionStorage.removeItem("activeReceiveTransaction");
-              setActiveTransactionId(null);
               setIsTransactionLocked(false);
               form.resetFields();
               setShowConfirmModal(false);
             } catch (err) {
-              console.log(err);
               message.error(err?.message || err?.data?.message || "Failed to finalize");
             } finally {
               setIsSubmitting(false);
