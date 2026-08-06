@@ -396,60 +396,60 @@ const SideBar = () => {
         },
       ],
     },
-    {
-      key: "Task-Management",
-      icon: <HiOutlineClipboardCheck />,
-      label: "Task Management",
-      children: [
-        {
-          key: "/Task-Management/Dashboard",
-          icon: <HiOutlineViewGrid />,
-          label: "Dashboard",
-        },
+    // {
+    //   key: "Task-Management",
+    //   icon: <HiOutlineClipboardCheck />,
+    //   label: "Task Management",
+    //   children: [
+    //     {
+    //       key: "/Task-Management/Dashboard",
+    //       icon: <HiOutlineViewGrid />,
+    //       label: "Dashboard",
+    //     },
 
-        {
-          key: "/Task-Management/Projects",
-          icon: <HiOutlineFolder />,
-          label: "Projects",
-        },
+    //     {
+    //       key: "/Task-Management/Projects",
+    //       icon: <HiOutlineFolder />,
+    //       label: "Projects",
+    //     },
 
-        {
-          key: "/Task-Management/Sprints",
-          icon: <HiOutlineClock />,
-          label: "Sprints",
-        },
+    //     {
+    //       key: "/Task-Management/Sprints",
+    //       icon: <HiOutlineClock />,
+    //       label: "Sprints",
+    //     },
 
-        {
-          key: "/Task-Management/Tasks",
-          icon: <HiOutlineClipboardList />,
-          label: "Tasks",
-        },
+    //     {
+    //       key: "/Task-Management/Tasks",
+    //       icon: <HiOutlineClipboardList />,
+    //       label: "Tasks",
+    //     },
 
-        {
-          key: "/Task-Management/DailyLog",
-          icon: <HiOutlineDocumentText />,
-          label: "Daily Log",
-        },
+    //     {
+    //       key: "/Task-Management/DailyLog",
+    //       icon: <HiOutlineDocumentText />,
+    //       label: "Daily Log",
+    //     },
 
-        {
-          key: "/Task-Management/Team",
-          icon: <HiOutlineUsers />,
-          label: "Team",
-        },
+    //     {
+    //       key: "/Task-Management/Team",
+    //       icon: <HiOutlineUsers />,
+    //       label: "Team",
+    //     },
 
-        {
-          key: "/Task-Management/Reports",
-          icon: <HiOutlineChartBar />,
-          label: "Reports",
-        },
+    //     {
+    //       key: "/Task-Management/Reports",
+    //       icon: <HiOutlineChartBar />,
+    //       label: "Reports",
+    //     },
 
-        {
-          key: "/Task-Management/Masters",
-          icon: <HiOutlineCog />,
-          label: "Masters",
-        },
-      ],
-    },
+    //     {
+    //       key: "/Task-Management/Masters",
+    //       icon: <HiOutlineCog />,
+    //       label: "Masters",
+    //     },
+    //   ],
+    // },
     {
       key: "customer-item-management",
       icon: <HiOutlineCube />,
@@ -494,6 +494,7 @@ const SideBar = () => {
     return result;
   }
   const menuData = extractMenuData(menuItems);
+  const ALWAYS_ALLOWED = ["/Settings"]
   // console.log(menuData);
   // ✅ Filter based on user.permissions
   const filterMenu = (items) => {
@@ -510,7 +511,10 @@ const SideBar = () => {
         if (allowedChildren.length > 0) {
           allowed.push({ ...item, children: allowedChildren });
         }
-      } else if (user?.permissions?.includes(item.key)) {
+      } else if (
+        ALWAYS_ALLOWED.includes(item.key) ||
+        user?.permissions?.includes(item.key)
+      ) {
         allowed.push(item);
       }
     }

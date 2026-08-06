@@ -39,6 +39,15 @@ export const CustomerMasterMenuItems = [
       </Link>
     ),
   },
+  {
+    key: "/Masters/CustomerMaster/ProcessIDMapping",
+    icon: <FileText size={18} />,
+    label: (
+      <Link to="/Masters/CustomerMaster/ProcessIDMapping">
+        Customer ProcessID Mapping
+      </Link>
+    ),
+  },
 //   {
 //     key: "/Masters/Usermaster",
 //     icon: <PlusCircleOutlined />,

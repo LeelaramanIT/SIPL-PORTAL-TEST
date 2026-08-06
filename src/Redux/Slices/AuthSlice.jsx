@@ -160,6 +160,27 @@ export const resetPassword = (payload) => async (dispatch) => {
     dispatch(loginFailure({ message }));
   }
 };
+
+export const resetUserPassword = (payload) => async (dispatch) => {
+  try {
+    // dispatch(logout());
+    const res = await api.post("/CreateUser/ResetPasswordByUserId",payload);
+
+    if (res.status === 200) {
+      return res;
+    }
+  } catch (error) {
+    let message = "Failled to Change password";
+    if (error.response?.data?.message) {
+      message = error.response.data.message;
+    } else if (error.message) {
+      message = error.message;
+    }
+
+    dispatch(loginFailure({ message }));
+  }
+};
+
 export const { loginSuccess, logout, loginStart, loginFailure } =
   authSlice.actions;
 

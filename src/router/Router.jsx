@@ -94,6 +94,10 @@ import CRMReports from "../pages/Reports/CRMReports/CRMReports";
 import PlannerWorkspace from "../pages/Dashboard/Plannerworkspace";
 import WorkOrderPlanning from "../pages/TTS/International/OrderProcess/PlantAssign/PlantAssign";
 import ManufacturingPlanningRevision from "../pages/TTS/International/OrderProcess/Manufacturingplanningrevision/Manufacturingplanningrevision";
+import ProcessIdModification from "../pages/Dashboard/Processidmodification";
+import UserMasterManagement from "../pages/MenuAccess/UserMaster/UserMasterManagement";
+import CustomerProcessIDMapping from "../pages/Masters/Customer Master/CustomerProcessIDMapping/CustomerProcessIDMapping";
+import MyProfilePage from "../pages/Settings/UserProfile/UserProfile";
 // import WorkOrderPlanning from "../pages/Dashboard/PlantAssign";
 
 export const router = createBrowserRouter([
@@ -112,8 +116,9 @@ export const router = createBrowserRouter([
           { index: true, element: <Home /> },
           { path: "Dashboard", element: <Dashboard /> },
           // { path: "Barcode", element: <Barcode /> },
+          { path: "Barcode", element: <ProcessIdModification /> },
           // { path: "Barcode", element: <PlannerWorkspace /> },
-          { path: "Barcode", element: <ManufacturingPlanningRevision /> },
+          // { path: "Barcode", element: <ManufacturingPlanningRevision /> },
           {
             path: "Masters",
             element: <MasterLayout />,
@@ -128,6 +133,7 @@ export const router = createBrowserRouter([
                   { path: "Creation" ,element: <CustomerModule /> },
                   { path: "Creation1" ,element: <CustomerModule1 /> },
                   { path: "Creation2" ,element: <CustomerModule2 /> },
+                  { path: "ProcessIDMapping" ,element: <CustomerProcessIDMapping /> },
                 ],
                },
     
@@ -493,21 +499,21 @@ export const router = createBrowserRouter([
               },
             ],
           },
-          {
-            path: "Task-Management",
-            element: <TaskLayout />,
-            children: [
-              { path: "Home", element: <TaskHomePage /> },
-              { path: "Dashboard", element: <TaskDashboard /> },
-              { path: "Projects", element: <Projects /> },
-              { path: "Sprints", element: <Sprints /> },
-              { path: "Tasks", element: <Tasks /> },
-              { path: "DailyLog", element: <DailyLog /> },
-              { path: "Team", element: <Team /> },
-              { path: "Reports", element: <Reports /> },
-              { path: "Masters", element: <Masters /> },
-            ],
-          },
+          // {
+          //   path: "Task-Management",
+          //   element: <TaskLayout />,
+          //   children: [
+          //     { path: "Home", element: <TaskHomePage /> },
+          //     { path: "Dashboard", element: <TaskDashboard /> },
+          //     { path: "Projects", element: <Projects /> },
+          //     { path: "Sprints", element: <Sprints /> },
+          //     { path: "Tasks", element: <Tasks /> },
+          //     { path: "DailyLog", element: <DailyLog /> },
+          //     { path: "Team", element: <Team /> },
+          //     { path: "Reports", element: <Reports /> },
+          //     { path: "Masters", element: <Masters /> },
+          //   ],
+          // },
           {
             path: "customer-item-management",
             element: <CPMMaster />,
@@ -525,7 +531,12 @@ export const router = createBrowserRouter([
           {
             path: "Settings",
             element: <SettingsLayout />,
-            children: [{ index: true, element: <Settings /> }],
+            children: [
+              { index: true, element: <Navigate to="profile"/> },
+              { path: "Settings", element: <Settings /> },
+              { path: "profile", element: <MyProfilePage /> },
+
+            ],
           },
           {
             path: "UserMaster",
@@ -536,6 +547,7 @@ export const router = createBrowserRouter([
               { path: "user-creation", element: <UserCreation /> },
               // { path: "menuaccess", element: <MenuAccessManager /> },
               { path: "menuaccess", element: <MenuAccessManager1 /> },
+              { path: "UserMasterManagement", element: <UserMasterManagement /> },
             ],
           },
         ],

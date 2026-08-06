@@ -9,7 +9,7 @@ import { api } from "../../utils/axios";
 const ProtectedRoutes = () => {
   const isLoggedIn = useSelector((state) => state.auth?.loggedIn);
   const roles = useSelector((state) => state.auth?.roles);
-  const menus = useSelector((state) => state.auth?.menus || []);
+  const menus = useSelector((state) => state.auth?.Menus || []);
   const roleID = useSelector((state) => state.auth?.RoleID);
   const location = useLocation(); 
 
@@ -37,6 +37,8 @@ const ProtectedRoutes = () => {
 
   // 1️⃣ Not logged in → redirect
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  // console.log(isLoggedIn);
+  
 
   // 2️⃣ Admin → full access
   const isAdmin = (roles === "admin" || roles === "Admin") && roleID === 1;
@@ -44,10 +46,12 @@ const ProtectedRoutes = () => {
 
   // 3️⃣ Clean current path
   const currentPath = location.pathname.replace(/\/+$/, "");
-  // console.log("Current Path:", currentPath);
+  console.log("Current Path:", currentPath);
 
   // 4️⃣ Exact match with routePermissions
   const requiredMenuName = routePermissions[currentPath];
+  console.log(requiredMenuName);
+  
   
 
   // 5️⃣ If URL not present in permission list → no restriction

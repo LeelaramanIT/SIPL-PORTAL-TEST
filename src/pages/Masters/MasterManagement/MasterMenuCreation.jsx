@@ -30,9 +30,9 @@ export const masterMenuItems = [
       </Link>
     ),
   },
-  {
-    key: "/Masters/Usermaster",
-    icon: <PlusCircleOutlined />,
-    label: <Link to="/Masters/Usermaster">User Creation</Link>,
-  },
+  // {
+  //   key: "/Masters/Usermaster",
+  //   icon: <PlusCircleOutlined />,
+  //   label: <Link to="/Masters/Usermaster">User Creation</Link>,
+  // },
 ];

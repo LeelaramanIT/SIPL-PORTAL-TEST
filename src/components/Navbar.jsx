@@ -34,7 +34,7 @@ const Navbar = () => {
           onClick={() => {
             if (!isSidebarOpen) dispatch(toggleSidebar());
           }}
-          className="lg:hidden flex-shrink-0 p-1.5 text-[var(--text)] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+          className="lg:hidden flex-shrink-0 p-1.5 text-[var(--primary)] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
         >
           <HiMenuAlt3 size={20} />
         </button>
