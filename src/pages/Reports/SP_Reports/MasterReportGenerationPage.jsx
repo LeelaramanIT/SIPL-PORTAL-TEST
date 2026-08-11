@@ -121,7 +121,7 @@ const getSortedFilterOptions = (info) => {
 // dates. Every other column type still uses the Excel-style checkbox list.
 const DateFilter = ({ columnKey, selectedRange, onChange, onClear }) => {
   return (
-    <div className="p-3 w-72 space-y-3">
+    <div className="p-3 w-72 space-y-3 bg-white dark:bg-slate-900">
       <RangePicker
         value={
           Array.isArray(selectedRange) && selectedRange.length === 2
@@ -133,7 +133,7 @@ const DateFilter = ({ columnKey, selectedRange, onChange, onClear }) => {
         }
         className="w-full"
       />
-      <div className="flex justify-end pt-2 border-t">
+      <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-slate-800">
         <Button size="small" onClick={() => onClear(columnKey)}>
           Clear
         </Button>
@@ -199,11 +199,11 @@ const ExcelFilterDropdown = ({
 
   return (
     <div
-      className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-[90vw]"
+      className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 max-w-[90vw]"
       style={{ width: 220 }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="p-1.5 border-b border-gray-100">
+      <div className="p-1.5 border-b border-gray-100 dark:border-slate-800">
         <Input
           placeholder="Search..."
           size="small"
@@ -214,13 +214,13 @@ const ExcelFilterDropdown = ({
         />
       </div>
 
-      <div className="px-2 py-1 border-b border-gray-100">
+      <div className="px-2 py-1 border-b border-gray-100 dark:border-slate-800">
         <Checkbox
           checked={allSelected}
           indeterminate={someSelected}
           onChange={(e) => onToggleSelectAll(filteredOptions, e.target.checked)}
         >
-          Select All
+          <span className="dark:text-slate-200">Select All</span>
         </Checkbox>
       </div>
 
@@ -231,7 +231,7 @@ const ExcelFilterDropdown = ({
         onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       >
         {totalCount === 0 ? (
-          <div className="px-3 py-6 text-xs text-gray-400 text-center">
+          <div className="px-3 py-6 text-xs text-gray-400 dark:text-slate-500 text-center">
             No matching values
           </div>
         ) : (
@@ -239,14 +239,14 @@ const ExcelFilterDropdown = ({
             {visibleOptions.map((opt, idx) => (
               <div
                 key={`${columnKey}-${startIndex + idx}`}
-                className="flex items-center px-2 hover:bg-gray-50"
+                className="flex items-center px-2 hover:bg-gray-50 dark:hover:bg-slate-800/60"
                 style={{ height: FILTER_ROW_HEIGHT }}
               >
                 <Checkbox
                   checked={pendingValues.includes(opt.value)}
                   onChange={() => onToggleValue(opt.value)}
                 >
-                  {opt.label}
+                  <span className="dark:text-slate-200">{opt.label}</span>
                 </Checkbox>
               </div>
             ))}
@@ -254,7 +254,7 @@ const ExcelFilterDropdown = ({
         )}
       </div>
 
-      <div className="flex justify-between items-center gap-2 px-2 py-1.5 border-t border-gray-100">
+      <div className="flex justify-between items-center gap-2 px-2 py-1.5 border-t border-gray-100 dark:border-slate-800">
         <Button size="small" onClick={onClear}>
           Clear Filter
         </Button>
@@ -269,6 +269,18 @@ const ExcelFilterDropdown = ({
       </div>
     </div>
   );
+};
+
+// ==================== DENSITY MODE → TABLE METRICS ====================
+// Maps the Segmented control's value (which doubles as AntD Table's `size`
+// prop) to the actual padding/font values the custom table CSS renders.
+// Keeping this as the single source of truth is what makes the density
+// toggle visibly change the table instead of being overridden by a fixed
+// set of !important rules.
+const DENSITY_METRICS = {
+  small: { cellPaddingY: "4px", headPaddingY: "6px", fontSize: "12px", lineHeight: "1.3" },
+  default: { cellPaddingY: "8px", headPaddingY: "10px", fontSize: "13px", lineHeight: "1.5" },
+  large: { cellPaddingY: "14px", headPaddingY: "16px", fontSize: "14px", lineHeight: "1.7" },
 };
 
 // ==================== MAIN COMPONENT ====================
@@ -294,7 +306,7 @@ const MasterReportGenerationPage = () => {
   const [densityMode, setDensityMode] = useState("default");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
 
   // Column visibility panel: temporary/pending selection state so the table
   // and export only react once the user clicks "Apply".
@@ -683,7 +695,9 @@ useEffect(() => {
           title: info.title,
           dataIndex: key,
           key,
-          width: Math.min(Math.max(info.title.length * 8, 120), 300),
+          // Extra buffer accounts for the bold header font plus the sort
+          // and filter icons, so titles never wrap onto a second line.
+          width: Math.min(Math.max(info.title.length * 9 + 56, 140), 320),
           sorter: (a, b) => {
             const aVal = a[key];
             const bVal = b[key];
@@ -717,7 +731,7 @@ useEffect(() => {
           ),
           render: (value, record) => {
             if (value == null || value === "") {
-              return <span className="text-gray-400">-</span>;
+              return <span className="text-gray-400 dark:text-slate-600">-</span>;
             }
 
             const colInfo = columnMetadata[key];
@@ -947,6 +961,9 @@ useEffect(() => {
       `${sheetName}_Report_${dayjs().format("DD-MM-YYYY_HH-mm")}.xlsx`,
     );
   };
+
+  const density = DENSITY_METRICS[densityMode] || DENSITY_METRICS.default;
+
   return (
     <div
       className={`min-h-screen w-full min-w-0 overflow-x-hidden bg-gradient-to-br from-slate-50 to-stone-100 dark:from-slate-900 dark:to-slate-950 p-3 sm:p-4 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
@@ -958,7 +975,7 @@ useEffect(() => {
             <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:text-white bg-clip-text text-transparent truncate">
               Advanced Report Viewer
             </h1>
-            <p className="text-gray-600 text-xs mt-0.5 break-words">
+            <p className="text-gray-600 dark:text-slate-400 text-xs mt-0.5 break-words">
               Dynamic data analysis with smart filtering
             </p>
           </div>
@@ -978,9 +995,6 @@ useEffect(() => {
               value={densityMode}
               onChange={(value) => setDensityMode(value)}
               style={{
-                backgroundColor: "var(--primary)",
-                borderColor: "var(--primary)",
-                color: "#fff",
                 maxWidth: "100%",
               }}
             />
@@ -989,7 +1003,7 @@ useEffect(() => {
 
         {/* Toolbar — filters/search cluster grows & wraps on the left,
             action buttons stay grouped and fixed-size on the right. */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-xl p-2.5">
           {/* Filters + search */}
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           <Select
@@ -1217,12 +1231,7 @@ useEffect(() => {
               onClick={executeReport}
               loading={loading}
               disabled={!selectedReport}
-              className="w-full sm:w-auto"
-              style={{
-                backgroundColor: "var(--primary-light)",
-                borderColor: "var(--primary)",
-                color: "var(--primary)",
-              }}
+              className="w-full sm:w-auto rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:!border-slate-300 dark:hover:!border-slate-600 hover:!bg-slate-100 dark:hover:!bg-slate-700 hover:shadow-sm transition-all"
             >
               Refresh
             </Button>
@@ -1232,7 +1241,7 @@ useEffect(() => {
               type="primary"
               onClick={handleExportExcel}
               disabled={fullyFilteredData.length === 0}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto rounded-lg hover:shadow-md transition-all"
               style={{
                 backgroundColor: "var(--primary)",
                 borderColor: "var(--primary)",
@@ -1249,13 +1258,13 @@ useEffect(() => {
               placement="topRight"
               dropdownRender={() => (
                 <div
-                  className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-[90vw]"
+                  className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 max-w-[90vw]"
                   style={{ width: 220 }}
                   // Prevent AntD's internal click-outside handling from
                   // treating a click inside the panel as an "outside" click.
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex justify-between items-center px-2 py-1.5 border-b border-gray-100">
+                  <div className="flex justify-between items-center px-2 py-1.5 border-b border-gray-100 dark:border-slate-800">
                     <Button
                       type="link"
                       size="small"
@@ -1277,18 +1286,18 @@ useEffect(() => {
                     {Object.entries(columnMetadata).map(([key, info]) => (
                       <div
                         key={key}
-                        className="flex items-center px-2 py-1 hover:bg-gray-50"
+                        className="flex items-center px-2 py-1 hover:bg-gray-50 dark:hover:bg-slate-800/60"
                       >
                         <Checkbox
                           checked={pendingColumns.includes(key)}
                           onChange={() => togglePendingColumn(key)}
                         >
-                          {info.title}
+                          <span className="dark:text-slate-200">{info.title}</span>
                         </Checkbox>
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-end gap-2 px-2 py-1.5 border-t border-gray-100">
+                  <div className="flex justify-end gap-2 px-2 py-1.5 border-t border-gray-100 dark:border-slate-800">
                     <Button size="small" onClick={handleCancelColumns}>
                       Cancel
                     </Button>
@@ -1306,12 +1315,7 @@ useEffect(() => {
               <Button
                 size="middle"
                 icon={<SettingOutlined />}
-                className="w-full sm:w-auto"
-                style={{
-                  backgroundColor: "var(--primary-light)",
-                  borderColor: "var(--primary)",
-                  color: "var(--primary)",
-                }}
+                className="w-full sm:w-auto rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:!border-slate-300 dark:hover:!border-slate-600 hover:!bg-slate-100 dark:hover:!bg-slate-700 hover:shadow-sm transition-all"
               >
                 Columns ({visibleColumns.length})
               </Button>
@@ -1321,20 +1325,20 @@ useEffect(() => {
 
         {/* Stats & Filters */}
         {fullyFilteredData.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 bg-[var(--background)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm text-xs">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl px-3 py-1.5 border border-slate-200/80 dark:border-slate-800 shadow-sm text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="font-medium">Records:</span>
+              <span className="font-medium dark:text-slate-300">Records:</span>
               <Badge count={fullyFilteredData.length.toLocaleString()} />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-medium">Columns:</span>
+              <span className="font-medium dark:text-slate-300">Columns:</span>
               <Badge
                 count={`${visibleColumns.length}/${Object.keys(columnMetadata).length}`}
               />
             </div>
             {activeFilterCount > 0 && (
               <div className="flex items-center flex-wrap gap-1.5">
-                <span className="font-medium">Filters:</span>
+                <span className="font-medium dark:text-slate-300">Filters:</span>
                 <Badge count={activeFilterCount} color="blue" />
                 <Button size="small" onClick={clearAllFilters}>
                   Clear All Filters
@@ -1347,7 +1351,7 @@ useEffect(() => {
         {/* Table */}
         <div
           ref={tableWrapperRef}
-          className="w-full min-w-0 bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-[var(--primary)] overflow-hidden">
+          className="w-full min-w-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
           {loading ? (
             <div className="p-4 sm:p-8">
               <Skeleton active paragraph={{ rows: 12 }} />
@@ -1373,7 +1377,7 @@ useEffect(() => {
                 pageSize,
                 total: fullyFilteredData.length,
                 showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50", "100"],
+                pageSizeOptions: ["10", "20", "50", "100", "200"],
                 onChange: (page, size) => {
                   setCurrentPage(page);
                   setPageSize(size);
@@ -1390,6 +1394,10 @@ useEffect(() => {
       </div>
 
       <style jsx>{`
+        /* ============ Density (Compact / Default / Spacious) ============
+           Driven by DENSITY_METRICS[densityMode] so the Segmented control
+           actually changes row height/font instead of being fought by a
+           fixed set of !important rules. */
         .custom-report-table :global(.ant-table-thead) th {
           background: linear-gradient(
             135deg,
@@ -1398,22 +1406,49 @@ useEffect(() => {
           ) !important;
           font-weight: 600 !important;
           border-bottom: 2px solid #e2e8f0 !important;
-          padding-top: 6px !important;
-          padding-bottom: 6px !important;
-          font-size: 12px !important;
+          padding-top: ${density.headPaddingY} !important;
+          padding-bottom: ${density.headPaddingY} !important;
+          font-size: ${density.fontSize} !important;
+          letter-spacing: 0.01em;
+          color: #1e293b !important;
+          white-space: nowrap !important;
+          transition: padding 0.15s ease, font-size 0.15s ease;
         }
         .dark .custom-report-table :global(.ant-table-thead) th {
-          background: linear-gradient(
-            135deg,
-            #0f172a 0%,
-            #1e293b 100%
-          ) !important;
-          color: #e2e8f0 !important;
+          background: rgba(30, 41, 59, 0.8) !important;
+          border-bottom: 2px solid #1e293b !important;
+          color: #cbd5e1 !important;
         }
         .custom-report-table :global(.ant-table-tbody) > tr > td {
-          padding-top: 5px !important;
-          padding-bottom: 5px !important;
-          font-size: 12px !important;
+          padding-top: ${density.cellPaddingY} !important;
+          padding-bottom: ${density.cellPaddingY} !important;
+          font-size: ${density.fontSize} !important;
+          line-height: ${density.lineHeight};
+          white-space: nowrap !important;
+          color: #334155;
+          transition: padding 0.15s ease, font-size 0.15s ease, background-color 0.15s ease;
+        }
+        .dark .custom-report-table :global(.ant-table-tbody) > tr > td {
+          color: #cbd5e1;
+          border-bottom: 1px solid #1e293b;
+        }
+        .custom-report-table :global(.ant-table-tbody) > tr:nth-child(even) > td {
+          background: rgba(248, 250, 252, 0.6);
+        }
+        .dark .custom-report-table :global(.ant-table-tbody) > tr:nth-child(even) > td {
+          background: rgba(15, 23, 42, 0.4);
+        }
+        .custom-report-table :global(.ant-table-tbody) > tr:hover > td {
+          background: rgba(219, 234, 254, 0.35) !important;
+        }
+        .dark .custom-report-table :global(.ant-table-tbody) > tr:hover > td {
+          background: rgba(30, 41, 59, 0.5) !important;
+        }
+        .dark .custom-report-table :global(.ant-table) {
+          background: transparent;
+        }
+        .dark .custom-report-table :global(.ant-table-placeholder) {
+          background: transparent !important;
         }
         .custom-report-table :global(.ant-table-pagination) {
           margin: 8px 0 !important;
@@ -1435,6 +1470,126 @@ useEffect(() => {
           .custom-report-table :global(.ant-pagination-options) {
             margin-inline-start: 0 !important;
           }
+        }
+
+        /* ============ AntD form-control chrome: rounded corners + smooth
+           border transitions, applied uniformly in light and dark ============ */
+        :global(.ant-select-selector),
+        :global(.ant-picker),
+        :global(.ant-input),
+        :global(.ant-input-number),
+        :global(.ant-input-affix-wrapper) {
+          border-radius: 8px !important;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+        }
+
+        /* ============ AntD dark-mode overrides ============
+           No global ConfigProvider dark algorithm exists in this app yet,
+           so AntD's own chrome (selects, pickers, dropdown/menu popups,
+           buttons, checkboxes) stays light unless targeted explicitly here.
+           These rules key off the same .dark class the Tailwind dark:
+           variant uses, so they always agree with the rest of the page. */
+        :global(.dark) .ant-select-selector,
+        :global(.dark) .ant-picker,
+        :global(.dark) .ant-input,
+        :global(.dark) .ant-input-number,
+        :global(.dark) .ant-input-affix-wrapper {
+          background-color: #0f172a !important;
+          border-color: #334155 !important;
+          color: #e2e8f0 !important;
+        }
+        :global(.dark) .ant-select-selection-placeholder,
+        :global(.dark) .ant-select-selection-item,
+        :global(.dark) .ant-picker-input > input,
+        :global(.dark) .ant-input::placeholder,
+        :global(.dark) .ant-input-number-input {
+          color: #e2e8f0 !important;
+        }
+        :global(.dark) .ant-input::placeholder,
+        :global(.dark) .ant-picker-input > input::placeholder {
+          color: #64748b !important;
+        }
+        :global(.dark) .ant-select-arrow,
+        :global(.dark) .ant-picker-suffix,
+        :global(.dark) .ant-input-clear-icon,
+        :global(.dark) .ant-select-clear {
+          color: #94a3b8 !important;
+        }
+        :global(.dark) .ant-select-dropdown,
+        :global(.dark) .ant-picker-dropdown,
+        :global(.dark) .ant-dropdown-menu,
+        :global(.dark) .ant-table-filter-dropdown,
+        :global(.dark) .ant-picker-panel-container {
+          background-color: #0f172a !important;
+          border: 1px solid #1e293b !important;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+        }
+        :global(.dark) .ant-select-item {
+          color: #e2e8f0 !important;
+        }
+        :global(.dark) .ant-select-item-option-active,
+        :global(.dark) .ant-select-item-option-selected {
+          background-color: #1e293b !important;
+        }
+        :global(.dark) .ant-picker-cell {
+          color: #475569;
+        }
+        :global(.dark) .ant-picker-cell-in-view {
+          color: #e2e8f0;
+        }
+        :global(.dark) .ant-picker-header,
+        :global(.dark) .ant-picker-footer,
+        :global(.dark) .ant-picker-panel {
+          border-color: #1e293b !important;
+          color: #e2e8f0;
+        }
+        :global(.dark) .ant-picker-header button {
+          color: #cbd5e1;
+        }
+        :global(.dark) .ant-btn-default {
+          background-color: #0f172a !important;
+          border-color: #334155 !important;
+          color: #e2e8f0 !important;
+        }
+        :global(.dark) .ant-btn-default:hover:not(:disabled) {
+          border-color: #475569 !important;
+          color: #f8fafc !important;
+        }
+        :global(.dark) .ant-checkbox-inner {
+          background-color: #0f172a !important;
+          border-color: #475569 !important;
+        }
+        :global(.dark) .ant-empty-description {
+          color: #94a3b8 !important;
+        }
+        :global(.dark) .ant-segmented {
+          background-color: #0f172a !important;
+        }
+        :global(.dark) .ant-segmented-item {
+          color: #94a3b8 !important;
+        }
+        :global(.dark) .ant-segmented-item-selected {
+          background-color: #1e293b !important;
+          color: #f8fafc !important;
+        }
+        :global(.dark) .ant-pagination-item {
+          background-color: transparent !important;
+          border-color: #334155 !important;
+        }
+        :global(.dark) .ant-pagination-item a {
+          color: #cbd5e1 !important;
+        }
+        :global(.dark) .ant-pagination-item-active {
+          border-color: #3b82f6 !important;
+        }
+        :global(.dark) .ant-pagination-item-active a {
+          color: #60a5fa !important;
+        }
+        :global(.dark) .ant-pagination-prev .ant-pagination-item-link,
+        :global(.dark) .ant-pagination-next .ant-pagination-item-link {
+          background-color: transparent !important;
+          border-color: #334155 !important;
+          color: #cbd5e1 !important;
         }
       `}</style>
     </div>
