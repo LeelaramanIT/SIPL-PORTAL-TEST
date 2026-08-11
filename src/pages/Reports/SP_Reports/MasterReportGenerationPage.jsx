@@ -437,10 +437,18 @@ const MasterReportGenerationPage = () => {
 
   // Column analysis with proper typing
   const analyzeColumns = useCallback((data) => {
-    const scanLimit = Math.min(data.length, 1000);
+    // Type detection only needs a bounded sample for performance — sampling
+    // here doesn't affect which values are offered in the filter dropdowns.
+    const typeScanLimit = Math.min(data.length, 1000);
     const columnInfo = {};
 
-    for (let i = 0; i < scanLimit; i++) {
+    // Unique values must be collected from the ENTIRE dataset, not just a
+    // scanned prefix — column filter dropdowns are built from
+    // `info.values`, so limiting this loop previously meant values that
+    // only occurred later in the (6000+ row) dataset silently never
+    // appeared as filter options, even though every row's data was already
+    // loaded in memory.
+    for (let i = 0; i < data.length; i++) {
       const row = data[i];
       if (!row) continue;
 
@@ -456,9 +464,11 @@ const MasterReportGenerationPage = () => {
         const info = columnInfo[key];
         if (value != null && value !== "") {
           info.values.add(value);
-          info.sampleValues.push(value);
-          if (info.sampleValues.length > 100) {
-            info.sampleValues.shift();
+          if (i < typeScanLimit) {
+            info.sampleValues.push(value);
+            if (info.sampleValues.length > 100) {
+              info.sampleValues.shift();
+            }
           }
         }
       });
@@ -583,6 +593,16 @@ useEffect(() => {
 
     return filtered;
   }, [data, globalSearch, columnFilters, columnMetadata]);
+
+  // If a column/global filter shrinks the result set enough that the page
+  // currently being viewed no longer exists, fall back to page 1 instead of
+  // leaving AntD's controlled pagination pointed at an out-of-range page.
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(fullyFilteredData.length / pageSize));
+    if (currentPage > maxPage) {
+      setCurrentPage(1);
+    }
+  }, [fullyFilteredData.length, pageSize, currentPage]);
 
   // Dynamic table columns
   // NOTE: this is the single source of truth for column order used both by
