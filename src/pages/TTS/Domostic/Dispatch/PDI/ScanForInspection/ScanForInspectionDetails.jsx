@@ -215,8 +215,12 @@ const ScanForInspectionDetails = () => {
       width: "1.2fr",
       align: "left",
     },
+    
     { header: "RIM", accessor: "rimSize", width: "0.5fr", align: "center" },
     { header: "TYPE", accessor: "tyreType", width: "0.5fr", align: "center" },
+    { header: "ProcessId", accessor: "processID", width: "1fr", align: "center" },
+    
+
     { header: "BRAND", accessor: "brand", width: "1fr", align: "left" },
     { header: "sidewall", accessor: "sidewall", width: "1fr", align: "center" },
     {

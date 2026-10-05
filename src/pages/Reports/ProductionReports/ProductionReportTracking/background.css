@@ -1,0 +1,112 @@
+/* Lightweight, CSS-only "premium" visual layer for the Production Order Tracking
+   dashboard. No WebGL, no mousemove listeners, no backdrop-filter, no full-page
+   continuous animation — see the notes above each rule for why it's cheap. */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+.po-app .font-mono,
+.po-app .tabular-nums,
+.po-app kbd {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum';
+}
+
+.po-app ::-webkit-scrollbar { width: 8px; height: 8px; }
+.po-app ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.po-app ::-webkit-scrollbar-track { background: transparent; }
+
+/*
+ * Page backdrop — entirely static (no @keyframes here). A faint dot-grid plus
+ * two motionless radial tints built from the existing --accent-soft token, so
+ * it costs one paint on load and then nothing: no repaint while scrolling,
+ * filtering, or expanding a 100-item work order.
+ */
+.po-grid {
+  background-image:
+    radial-gradient(900px circle at 8% 0%, var(--accent-soft), transparent 55%),
+    radial-gradient(700px circle at 100% 0%, var(--accent-soft), transparent 50%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, auto, 32px 32px, 32px 32px;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+}
+
+/*
+ * Hero glow accents — confined to the header only (via overflow:hidden on
+ * .po-hero), not the full page and never behind the table/line-item list.
+ * Only `transform` + `opacity` are animated, which are compositor-only
+ * properties: the browser rasterizes each blurred blob once into its own
+ * layer and then just slides that layer, with zero per-frame layout/paint
+ * work and no interaction with mouse events.
+ */
+.po-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.po-hero__blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  opacity: 0.55;
+  pointer-events: none;
+  will-change: transform;
+  z-index: -1;
+}
+
+.po-hero__blob--a {
+  top: -60px;
+  left: -40px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+  animation: po-float-a 30s ease-in-out infinite alternate;
+}
+
+.po-hero__blob--b {
+  top: -90px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+  animation: po-float-b 36s ease-in-out infinite alternate;
+}
+
+@keyframes po-float-a {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(18px, 14px); }
+}
+
+@keyframes po-float-b {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-16px, 18px); }
+}
+
+/* Respect reduced-motion preferences: the blobs become fully static. */
+@media (prefers-reduced-motion: reduce) {
+  .po-hero__blob--a,
+  .po-hero__blob--b {
+    animation: none;
+  }
+}
+
+/*
+ * Recharts adds a tabindex to its chart <svg> (`.recharts-surface`) and wrapper
+ * for its accessibility layer, so clicking a chart draws the browser's default
+ * focus outline — which reads as a "broken selection box" around the chart.
+ * Suppress that outline only; hover, tooltips, legends, and click handlers are
+ * untouched. Not scoped to `.po-app` on purpose: the Summary charts render inside
+ * an antd Modal that portals to <body>, outside `.po-app`, so this must be global
+ * to reach every chart (dashboard and modal alike).
+ */
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus,
+.recharts-surface:focus-visible,
+.recharts-wrapper svg:focus,
+.recharts-wrapper svg:focus-visible,
+.recharts-wrapper *:focus,
+.recharts-wrapper *:focus-visible {
+  outline: none !important;
+}

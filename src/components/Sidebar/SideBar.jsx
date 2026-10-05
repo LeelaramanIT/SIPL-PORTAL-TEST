@@ -30,6 +30,7 @@ import {
   FaProjectDiagram,
   FaClipboardList,
   FaIndustry,
+  FaBug,
 } from "react-icons/fa";
 import { TfiBarChartAlt } from "react-icons/tfi";
 import { VscCalendar, VscGraphLine } from "react-icons/vsc";
@@ -43,6 +44,8 @@ import ThemeSwitcher from "../ThemeSwitcher";
 import assets from "../../assets/assets";
 import "./SideBar.css";
 import { logout, userLogout } from "../../Redux/Slices/AuthSlice";
+import { persistor } from "../../Redux/Store/app";
+import { hasAccess } from "../../utils/menuAccess";
 import { MdOutlineContactEmergency } from "react-icons/md";
 import { MdOutlinePriceChange } from "react-icons/md";
 import { MdOutlineQrCodeScanner } from "react-icons/md";
@@ -468,6 +471,11 @@ const SideBar = () => {
       icon: <MdOutlineContactEmergency />,
       label: "User Master",
     },
+    {
+      key: "/ErrorLog",
+      icon: <FaBug />,
+      label: "Error Log",
+    },
   ];
 
   function extractMenuData(items) {
@@ -513,7 +521,7 @@ const SideBar = () => {
         }
       } else if (
         ALWAYS_ALLOWED.includes(item.key) ||
-        user?.permissions?.includes(item.key)
+        hasAccess(user?.permissions, item.key)
       ) {
         allowed.push(item);
       }

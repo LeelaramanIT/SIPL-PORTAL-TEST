@@ -59,14 +59,13 @@ const authSlice = createSlice({
     },
 
     logout: (state) => {
-      state.token = null;
       state.username = null;
-      state.roles = [];
+      state.roles = "";
       state.Menus = [];
-      state.loggedIn = false;
-      state.Department = "";
+      state.DepartmentDetails = [];
+      state.LocationDetails = [];
       state.RoleID = "";
-      state.Location = "";
+      state.loggedIn = false;
       state.loading = false;
       state.error = null;
       window.localStorage.clear();

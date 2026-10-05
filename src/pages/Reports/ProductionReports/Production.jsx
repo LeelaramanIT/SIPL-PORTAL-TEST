@@ -662,7 +662,7 @@ export default function ProductionDashboard() {
               <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Factory size={16} style={{ color: "#fff" }} />
               </div>
-              <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--tp)", margin: 0, letterSpacing: "-0.02em" }}>Production Dashboard</h1>
+              <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--tp)", margin: 0, letterSpacing: "-0.02em" }}></h1>
             </div>
             <p style={{ fontSize: 12, color: "var(--ts)", margin: 0 }}>
               {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}

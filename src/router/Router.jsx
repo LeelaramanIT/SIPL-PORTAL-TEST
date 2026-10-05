@@ -98,6 +98,10 @@ import ProcessIdModification from "../pages/Dashboard/Processidmodification";
 import UserMasterManagement from "../pages/MenuAccess/UserMaster/UserMasterManagement";
 import CustomerProcessIDMapping from "../pages/Masters/Customer Master/CustomerProcessIDMapping/CustomerProcessIDMapping";
 import MyProfilePage from "../pages/Settings/UserProfile/UserProfile";
+import ProductionOrderTracking from "../pages/Reports/ProductionReports/ProductionReportTracking/ProductionOrderTracking";
+import SerialLogs from "../pages/ErrorLog/Seriallogs";
+import CustomerProcessIDMappingFunctionDoc from "../pages/Masters/Customer Master/CustomerProcessIDMapping/data/Customerprocessidmappingfunctiondoc ";
+// import CustomerProcessID from "../pages/Masters/Item ID Master/Customer ProcessID/CustomerProcessID";
 // import WorkOrderPlanning from "../pages/Dashboard/PlantAssign";
 
 export const router = createBrowserRouter([
@@ -134,6 +138,8 @@ export const router = createBrowserRouter([
                   { path: "Creation1" ,element: <CustomerModule1 /> },
                   { path: "Creation2" ,element: <CustomerModule2 /> },
                   { path: "ProcessIDMapping" ,element: <CustomerProcessIDMapping /> },
+                  { path: "FunctionalDocumentation" ,element: <CustomerProcessIDMappingFunctionDoc /> },
+
                 ],
                },
     
@@ -168,7 +174,9 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: "CustomerProcessIDCreation",
-                    element: <RIMProcessIDCreation />,
+                    // element: <CustomerProcessID />,
+                    element: <CustomerProcessIDMapping />,
+
                   },
                 ],
               },
@@ -483,9 +491,13 @@ export const router = createBrowserRouter([
                   },
                   { path: "PowerBIReport", element: <TTSPowerBIReports /> },
                   { path: "SaleRepost", element: <TyreSalesDashboard /> },
+                  // {
+                  //   path: "ProductionRepost",
+                  //   element: <ProductionDashboard />,
+                  // },
                   {
                     path: "ProductionRepost",
-                    element: <ProductionDashboard />,
+                    element: <ProductionOrderTracking />,
                   },
                   {
                     path: "DomesticsReport",
@@ -550,6 +562,10 @@ export const router = createBrowserRouter([
               { path: "UserMasterManagement", element: <UserMasterManagement /> },
             ],
           },
+          {
+            path:'ErrorLog',
+            element:<SerialLogs/>
+          }
         ],
       },
     ],

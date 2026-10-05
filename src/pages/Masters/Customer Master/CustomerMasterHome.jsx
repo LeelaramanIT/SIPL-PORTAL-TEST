@@ -8,7 +8,9 @@ import {
   CreditCard,
   ArrowUpRight,
   Lock,
+  BookOpen,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 /* ============================================================
    CUSTOMER HUB — INDEX PAGE
@@ -26,6 +28,7 @@ const MODULES = [
     description:
       "View, edit, and manage your complete customer list, contact details, shipping addresses, and core communication preferences.",
     status: "active",
+    adminOnly: false,
   },
   {
     key: "add-customer",
@@ -36,6 +39,7 @@ const MODULES = [
     description:
       "Register new client accounts, assign primary account managers, and set up initial account configurations.",
     status: "active",
+    adminOnly: false,
   },
   {
     key: "customer-groups",
@@ -46,6 +50,7 @@ const MODULES = [
     description:
       "Categorize accounts by region, industry, or tier to streamline price lists, bulk discounts, and targeted reporting.",
     status: "active",
+    adminOnly: false,
   },
   {
     key: "credit-billing",
@@ -56,9 +61,31 @@ const MODULES = [
     description:
       "Manage risk by enforcing credit limits, custom payment terms, payment methods, and automated overdue alerts.",
     status: "soon",
+    adminOnly: true,
   },
-]; 
-
+  {
+    key: "process-id-mapping-docs",
+    to: "/Masters/CustomerMaster/FunctionalDocumentation",
+    tag: "05",
+    icon: BookOpen,
+    title: "Process ID Mapping — Docs",
+    description:
+      "Full functional reference for Customer Process ID Mapping: architecture, data flow, validation rules, and API contracts.",
+    status: "active",
+    adminOnly: true,
+  },
+  {
+    key: "process-id-mapping-user-Doc",
+    to: "https://claude.ai/code/artifact/8a11f52c-cc33-4a8c-9117-adbdbd94ccaa",
+    tag: "06",
+    icon: BookOpen,
+    title: "Process ID Mapping — User Manual",
+    description:
+      "Step-by-step user guide for Customer Process ID Mapping, covering navigation, process ID assignment, mapping updates, validation, and common user actions.",
+    status: "active",
+    adminOnly: false,
+  },
+];
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -152,6 +179,14 @@ const ModuleCard = ({ module }) => {
 };
 
 const CustomerHubHome = () => {
+
+  const { roles } = useSelector((state) => state.auth);
+
+const isAdmin =
+  Array.isArray(roles)
+    ? roles.includes("admin")
+    : roles === "admin";
+  
   return (
     <div className="h-full overflow-y-auto px-6 py-10 sm:px-10 lg:px-14">
       <motion.div
@@ -179,9 +214,17 @@ const CustomerHubHome = () => {
           variants={container}
           className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {MODULES.map((m) => (
-            <ModuleCard key={m.key} module={m} />
-          ))}
+          {MODULES
+  .filter((module) => !module.adminOnly || isAdmin)
+  .map((module, index) => (
+    <ModuleCard
+      key={module.key}
+      module={{
+        ...module,
+        tag: String(index + 1).padStart(2, "0"),
+      }}
+    />
+  ))}
         </motion.div>
 
         {/* Footer note */}

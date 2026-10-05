@@ -10,7 +10,7 @@ const initialState = {
   generatedProcessID: null,
 };
 
-const AssemblyProcessIDSlice = createSlice({
+const CustomerProcessIDSlice = createSlice({
   name: "CustomerProcessID",
   initialState,
   reducers: {
@@ -29,111 +29,115 @@ const AssemblyProcessIDSlice = createSlice({
   },
 });
 
-export const getProcessIDMaster = () => async (dispatch) => {
+export const getListOfCustomer = () => async (dispatch) => {
   try {
     dispatch(setLoading(true));
-    const res = await api.get("EDC_Master/EDC_MasterList");
-    dispatch(setLoading(false));
-    dispatch(setProcessIDMaster(res.data));
-  } catch (error) {
-    console.log(error);
-    dispatch(setLoading(false));
-    throw error;
-  }
-};
-export const getProcessIDByParameters = (params) => async (dispatch) => {
-  try {
-    dispatch(setLoading(true));
-    const res = await api.get(`/EDC_Master/GetAssyProcessIDByParameter`, {
-      params,
-    });
-    dispatch(setLoading(false));
-    dispatch(setGeneratedProcessID(res.data));
-    return res.data;
-  } catch (error) {
-    console.log(error);
-    dispatch(setLoading(false));
-  }
-};
 
-export const getEDCNumbers = (filters) => async (dispatch) => {
-  try {
-    console.log(filters);
+    const res = await api.get("/OrderProcess/customer-master");
+    // console.log("Res", res);
 
-    const response = await api.get("/EDC_Master/GetEDCNoByProcessID", {
-      params: {
-        RimSize: filters.tyreRim,
-        TyreSize: filters.tyreSize,
-      },
-    });
-    console.log(response.data);
-
-    return response.data;
-  } catch (error) {
-    console.log("EDC API ERROR:", error);
-    throw error;
-    return [];
-  }
-};
-
-export const getProcessID = (params) => async (dispatch) => {
-  const data = {
-    Category: params.category.toUpperCase(),
-    config: params.platform.toUpperCase(), // ⚠ also fix this
-    TyreSize: params.tyreSize.toUpperCase(),
-    TyreType: params.tyreType.toUpperCase(),
-    TyreRim: params.tyreRim.toUpperCase(),
-    Brand: params.brand.toUpperCase(),
-    Sidewall: params.sidewall.toUpperCase(),
-  };
-
-  try {
-    const res = await api.get(`/EDC_Master/GetAssyProcessID`, {
-      params: data, // ✅ FIXED
-    });
-
-    return res?.data?.processID;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
-
-export const saveAssyProcess = (payload) => async (dispatch) => {
-  const data = {
-    directional: payload.directional,
-    processID: payload.processID,
-    edcno: payload.edcNo,
-  };
-
-  try {
-    const res = await api.post(`/EDC_Master/SaveAssyPID`, data);
-    if (res.status === 201) {
-      toast.success("Assembly Process ID Created Successfully");
+    if (res.status === 200) {
+      return res?.data?.data;
+    } else {
+      throw new Error("Unexpected response status: " + res.status);
     }
 
-    return res.data;
   } catch (error) {
-    console.log("Save API Error:", error);
-    throw error;
+    console.error("", error);
+  } finally {
+    dispatch(setLoading(false));
   }
 };
 
-export const getProcessIDByPID = (params) => async (dispatch) => {
+export const getCustomerItemsByCustomerAndShip = ({ customerCode, shipIds }) => async (dispatch) => {
   try {
-    const res = await api.get(`EDC_Master/FindByProcessID?processId=${params}`);
-    console.log(res.data);
-    return res.data;
+    dispatch(setLoading(true));
+
+    // Build the query string manually — axios's default array serialization
+    // for `params` emits `shipID[]=x&shipID[]=y`, but the backend's model
+    // binder only accepts the plain repeated-key form `shipID=x&shipID=y`.
+    const query = new URLSearchParams();
+    query.append("customerCode", customerCode);
+    (Array.isArray(shipIds) ? shipIds : [shipIds]).forEach((id) => query.append("shipID", id));
+
+    const res = await api.get(`/CustomerItemMaster/customer-ship?${query.toString()}`);
+
+    if (res.status === 200) {
+      return res?.data?.data;
+    } else {
+      throw new Error("Unexpected response status: " + res.status);
+    }
+
   } catch (error) {
-    console.log(error);
-    throw error;
+    console.error("", error);
+  } finally {
+    dispatch(setLoading(false));
   }
 };
+
+export const createCustomerItem = (payload) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+
+    const res = await api.post("/CustomerItemMaster/CreateCustomerItem", payload);
+
+    if (res.status === 200 || res.status === 201) {
+      return res?.data?.data;
+    } else {
+      throw new Error("Unexpected response status: " + res.status);
+    }
+
+  } catch (error) {
+    console.error("", error);
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const updateCustomerItem = (payload) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+
+    const res = await api.put("/CustomerItemMaster/UpdateCustomerItem", payload);
+
+    if (res.status === 200 || res.status === 201) {
+      return res?.data?.data;
+    } else {
+      throw new Error("Unexpected response status: " + res.status);
+    }
+
+  } catch (error) {
+    console.error("", error);
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const getListOfItems = (payload) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const res = await api.get(`/OrderProcess/customer-LineItems/${payload}`);
+
+    if (res.status === 200) {
+      return res?.data?.data;
+    } else {
+      throw new Error("Unexpected response status: " + res.status);
+    }
+
+  } catch (error) {
+    console.error("", error);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
 
 export const {
   setLoading,
   setSearch,
   setProcessIDMaster,
   setGeneratedProcessID,
-} = AssemblyProcessIDSlice.actions;
-export default AssemblyProcessIDSlice.reducer;
+} = CustomerProcessIDSlice.actions;
+export default CustomerProcessIDSlice.reducer;

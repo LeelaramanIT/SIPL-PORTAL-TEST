@@ -1,12 +1,11 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Sun, Moon } from "lucide-react";
 import { setIsDark } from "../../Redux/Slices/GlobalSlice";
-import "./DarkModeToggle.css";
 
 const DarkModeToggle = () => {
   const isDark = useSelector((state) => state.global.isDark);
   const dispatch = useDispatch();
-
 
   useEffect(() => {
     const root = document.documentElement;
@@ -20,23 +19,15 @@ const DarkModeToggle = () => {
   const toggleTheme = () => {
     dispatch(setIsDark(!isDark)); // send a boolean
   };
-  
 
   return (
-    <div>
-      <input
-        type="checkbox"
-        className={`checkbox`}
-        id="checkbox"
-        checked={isDark}
-        onChange={toggleTheme}
-      />
-      <label htmlFor="checkbox" className="checkbox-label">
-        <i className="fas fa-sun"></i>
-        <i className="fas fa-moon"></i>
-        <span className="ball"></span>
-      </label>
-    </div>
+    <button
+      onClick={toggleTheme}
+      title="Toggle theme"
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-600 dark:text-white transition-colors hover:bg-gray-100 dark:hover:bg-slate-700"
+    >
+      {isDark ? <Sun size={15} /> : <Moon size={15} />}
+    </button>
   );
 };
 

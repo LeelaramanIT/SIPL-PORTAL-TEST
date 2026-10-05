@@ -9,7 +9,8 @@ import SaleReportHeader from './SaleReportHeader'
 const SaleRepostMaster = () => {
   const modeOrder = [
     "PowerBIReport",
-    "SaleOrder"
+    "SaleOrder",
+    'ProductionReport'
   ];
   const [mode, setMode] = useState('SaleOrder')
 

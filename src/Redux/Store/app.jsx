@@ -25,6 +25,14 @@ import ProjectReducer from '../Slices/Task_Master/Projects/ProjectSlice'
 import SprintReducer from '../Slices/Task_Master/Sprint/SprintSlice'
 import CIMMasterReducer from '../Slices/Customer_Item_Management/CIMMasterSlice'
 import CIMBarcodeReducer from '../Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice'
+// LegalEntity
+import legalEntityMasterReducer from '../Slices/Master/LegalEntityMaster/LegalEntityMasterSlice'
+
+// production report
+import productionReportReducer from '../Slices/Report/ProductionReportSlice'
+
+// error log
+import errorLogReducer from '../Slices/ErrorLog/ErrorLogSlice'
 
 // orderProcess
 import OrderProcessReducer from "../Slices/OrderProcess/OrderProcessSlice";
@@ -194,6 +202,12 @@ const CustomerMasterConfig = {
   storage:storageSession
 }
 
+const legalEntityMasterConfig = {
+  key: 'legalEntity',
+  version:1,
+  storage:storageSession
+}
+
 
 const persistedInvoiceReducer = persistReducer(invoicePersistConfig, invoiceSlice);
 const persistedProformaInvoiceReducer = persistReducer(proformaInvoiceConfig, proformaInvoice);
@@ -218,6 +232,7 @@ const persistedWarehouseReducer = persistReducer(WarehouseReducerConfig,Warehous
 const persistedOrderProcessReducer = persistReducer(OrderProcessConfig,OrderProcessReducer)
 const persistedReportMasterReducer = persistReducer(ReportMasterConfig,ReportMasterReducer)
 const persistedCustomerMasterReducer = persistReducer(CustomerMasterConfig,CustomerMaster)
+const persistedLegalEntityMasterReducer = persistReducer(legalEntityMasterConfig,legalEntityMasterReducer)
 
 
 
@@ -247,6 +262,9 @@ const rootReducer = combineReducers({
   orderProcess:persistedOrderProcessReducer,
   reportMaster:persistedReportMasterReducer,
   customerMaster: persistedCustomerMasterReducer,
+  legalEntity: persistedLegalEntityMasterReducer,
+  productionReport: productionReportReducer,
+  errorLog: errorLogReducer
 });
 
 // Store setup

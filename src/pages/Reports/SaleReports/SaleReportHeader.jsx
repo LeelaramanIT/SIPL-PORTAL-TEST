@@ -96,7 +96,7 @@ function SaleReportHeader({ mode }) {
     "/Reports/TTSReports/Sale/ProductionRepost": {
       title: "Production Dashboard",
       subtitle: "Track production metrics and operational status",
-      mode: "SaleOrder",
+      mode: "Production",
     },
     "/Reports/TTSReports/Sale/MasterReportGeneration": {
       title: "Master Report Generation",
@@ -187,10 +187,10 @@ function SaleReportHeader({ mode }) {
                       <Activity size={16} style={{ color: "#fff" }} />
                     </div>
                     <h1
+                      className="text-slate-800 dark:text-slate-100"
                       style={{
                         fontSize: 20,
                         fontWeight: 800,
-                        color: "var(--tp)",
                         margin: 0,
                         letterSpacing: "-0.02em",
                       }}
@@ -198,7 +198,7 @@ function SaleReportHeader({ mode }) {
                       {currentPage.title}
                     </h1>
                   </div>
-                  <p style={{ fontSize: 12, color: "var(--ts)", margin: 0 }}>
+                  <p className="text-slate-400 dark:text-slate-400" style={{ fontSize: 12, margin: 0 }}>
                     {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                   </p>
                 </div>

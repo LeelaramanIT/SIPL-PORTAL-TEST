@@ -14,6 +14,7 @@ export function DynamicDataTable({
   loading = false,
   visibleRows = 50,
   onLoadMore,
+  onRowClick,
   rowClassName,
   headerClassName,
   cellClassName,
@@ -343,7 +344,8 @@ export function DynamicDataTable({
   const baseRowClasses = (row) => {
     const card =
       "rounded-lg border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-900 hover:-translate-y-0.1";
-    return rowClassName ? `${rowClassName(row)} ${card}` : card;
+    const clickable = onRowClick ? "cursor-pointer" : "";
+    return rowClassName ? `${rowClassName(row)} ${card} ${clickable}` : `${card} ${clickable}`;
   };
 
   // Rows above the virtualization threshold render as plain divs, keyed
@@ -355,14 +357,14 @@ export function DynamicDataTable({
   return (
     <div
       ref={rootRef}
-      className="flex flex-col w-full h-full min-h-[400px] border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 shadow-sm overflow-hidden"
+      className="flex flex-col w-full h-full min-h-0 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 shadow-sm overflow-hidden"
     >
       {/* --- DESKTOP / TABLET TABLE VIEW --- */}
-      <div className="hidden md:flex flex-1 flex-col overflow-hidden">
+      <div className="hidden md:flex flex-1 flex-col min-h-0 overflow-hidden">
         <div
           ref={listRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-auto custom-scrollbar bg-slate-50/40 dark:bg-slate-900/20"
+          className="flex-1 min-h-[380px] overflow-auto custom-scrollbar bg-slate-50/40 dark:bg-slate-900/20"
         >
           <div style={{ minWidth: totalMinWidth }} className="p-2 md:p-3">
             <div
@@ -406,6 +408,7 @@ export function DynamicDataTable({
                         <div
                           key={getRowKey(row, virtualRange.start + i)}
                           role="row"
+                          onClick={() => onRowClick?.(row)}
                           className={`grid gap-2 sm:gap-3 md:gap-4 px-4 md:px-6 py-2 md:py-3 items-center mb-2 ${baseRowClasses(row)}`}
                           style={{ gridTemplateColumns: gridTemplate, minHeight: rowHeightEstimate }}
                         >
@@ -419,6 +422,7 @@ export function DynamicDataTable({
                     <div
                       key={getRowKey(row, rowIndex)}
                       role="row"
+                      onClick={() => onRowClick?.(row)}
                       className={`grid gap-2 sm:gap-3 md:gap-4 px-4 md:px-6 py-2 md:py-3 items-center mb-2 transition-all ${baseRowClasses(row)}`}
                       style={{ gridTemplateColumns: gridTemplate }}
                     >
@@ -437,6 +441,7 @@ export function DynamicDataTable({
                         exit="exit"
                         transition={{ duration: 0.2 }}
                         whileHover={{ y: -1 }}
+                        onClick={() => onRowClick?.(row)}
                         className={`grid gap-2 sm:gap-3 md:gap-4 px-4 py-2 md:py-3 items-center mb-2 transition-all ${baseRowClasses(row)}`}
                         style={{ gridTemplateColumns: gridTemplate }}
                       >
@@ -459,7 +464,7 @@ export function DynamicDataTable({
       </div>
 
       {/* --- MOBILE / SMALL-SCREEN CARD VIEW --- */}
-      <div className="md:hidden flex flex-col flex-1 overflow-hidden">
+      <div className="md:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
         <div
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-slate-50/50 dark:bg-slate-900/50"
@@ -480,7 +485,8 @@ export function DynamicDataTable({
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-4 sm:p-5 shadow-sm active:scale-[0.98] transition-transform"
+                    onClick={() => onRowClick?.(row)}
+                    className={`relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-4 sm:p-5 shadow-sm active:scale-[0.98] transition-transform ${onRowClick ? "cursor-pointer" : ""}`}
                   >
                     <div className="flex justify-between items-start mb-3 sm:mb-4">
                       <div className="flex-1 min-w-0">
