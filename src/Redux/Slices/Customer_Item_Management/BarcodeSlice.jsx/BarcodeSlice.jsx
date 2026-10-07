@@ -72,6 +72,47 @@ export const printSingleBarcode = (barcode) => async (dispatch) => {
   }
 };
 
+export const printScannedBarcodeLabel = (barcode) => async (dispatch) => {
+  dispatch(setLoading(true));
+
+  try {
+    const res = await api.get(
+      `/CustomerBarcode/GenerateScannedBarcodeLabel?request=${encodeURIComponent(barcode)}`
+    );
+
+    // API returns { data: { zpl } }
+    const zplCode = res.data?.data?.zpl ?? res.data?.zpl;
+
+    if (res.status === 200 && zplCode) {
+      await printSingleBarcodeLabel(zplCode);
+
+      return {
+        success: true,
+        data: { ...(res.data?.data ?? res.data), zplCode },
+        message: "Barcode processed successfully",
+      };
+    }
+
+    return {
+      success: false,
+      message: res.data?.message || "Invalid response from server",
+    };
+
+  } catch (error) {
+    console.error("❌ Barcode API Error:", error);
+
+    return {
+      success: false,
+      message:
+        error?.response?.data?.message ||
+        error.message ||
+        "Something went wrong",
+    };
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
 export const printBulkBarcode = (o_ItemID) => async (dispatch) => {
   dispatch(setLoading(true));
 

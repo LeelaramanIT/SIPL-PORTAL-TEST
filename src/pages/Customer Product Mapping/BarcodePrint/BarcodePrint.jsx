@@ -20,6 +20,7 @@ import {
   getCusWorkOrder,
   getItemsByWorkOrder,
   printBulkBarcode,
+  printScannedBarcodeLabel,
   printSingleBarcode,
 } from "../../../Redux/Slices/Customer_Item_Management/BarcodeSlice.jsx/BarcodeSlice"; // Update path
 import {
@@ -73,6 +74,9 @@ export default function TyreBarcodeGenerator() {
   const [barcodeData, setBarcodeData] = useState(null);
   const inputRef = useRef(null);
 
+  // Quick Scan and Labelling share the same scan layout
+  const isScanMode = mode === "input" || mode === "labelling";
+
   const customersList = useMemo(() => {
     return (
       custWorkOrder?.map((item) => ({
@@ -91,6 +95,7 @@ export default function TyreBarcodeGenerator() {
     setBarcodeInput("");
     setQuantity(1);
     setBarcodeData(null);
+    setErrorMsg("");
   }, [mode]);
 
   useEffect(() => {
@@ -166,7 +171,11 @@ export default function TyreBarcodeGenerator() {
     setErrorMsg(""); // reset previous error
 
     try {
-      const result = await dispatch(printSingleBarcode(barcode));
+      const result = await dispatch(
+        mode === "labelling"
+          ? printScannedBarcodeLabel(barcode.trim())
+          : printSingleBarcode(barcode),
+      );
 
       if (result?.success) {
         setBarcodeData(result.data);
@@ -191,7 +200,7 @@ export default function TyreBarcodeGenerator() {
 
   // Trigger scan on Enter key
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && mode === "input" && barcodeInput.trim()) {
+    if (e.key === "Enter" && isScanMode && barcodeInput.trim()) {
       handleBarcodeScan(barcodeInput);
     }
   };
@@ -259,7 +268,9 @@ export default function TyreBarcodeGenerator() {
                 <p className="text-xs text-slate-500">
                   {mode === "input"
                     ? "Single barcode scan & print"
-                    : "Bulk label generation & print"}
+                    : mode === "labelling"
+                      ? "All customers label scan & print"
+                      : "Bulk label generation & print"}
                 </p>
               </div>
             </div>
@@ -289,8 +300,8 @@ export default function TyreBarcodeGenerator() {
               exit="hidden"
               className="h-full flex flex-col gap-4"
             >
-              {/* INPUT MODE - Side by Side Layout */}
-              {mode === "input" && (
+              {/* INPUT / LABELLING MODE - Side by Side Layout */}
+              {isScanMode && (
                 <motion.div
                   variants={itemVariants}
                   className="h-full grid grid-cols-5 gap-4"
@@ -333,7 +344,11 @@ export default function TyreBarcodeGenerator() {
                             type="text"
                             value={barcodeInput}
                             onChange={(e) => {
-                              const value = e.target.value.slice(0, 19);
+                              // 19-char limit is the MITCO barcode length
+                              const value =
+                                mode === "input"
+                                  ? e.target.value.slice(0, 19)
+                                  : e.target.value;
                               setBarcodeInput(value);
                               setErrorMsg("");
                             }}
@@ -351,7 +366,9 @@ export default function TyreBarcodeGenerator() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
                           </span>
-                          MITCO Customer Mode Only
+                          {mode === "labelling"
+                            ? "All Customers Labelling Mode"
+                            : "MITCO Customer Mode Only"}
                         </p>
                       </div>
 
@@ -628,9 +645,54 @@ export default function TyreBarcodeGenerator() {
 
 // ============ Single Barcode Preview ============
 const SingleBarcodePreview = ({ barcode, data, loading }) => {
-  const imageUrl = data?.zplCode
-    ? `https://api.labelary.com/v1/printers/6dpmm/labels/4x6/0/?zpl=${encodeURIComponent(data.zplCode)}`
-    : null;
+  const [imageUrl, setImageUrl] = useState(null);
+  const zplCode = data?.zplCode;
+
+  useEffect(() => {
+    if (!zplCode) {
+      setImageUrl(null);
+      return;
+    }
+
+    // Label size from ^PW / ^LL (dots at 8dpmm), else default 4x6 at 6dpmm
+    const pw = zplCode.match(/\^PW(\d+)/)?.[1];
+    const ll = zplCode.match(/\^LL(\d+)/)?.[1];
+    const path =
+      pw && ll
+        ? `8dpmm/labels/${(pw / 203.2).toFixed(2)}x${(ll / 203.2).toFixed(2)}`
+        : "6dpmm/labels/4x6";
+
+    let objectUrl = null;
+    let cancelled = false;
+
+    // POST instead of GET: ZPL with embedded graphics is too long for a URL
+    fetch(`https://api.labelary.com/v1/printers/${path}/0/`, {
+      method: "POST",
+      headers: {
+        Accept: "image/png",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: zplCode,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Labelary ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      })
+      .catch((error) => {
+        console.error("Label preview error:", error);
+        if (!cancelled) setImageUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [zplCode]);
 
   return (
     <motion.div className="w-full h-11/12 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg shadow-2xs flex flex-col items-center justify-between overflow-hidden">
@@ -991,6 +1053,7 @@ const ModeToggle = ({ mode, onChange }) => {
   const modes = [
     { key: "bulk", label: "Bulk" },
     { key: "input", label: "Quick Scan" },
+    { key: "labelling", label: "Labelling" },
   ];
 
   return (
