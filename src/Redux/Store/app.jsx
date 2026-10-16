@@ -47,6 +47,9 @@ import ReportMasterReducer from '../Slices/Master/ReportMasterCreation/ReportMas
 // customer masters
 import CustomerMaster from '../Slices/Master/CustomerMaster/CustomerMasterSlice'
 
+// customer labelling
+import CustomerLabellingReducer from '../Slices/Master/PI_Master/CustomerLabellingSlice'
+
 
 // Encryption config
 const encryptor = encryptTransform({
@@ -263,6 +266,7 @@ const rootReducer = combineReducers({
   reportMaster:persistedReportMasterReducer,
   customerMaster: persistedCustomerMasterReducer,
   legalEntity: persistedLegalEntityMasterReducer,
+  customerLabelling: CustomerLabellingReducer,
   productionReport: productionReportReducer,
   errorLog: errorLogReducer
 });

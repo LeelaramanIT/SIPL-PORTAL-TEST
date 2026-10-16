@@ -1,7 +1,7 @@
 import { motion, LayoutGroup } from "framer-motion";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Boxes, CircleDot, Combine, Disc3, Users } from "lucide-react";
+import { Boxes, CircleDot, Combine, Disc3, Tag, Users } from "lucide-react";
 import { hasAccess } from "../../../utils/menuAccess";
 
 const allTabs = [
@@ -32,6 +32,13 @@ const allTabs = [
     permissionKey: "Customer Process ID Creation",
     URL: "/Masters/ItemIDMaster/CustomerProcessIDCreation",
     icon: <Users className="w-3.5 h-3.5" />,
+  },
+  {
+    label: "Customer Labelling",
+    title: "Customer Labelling",
+    permissionKey: "Customer Labelling",
+    URL: "/Masters/ItemIDMaster/CustomerLabelling",
+    icon: <Tag className="w-3.5 h-3.5" />,
   },
 ];
 

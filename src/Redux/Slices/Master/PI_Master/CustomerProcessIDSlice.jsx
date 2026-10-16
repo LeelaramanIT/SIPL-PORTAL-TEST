@@ -133,7 +133,6 @@ export const getListOfItems = (payload) => async (dispatch) => {
   }
 };
 
-
 export const {
   setLoading,
   setSearch,

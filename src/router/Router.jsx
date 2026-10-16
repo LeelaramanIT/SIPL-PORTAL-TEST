@@ -40,6 +40,7 @@ import ItemIDMaster from "../pages/Masters/Item ID Master/ItemIDMaster";
 import AssemblyProcessIDCreation from "../pages/Masters/Item ID Master/Assembly ProcessID/AssemblyProcessIDCreation";
 import TyreProcessIDCreation from "../pages/Masters/Item ID Master/Tyre ProcessID/TyreProcessIDCreation";
 import RIMProcessIDCreation from "../pages/Masters/Item ID Master/RIM ProcessID/RIMProcessIDCreation";
+import CustomerLabelling from "../pages/Masters/Item ID Master/Customer Label Mapping/CustomerLabelling";
 import PDIScanForInspection from "../pages/TTS/Domostic/Dispatch/PDI/ScanForInspection/PDIScanForInspection";
 import InspectionInComplete from "../pages/TTS/Domostic/Dispatch/PDI/Inspection In Complete/InspecttionInComplete";
 import LoadingCheck from "../pages/TTS/Domostic/Dispatch/PDI/Loading Check/LoadingCheck";
@@ -177,6 +178,10 @@ export const router = createBrowserRouter([
                     // element: <CustomerProcessID />,
                     element: <CustomerProcessIDMapping />,
 
+                  },
+                  {
+                    path: "CustomerLabelling",
+                    element: <CustomerLabelling />,
                   },
                 ],
               },
