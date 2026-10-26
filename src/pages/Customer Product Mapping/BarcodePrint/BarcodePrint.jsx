@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Select, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { getAllowedModes } from "./barcodeModes";
 import {
   getCusWorkOrder,
   getItemsByWorkOrder,
@@ -52,8 +54,12 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-export default function TyreBarcodeGenerator() {
+export default function TyreBarcodeGenerator({ mode = "bulk" }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const auth = useSelector((state) => state.auth);
+  // Modes this user may switch to; each one is its own route / permission.
+  const allowedModes = useMemo(() => getAllowedModes(auth), [auth]);
   const { custWorkOrder, loading, itemsByWorkOrder } = useSelector(
     (state) => state.CIMBarcode,
   );
@@ -61,7 +67,6 @@ export default function TyreBarcodeGenerator() {
   const [messageApi, contextHolder] = message.useMessage();
   const [errorMsg, setErrorMsg] = useState("");
 
-  const [mode, setMode] = useState("bulk");
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [workOrder, setWorkOrder] = useState(null);
@@ -275,7 +280,16 @@ export default function TyreBarcodeGenerator() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <ModeToggle mode={mode} onChange={setMode} />
+              {allowedModes.length > 1 && (
+                <ModeToggle
+                  mode={mode}
+                  modes={allowedModes}
+                  onChange={(key) => {
+                    const target = allowedModes.find((m) => m.key === key);
+                    if (target) navigate(target.path);
+                  }}
+                />
+              )}
               <button
                 onClick={clearAll}
                 className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--primary)] transition-colors"
@@ -1049,13 +1063,7 @@ const ItemsTable = ({ items, selected, onSelect }) => {
 };
 
 // ============ Mode Toggle ============
-const ModeToggle = ({ mode, onChange }) => {
-  const modes = [
-    { key: "bulk", label: "Bulk" },
-    { key: "input", label: "Quick Scan" },
-    { key: "labelling", label: "Labelling" },
-  ];
-
+const ModeToggle = ({ mode, modes, onChange }) => {
   return (
     <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
       {modes.map((m) => {

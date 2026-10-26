@@ -459,9 +459,12 @@ const SideBar = () => {
       label: "Customer Item Management",
       children: [
         {
-          key: "customer-item-management/barcode-print",
+          // Visible to anyone holding a mode permission nested under this key
+          // (…/barcode-print/bulk | quick-scan | labelling); the mode URLs
+          // themselves are hidden permissions with no sidebar item.
+          key: "/customer-item-management/barcode-print",
           icon: <MdOutlineQrCode />,
-          label: "Barcode Printing",
+          label: "Barcode Print",
         },
       ],
     },
@@ -663,7 +666,11 @@ const SideBar = () => {
           <Menu
             theme={isDark ? "dark" : "light"}
             mode="inline"
-            selectedKeys={[location.pathname]}
+            selectedKeys={[
+              location.pathname.startsWith("/customer-item-management/barcode-print")
+                ? "/customer-item-management/barcode-print"
+                : location.pathname,
+            ]}
             items={filteredMenu}
             onClick={handleClick}
             inlineCollapsed={collapsed}

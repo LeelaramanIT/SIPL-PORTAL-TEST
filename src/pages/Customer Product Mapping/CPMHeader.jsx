@@ -17,6 +17,7 @@ import SearchBar from "../../components/SearchBar";
 import { useState, useRef, useEffect } from "react";
 import { setSearch } from "../../Redux/Slices/Customer_Item_Management/CIMMasterSlice";
 import { IoMdBarcode } from "react-icons/io";
+import { BARCODE_PRINT_BASE, getAllowedModes } from "./BarcodePrint/barcodeModes";
 
 function CPMHeader() {
   const navigate = useNavigate();
@@ -26,36 +27,29 @@ function CPMHeader() {
   const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const { menus, roles } = useSelector((state) => state.auth);
+  const auth = useSelector((state) => state.auth);
   const { search, inspectionType } = useSelector(
     (state) => state.CIMMaster
   );
 
-  const hasPermission = (menus, requiredMenuNameOrUrl) => {
-    if (roles?.toLowerCase() === "admin") return true;
-    if (!menus || !Array.isArray(menus)) return false;
-    const normalized = requiredMenuNameOrUrl.toLowerCase().trim();
-    return menus.some(
-      (menu) =>
-        menu.MenuName?.toLowerCase().trim() === normalized ||
-        menu.MenuUrl?.toLowerCase().trim() === normalized
-    );
-  };
-
   const type = custType === "Domestic" ? "Domestic" : "International";
-  const basePath = `/customer-item-management`;
 
+  // The tab is shown when the user can open at least one barcode print mode.
+  // Its path is the bare URL, which redirects to the first allowed mode.
   const allTabs = [
     {
-      label: "Barcode Printing",
-      permissionKey: "barcode-print",
-      path: `${basePath}/barcode-print`,
+      label: "Barcode Print",
+      path: BARCODE_PRINT_BASE,
       icon: <IoMdBarcode className="w-3.5 h-3.5 flex-shrink-0" />,
+      hasAccess: () => getAllowedModes(auth).length > 0,
     }
   ];
 
-  const visibleTabs = allTabs.filter((tab) => hasPermission(menus, tab.path));
-  const activeTab = visibleTabs.find((tab) => location.pathname === tab.path);
+  const isTabActive = (tab) =>
+    location.pathname === tab.path || location.pathname.startsWith(`${tab.path}/`);
+
+  const visibleTabs = allTabs.filter((tab) => tab.hasAccess());
+  const activeTab = visibleTabs.find(isTabActive);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -201,7 +195,7 @@ function CPMHeader() {
                   className="mt-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden z-50 relative"
                 >
                   {visibleTabs.map((tab, i) => {
-                    const isActive = location.pathname === tab.path;
+                    const isActive = isTabActive(tab);
                     return (
                       <button
                         key={tab.path}
@@ -234,7 +228,7 @@ function CPMHeader() {
           {/* Desktop: Horizontal scrollable tabs */}
           <div className="hidden md:flex gap-5 px-5 mt-3 overflow-x-auto scrollbar-hide">
             {visibleTabs.map((tab) => {
-              const isActive = location.pathname === tab.path;
+              const isActive = isTabActive(tab);
               return (
                 <button
                   key={tab.path}

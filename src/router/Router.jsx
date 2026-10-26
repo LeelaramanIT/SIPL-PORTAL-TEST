@@ -68,6 +68,9 @@ import TTSPowerBIReports from "../pages/Reports/TTSPowerBIReports";
 import SaleRepostMaster from "../pages/Reports/SaleReports/SaleRepostMaster";
 import CPMMaster from "../pages/Customer Product Mapping/CPMMaster";
 import TyreBarcodeGenerator from "../pages/Customer Product Mapping/BarcodePrint/BarcodePrint";
+import BarcodePrintIndex from "../pages/Customer Product Mapping/BarcodePrint/BarcodePrintIndex";
+import RequireMenuAccess from "../components/ProtectedRoutes/RequireMenuAccess";
+import { BARCODE_MODES } from "../pages/Customer Product Mapping/BarcodePrint/barcodeModes";
 import TyreSalesDashboard from "../pages/Reports/SaleReports/SaleReports";
 import UserCreation from "../pages/MenuAccess/UserMaster/UserCreation";
 import ProductionDashboard from "../pages/Reports/ProductionReports/Production";
@@ -539,10 +542,17 @@ export const router = createBrowserRouter([
                 index: true, // ✅ default route
                 element: <Navigate to="barcode-print" />, // 👈 choose your default page
               },
-              {
-                path: "barcode-print",
-                element: <TyreBarcodeGenerator />,
-              },
+              // Bare URL redirects to the first mode the user can access.
+              { path: "barcode-print", element: <BarcodePrintIndex /> },
+              // One route per mode; each mode URL is its own menu permission.
+              ...BARCODE_MODES.map((m) => ({
+                path: `barcode-print/${m.segment}`,
+                element: (
+                  <RequireMenuAccess permission={m.path}>
+                    <TyreBarcodeGenerator mode={m.key} />
+                  </RequireMenuAccess>
+                ),
+              })),
             ],
           },
           {
