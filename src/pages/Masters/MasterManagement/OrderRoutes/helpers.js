@@ -112,6 +112,26 @@ export function toCreateWorkflowBody(route, statusById) {
   };
 }
 
+// A step that is not on the server yet: no ruleStatusId from the GET and not
+// sent in an earlier save of this session.
+export const isUnsavedStep = (s) => !s.ruleStatusId && !s.persisted;
+
+// Body for POST WorkFlow/insert-workflow-status: the steps added to a saved
+// route, each with its position in the timeline (wayPointOrderID).
+export function toInsertStatusBody(route, statusById) {
+  return {
+    ruleHeaderID: route.id,
+    workFlows: route.steps
+      .map((s, i) => ({ step: s, wayPointOrderID: i + 1 }))
+      .filter(({ step }) => isUnsavedStep(step))
+      .map(({ step, wayPointOrderID }) => ({
+        statusName: statusById.get(step.statusId)?.text ?? "",
+        statusMasterID: step.statusId,
+        wayPointOrderID,
+      })),
+  };
+}
+
 // Problems that block saving.
 export function validateRoute(route) {
   const errors = [];

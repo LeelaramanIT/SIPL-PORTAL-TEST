@@ -21,6 +21,7 @@ import {
   routeSummary,
   stepTitle,
   toCreateWorkflowBody,
+  toInsertStatusBody,
   uid,
   usedStatusIds,
   validateRoute,
@@ -88,8 +89,11 @@ const OrderRoutes = () => {
   }, [dirty]);
 
   useEffect(() => {
-    dispatch(getOrderRouteMasters()).catch((e) => toast.error(e.message));
-    dispatch(getOrderRoutes()).catch((e) => toast.error(`Could not load order routes: ${e.message}`));
+    // Statuses first: the route list uses them to tell Sales Order from Inward.
+    dispatch(getOrderRouteMasters())
+      .catch((e) => toast.error(e.message))
+      .then(() => dispatch(getOrderRoutes()))
+      .catch((e) => toast.error(`Could not load order routes: ${e.message}`));
   }, [dispatch]);
 
   // Refresh from the store but keep routes with unsaved edits.
@@ -201,11 +205,11 @@ const OrderRoutes = () => {
       toast.error(errors.slice(0, 3).join("\n") + (errors.length > 3 ? `\n+${errors.length - 3} more` : ""));
       return;
     }
-    const body = toCreateWorkflowBody(route, statusById);
     const oldId = route.id;
     const isNew = isNewRouteId(oldId);
-    dispatch(saveOrderRoute(route, body, isNew))
-      .then(({ route: saved, sentToServer }) => {
+    const bodies = { create: toCreateWorkflowBody(route, statusById), insert: toInsertStatusBody(route, statusById) };
+    dispatch(saveOrderRoute(route, bodies, isNew))
+      .then(({ route: saved, sentToServer, insertedCount, notSaved }) => {
         setRoutes((prev) => {
           const i = prev.findIndex((r) => r.id === oldId);
           const rest = prev.filter((r) => r.id !== oldId && r.id !== saved.id);
@@ -219,14 +223,20 @@ const OrderRoutes = () => {
           return next;
         });
         setCurrentId(saved.id);
-        if (sentToServer) toast.success(isNew ? "Order route created" : "Order route saved");
-        else
-          toast(
-            isNew
-              ? "Saved for this session only: creating on the server is switched off"
-              : "Saved for this session only: there is no update API yet, so changes to an existing route aren't sent to the server",
-            { icon: "ℹ️", duration: 6000 },
-          );
+        if (isNew) {
+          if (sentToServer) toast.success("Order route created");
+          else toast("Saved for this session only: creating on the server is switched off", { icon: "ℹ️", duration: 6000 });
+          return;
+        }
+        if (sentToServer) toast.success(`Added ${insertedCount} step${insertedCount === 1 ? "" : "s"} to the route on the server`);
+        if (notSaved.length) {
+          toast(`Not saved on the server (no API yet): ${notSaved.join(", ")}. These changes last until you reload.`, {
+            icon: "ℹ️",
+            duration: 8000,
+          });
+        } else if (!sentToServer) {
+          toast("Nothing new to send. Step types, owners and SLAs are kept on this page only for now.", { icon: "ℹ️", duration: 6000 });
+        }
       })
       .catch((e) => toast.error(`Could not save: ${e.message}`));
   };
@@ -253,7 +263,8 @@ const OrderRoutes = () => {
 
   const duplicateStep = () => {
     const i = route.steps.findIndex((s) => s.id === selection);
-    const copy = { ...clone(route.steps[i]), id: uid("s_") };
+    // A copy is a new step for the server: drop the original's server ids.
+    const copy = { ...clone(route.steps[i]), id: uid("s_"), ruleStatusId: undefined, persisted: false };
     copy.sendBack = (copy.sendBack || []).map((b) => ({ ...b, id: uid("b_") }));
     updateRoute((r) => r.steps.splice(i + 1, 0, copy));
     setSelection(copy.id);
@@ -377,7 +388,7 @@ const OrderRoutes = () => {
               </button>
             </div>
 
-            {(isNewRouteId(route.id) ? mock.create : mock.update) || mock.statuses ? (
+            {(isNewRouteId(route.id) ? mock.create : true) ? (
               <p className="m-0 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                 <Info className="mt-0.5 h-3.5 w-3.5 flex-none" />
                 <span>
@@ -385,11 +396,9 @@ const OrderRoutes = () => {
                     ? mock.create
                       ? "Creating on the server is switched off, so this route lasts only until you reload. "
                       : ""
-                    : mock.update
-                      ? "This route is saved on the server. There is no update API yet, so changes here last only until you reload. "
-                      : ""}
-                  {mock.statuses ? "The status list is from the sample status master until its API is connected." : ""}
-                </span>
+                    : mock.insertSteps
+                      ? "This route is saved on the server. Changes here last only until you reload. "
+                      : "This route is saved on the server. Save sends the steps you add; other changes (name, start rules, reorder, remove) have no API yet and last until you reload. "}                </span>
               </p>
             ) : null}
 

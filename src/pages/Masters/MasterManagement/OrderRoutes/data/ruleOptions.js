@@ -2,8 +2,8 @@
 // (entityID, exportAuthorizeAddressID, orderTypeID, customerCode, shipID, billID).
 // null means "any" and is sent as 0.
 //
-// Entities and customers (with their addresses) come from the same API the
-// Order Entry screen uses: GET /OrderProcess/customer-master.
+// All option lists (and the status master) come from one call:
+// GET WorkFlow/workflow-details — see mapWorkflowDetails below.
 
 export const emptyRules = () => ({
   entityId: null,
@@ -14,9 +14,7 @@ export const emptyRules = () => ({
   billId: null,
 });
 
-// Order Entry has no order-type master; its save sends orderTypeID with 1 as
-// the default. These ids follow the order of ORDER_TYPES in SaleOrderEntry.jsx.
-// TODO: confirm the ids with the backend (or replace with an order-type API).
+// Fallback only, used if workflow-details returns no orderTypes.
 export const ORDER_TYPE_OPTIONS = [
   { id: 1, name: "Standard Sales Order" },
   { id: 2, name: "Sales Agreement" },
@@ -25,73 +23,128 @@ export const ORDER_TYPE_OPTIONS = [
   { id: 5, name: "Inter-Plant Transfer" },
 ];
 
-const joinParts = (...parts) => parts.filter(Boolean).join(", ");
+const joinParts = (...parts) =>
+  parts
+    .map((p) => (typeof p === "string" ? p.trim() : p))
+    .filter(Boolean)
+    .join(", ");
 
-// Maps GET /OrderProcess/customer-master → { entities, customers }.
-// Entity:   { entityID, entityCode, entityName, countryCode, addresses: [{ id, addressType, exporterAddressFormatted }] }
-// Customer: { custID, customerCode, customerName, addresses: [{ id, addressType (1 ship / 2 bill), addressName, city, country, billID }] }
-export function mapCustomerMaster(data = {}) {
-  const entities = (data.companyEntities || []).map((e) => ({
-    id: Number(e.entityID),
-    code: e.entityCode || e.entityShortName || "",
-    name: e.entityName || "",
-    meta: e.countryCode || "",
-    addresses: (e.addresses || []).map((a) => ({
-      id: Number(a.id),
-      label: a.exporterAddressFormatted || joinParts(a.addressName, a.city, a.country) || `Address ${a.id}`,
-      type: a.addressType ?? "",
-    })),
+// First value that is set, as a number; null when none is.
+const num = (...vals) => {
+  const v = vals.find((x) => x !== undefined && x !== null && x !== "");
+  return v === undefined ? null : Number(v);
+};
+
+// Maps `data` of GET WorkFlow/workflow-details →
+//   { entities, exportAddresses, orderTypes, customers, shipAddresses, billAddresses }
+//
+//   legalEntities:        { legalEntityId, entityCode, legalName, shortName }
+//   legalEntityAddresses: { legalEntityAddressId, addressName, address }
+//   orderTypes:           { orderTypeID, orderTypeName }
+//   customers:            { customerID, custCode, custFullName }
+//   shipAddresses:        empty so far; read defensively (id, customer id,
+//                         name, linked bill id, addressType 2 = bill).
+//
+// An address carries its entity / customer id when the API sends one. Without
+// it, the address is offered whichever entity / customer is picked.
+export function mapWorkflowDetails(data = {}) {
+  const entities = (data.legalEntities || []).map((e) => ({
+    id: Number(e.legalEntityId),
+    code: e.shortName || e.entityCode || "",
+    name: e.legalName || "",
+    meta: e.entityCode || "",
   }));
 
-  const customers = (data.customers || []).map((c) => {
-    const addresses = c.addresses || [];
-    const isBill = (a) => Number(a.addressType) === 2 || a.addressType === "BILL_TO";
-    const label = (a) => joinParts(a.addressName, a.city, a.stateName, a.country) || `Address ${a.id}`;
+  const exportAddresses = (data.legalEntityAddresses || []).map((a) => {
+    const id = Number(a.legalEntityAddressId ?? a.id);
     return {
-      id: Number(c.custID),
-      code: c.customerCode ?? c.custID,
-      name: c.customerName || "",
-      ship: addresses.filter((a) => !isBill(a)).map((a) => ({ id: Number(a.id), label: label(a), billId: a.billID ?? null })),
-      bill: addresses.filter(isBill).map((a) => ({ id: Number(a.id), label: label(a) })),
+      id,
+      label: joinParts(a.addressName, a.address) || `Address ${id}`,
+      entityId: num(a.legalEntityId, a.legalEntityID, a.entityId),
     };
   });
 
-  return { entities, customers, orderTypes: ORDER_TYPE_OPTIONS };
+  const orderTypes = (data.orderTypes || []).map((t) => ({
+    id: Number(t.orderTypeID ?? t.id),
+    name: t.orderTypeName || t.name || "",
+  }));
+
+  const customers = (data.customers || []).map((c) => ({
+    id: Number(c.customerID ?? c.custID),
+    code: c.custCode ?? c.customerCode ?? "",
+    name: c.custFullName || c.customerName || "",
+  }));
+
+  const addresses = (data.shipAddresses || []).map((a) => {
+    const id = Number(a.shipAddressId ?? a.shipAddressID ?? a.addressId ?? a.id);
+    return {
+      id,
+      label: joinParts(a.addressName, a.address, a.city, a.stateName, a.country) || `Address ${id}`,
+      customerId: num(a.customerID, a.customerId, a.custID),
+      billId: num(a.billID, a.billId, a.billAddressId),
+      isBill: Number(a.addressType) === 2 || a.addressType === "BILL_TO",
+    };
+  });
+
+  return {
+    entities,
+    exportAddresses,
+    orderTypes: orderTypes.length ? orderTypes : ORDER_TYPE_OPTIONS,
+    customers,
+    shipAddresses: addresses.filter((a) => !a.isBill),
+    billAddresses: addresses.filter((a) => a.isBill),
+  };
 }
 
-// Used only when the customer-master API cannot be reached.
+// Addresses that apply to the chosen entity / customer. An address without an
+// owner id is offered for all.
+const ownedBy = (list, key, ownerId) => (list || []).filter((a) => a[key] == null || ownerId == null || a[key] === ownerId);
+export const exportAddressesFor = (options, entityId) => ownedBy(options.exportAddresses, "entityId", entityId);
+export const shipAddressesFor = (options, customerId) => ownedBy(options.shipAddresses, "customerId", customerId);
+export const billAddressesFor = (options, customerId) => ownedBy(options.billAddresses, "customerId", customerId);
+
+// Used only when workflow-details cannot be reached.
 export const SAMPLE_RULE_OPTIONS = {
   entities: [
-    { id: 1, code: "SIPL", name: "Sundaram Industries Private Limited", meta: "SI001 · India", addresses: [] },
-    { id: 2, code: "SLTL", name: "Sundaram Lanka Tyres Limited", meta: "SL001 · Sri Lanka", addresses: [] },
-    { id: 3, code: "SITL", name: "Sun Industrial Tyres Limited", meta: "SI002 · Sri Lanka", addresses: [] },
-    { id: 4, code: "STA", name: "Sun TWS America", meta: "ST002 · America", addresses: [] },
+    { id: 1, code: "SIPL", name: "SUNDARAM INDUSTRIES PRIVATE LIMITED", meta: "SI001" },
+    { id: 2, code: "SLTL", name: "SUNDARAM LANKA TYRES LIMITED", meta: "SL001" },
+    { id: 3, code: "SITL", name: "SUN INDUSTRIAL TYRES LIMITED", meta: "SI002" },
+    { id: 4, code: "STA", name: "SUN TWS AMERICA", meta: "ST002" },
   ],
-  customers: [],
+  exportAddresses: [],
   orderTypes: ORDER_TYPE_OPTIONS,
+  customers: [],
+  shipAddresses: [],
+  billAddresses: [],
 };
 
 // Readable labels for the current rule values (for the Start card).
 export function describeRules(rules, options) {
-  const entity = options.entities.find((e) => e.id === rules.entityId);
-  const customer = options.customers.find((c) => c.id === rules.customerId);
+  const find = (list, id) => (list || []).find((x) => x.id === id);
+  const entity = find(options.entities, rules.entityId);
+  const customer = find(options.customers, rules.customerId);
   const out = [];
   if (rules.entityId != null) out.push({ key: "entity", label: "Entity is", value: entity ? entity.code || entity.name : `#${rules.entityId}` });
   if (rules.exportAddressId != null) {
-    const a = entity?.addresses.find((x) => x.id === rules.exportAddressId);
+    const a = find(options.exportAddresses, rules.exportAddressId);
     out.push({ key: "exportAddress", label: "Export address is", value: a ? a.label : `#${rules.exportAddressId}` });
   }
   if (rules.orderTypeId != null) {
-    const t = options.orderTypes.find((x) => x.id === rules.orderTypeId);
+    const t = find(options.orderTypes, rules.orderTypeId);
     out.push({ key: "orderType", label: "Order type is", value: t ? t.name : `#${rules.orderTypeId}` });
   }
-  if (rules.customerId != null) out.push({ key: "customer", label: "Customer is", value: customer ? customer.name : `#${rules.customerId}` });
+  if (rules.customerId != null)
+    out.push({
+      key: "customer",
+      label: "Customer is",
+      value: customer ? `${customer.name}${customer.code ? ` (${customer.code})` : ""}` : `#${rules.customerId}`,
+    });
   if (rules.shipId != null) {
-    const a = customer?.ship.find((x) => x.id === rules.shipId);
+    const a = find(options.shipAddresses, rules.shipId);
     out.push({ key: "ship", label: "Ship-to is", value: a ? a.label : `#${rules.shipId}` });
   }
   if (rules.billId != null) {
-    const a = customer?.bill.find((x) => x.id === rules.billId);
+    const a = find(options.billAddresses, rules.billId);
     out.push({ key: "bill", label: "Bill-to is", value: a ? a.label : `#${rules.billId}` });
   }
   return out;

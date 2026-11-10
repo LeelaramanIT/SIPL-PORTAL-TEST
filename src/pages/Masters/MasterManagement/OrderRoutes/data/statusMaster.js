@@ -1,6 +1,6 @@
 // Order status master (TypeID 1 = Sales Order, TypeID 2 = Inward).
-// SAMPLE_STATUSES is used until the status API is connected — see
-// ORDER_ROUTE_ENDPOINTS.masters in OrderRoutesSlice.
+// Loaded from GET WorkFlow/workflow-details (orderStatuses); SAMPLE_STATUSES
+// is the fallback when that call fails.
 
 export const STATUS_TYPES = { 1: "Sales Order", 2: "Inward" };
 
@@ -52,17 +52,21 @@ export const prettyStatus = (text) =>
 
 // Accepts rows from the API in either casing (ID/StatusText/TypeID or
 // id/statusText/typeId) as well as the [id, text, typeId] tuples below.
+// WorkFlow/workflow-details sends only { id, statusText }; when TypeID is
+// missing it is taken from the known master below (46–50 = Inward), else 1.
 export function normalizeStatuses(rows = []) {
+  const knownType = (id) => SAMPLE_ROWS.find((row) => row[0] === id)?.[2] ?? 1;
   return rows
-    .map((r) =>
-      Array.isArray(r)
-        ? { id: r[0], text: r[1], typeId: r[2] }
-        : {
-            id: Number(r.id ?? r.ID ?? r.statusId ?? r.StatusID),
-            text: String(r.statusText ?? r.StatusText ?? r.text ?? "").trim().toUpperCase(),
-            typeId: Number(r.typeId ?? r.TypeID ?? r.typeID ?? 1),
-          },
-    )
+    .map((r) => {
+      if (Array.isArray(r)) return { id: r[0], text: r[1], typeId: r[2] };
+      const id = Number(r.id ?? r.ID ?? r.statusId ?? r.StatusID);
+      const type = r.typeId ?? r.TypeID ?? r.typeID;
+      return {
+        id,
+        text: String(r.statusText ?? r.StatusText ?? r.text ?? "").trim().toUpperCase(),
+        typeId: type == null ? knownType(id) : Number(type),
+      };
+    })
     .filter((s) => s.id && s.text)
     .map((s) => ({ ...s, category: categorizeStatus(s.text, s.typeId) }));
 }

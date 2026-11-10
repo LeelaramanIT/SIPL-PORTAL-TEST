@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { emptyRules } from "../data/ruleOptions";
+import { billAddressesFor, emptyRules, exportAddressesFor, shipAddressesFor } from "../data/ruleOptions";
 import { FieldHeader, InspectorShell, inputClass } from "./InspectorShell";
 
 const toId = (v) => (v === "" ? null : Number(v));
@@ -20,12 +20,22 @@ const SingleSelect = ({ id, value, onChange, options, anyLabel = "Any", disabled
 const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) => {
   const [customerQuery, setCustomerQuery] = useState("");
 
-  const entity = options.entities.find((e) => e.id === rules.entityId);
   const customer = options.customers.find((c) => c.id === rules.customerId);
+  const exportAddresses = exportAddressesFor(options, rules.entityId);
+  const shipAddresses = shipAddressesFor(options, rules.customerId);
+  const billAddresses = billAddressesFor(options, rules.customerId);
+  // Changing the entity / customer keeps an address only if it still applies.
+  const keepIf = (list, id) => (id != null && list.some((a) => a.id === id) ? id : null);
   const q = customerQuery.trim().toLowerCase();
   const customers = options.customers.filter((c) => !q || `${c.name} ${c.code}`.toLowerCase().includes(q)).slice(0, 200);
 
   const set = (patch) => onChange((r) => Object.assign(r, patch));
+  const pickCustomer = (id) =>
+    set({
+      customerId: id,
+      shipId: keepIf(shipAddressesFor(options, id), rules.shipId),
+      billId: keepIf(billAddressesFor(options, id), rules.billId),
+    });
 
   return (
     <InspectorShell
@@ -60,23 +70,23 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
         Entity & export address
       </p>
       <div className="flex flex-col gap-1.5">
-        <FieldHeader title="Entity" hint="Company that books the order." onClear={() => set({ entityId: null, exportAddressId: null })} />
+        <FieldHeader title="Entity" hint="Legal entity that books the order." onClear={() => set({ entityId: null })} />
         <SingleSelect
           id="rule-entity"
           value={rules.entityId}
-          onChange={(v) => set({ entityId: v, exportAddressId: null })}
+          onChange={(v) => set({ entityId: v, exportAddressId: keepIf(exportAddressesFor(options, v), rules.exportAddressId) })}
           options={options.entities.map((e) => ({ id: e.id, label: `${e.code ? `${e.code} · ` : ""}${e.name}${e.meta ? ` (${e.meta})` : ""}` }))}
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldHeader title="Export authorised address" hint="Exporter address registered for the entity." onClear={() => set({ exportAddressId: null })} />
+        <FieldHeader title="Export authorised address" hint="Registered address the export is authorised from." onClear={() => set({ exportAddressId: null })} />
         <SingleSelect
           id="rule-export-address"
           value={rules.exportAddressId}
           onChange={(v) => set({ exportAddressId: v })}
-          disabled={!entity}
-          anyLabel={entity ? (entity.addresses.length ? "Any" : "No addresses for this entity") : "Pick an entity first"}
-          options={(entity?.addresses || []).map((a) => ({ id: a.id, label: a.type ? `${a.type} · ${a.label}` : a.label }))}
+          disabled={!exportAddresses.length}
+          anyLabel={exportAddresses.length ? "Any" : "No export addresses loaded"}
+          options={exportAddresses.map((a) => ({ id: a.id, label: a.label }))}
         />
       </div>
 
@@ -100,7 +110,7 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
         <FieldHeader
           title="Customer"
           count={customer ? customer.name : "Any"}
-          onClear={() => set({ customerId: null, shipId: null, billId: null })}
+          onClear={() => set({ customerId: null })}
         />
         <input
           type="search"
@@ -111,7 +121,7 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
         />
         <div role="radiogroup" aria-label="Customer" className="custom-scrollbar max-h-48 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
           <label className="flex cursor-pointer items-center gap-2.5 border-b border-slate-100 px-2.5 py-1.5 text-[13px] hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800">
-            <input type="radio" name="rule-customer" checked={rules.customerId == null} onChange={() => set({ customerId: null, shipId: null, billId: null })} className="accent-indigo-600" />
+            <input type="radio" name="rule-customer" checked={rules.customerId == null} onChange={() => pickCustomer(null)} className="accent-indigo-600" />
             Any customer
           </label>
           {customers.map((c) => (
@@ -123,7 +133,7 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
                 type="radio"
                 name="rule-customer"
                 checked={rules.customerId === c.id}
-                onChange={() => set({ customerId: c.id, shipId: null, billId: null })}
+                onChange={() => pickCustomer(c.id)}
                 className="accent-indigo-600"
               />
               <span className="min-w-0 truncate">{c.name}</span>
@@ -131,7 +141,7 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
             </label>
           ))}
           {options.customers.length === 0 && (
-            <p className="m-2 text-[12px] text-slate-500">Customer list not loaded. Check the customer-master API.</p>
+            <p className="m-2 text-[12px] text-slate-500">Customer list not loaded. Check WorkFlow/workflow-details.</p>
           )}
         </div>
       </div>
@@ -141,14 +151,14 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
           <SingleSelect
             id="rule-ship"
             value={rules.shipId}
-            disabled={!customer}
-            anyLabel={customer ? "Any" : "Pick a customer first"}
+            disabled={!shipAddresses.length}
+            anyLabel={shipAddresses.length ? "Any" : "No ship-to addresses loaded"}
             onChange={(v) => {
               // Pre-fill the bill-to address linked to this ship-to address.
-              const linked = customer?.ship.find((a) => a.id === v)?.billId;
-              set({ shipId: v, ...(v != null && linked ? { billId: Number(linked) } : {}) });
+              const linked = shipAddresses.find((a) => a.id === v)?.billId;
+              set({ shipId: v, ...(v != null && linked ? { billId: linked } : {}) });
             }}
-            options={(customer?.ship || []).map((a) => ({ id: a.id, label: a.label }))}
+            options={shipAddresses.map((a) => ({ id: a.id, label: a.label }))}
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -156,10 +166,10 @@ const StartRulesInspector = ({ routeName, rules, options, onChange, onClose }) =
           <SingleSelect
             id="rule-bill"
             value={rules.billId}
-            disabled={!customer}
-            anyLabel={customer ? "Any" : "Pick a customer first"}
+            disabled={!billAddresses.length}
+            anyLabel={billAddresses.length ? "Any" : "No bill-to addresses loaded"}
             onChange={(v) => set({ billId: v })}
-            options={(customer?.bill || []).map((a) => ({ id: a.id, label: a.label }))}
+            options={billAddresses.map((a) => ({ id: a.id, label: a.label }))}
           />
         </label>
       </div>

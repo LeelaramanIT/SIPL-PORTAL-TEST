@@ -4,7 +4,7 @@ import { SAMPLE_STATUSES, normalizeStatuses } from "../../../../pages/Masters/Ma
 import {
   SAMPLE_RULE_OPTIONS,
   emptyRules,
-  mapCustomerMaster,
+  mapWorkflowDetails,
 } from "../../../../pages/Masters/MasterManagement/OrderRoutes/data/ruleOptions";
 import { buildSampleRoutes } from "../../../../pages/Masters/MasterManagement/OrderRoutes/data/sampleRoutes";
 
@@ -16,20 +16,18 @@ import { buildSampleRoutes } from "../../../../pages/Masters/MasterManagement/Or
 // Paths are relative to VITE_BASE_URL (e.g. http://localhost:5300/api/).
 // ─────────────────────────────────────────────────────────────────────────────
 export const MOCK = {
-  statuses: true, // TODO: status master API (ID, StatusText, TypeID)
-  ruleOptions: false, // live: entities + customers from /OrderProcess/customer-master
+  masters: false, // live: GET WorkFlow/workflow-details (statuses + all Start Rules lists)
   list: false, // live: GET WorkFlow/workflow-rule-status
   create: false, // live: POST WorkFlow/create-workflow
-  update: true, // TODO: no update API yet — edits to saved routes stay in memory
+  insertSteps: false, // live: POST WorkFlow/insert-workflow-status (steps added to a saved route)
   remove: true, // TODO: no delete API yet
 };
 
 export const ORDER_ROUTE_ENDPOINTS = {
-  statuses: "WorkFlow/status-master", // TODO: real path
-  ruleOptions: "/OrderProcess/customer-master",
+  masters: "WorkFlow/workflow-details",
   list: "WorkFlow/workflow-rule-status",
   create: "WorkFlow/create-workflow",
-  update: (routeId) => `WorkFlow/update-workflow/${routeId}`, // TODO: real path
+  insertSteps: "WorkFlow/insert-workflow-status",
   remove: (routeId) => `WorkFlow/delete-workflow/${routeId}`, // TODO: real path
 };
 
@@ -134,34 +132,23 @@ const orderRoutesSlice = createSlice({
 export const { setRoutesLoading, setRoutes, setStatuses, setRuleOptions, setSaving, upsertRoute, removeRoute, setRoutesError } =
   orderRoutesSlice.actions;
 
-// GET: status master + Start Rules option lists (entities, customers, addresses)
+// GET WorkFlow/workflow-details: status master + every Start Rules list
+// (legal entities, export addresses, order types, customers, ship addresses).
+// Lists that come back empty keep the sample fallback.
 export const getOrderRouteMasters = () => async (dispatch) => {
-  const failures = [];
-
-  if (!MOCK.statuses) {
-    try {
-      const res = await api.get(ORDER_ROUTE_ENDPOINTS.statuses);
-      ensureSuccess(res, "Could not load the status master.");
-      dispatch(setStatuses(normalizeStatuses(res.data?.data || [])));
-    } catch (error) {
-      console.error("Failed to fetch status master:", error);
-      failures.push(`statuses (${errorMessage(error)})`);
-    }
+  if (MOCK.masters) return;
+  try {
+    const res = await api.get(ORDER_ROUTE_ENDPOINTS.masters);
+    ensureSuccess(res, "Could not load the workflow details.");
+    const data = res.data?.data || {};
+    const statuses = normalizeStatuses(data.orderStatuses || []);
+    if (statuses.length) dispatch(setStatuses(statuses));
+    const mapped = mapWorkflowDetails(data);
+    dispatch(setRuleOptions({ ...mapped, entities: mapped.entities.length ? mapped.entities : SAMPLE_RULE_OPTIONS.entities }));
+  } catch (error) {
+    console.error("Failed to fetch workflow details:", error);
+    return Promise.reject(new Error(`Could not load statuses, entities and customers (${errorMessage(error)})`));
   }
-
-  if (!MOCK.ruleOptions) {
-    try {
-      const res = await api.get(ORDER_ROUTE_ENDPOINTS.ruleOptions);
-      ensureSuccess(res, "Could not load entities and customers.");
-      const mapped = mapCustomerMaster(res.data?.data);
-      dispatch(setRuleOptions({ ...mapped, entities: mapped.entities.length ? mapped.entities : SAMPLE_RULE_OPTIONS.entities }));
-    } catch (error) {
-      console.error("Failed to fetch entities and customers:", error);
-      failures.push(`entities and customers (${errorMessage(error)})`);
-    }
-  }
-
-  if (failures.length) return Promise.reject(new Error(`Could not load ${failures.join(" and ")}`));
 };
 
 const fetchRoutes = async (getState) => {
@@ -188,56 +175,116 @@ export const getOrderRoutes = () => async (dispatch, getState) => {
   }
 };
 
-// Save one route. New routes go to POST create-workflow with `body` from
-// toCreateWorkflowBody(); there is no update API yet, so edits to an existing
-// route are kept in memory only.
-// Resolves with { route, sentToServer }.
-export const saveOrderRoute = (route, body, isNew) => async (dispatch, getState) => {
+// Save one route.
+// - New route: POST create-workflow with bodies.create (toCreateWorkflowBody).
+// - Saved route: steps added since the last save go to POST
+//   insert-workflow-status with bodies.insert (toInsertStatusBody). There is
+//   no API yet for other edits (name, start rules, reorder, remove, change a
+//   step's status); those stay in memory and are listed in `notSaved`.
+// Resolves with { route, sentToServer, insertedCount, notSaved }.
+export const saveOrderRoute = (route, bodies, isNew) => async (dispatch, getState) => {
   dispatch(setSaving(true));
   try {
-    if (!isNew || MOCK.create) {
-      if (!isNew && !MOCK.update) {
-        const res = await api.put(ORDER_ROUTE_ENDPOINTS.update(route.id), body);
-        ensureSuccess(res, "The server could not update the workflow.");
-        dispatch(upsertRoute({ route }));
-        return { route, sentToServer: true };
+    if (isNew) {
+      if (MOCK.create) {
+        const saved = { ...route, id: `route_${Date.now()}` };
+        dispatch(upsertRoute({ route: saved, replaceId: route.id }));
+        return { route: saved, sentToServer: false, insertedCount: 0, notSaved: [] };
       }
-      const saved = isNew ? { ...route, id: `route_${Date.now()}` } : route;
-      dispatch(upsertRoute({ route: saved, replaceId: route.id }));
-      return { route: saved, sentToServer: false };
+      const before = new Set(getState().orderRoutes.routes.map((r) => r.id));
+      const res = await api.post(ORDER_ROUTE_ENDPOINTS.create, bodies.create);
+      ensureSuccess(res, "The server could not create the workflow.");
+
+      // The create response shape is not fixed yet: use its ruleHeaderID when
+      // present, otherwise reload the list and pick the workflow that is new.
+      let newId = res.data?.data?.ruleHeaderID ?? res.data?.ruleHeaderID ?? null;
+      let serverRoute = null;
+      if (!MOCK.list) {
+        try {
+          const routes = await fetchRoutes(getState);
+          dispatch(setRoutes(routes));
+          if (newId == null) {
+            const added = routes.filter((r) => !before.has(r.id));
+            newId = (added.find((r) => r.name === bodies.create.workflowDescription) || added[added.length - 1])?.id ?? null;
+          }
+          serverRoute = routes.find((r) => r.id === newId) || null;
+        } catch (error) {
+          console.error("Created, but reloading the workflows failed:", error);
+        }
+      }
+      const saved = serverRoute
+        ? mergeServerRoute(serverRoute, route)
+        : { ...route, id: newId ?? `route_${Date.now()}`, steps: route.steps.map((s) => ({ ...s, persisted: true })) };
+      if (serverRoute) dispatch(setSaving(false));
+      else dispatch(upsertRoute({ route: saved, replaceId: newId ?? route.id }));
+      return { route: saved, sentToServer: true, insertedCount: 0, notSaved: [] };
     }
 
-    const before = new Set(getState().orderRoutes.routes.map((r) => r.id));
-    const res = await api.post(ORDER_ROUTE_ENDPOINTS.create, body);
-    ensureSuccess(res, "The server could not create the workflow.");
+    // Existing route
+    const serverCopy = getState().orderRoutes.routes.find((r) => r.id === route.id);
+    const notSaved = unsupportedChanges(route, serverCopy);
+    const toInsert = bodies.insert.workFlows;
 
-    // The create response shape is not fixed yet: use its ruleHeaderID when
-    // present, otherwise reload the list and pick the workflow that is new.
-    let newId = res.data?.data?.ruleHeaderID ?? res.data?.ruleHeaderID ?? null;
+    // The store keeps the server's copy, so later saves can still tell which
+    // edits never reached the server.
+    if (!toInsert.length || MOCK.insertSteps) {
+      dispatch(setSaving(false));
+      return { route, sentToServer: false, insertedCount: 0, notSaved: toInsert.length ? [...notSaved, "added steps"] : notSaved };
+    }
+
+    const res = await api.post(ORDER_ROUTE_ENDPOINTS.insertSteps, bodies.insert);
+    ensureSuccess(res, "The server could not add the steps.");
+
+    let saved = { ...route, steps: route.steps.map((s) => (s.ruleStatusId ? s : { ...s, persisted: true })) };
     if (!MOCK.list) {
       try {
         const routes = await fetchRoutes(getState);
         dispatch(setRoutes(routes));
-        if (newId == null) {
-          const added = routes.filter((r) => !before.has(r.id));
-          newId = (added.find((r) => r.name === body.workflowDescription) || added[added.length - 1])?.id ?? null;
-        }
+        const fresh = routes.find((r) => r.id === route.id);
+        if (fresh) saved = mergeServerRoute(fresh, route);
       } catch (error) {
-        console.error("Created, but reloading the workflows failed:", error);
+        console.error("Steps added, but reloading the workflows failed:", error);
       }
     }
-
-    // Keep the local copy (step types, owners, SLAs) for this session under
-    // the server id; the GET does not return those fields yet.
-    const saved = { ...route, id: newId ?? `route_${Date.now()}` };
-    dispatch(upsertRoute({ route: saved, replaceId: newId ?? route.id }));
-    return { route: saved, sentToServer: true };
+    dispatch(setSaving(false));
+    return { route: saved, sentToServer: true, insertedCount: toInsert.length, notSaved };
   } catch (error) {
     console.error("Failed to save order route:", error);
     dispatch(setSaving(false));
     return Promise.reject(new Error(errorMessage(error)));
   }
 };
+
+// Server copy of a route + the local copy: take the server's step ids and
+// order, and keep the local-only details (step type, owner, SLA, send-back)
+// and start rules for this session.
+function mergeServerRoute(server, local) {
+  const unmatched = local.steps.filter((s) => !s.ruleStatusId);
+  const steps = server.steps.map((ss) => {
+    let ls = local.steps.find((l) => l.ruleStatusId && l.ruleStatusId === ss.ruleStatusId);
+    if (!ls) {
+      const i = unmatched.findIndex((l) => l.statusId === ss.statusId);
+      if (i >= 0) ls = unmatched.splice(i, 1)[0];
+    }
+    return ls ? { ...ls, id: ss.id, ruleStatusId: ss.ruleStatusId, statusId: ss.statusId } : ss;
+  });
+  return { ...server, rules: local.rules, status: local.status, statusTypeId: local.statusTypeId, steps };
+}
+
+// Edits to a saved route that no API can store yet.
+function unsupportedChanges(local, server) {
+  if (!server) return [];
+  const notes = [];
+  if ((local.name || "").trim() !== (server.name || "").trim()) notes.push("route name");
+  if (JSON.stringify(local.rules) !== JSON.stringify(server.rules)) notes.push("start rules");
+  const localSaved = local.steps.filter((s) => s.ruleStatusId);
+  const serverSaved = server.steps.filter((s) => s.ruleStatusId);
+  if (serverSaved.some((s) => !localSaved.some((l) => l.ruleStatusId === s.ruleStatusId))) notes.push("removed steps");
+  if (localSaved.some((l) => serverSaved.find((s) => s.ruleStatusId === l.ruleStatusId)?.statusId !== l.statusId)) notes.push("changed statuses");
+  const order = (steps) => steps.map((s) => s.ruleStatusId).filter((id) => localSaved.some((l) => l.ruleStatusId === id) && serverSaved.some((x) => x.ruleStatusId === id));
+  if (order(localSaved).join(",") !== order(serverSaved).join(",")) notes.push("step order");
+  return notes;
+}
 
 // DELETE: one saved route
 export const deleteOrderRoute = (routeId) => async (dispatch) => {
