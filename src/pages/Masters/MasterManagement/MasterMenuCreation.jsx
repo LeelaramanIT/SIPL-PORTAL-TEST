@@ -4,7 +4,7 @@ import {
   UserOutlined,
   PlusCircleOutlined,
 } from "@ant-design/icons";
-import { LayoutGrid, FileText } from "lucide-react";
+import { LayoutGrid, FileText, Route } from "lucide-react";
 
 export const masterMenuItems = [
   {
@@ -27,6 +27,15 @@ export const masterMenuItems = [
     label: (
       <Link to="/Masters/Master-creation/reports-master">
         Reports Master
+      </Link>
+    ),
+  },
+  {
+    key: "/Masters/Master-creation/order-routes",
+    icon: <Route size={18} />,
+    label: (
+      <Link to="/Masters/Master-creation/order-routes">
+        Order Routes
       </Link>
     ),
   },

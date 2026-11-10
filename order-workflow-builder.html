@@ -1,0 +1,675 @@
+<title>Order Routes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: three panes — workflow list + status library | vertical stage timeline (the order's journey, top to bottom) | live inspector for the selected item */
+:root{
+  --bg:#eef2f0; --panel:#ffffff; --panel-2:#f5f8f6; --ink:#13231f; --muted:#5a6a66; --line:#d8e0dc;
+  --accent:#0f6e5c; --accent-ink:#ffffff; --accent-soft:#dcefe9; --rail:#b9c8c2;
+  --waypoint:#6a3fb5; --waypoint-soft:#ece5f8; --task:#1f6fd1; --task-soft:#e1ecfb;
+  --approval:#b9480f; --approval-soft:#fbe8dc; --danger:#c02d2d; --danger-soft:#fbe3e3; --warn:#a86400;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-ui:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1513; --panel:#16201d; --panel-2:#1c2824; --ink:#e3ece8; --muted:#93a59f; --line:#2a3833;
+  --accent:#4cc3a6; --accent-ink:#07130f; --accent-soft:#173a32; --rail:#34463f;
+  --waypoint:#b593f0; --waypoint-soft:#2a2140; --task:#6aa8ff; --task-soft:#1a2b45;
+  --approval:#f08a4b; --approval-soft:#3a2416; --danger:#ff7070; --danger-soft:#3d1c1c; --warn:#e8a63c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1513; --panel:#16201d; --panel-2:#1c2824; --ink:#e3ece8; --muted:#93a59f; --line:#2a3833;
+  --accent:#4cc3a6; --accent-ink:#07130f; --accent-soft:#173a32; --rail:#34463f;
+  --waypoint:#b593f0; --waypoint-soft:#2a2140; --task:#6aa8ff; --task-soft:#1a2b45;
+  --approval:#f08a4b; --approval-soft:#3a2416; --danger:#ff7070; --danger-soft:#3d1c1c; --warn:#e8a63c; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num-t{font-variant-numeric:tabular-nums}
+
+.shell{height:100%;display:grid;grid-template-columns:250px minmax(0,1fr) 390px;gap:14px;min-height:0}
+
+/* left rail */
+.rail{display:flex;flex-direction:column;gap:16px;min-height:0}
+.brand{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:20px;letter-spacing:.01em;line-height:1}
+.brand small{display:block;font-family:var(--f-ui);font-stretch:100%;font-weight:500;font-size:12px;color:var(--muted);letter-spacing:0;margin-top:4px}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0}
+.wflist{display:flex;flex-direction:column;gap:2px}
+.wfitem{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:8px;border:0;background:none;text-align:left;width:100%}
+.wfitem:hover{background:var(--panel)}
+.wfitem.on{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent)}
+.wfitem b{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wfitem small{color:var(--muted);font-size:11.5px}
+.linkbtn{background:none;border:0;color:var(--accent);padding:4px 10px;font-size:13px;font-weight:600;text-align:left}
+.lib{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 0 0;overflow:hidden}
+.lib .hd{padding:0 12px;display:flex;flex-direction:column;gap:6px}
+.lib .hd p{margin:0;font-size:12px;color:var(--muted)}
+.mlist{overflow:auto;padding:0 6px 10px;flex:1;min-height:0}
+.mcat{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 6px 3px;font-weight:600;display:flex;justify-content:space-between}
+.mitem{display:grid;grid-template-columns:26px 1fr auto;gap:6px;align-items:center;padding:5px 6px;border-radius:6px;font-size:12px;width:100%;background:none;border:0;text-align:left;cursor:grab}
+.mitem:hover{background:var(--panel-2)}
+.mitem .id{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.mitem.used{color:var(--muted)}
+.mitem .tag{font-size:10px;color:var(--accent);font-weight:700}
+
+input[type=search],input[type=text],input[type=number],select{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:13px;width:100%;min-width:0}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* center */
+.flow{min-height:0;min-width:0;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.flow-in{padding:20px 24px 40px;display:flex;flex-direction:column;gap:18px;max-width:880px}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.top .name{flex:1 1 260px;font-family:var(--f-display);font-stretch:85%;font-weight:750;font-size:26px;border:0;border-bottom:1px dashed transparent;border-radius:0;padding:2px 0;background:none}
+.top .name:hover{border-bottom-color:var(--line)}
+.top .name:focus{box-shadow:none;border-bottom-color:var(--accent)}
+.top select{width:auto}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:7px 12px;font-size:13px;font-weight:600;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);background:none;border-color:transparent}
+.btn.danger:hover{border-color:var(--danger)}
+.btn.ghost{border-color:transparent;background:none;color:var(--accent)}
+
+.stats{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{flex:1 1 120px;padding:10px 14px;border-right:1px solid var(--line);min-width:0}
+.stat:last-child{border-right:0}
+.stat span{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.stat b{font-family:var(--f-display);font-stretch:85%;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat b small{font-family:var(--f-ui);font-size:12px;font-weight:500;color:var(--muted);margin-left:4px}
+.stat.warn b{color:var(--warn)}
+
+/* start rules card */
+.rules{border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:var(--panel-2);cursor:pointer;position:relative}
+.rules:hover{border-color:var(--accent)}
+.rules.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.rh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.startbadge{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:4px 10px;border-radius:5px}
+.rh p{margin:0;flex:1;min-width:200px}
+.mm{border:0;border-bottom:1.5px dotted var(--accent);background:none;color:var(--accent);font-weight:700;padding:0 1px}
+.toks{display:flex;flex-wrap:wrap;gap:6px}
+.tok{display:inline-flex;gap:5px;align-items:baseline;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:5px 9px;font-size:12.5px;max-width:100%}
+.tok span{color:var(--muted)}
+.tok b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tok.add{border-style:dashed;color:var(--accent);font-weight:600}
+.toks .empty{margin:0;color:var(--muted);font-size:13px}
+
+/* timeline */
+.timeline{list-style:none;margin:0;padding:0;position:relative}
+.timeline::before{content:"";position:absolute;left:19px;top:6px;bottom:6px;width:2px;background:var(--rail)}
+.phase{position:relative;padding-bottom:6px}
+.phd{display:flex;align-items:center;gap:10px;padding:14px 0 6px 0;position:relative}
+.phd::before{content:"";width:12px;height:12px;margin-left:14px;transform:rotate(45deg);background:var(--panel);border:2px solid var(--ink);flex:none;position:relative;z-index:1}
+.phd h3{margin:0 0 0 10px;font-family:var(--f-display);font-stretch:80%;font-weight:750;font-size:15px;letter-spacing:.07em;text-transform:uppercase}
+.phd span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.steps{list-style:none;margin:0;padding:0}
+.step{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:12px;align-items:start;padding:10px 10px 10px 0;border-radius:10px;border:1px solid transparent;cursor:pointer;position:relative}
+.step:hover{background:var(--panel-2)}
+.step.sel{background:var(--accent-soft);border-color:var(--accent)}
+.step.drop-before{box-shadow:inset 0 3px 0 var(--accent)}
+.step.drop-after{box-shadow:inset 0 -3px 0 var(--accent)}
+.num{width:30px;height:30px;margin-left:5px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:11.5px;font-weight:500;background:var(--panel);border:2px solid currentColor;position:relative;z-index:1}
+.k-waypoint .num{color:var(--waypoint)} .k-task .num{color:var(--task)} .k-approval .num{color:var(--approval);border-radius:7px;transform:rotate(45deg)}
+.k-approval .num i{transform:rotate(-45deg);font-style:normal}
+.sb{min-width:0;display:flex;flex-direction:column;gap:4px}
+.ttl{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-weight:600;font-size:14.5px}
+.ttl .sid{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-weight:400}
+.step.warn .ttl > span:first-child{color:var(--warn)}
+.meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted);align-items:center}
+.kpill{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.k-waypoint .kpill{background:var(--waypoint-soft);color:var(--waypoint)}
+.k-task .kpill{background:var(--task-soft);color:var(--task)}
+.k-approval .kpill{background:var(--approval-soft);color:var(--approval)}
+.branch{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:12px;margin-top:2px;padding:6px 8px;border-radius:7px;background:var(--danger-soft);border:1px dashed color-mix(in srgb,var(--danger) 45%,transparent)}
+.branch .bl{font-weight:700;color:var(--danger)}
+.branch .bchip{background:var(--panel);border-radius:4px;padding:1px 6px}
+.branch .bchip i{font-style:normal;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-right:4px}
+.branch .arr{color:var(--danger)}
+.branch .bret{font-style:italic;color:var(--muted)}
+.sla{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:3px;white-space:nowrap;text-align:right;min-width:52px}
+.ops{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+.step:hover .ops,.step.sel .ops,.step:focus-within .ops{opacity:1}
+.ops button{border:1px solid var(--line);background:var(--panel);border-radius:6px;width:26px;height:26px;font-size:13px;line-height:1;padding:0}
+.ins{display:block;width:calc(100% - 48px);margin:0 0 0 48px;height:12px;border:0;background:none;position:relative;padding:0;font-size:0}
+.ins::after{content:"+ Add step here";position:absolute;left:0;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:600;color:var(--accent);background:var(--panel);padding:0 6px;opacity:0;transition:opacity .12s}
+.ins::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1.5px dashed var(--accent);opacity:0;transition:opacity .12s}
+.ins:hover::after,.ins:hover::before,.ins:focus-visible::after,.ins:focus-visible::before,.ins.drop::before,.ins.drop::after{opacity:1}
+.addend{margin:10px 0 0 48px}
+.emptyflow{margin:14px 0 0 48px;padding:18px;border:1.5px dashed var(--line);border-radius:10px;color:var(--muted)}
+.endcap{display:flex;align-items:center;gap:10px;padding:14px 0 0 0}
+.endcap::before{content:"";width:16px;height:16px;margin-left:12px;border-radius:50%;background:var(--ink);position:relative;z-index:1;flex:none}
+.endcap span{font-family:var(--f-display);font-stretch:80%;font-weight:750;letter-spacing:.07em;text-transform:uppercase;font-size:13px;margin-left:8px}
+
+/* inspector */
+.insp{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.ih{display:flex;gap:10px;align-items:flex-start;padding:16px 18px 10px;border-bottom:1px solid var(--line)}
+.ih h2{margin:2px 0 0;font-family:var(--f-display);font-stretch:85%;font-weight:750;font-size:20px;line-height:1.15;text-wrap:balance}
+.ih .x{margin-left:auto;background:none;border:0;font-size:22px;line-height:1;color:var(--muted);padding:0 4px}
+.ib{padding:14px 18px 18px;overflow:auto;display:flex;flex-direction:column;gap:18px;min-height:0;flex:1}
+.if{display:flex;gap:8px;align-items:center;padding:10px 18px;border-top:1px solid var(--line)}
+.if .sp{flex:1}
+.ib .intro{margin:0;color:var(--muted);font-size:13px}
+.legend{display:flex;flex-direction:column;gap:10px}
+.legend div{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:center;font-size:13px}
+.legend b{display:block}
+.legend small{color:var(--muted)}
+.group{display:flex;flex-direction:column;gap:7px}
+.ghd{display:flex;align-items:baseline;gap:8px}
+.ghd label,.ghd h3{font-weight:700;font-size:13px;margin:0}
+.ghd .cnt{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.ghd .clr{margin-left:auto;background:none;border:0;color:var(--danger);font-size:12px;padding:0}
+.ghint{font-size:12px;color:var(--muted);margin:-3px 0 0}
+.sec{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);padding-bottom:5px;margin:4px 0 -6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 10px;font-size:12.5px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap;align-self:flex-start}
+.seg button{border:0;background:var(--panel);padding:6px 12px;font-size:12.5px;font-weight:500;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--panel)}
+.checklist{border:1px solid var(--line);border-radius:8px;max-height:176px;overflow:auto}
+.checklist label{display:flex;gap:9px;align-items:center;padding:7px 10px;font-size:13px;border-bottom:1px solid var(--line);cursor:pointer}
+.checklist label:last-child{border-bottom:0}
+.checklist label:hover{background:var(--panel-2)}
+.checklist small{font-family:var(--f-mono);color:var(--muted);font-size:11px;margin-left:auto;white-space:nowrap}
+.note{font-size:12px;color:var(--muted);background:var(--panel-2);border-radius:8px;padding:8px 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld > span{font-size:12px;color:var(--muted);font-weight:600}
+.cats{display:flex;gap:5px;flex-wrap:wrap}
+.cats .chip{padding:3px 9px;font-size:11.5px}
+.slist{border:1px solid var(--line);border-radius:8px;max-height:230px;overflow:auto}
+.srow{display:grid;grid-template-columns:18px 30px 1fr;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}
+.srow:last-child{border-bottom:0}
+.srow:hover{background:var(--panel-2)}
+.srow.on{background:var(--accent-soft)}
+.srow .id{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.srow em{grid-column:3;font-style:normal;font-size:10.5px;color:var(--warn);margin-top:-3px}
+.brows{display:flex;flex-direction:column;gap:6px}
+.brow{display:grid;grid-template-columns:18px minmax(0,1.6fr) minmax(0,1fr) 28px;gap:6px;align-items:center}
+.brow .n{font-family:var(--f-mono);font-size:11px;color:var(--danger)}
+.brow button{border:1px solid var(--line);background:var(--panel);border-radius:6px;height:30px;padding:0}
+.bend{font-size:12px;color:var(--muted);font-style:italic;padding-left:24px}
+
+.scrim{position:fixed;inset:0;background:rgba(8,14,12,.5);display:grid;place-items:center;z-index:50;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{background:var(--panel);border-radius:14px;width:min(680px,100%);max-height:100%;display:flex;flex-direction:column;min-height:0;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+pre.json{margin:0;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--f-mono);font-size:11.5px;max-height:55vh;overflow:auto;white-space:pre}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--panel);padding:9px 16px;border-radius:8px;font-size:13px;z-index:60}
+
+@media (max-width:1180px){
+  .shell{grid-template-columns:240px minmax(0,1fr)}
+  .insp{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);border-radius:0;z-index:40;transform:translateX(105%);transition:transform .2s;box-shadow:-12px 0 40px rgba(0,0,0,.25);
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+  .insp.open{transform:none}
+}
+@media (max-width:820px){
+  html,body{height:auto}
+  .shell{grid-template-columns:minmax(0,1fr);height:auto}
+  .lib{max-height:300px}
+  .flow{overflow:visible}
+  .flow-in{padding:16px 14px 30px}
+  .grid2{grid-template-columns:1fr}
+  .step{grid-template-columns:40px minmax(0,1fr) auto}
+  .ops{display:none}
+  .top .name{font-size:21px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="shell">
+  <aside class="rail" aria-label="Order routes and status library">
+    <div class="brand">Order Routes<small>Build the journey an order takes</small></div>
+    <div>
+      <p class="lbl" style="padding:0 10px 6px">Routes</p>
+      <div class="wflist" id="wflist"></div>
+      <button class="linkbtn" id="btn-new">+ New order route</button>
+    </div>
+    <div class="lib">
+      <div class="hd">
+        <p class="lbl" id="lib-title">Status library</p>
+        <p>Click to add after the selected step, or drag into the timeline.</p>
+        <input type="search" id="lib-q" placeholder="Search status or ID" aria-label="Search status library">
+      </div>
+      <div class="mlist" id="mlist"></div>
+    </div>
+  </aside>
+
+  <main class="flow">
+    <div class="flow-in">
+      <div class="top">
+        <input type="text" class="name" id="wf-name" aria-label="Order route name">
+        <select id="wf-status" aria-label="Order route status"><option>Active</option><option>Draft</option><option>Inactive</option></select>
+        <select id="wf-type" aria-label="Status master type"><option value="1">Type 1 · Sales Order</option><option value="2">Type 2 · Inward</option></select>
+        <button class="btn" id="btn-json">Export JSON</button>
+        <button class="btn primary" id="btn-save">Save</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <section class="rules" id="rules" tabindex="0" aria-label="Start rules"></section>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+  </main>
+
+  <aside class="insp" id="insp" aria-label="Inspector"></aside>
+</div>
+
+<div class="scrim" id="scrim" hidden><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/* ---------- Status master (from your table) ---------- */
+const STATUSES = [
+[1,'ORDER RECEIVED',1],[2,'PROFORMA GENERATED',1],[3,'PROFORMA CONFIRMED',1],[4,'MOVED TO PRODUCTION',1],[5,'DISPATCHED',1],[6,'CANCELLED',1],
+[7,'WAITING FOR INVOICE PREPARE',1],[8,'WAITING FOR PAYMENT CONFIRMATION',1],[9,'WAITING FOR SHIPPING DOCUMENTS E-MAIL',1],[10,'WAITING FOR DOCUMENT COURIER',1],
+[11,'WAITING FOR PAYMENT RECEIVED',1],[12,'WAITING FOR INVOICE RE-PREPARE',1],[13,'WAITING FOR GST INVOICE PREPARE',1],[14,'REQUEST FOR ORDER MASTER DETAILS REVISE',1],
+[15,'REQUEST FOR ORDER ITEM DETAILS REVISE',1],[16,'REQUEST FOR OTHER DETAILS REVISE',1],[17,'WAITING FOR CRM REVISIONS',1],[18,'REQUEST FOR ORDER CANCEL',1],
+[19,'WAITING FOR PDI',1],[20,'WAITING FOR VEHICLE LOADING',1],[21,'WAITING FOR DISPATCH',1],[22,'PROFORMA SENT',1],[23,'WAITING FOR WORK ORDER PREPARE',1],
+[24,'WAITING FOR PPC RFD',1],[25,'WAITING FOR TENTATIVE SCHEDULE',1],[26,'WAITING FOR ALL DEPT APPROVAL',1],[27,'REQUEST FOR ORDER SPLIT',1],[28,'REQUEST FOR PRICE CHANGE',1],
+[29,'REQUEST FOR LOGISTICS REVISION',1],[30,'REQUEST FOR PPC REVISION',1],[31,'WAITING FOR LOGISTICS CHANGES',1],[32,'WAITING FOR PPC CHANGES',1],
+[33,'WAITING FOR SUBSTITUTION CONFIRMATION',1],[34,'WAITING FOR CRM STENCIL ASSIGN',1],[35,'WAITING FOR ASSIGNED STENCIL VERIFICATION',1],
+[36,'WAITING FOR REVOKE THE STENCIL FROM ASSIGNED',1],[37,'WAITING FOR REVOKE THE STENCIL FROM PDI REJECT',1],[38,'WAITING FOR ACTUAL SAILING DETAILS',1],
+[39,'WAITING FOR CONTAINER DELIVERED CONFIRMATION',1],[40,'DISPATCHED TO FINAL LOADING',1],[41,'WAITING FOR PPC STENCIL ASSIGN',1],[42,'WAITING FOR APPROVAL TO PRODUCTION',1],
+[43,'WAITING FOR TCS CONFIRMATION',1],[44,'E-INVOICE CANCELLED',1],[45,'WAITING FOR DRAFT PI PREPARE',1],
+[46,'SCANNING IN PROGRESS',2],[47,'PENDING DC PREPARATION',2],[48,'PENDING RECEIPT',2],[49,'RECEIVING IN PROGRESS',2],[50,'INWARD COMPLETED',2]
+].map(([id,text,type])=>({id,text,type,cat:category(text,type)}));
+const TYPES={1:'Sales Order',2:'Inward'};
+const CAT_ORDER=['Order','Proforma','Production','Stencil & PDI','Invoice & Payment','Dispatch & Shipping','Revisions','Cancellation','Inward'];
+function category(t,type){
+  if(type===2) return 'Inward';
+  const has=(...k)=>k.some(x=>t.includes(x));
+  if(has('CANCEL')) return 'Cancellation';
+  if(t.startsWith('REQUEST FOR')||has('REVISION','CHANGES','RE-PREPARE','SUBSTITUTION')) return 'Revisions';
+  if(has('STENCIL','PDI')) return 'Stencil & PDI';
+  if(has('PROFORMA','DRAFT PI')) return 'Proforma';
+  if(has('INVOICE','PAYMENT','TCS')) return 'Invoice & Payment';
+  if(has('PRODUCTION','PPC','WORK ORDER','SCHEDULE','APPROVAL')) return 'Production';
+  if(has('DISPATCH','VEHICLE','SAILING','CONTAINER','DOCUMENT','SHIPPING','LOADING')) return 'Dispatch & Shipping';
+  return 'Order';
+}
+const byId=id=>STATUSES.find(s=>s.id===id);
+const ACR=new Set(['PDI','CRM','PPC','TCS','GST','RFD','DC','PI']);
+const nice=t=>t.split(' ').map(w=>ACR.has(w)?w:w.split('-').map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join('-')).join(' ');
+
+/* ---------- Start rule masters ---------- */
+const OPTS={
+  entities:[['SIPL','Sundaram Industries Private Limited · SI001 · India'],['SLTL','Sundaram Lanka Tyres Limited · SL001 · Sri Lanka'],['SITL','Sun Industrial Tyres Limited · SI002 · Sri Lanka'],['STA','Sun TWS America · ST002 · America']],
+  adCodes:[['AD 0510001','Chennai Sea Port · INMAA1'],['AD 0510002','Chennai Air Cargo · INMAA4'],['AD 0270003','Nhava Sheva · INNSA1'],['AD 0820004','Tuticorin · INTUT1'],['AD 0590005','Mundra · INMUN1'],['AD 0510006','Bengaluru ICD · INWFD6']],
+  orderTypes:['Export','Merchant Export','Deemed Export','Domestic','Sample','Spares','Stock Transfer'],
+  customers:[['Northwind Traders','C1001'],['Contoso Motors','C1002'],['Fabrikam Industries','C1003'],['Tailspin Exports','C1004'],['Globex Trading','C1005'],['Initech Distributors','C1006'],['Lakeshore Agro','C1007'],['Harbor Machinery','C1008']],
+  countries:['India','Sri Lanka','United States','Nigeria','Kenya','Tanzania','UAE','Bangladesh','Nepal','United Kingdom'],
+  shipmentModes:['FCL','LCL','Air','Road','Rail','Courier'],
+  incoterms:['EXW','FCA','FOB','CFR','CIF','CPT','CIP','DAP','DDP']
+};
+const RGROUPS=[
+  {sec:'Entity & export address'},
+  {key:'entities',label:'Entity',hint:'Company that books the order.',kind:'list',opts:OPTS.entities},
+  {key:'exportAddresses',label:'Export authorised address',hint:'AD code and port registered for the shipment.',kind:'list',opts:OPTS.adCodes},
+  {sec:'Order'},
+  {key:'orderTypes',label:'Order type',kind:'chips',opts:OPTS.orderTypes},
+  {key:'shipmentModes',label:'Shipment mode',kind:'chips',opts:OPTS.shipmentModes},
+  {key:'incoterms',label:'Incoterms',kind:'chips',opts:OPTS.incoterms},
+  {sec:'Customer, ship-to & bill-to'},
+  {key:'customers',label:'Customer',kind:'list',opts:OPTS.customers},
+  {key:'shipTo',label:'Ship-to country',kind:'chips',opts:OPTS.countries},
+  {key:'billTo',label:'Bill-to country',kind:'chips',opts:OPTS.countries},
+  {key:'shipBill',label:'Ship-to vs bill-to party',kind:'seg',opts:['Any','Same party','Different party']}
+];
+const emptyRules=()=>({matchMode:'All',entities:[],exportAddresses:[],orderTypes:[],shipmentModes:[],incoterms:[],customers:[],shipTo:[],billTo:[],shipBill:'Any'});
+const KIND={
+  waypoint:{label:'Waypoint',desc:'A marker the order passes when it reaches this status. Nobody has to act.'},
+  task:{label:'Task',desc:'Someone must finish this work before the order moves on.'},
+  approval:{label:'Approval',desc:'An approver moves the order forward or sends it back along a revision path.'}
+};
+
+/* ---------- Helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=p=>p+Math.random().toString(36).slice(2,9);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const pad=n=>String(n).padStart(2,'0');
+function hrs(h){h=+h||0;if(!h)return '0 h';return h>=24?`${+(h/24).toFixed(1)} d`:`${h} h`}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200)}
+
+/* ---------- Samples ---------- */
+function mk(kind,statusId,o={}){const s={id:uid('s'),kind,statusId:statusId??null,name:o.name||'',atype:o.atype||'Internal User',amode:o.amode||'Direct',assignee:o.who||'',sla:o.sla??''};if(kind==='approval')s.back=o.back||[];return s}
+const bk=(statusId,who)=>({id:uid('b'),statusId,assignee:who||''});
+function sampleExport(){
+  return {id:uid('w'),name:'Export Order to Payment',status:'Active',statusType:1,
+    rules:{...emptyRules(),entities:['SIPL'],exportAddresses:['AD 0510001'],orderTypes:['Export','Merchant Export'],shipmentModes:['FCL','LCL'],incoterms:['FOB','CIF']},
+    steps:[
+      mk('waypoint',1,{who:'CRM desk',sla:4}),
+      mk('task',45,{amode:'Round Robin',who:'CRM team',sla:8}),
+      mk('waypoint',2,{who:'CRM desk',sla:4}),
+      mk('waypoint',22,{who:'CRM desk',sla:2}),
+      mk('waypoint',3,{atype:'Customer',who:'Buyer contact',sla:48}),
+      mk('task',23,{who:'Production planning',sla:8}),
+      mk('approval',26,{amode:'Round Robin',who:'Department heads',sla:24,back:[bk(29,'Logistics'),bk(31,'Logistics')]}),
+      mk('waypoint',4,{who:'Production planning',sla:8}),
+      mk('task',24,{who:'PPC',sla:72}),
+      mk('approval',19,{who:'Quality · PDI',sla:24,back:[bk(37,'PPC')]}),
+      mk('task',7,{amode:'Round Robin',who:'Accounts',sla:8}),
+      mk('task',43,{who:'Accounts',sla:4}),
+      mk('task',20,{atype:'Service Provider',who:'Transporter',sla:24}),
+      mk('waypoint',5,{who:'Logistics',sla:2}),
+      mk('task',9,{who:'Logistics',sla:24}),
+      mk('task',10,{atype:'Service Provider',who:'Courier partner',sla:72}),
+      mk('waypoint',11,{who:'Accounts',sla:720})
+    ]};
+}
+function sampleInward(){
+  return {id:uid('w'),name:'Inward Receipt',status:'Draft',statusType:2,
+    rules:{...emptyRules(),entities:['SLTL'],orderTypes:['Stock Transfer','Domestic']},
+    steps:[mk('waypoint',48,{who:'Stores',sla:24}),mk('waypoint',49,{amode:'Round Robin',who:'Stores team',sla:8}),
+      mk('task',46,{who:'Scanning desk',sla:4}),mk('task',47,{who:'Stores admin',sla:4}),mk('waypoint',50,{who:'Stores',sla:2})]};
+}
+
+/* ---------- State ---------- */
+const KEY='order-workflow-builder-v2';
+let state, sel=null; const pick={q:'',cat:'All'};
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.workflows&&s.workflows.length){s.workflows.forEach(w=>w.steps.forEach(x=>{if(x.kind==='milestone'||x.kind==='waypost')x.kind='waypoint'}));state=s;return}}catch(e){}
+  const a=sampleExport(),b=sampleInward();state={workflows:[a,b],current:a.id};
+}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));return true}catch(e){return false}}
+const wf=()=>state.workflows.find(w=>w.id===state.current)||state.workflows[0];
+const findStep=id=>wf().steps.find(s=>s.id===id);
+const stepTitle=s=>{const st=byId(s.statusId);return s.name||(st?nice(st.text):'Choose a status')};
+const usedIds=()=>{const u=new Set();wf().steps.forEach(s=>{u.add(s.statusId);(s.back||[]).forEach(b=>u.add(b.statusId))});return u};
+
+/* ---------- Rendering ---------- */
+function renderWfList(){
+  $('#wflist').innerHTML=state.workflows.map(w=>`<button class="wfitem${w.id===wf().id?' on':''}" data-wf="${w.id}"><b>${esc(w.name||'Untitled order route')}</b><small>${w.status} · ${w.steps.length} steps · ${TYPES[w.statusType]}</small></button>`).join('');
+}
+function renderLib(){
+  const w=wf(),q=$('#lib-q').value.trim().toUpperCase(),used=usedIds();
+  $('#lib-title').textContent=`Status library · Type ${w.statusType} ${TYPES[w.statusType]}`;
+  const list=STATUSES.filter(s=>s.type===w.statusType&&(!q||s.text.includes(q)||String(s.id)===q));
+  let h='';
+  CAT_ORDER.forEach(c=>{const items=list.filter(s=>s.cat===c);if(!items.length)return;
+    h+=`<div class="mcat"><span>${c}</span><span>${items.length}</span></div>`+items.map(s=>`<button class="mitem${used.has(s.id)?' used':''}" draggable="true" data-add-status="${s.id}"><span class="id">#${s.id}</span><span>${esc(nice(s.text))}</span><span class="tag">${used.has(s.id)?'IN FLOW':''}</span></button>`).join('')});
+  $('#mlist').innerHTML=h||'<p class="note" style="margin:8px">No status matches that search.</p>';
+}
+function renderBar(){const w=wf();$('#wf-name').value=w.name;$('#wf-status').value=w.status;$('#wf-type').value=String(w.statusType)}
+function renderStats(){
+  const w=wf(),total=w.steps.reduce((a,s)=>a+(+s.sla||0),0);
+  const owners=new Set(w.steps.map(s=>s.assignee).filter(Boolean)).size;
+  const missing=w.steps.filter(s=>!s.statusId&&!s.name).length;
+  $('#stats').innerHTML=`
+    <div class="stat"><span>Steps</span><b>${w.steps.length}</b></div>
+    <div class="stat"><span>Approvals</span><b>${w.steps.filter(s=>s.kind==='approval').length}</b></div>
+    <div class="stat"><span>Planned cycle</span><b>${hrs(total)}<small>${total} h SLA</small></b></div>
+    <div class="stat"><span>Owners</span><b>${owners}</b></div>
+    ${missing?`<div class="stat warn"><span>Need a status</span><b>${missing}</b></div>`:''}`;
+}
+function ruleTokens(r){
+  const t=[];
+  RGROUPS.forEach(g=>{if(!g.key)return;const v=r[g.key];
+    if(g.kind==='seg'){if(v&&v!=='Any')t.push([g.label,v]);return}
+    if(v&&v.length)t.push([g.label+(v.length>1?' is one of':' is'),v.slice(0,2).join(', ')+(v.length>2?` +${v.length-2}`:'')])});
+  return t;
+}
+function renderRules(){
+  const r=wf().rules,t=ruleTokens(r);
+  $('#rules').innerHTML=`<div class="rh"><span class="startbadge">Start</span><p>Begin when a new order matches <button class="mm" data-mm title="Switch between all and any">${r.matchMode==='All'?'all':'any'}</button> of these start rules</p></div>
+    <div class="toks">${t.length?t.map(x=>`<span class="tok"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></span>`).join(''):'<p class="empty">No rules yet, so every new order follows this route.</p>'}<span class="tok add">+ Add rule</span></div>`;
+  $('#rules').classList.toggle('sel',sel==='rules');
+}
+function phases(steps){const out=[];steps.forEach((s,i)=>{const c=byId(s.statusId)?.cat||'Unsorted';const l=out[out.length-1];l&&l.cat===c?l.items.push([s,i]):out.push({cat:c,items:[[s,i]]})});return out}
+function branchHTML(s){
+  const b=s.back||[];
+  if(!b.length) return `<div class="branch"><span class="bl">If sent back</span><span class="bret">returns to the previous step</span></div>`;
+  return `<div class="branch"><span class="bl">If sent back</span>${b.map(x=>{const st=byId(x.statusId);return `<span class="bchip"><i>#${x.statusId??'?'}</i>${esc(st?nice(st.text):'No status')}</span>`}).join('<span class="arr">→</span>')}<span class="arr">→</span><span class="bret">back to this approval</span></div>`;
+}
+function stepHTML(s,i){
+  const st=byId(s.statusId),warn=!st&&!s.name;
+  return `<li class="step k-${s.kind}${sel===s.id?' sel':''}${warn?' warn':''}" data-step="${s.id}" data-i="${i}" draggable="true" tabindex="0">
+    <span class="num"><i>${pad(i+1)}</i></span>
+    <div class="sb">
+      <div class="ttl"><span>${esc(stepTitle(s))}</span>${st?`<span class="sid">#${st.id}</span>`:''}</div>
+      <div class="meta"><span class="kpill">${KIND[s.kind].label}</span><span>${esc(s.atype)}</span><span>${esc(s.amode)}${s.assignee?' · '+esc(s.assignee):''}</span></div>
+      ${s.kind==='approval'?branchHTML(s):''}
+    </div>
+    <span class="sla">${s.sla!==''&&s.sla!=null?hrs(s.sla):'no SLA'}</span>
+    <div class="ops"><button type="button" data-move="-1" aria-label="Move up">↑</button><button type="button" data-move="1" aria-label="Move down">↓</button></div>
+  </li>`;
+}
+function renderTimeline(){
+  const w=wf(),ph=phases(w.steps);
+  let h=ph.map(p=>{const sla=p.items.reduce((a,[s])=>a+(+s.sla||0),0);
+    return `<li class="phase"><div class="phd"><h3>${esc(p.cat)}</h3><span>${p.items.length} step${p.items.length>1?'s':''} · ${hrs(sla)}</span></div>
+      <ol class="steps">${p.items.map(([s,i])=>(i?`<li><button type="button" class="ins" data-ins="${i}" aria-label="Add step before step ${i+1}">+</button></li>`:'')+stepHTML(s,i)).join('')}</ol></li>`}).join('');
+  if(!w.steps.length) h+=`<li class="emptyflow">No steps yet. Pick a status from the library on the left, or add a step below.</li>`;
+  h+=`<li><button type="button" class="btn addend" data-ins="${w.steps.length}">+ Add step</button></li><li class="endcap"><span>Route complete</span></li>`;
+  $('#timeline').innerHTML=h;
+}
+function refreshFlow(){renderStats();renderTimeline();renderWfList()}
+function renderAll(){renderBar();renderWfList();renderLib();renderStats();renderRules();renderTimeline();renderInspector()}
+
+/* ---------- Inspector ---------- */
+function renderInspector(){
+  const box=$('#insp');
+  box.classList.toggle('open',!!sel);
+  if(sel==='rules') return rulesInspector(box);
+  const s=sel&&findStep(sel);
+  if(s) return stepInspector(box,s);
+  sel=null; box.classList.remove('open');
+  box.innerHTML=`<div class="ih"><div><p class="lbl">Inspector</p><h2>Select something to edit</h2></div></div>
+   <div class="ib"><p class="intro">Click the Start card to set which orders this route applies to, or click any step in the timeline to change its status, owner and SLA.</p>
+   <div class="legend">
+     <div><span class="k-waypoint"><span class="num" style="margin:0"><i>01</i></span></span><span><b>Waypoint</b><small>${KIND.waypoint.desc}</small></span></div>
+     <div><span class="k-task"><span class="num" style="margin:0"><i>02</i></span></span><span><b>Task</b><small>${KIND.task.desc}</small></span></div>
+     <div><span class="k-approval"><span class="num" style="margin:0 0 0 4px"><i>03</i></span></span><span><b>Approval</b><small>${KIND.approval.desc}</small></span></div>
+   </div>
+   <p class="note">Steps are grouped into stages by their status category. Drag steps to reorder them, or use the arrows.</p></div>`;
+}
+const optVal=o=>Array.isArray(o)?o[0]:o, optLbl=o=>Array.isArray(o)?o[1]:'';
+function rcount(r,k){const v=r[k];return Array.isArray(v)?(v.length?`${v.length} selected`:'Any'):v}
+function ruleGroup(g,r){
+  if(g.sec) return `<p class="sec">${g.sec}</p>`;
+  const v=r[g.key];let body='';
+  if(g.kind==='chips') body=`<div class="chips">${g.opts.map(o=>`<button type="button" class="chip${v.includes(o)?' on':''}" data-chip="${g.key}" data-v="${esc(o)}" aria-pressed="${v.includes(o)}">${esc(o)}</button>`).join('')}</div>`;
+  if(g.kind==='list') body=`<input type="search" data-search="${g.key}" id="s-${g.key}" placeholder="Search ${g.label.toLowerCase()}"><div class="checklist">${g.opts.map(o=>`<label data-row="${esc((optVal(o)+' '+optLbl(o)).toLowerCase())}"><input type="checkbox" data-key="${g.key}" value="${esc(optVal(o))}" ${v.includes(optVal(o))?'checked':''}>${g.key==='customers'?esc(optVal(o))+`<small>${esc(optLbl(o))}</small>`:`<span><b>${esc(optVal(o))}</b> · ${esc(optLbl(o).split(' · ')[0])}</span><small>${esc(optLbl(o).split(' · ').slice(1).join(' · '))}</small>`}</label>`).join('')}</div>`;
+  if(g.kind==='seg') body=`<div class="seg">${g.opts.map(o=>`<button type="button" class="${v===o?'on':''}" data-seg="${g.key}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+  return `<div class="group" id="g-${g.key}"><div class="ghd"><label>${g.label}</label><span class="cnt" id="c-${g.key}">${rcount(r,g.key)}</span><button type="button" class="clr" data-clear="${g.key}">Clear</button></div>${g.hint?`<p class="ghint">${g.hint}</p>`:''}${body}</div>`;
+}
+function rulesInspector(box){
+  const r=wf().rules;
+  box.innerHTML=`<div class="ih"><div><p class="lbl">Start</p><h2>Start Rules</h2></div><button class="x" data-close-insp aria-label="Close">×</button></div>
+   <div class="ib">
+     <p class="intro">Choose which new orders start “${esc(wf().name)}”. An empty rule accepts any value. Changes apply as you click.</p>
+     <div class="group"><div class="ghd"><label>Order must match</label></div><div class="seg">${['All','Any'].map(o=>`<button type="button" class="${r.matchMode===o?'on':''}" data-seg="matchMode" data-v="${o}">${o==='All'?'All rules':'Any rule'}</button>`).join('')}</div></div>
+     ${RGROUPS.map(g=>ruleGroup(g,r)).join('')}
+     <p class="note">Entities come from your entity master. Address, customer and country lists are sample values; connect them to your AD code, customer and country masters.</p>
+   </div>
+   <div class="if"><button class="btn danger" id="r-reset">Clear all rules</button><span class="sp"></span><button class="btn" data-close-insp>Done</button></div>`;
+}
+function pickList(s){
+  const w=wf(),q=pick.q.toUpperCase(),used=usedIds();
+  const rows=STATUSES.filter(x=>(x.type===w.statusType||x.id===s.statusId)&&(pick.cat==='All'||x.cat===pick.cat)&&(!q||x.text.includes(q)||String(x.id)===q))
+    .sort((a,b)=>CAT_ORDER.indexOf(a.cat)-CAT_ORDER.indexOf(b.cat)||a.id-b.id);
+  return rows.map(x=>`<label class="srow${s.statusId===x.id?' on':''}"><input type="radio" name="i-status" value="${x.id}" ${s.statusId===x.id?'checked':''}><span class="id">#${x.id}</span><span>${esc(nice(x.text))}</span>${used.has(x.id)&&s.statusId!==x.id?'<em>Already used in this route</em>':''}</label>`).join('')||'<p class="note" style="margin:8px">No status matches.</p>';
+}
+function statusOptions(cur){
+  const w=wf();let h='<option value="">Choose status…</option>';
+  ['Revisions',...CAT_ORDER.filter(c=>c!=='Revisions')].forEach(c=>{const it=STATUSES.filter(x=>x.cat===c&&(x.type===w.statusType||x.id===cur));if(!it.length)return;
+    h+=`<optgroup label="${c}">${it.map(x=>`<option value="${x.id}" ${x.id===cur?'selected':''}>#${x.id} ${esc(nice(x.text))}</option>`).join('')}</optgroup>`});
+  return h;
+}
+function stepInspector(box,s){
+  const w=wf(),i=w.steps.indexOf(s);
+  const cats=['All',...CAT_ORDER.filter(c=>STATUSES.some(x=>x.type===w.statusType&&x.cat===c))];
+  if(!cats.includes(pick.cat)) pick.cat='All';
+  box.innerHTML=`<div class="ih"><div><p class="lbl">Step ${i+1} of ${w.steps.length}</p><h2 id="i-title">${esc(stepTitle(s))}</h2></div><button class="x" data-close-insp aria-label="Close">×</button></div>
+   <div class="ib">
+     <div class="group"><div class="ghd"><h3>Step type</h3></div>
+       <div class="seg">${Object.keys(KIND).map(k=>`<button type="button" class="${s.kind===k?'on':''}" data-kind="${k}">${KIND[k].label}</button>`).join('')}</div>
+       <p class="ghint" style="margin:0">${KIND[s.kind].desc}</p></div>
+     <div class="group"><div class="ghd"><h3>${s.kind==='waypoint'?'Status reached':'Status while this step is open'}</h3><span class="cnt">Type ${w.statusType} · ${TYPES[w.statusType]}</span></div>
+       <input type="search" id="i-q" placeholder="Search status text or ID" value="${esc(pick.q)}">
+       <div class="cats">${cats.map(c=>`<button type="button" class="chip${pick.cat===c?' on':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+       <div class="slist" id="i-list" role="radiogroup" aria-label="Status">${pickList(s)}</div></div>
+     <label class="fld"><span>Display name (optional)</span><input type="text" id="i-name" value="${esc(s.name)}" placeholder="${esc(byId(s.statusId)?nice(byId(s.statusId).text):'Uses the status name')}"></label>
+     <div class="group"><div class="ghd"><h3>Owner</h3></div>
+       <div class="grid2">
+         <label class="fld"><span>Assignee type</span><select id="i-atype">${['Internal User','Service Provider','Customer'].map(o=>`<option ${s.atype===o?'selected':''}>${o}</option>`).join('')}</select></label>
+         <label class="fld"><span>Assignment</span><select id="i-amode">${['Direct','Round Robin'].map(o=>`<option ${s.amode===o?'selected':''}>${o}</option>`).join('')}</select></label>
+         <label class="fld"><span>Person or team</span><input type="text" id="i-who" value="${esc(s.assignee)}" placeholder="e.g. CRM desk"></label>
+         <label class="fld"><span>SLA (hours)</span><input type="number" id="i-sla" min="0" value="${esc(s.sla)}" placeholder="e.g. 24"></label>
+       </div></div>
+     ${s.kind==='approval'?`<div class="group"><div class="ghd"><h3>When sent back</h3></div>
+       <p class="ghint" style="margin:0">The order goes through these steps, then returns to this approval. Leave empty to return to the previous step.</p>
+       <div class="brows">${(s.back||[]).map((b,j)=>`<div class="brow"><span class="n">${j+1}</span><select data-b-status="${j}" aria-label="Send-back status ${j+1}">${statusOptions(b.statusId)}</select><input type="text" data-b-who="${j}" value="${esc(b.assignee)}" placeholder="Owner" aria-label="Send-back owner ${j+1}"><button type="button" data-b-rm="${j}" aria-label="Remove">×</button></div>`).join('')}
+       ${(s.back||[]).length?'<div class="bend">↩ back to this approval</div>':''}</div>
+       <button type="button" class="linkbtn" style="padding-left:0" data-b-add>+ Add send-back step</button></div>`:''}
+   </div>
+   <div class="if"><button class="btn" id="i-dup">Duplicate</button><span class="sp"></span><button class="btn danger" id="i-del">Delete step</button></div>`;
+}
+
+/* ---------- Inspector events ---------- */
+const insp=$('#insp');
+insp.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('[data-close-insp]')){sel=null;renderRules();renderTimeline();renderInspector();return}
+  if(sel==='rules'){
+    const r=wf().rules;
+    const c=t.closest('[data-chip]');
+    if(c){const a=r[c.dataset.chip],v=c.dataset.v,i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);c.classList.toggle('on');c.setAttribute('aria-pressed',i<0);$('#c-'+c.dataset.chip).textContent=rcount(r,c.dataset.chip);renderRules();return}
+    const sg=t.closest('[data-seg]');
+    if(sg){r[sg.dataset.seg]=sg.dataset.v;sg.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===sg));const cn=$('#c-'+sg.dataset.seg);if(cn)cn.textContent=rcount(r,sg.dataset.seg);renderRules();return}
+    const x=t.closest('[data-clear]');
+    if(x){const k=x.dataset.clear;r[k]=Array.isArray(r[k])?[]:'Any';$('#g-'+k).outerHTML=ruleGroup(RGROUPS.find(g=>g.key===k),r);renderRules();return}
+    if(t.id==='r-reset'){Object.assign(r,emptyRules(),{matchMode:r.matchMode});renderRules();renderInspector();toast('All start rules cleared');return}
+    return;
+  }
+  const s=findStep(sel);if(!s)return;
+  const k=t.closest('[data-kind]');
+  if(k){s.kind=k.dataset.kind;if(s.kind==='approval'&&!s.back)s.back=[];refreshFlow();renderInspector();return}
+  const c=t.closest('[data-cat]');
+  if(c){pick.cat=c.dataset.cat;c.parentElement.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b===c));$('#i-list').innerHTML=pickList(s);return}
+  const rm=t.closest('[data-b-rm]');
+  if(rm){s.back.splice(+rm.dataset.bRm,1);refreshFlow();renderLib();renderInspector();return}
+  if(t.closest('[data-b-add]')){s.back.push(bk(null,''));renderInspector();refreshFlow();return}
+  if(t.id==='i-dup'){const i=wf().steps.indexOf(s),cp={...clone(s),id:uid('s')};if(cp.back)cp.back=cp.back.map(b=>({...b,id:uid('b')}));wf().steps.splice(i+1,0,cp);sel=cp.id;refreshFlow();renderInspector();toast('Step duplicated');return}
+  if(t.id==='i-del'){if(!t.dataset.armed){t.dataset.armed='1';t.textContent='Click again to delete';return}
+    const w=wf();w.steps=w.steps.filter(x=>x.id!==s.id);sel=null;refreshFlow();renderLib();renderInspector();toast('Step deleted')}
+});
+insp.addEventListener('change',e=>{
+  const t=e.target;
+  if(sel==='rules'){const cb=t.closest('input[data-key]');if(!cb)return;const r=wf().rules,a=r[cb.dataset.key],i=a.indexOf(cb.value);
+    cb.checked?(i<0&&a.push(cb.value)):(i>=0&&a.splice(i,1));$('#c-'+cb.dataset.key).textContent=rcount(r,cb.dataset.key);renderRules();return}
+  const s=findStep(sel);if(!s)return;
+  if(t.name==='i-status'){s.statusId=+t.value;$('#i-list').querySelectorAll('.srow').forEach(r=>r.classList.toggle('on',r.querySelector('input').checked));
+    $('#i-title').textContent=stepTitle(s);$('#i-name').placeholder=nice(byId(s.statusId).text);refreshFlow();renderLib();return}
+  if(t.id==='i-atype'){s.atype=t.value;refreshFlow();return}
+  if(t.id==='i-amode'){s.amode=t.value;refreshFlow();return}
+  if(t.dataset.bStatus!=null){s.back[+t.dataset.bStatus].statusId=t.value?+t.value:null;refreshFlow();renderLib();return}
+});
+insp.addEventListener('input',e=>{
+  const t=e.target;
+  if(sel==='rules'){const sr=t.closest('[data-search]');if(!sr)return;const q=sr.value.trim().toLowerCase();sr.nextElementSibling.querySelectorAll('label').forEach(l=>l.hidden=!!q&&!l.dataset.row.includes(q));return}
+  const s=findStep(sel);if(!s)return;
+  if(t.id==='i-q'){pick.q=t.value.trim();$('#i-list').innerHTML=pickList(s);return}
+  if(t.id==='i-name'){s.name=t.value;$('#i-title').textContent=stepTitle(s);refreshFlow();return}
+  if(t.id==='i-who'){s.assignee=t.value;refreshFlow();return}
+  if(t.id==='i-sla'){s.sla=t.value===''?'':Math.max(0,+t.value);refreshFlow();return}
+  if(t.dataset.bWho!=null){s.back[+t.dataset.bWho].assignee=t.value;return}
+});
+
+/* ---------- Timeline events ---------- */
+function select(id){sel=id;renderRules();renderTimeline();renderInspector()}
+function insertStep(at,statusId){
+  const w=wf(),s=mk('waypoint',statusId);w.steps.splice(at,0,s);pick.q='';
+  sel=s.id;refreshFlow();renderLib();renderInspector();
+  toast(statusId?`Added “${stepTitle(s)}” as step ${at+1}`:`New step ${at+1}: choose its status`);
+  requestAnimationFrame(()=>document.querySelector(`[data-step="${s.id}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'}));
+}
+function moveStep(id,to){const w=wf(),i=w.steps.findIndex(s=>s.id===id);if(i<0)return;const [s]=w.steps.splice(i,1);to=Math.max(0,Math.min(w.steps.length,to>i?to-1:to));w.steps.splice(to,0,s);refreshFlow();if(sel===id)renderInspector()}
+const tl=$('#timeline');
+tl.addEventListener('click',e=>{
+  const mv=e.target.closest('[data-move]');
+  if(mv){const id=mv.closest('.step').dataset.step,i=+mv.closest('.step').dataset.i,d=+mv.dataset.move;moveStep(id,d<0?i-1:i+2);return}
+  const ins=e.target.closest('[data-ins]');
+  if(ins){insertStep(+ins.dataset.ins,null);return}
+  const st=e.target.closest('.step');if(st)select(st.dataset.step);
+});
+tl.addEventListener('keydown',e=>{const st=e.target.closest('.step');if(st&&e.target===st&&(e.key==='Enter'||e.key===' ')){e.preventDefault();select(st.dataset.step)}});
+let dragId=null;
+tl.addEventListener('dragstart',e=>{const st=e.target.closest('.step');if(!st)return;dragId=st.dataset.step;e.dataTransfer.setData('text/plain','step:'+dragId);e.dataTransfer.effectAllowed='move'});
+function clearDrop(){tl.querySelectorAll('.drop-before,.drop-after,.drop').forEach(x=>x.classList.remove('drop-before','drop-after','drop'))}
+function dropTarget(e){
+  const st=e.target.closest('.step');
+  if(st){const r=st.getBoundingClientRect(),after=e.clientY>r.top+r.height/2;return {el:st,cls:after?'drop-after':'drop-before',at:+st.dataset.i+(after?1:0)}}
+  const ins=e.target.closest('[data-ins]');if(ins)return {el:ins,cls:'drop',at:+ins.dataset.ins};
+  return null;
+}
+tl.addEventListener('dragover',e=>{const d=dropTarget(e);if(!d)return;e.preventDefault();clearDrop();d.el.classList.add(d.cls)});
+tl.addEventListener('dragleave',e=>{if(!tl.contains(e.relatedTarget))clearDrop()});
+tl.addEventListener('drop',e=>{
+  const d=dropTarget(e);clearDrop();if(!d)return;e.preventDefault();
+  const v=e.dataTransfer.getData('text/plain');
+  if(v.startsWith('step:'))moveStep(v.slice(5),d.at);
+  else if(v.startsWith('status:'))insertStep(d.at,+v.slice(7));
+});
+tl.addEventListener('dragend',()=>{dragId=null;clearDrop()});
+
+/* ---------- Start card, rail, top bar ---------- */
+$('#rules').addEventListener('click',e=>{
+  if(e.target.closest('[data-mm]')){const r=wf().rules;r.matchMode=r.matchMode==='All'?'Any':'All';renderRules();if(sel==='rules')renderInspector();return}
+  select('rules');
+});
+$('#rules').addEventListener('keydown',e=>{if(e.target.id==='rules'&&(e.key==='Enter'||e.key===' ')){e.preventDefault();select('rules')}});
+$('.rail').addEventListener('click',e=>{
+  const w=e.target.closest('[data-wf]');
+  if(w){state.current=w.dataset.wf;sel=null;pick.q='';pick.cat='All';renderAll();return}
+  const s=e.target.closest('[data-add-status]');
+  if(s){const steps=wf().steps,i=steps.findIndex(x=>x.id===sel);insertStep(i>=0?i+1:steps.length,+s.dataset.addStatus)}
+});
+$('#mlist').addEventListener('dragstart',e=>{const s=e.target.closest('[data-add-status]');if(s){e.dataTransfer.setData('text/plain','status:'+s.dataset.addStatus);e.dataTransfer.effectAllowed='copy'}});
+$('#lib-q').addEventListener('input',renderLib);
+$('#btn-new').addEventListener('click',()=>{
+  const w={id:uid('w'),name:'New order route',status:'Draft',statusType:1,rules:emptyRules(),steps:[]};
+  state.workflows.push(w);state.current=w.id;sel='rules';renderAll();$('#wf-name').select();
+});
+$('#wf-name').addEventListener('input',e=>{wf().name=e.target.value;renderWfList()});
+$('#wf-status').addEventListener('change',e=>{wf().status=e.target.value;renderWfList()});
+$('#wf-type').addEventListener('change',e=>{wf().statusType=+e.target.value;pick.cat='All';renderLib();renderWfList();renderInspector();toast(`Library now shows Type ${e.target.value} · ${TYPES[e.target.value]} statuses`)});
+$('#btn-save').addEventListener('click',()=>toast(persist()?'Saved in this browser':'Could not save: browser storage is blocked'));
+document.addEventListener('keydown',e=>{
+  if(!$('#scrim').hidden){if(e.key==='Escape')closeModal();return}
+  if(e.key==='Escape'&&sel){sel=null;renderRules();renderTimeline();renderInspector()}
+});
+
+/* ---------- Export JSON ---------- */
+function exportDef(){
+  const w=wf(),steps=[],links=[];
+  const out=(s,extra={})=>({id:s.id,kind:s.kind||'task',statusId:s.statusId,statusText:byId(s.statusId)?.text??null,name:s.kind?stepTitle(s):(byId(s.statusId)?nice(byId(s.statusId).text):null),assigneeType:s.atype||'Internal User',assignment:s.amode||'Direct',assignee:s.assignee||'',slaHours:s.sla===''||s.sla==null?null:+s.sla,...extra});
+  if(w.steps[0])links.push({from:'start',to:w.steps[0].id,path:'next'});
+  w.steps.forEach((s,i)=>{
+    steps.push(out(s,{order:i+1}));const next=w.steps[i+1];
+    if(next)links.push({from:s.id,to:next.id,path:s.kind==='approval'?'approve':'next'});
+    if(s.kind==='approval'){const b=s.back||[];
+      if(b.length){b.forEach((x,j)=>{steps.push(out(x,{sendBackOf:s.id}));links.push({from:j?b[j-1].id:s.id,to:x.id,path:j?'next':'reject'})});links.push({from:b[b.length-1].id,to:s.id,path:'next'})}
+      else if(i>0)links.push({from:s.id,to:w.steps[i-1].id,path:'reject'});}
+  });
+  return {name:w.name,status:w.status,statusTypeId:w.statusType,startRules:w.rules,steps,links};
+}
+function openModal(h){$('#modal').innerHTML=h;$('#scrim').hidden=false}
+function closeModal(){$('#scrim').hidden=true;$('#modal').innerHTML=''}
+$('#scrim').addEventListener('click',e=>{if(e.target.id==='scrim'||e.target.closest('[data-close]'))closeModal()});
+$('#btn-json').addEventListener('click',()=>{
+  const json=JSON.stringify(exportDef(),null,2);
+  openModal(`<div class="ih"><div><p class="lbl">Export</p><h2>Order route JSON</h2></div><button class="x" data-close aria-label="Close">×</button></div>
+   <div class="ib"><p class="intro">Definition for “${esc(wf().name)}”: start rules, steps with status IDs, and links (next, approve, reject).</p><pre class="json" id="json-pre">${esc(json)}</pre></div>
+   <div class="if"><span class="sp"></span><button class="btn" data-close>Close</button><button class="btn primary" id="copy-json">Copy JSON</button></div>`);
+  $('#copy-json').onclick=()=>navigator.clipboard.writeText(json).then(()=>toast('Copied')).catch(()=>{const r=document.createRange();r.selectNodeContents($('#json-pre'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected: press Ctrl+C to copy')});
+});
+
+/* ---------- Boot ---------- */
+load();renderAll();
+</script>

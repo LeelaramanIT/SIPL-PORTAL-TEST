@@ -50,6 +50,9 @@ import CustomerMaster from '../Slices/Master/CustomerMaster/CustomerMasterSlice'
 // customer labelling
 import CustomerLabellingReducer from '../Slices/Master/PI_Master/CustomerLabellingSlice'
 
+// order routes (not persisted: always reloaded from the API)
+import OrderRoutesReducer from '../Slices/Master/OrderRoutes/OrderRoutesSlice'
+
 
 // Encryption config
 const encryptor = encryptTransform({
@@ -267,6 +270,7 @@ const rootReducer = combineReducers({
   customerMaster: persistedCustomerMasterReducer,
   legalEntity: persistedLegalEntityMasterReducer,
   customerLabelling: CustomerLabellingReducer,
+  orderRoutes: OrderRoutesReducer,
   productionReport: productionReportReducer,
   errorLog: errorLogReducer
 });

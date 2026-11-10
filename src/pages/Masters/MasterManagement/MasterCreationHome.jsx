@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   ArrowUpRight,
   Lock,
+  Route,
 } from "lucide-react";
 
 /* ============================================================
@@ -37,9 +38,19 @@ const MODULES = [
     status: "active",
   },
   {
+    key: "order-routes",
+    to: "/Masters/Master-creation/order-routes",
+    tag: "03",
+    icon: Route,
+    title: "Order Routes",
+    description:
+      "Define the path an order follows: start rules, waypoints, tasks and approvals with owners and SLAs.",
+    status: "active",
+  },
+  {
     key: "master-management",
     to: "/Masters/MasterManagement",
-    tag: "03",
+    tag: "04",
     icon: LayoutGrid,
     title: "Master Management",
     description:

@@ -105,6 +105,7 @@ import MyProfilePage from "../pages/Settings/UserProfile/UserProfile";
 import ProductionOrderTracking from "../pages/Reports/ProductionReports/ProductionReportTracking/ProductionOrderTracking";
 import SerialLogs from "../pages/ErrorLog/Seriallogs";
 import CustomerProcessIDMappingFunctionDoc from "../pages/Masters/Customer Master/CustomerProcessIDMapping/data/Customerprocessidmappingfunctiondoc ";
+import OrderRoutes from "../pages/Masters/MasterManagement/OrderRoutes/OrderRoutes";
 // import CustomerProcessID from "../pages/Masters/Item ID Master/Customer ProcessID/CustomerProcessID";
 // import WorkOrderPlanning from "../pages/Dashboard/PlantAssign";
 
@@ -154,6 +155,7 @@ export const router = createBrowserRouter([
                   { index: true, element: <MasterCreationHome /> },
                   { path:'legal-entity', element: <LegalEntityMaster /> },
                   { path:'reports-master', element: <ReportMasterManagement /> },
+                  { path:'order-routes', element: <OrderRoutes /> },
                 ],
               },
               {
