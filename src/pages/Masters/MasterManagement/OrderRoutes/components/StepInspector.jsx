@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Copy, Plus, Trash2, X } from "lucide-react";
-import { CATEGORY_ORDER, STATUS_TYPES, prettyStatus } from "../data/statusMaster";
+import { CATEGORY_ORDER, matchesType, prettyStatus, statusTypeLabel } from "../data/statusMaster";
 import {
   ASSIGNEE_TYPES,
   ASSIGNMENT_MODES,
@@ -14,13 +14,13 @@ import { FieldHeader, InspectorShell, Segmented, inputClass } from "./InspectorS
 
 // Right panel for one step: type, status, owner, SLA and (for approvals) the
 // send-back path. Edits apply immediately through onChange(mutator).
-const StepInspector = ({ route, step, statuses, statusById, onChange, onClose, onDuplicate, onDelete }) => {
+const StepInspector = ({ route, step, statuses, statusTypes, statusById, onChange, onClose, onDuplicate, onDelete }) => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [armDelete, setArmDelete] = useState(false);
 
   const index = route.steps.findIndex((s) => s.id === step.id);
-  const typeStatuses = statuses.filter((s) => s.typeId === route.statusTypeId || s.id === step.statusId);
+  const typeStatuses = statuses.filter((s) => matchesType(s, route.statusTypeId) || s.id === step.statusId);
   const categories = ["All", ...CATEGORY_ORDER.filter((c) => typeStatuses.some((s) => s.category === c))];
   const activeCategory = categories.includes(category) ? category : "All";
   const used = usedStatusIds(route);
@@ -31,7 +31,7 @@ const StepInspector = ({ route, step, statuses, statusById, onChange, onClose, o
 
   // Send-back dropdown: revision statuses first, as they are the usual choice.
   const sendBackGroups = ["Revisions", ...CATEGORY_ORDER.filter((c) => c !== "Revisions")]
-    .map((c) => ({ c, items: statuses.filter((s) => s.category === c && s.typeId === route.statusTypeId) }))
+    .map((c) => ({ c, items: statuses.filter((s) => s.category === c && matchesType(s, route.statusTypeId)) }))
     .filter((g) => g.items.length);
 
   const set = (field, value) => onChange((s) => (s[field] = value));
@@ -62,6 +62,28 @@ const StepInspector = ({ route, step, statuses, statusById, onChange, onClose, o
         </>
       }
     >
+      {step.ruleStatusId ? (
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700">
+          <span className="flex flex-col">
+            <span className="text-[13px] font-semibold">Active</span>
+            <small className="text-[12px] text-slate-500 dark:text-slate-400">
+              {step.isActive === false ? "Orders skip this step." : "Orders pass through this step."} Saved with Save.
+            </small>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={step.isActive !== false}
+            onChange={(e) => set("isActive", e.target.checked)}
+            className="h-4 w-4 accent-indigo-600"
+          />
+        </label>
+      ) : (
+        <p className="m-0 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+          New step: it is added to the server on Save, and can be switched off after that.
+        </p>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <FieldHeader title="Step type" />
         <Segmented
@@ -76,7 +98,7 @@ const StepInspector = ({ route, step, statuses, statusById, onChange, onClose, o
       <div className="flex flex-col gap-1.5">
         <FieldHeader
           title={step.kind === "waypoint" ? "Status reached" : "Status while this step is open"}
-          count={`Type ${route.statusTypeId} · ${STATUS_TYPES[route.statusTypeId]}`}
+          count={statusTypeLabel(statusTypes, route.statusTypeId)}
         />
         <input
           type="search"

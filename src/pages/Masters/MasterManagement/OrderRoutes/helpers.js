@@ -21,7 +21,8 @@ export const STEP_KINDS = {
 
 export const ASSIGNEE_TYPES = ["Internal User", "Service Provider", "Customer"];
 export const ASSIGNMENT_MODES = ["Direct", "Round Robin"];
-export const ROUTE_STATUSES = ["Active", "Draft", "Inactive"];
+// Whole-workflow switch, saved through modify-workflow-configuration.isActive.
+export const ROUTE_STATUSES = ["Active", "Inactive"];
 
 export const newStep = (kind = "waypoint", statusId = null, o = {}) => ({
   id: uid("s_"),
@@ -33,15 +34,16 @@ export const newStep = (kind = "waypoint", statusId = null, o = {}) => ({
   assignee: o.assignee || "",
   slaHours: o.slaHours ?? null,
   sendBack: o.sendBack || [],
+  isActive: true,
 });
 
 export const newSendBack = (statusId = null, assignee = "") => ({ id: uid("b_"), statusId, assignee });
 
-export const newRoute = () => ({
+export const newRoute = (statusTypeId = null) => ({
   id: uid("new_"),
   name: "New order route",
-  status: "Draft",
-  statusTypeId: 1,
+  status: "Active",
+  statusTypeId,
   rules: emptyRules(),
   steps: [],
 });
@@ -86,24 +88,25 @@ export function routeSummary(route) {
   };
 }
 
-// Body for POST WorkFlow/create-workflow (also shown by Export JSON).
-// Rules left on "Any" are sent as 0. Steps are sent in timeline order as
-// wayPointOrderID 1, 2, 3…
-// `workflowDescription` (the route name) is not in the current API contract;
-// it is sent so the backend can store it once the field is added — the GET
-// returns workflowDescription, so create needs to accept it.
+// Body for POST WorkFlow/create-workflow (also shown by Export JSON):
+//   { workflowDescription, entityID, exportAuthorizeAddressID, orderTypeID,
+//     customerCode, shipID, billID, workFlowRuleStatus: [...] }
+// CreateWorkflowRequestDto uses non-nullable `long` for the six rule ids, so a
+// rule left empty ("applies to all") is sent as 0; at least one must be set
+// (all six 0 = the default workflow). Steps are sent in timeline order as wayPointOrderID 1, 2, 3…
 // Step type, owner, SLA and send-back paths are not in the API yet and are
 // not sent.
 export function toCreateWorkflowBody(route, statusById) {
   const r = route.rules || {};
+  const id = (v) => ruleValue(v) ?? 0;
   return {
     workflowDescription: route.name.trim(),
-    entityID: r.entityId ?? 0,
-    exportAuthorizeAddressID: r.exportAddressId ?? 0,
-    orderTypeID: r.orderTypeId ?? 0,
-    customerCode: r.customerId ?? 0,
-    shipID: r.shipId ?? 0,
-    billID: r.billId ?? 0,
+    entityID: id(r.entityId),
+    exportAuthorizeAddressID: id(r.exportAddressId),
+    orderTypeID: id(r.orderTypeId),
+    customerCode: id(r.customerId),
+    shipID: id(r.shipId),
+    billID: id(r.billId),
     workFlowRuleStatus: route.steps.map((s, i) => ({
       statusName: statusById.get(s.statusId)?.text ?? "",
       statusMasterID: s.statusId,
@@ -112,12 +115,30 @@ export function toCreateWorkflowBody(route, statusById) {
   };
 }
 
-// A step that is not on the server yet: no ruleStatusId from the GET and not
-// sent in an earlier save of this session.
-export const isUnsavedStep = (s) => !s.ruleStatusId && !s.persisted;
+// A step that is not on the server yet (no ruleStatusID).
+export const isUnsavedStep = (s) => !s.ruleStatusId;
 
-// Body for POST WorkFlow/insert-workflow-status: the steps added to a saved
-// route, each with its position in the timeline (wayPointOrderID).
+// Saved step whose Active switch differs from what the server has.
+export const isActiveChanged = (s) => Boolean(s.ruleStatusId) && (s.isActive !== false) !== (s.serverActive !== false);
+
+// wayPointOrderID is always the step's position in the timeline: 1, 2, 3…
+// with no gaps, recalculated from the current order on every save. The order
+// counts as changed when the saved steps' sequence differs from the server's
+// (compared by sequence, not by number: the GET leaves gaps where it hides
+// inactive steps).
+export const isOrderChanged = (route) => {
+  const saved = route.steps.filter((s) => s.ruleStatusId);
+  const serverOrder = saved
+    .slice()
+    .sort((a, b) => (a.wayPointOrderId ?? 0) - (b.wayPointOrderId ?? 0))
+    .map((s) => s.ruleStatusId);
+  return saved.some((s, i) => s.ruleStatusId !== serverOrder[i]);
+};
+
+// Body for POST WorkFlow/insert-workflow-status (save type 2): the steps added
+// to a saved route, each with the position it must take (wayPointOrderID).
+// Saved steps are not sent here, so they are not inserted twice; their new
+// positions go to update-workflow-status-order (toReorderBody).
 export function toInsertStatusBody(route, statusById) {
   return {
     ruleHeaderID: route.id,
@@ -131,6 +152,69 @@ export function toInsertStatusBody(route, statusById) {
       })),
   };
 }
+
+// Body for PUT WorkFlow/update-workflow-status-order (save type 4): the full
+// ordered list of the route's steps. Every step needs its ruleStatusID.
+export const toReorderBody = (route) => ({
+  ruleHeaderID: route.id,
+  workflowStatuses: route.steps.map((s, i) => ({ ruleStatusID: s.ruleStatusId, wayPointOrderID: i + 1 })),
+});
+
+// Body for PATCH WorkFlow/workflow-status-active-inactive (save type 3), one per step.
+// WorkflowActiveInactiveRequestDto has two non-nullable bools: both are always sent.
+export const toActiveBody = (step) => ({ ruleStatusID: step.ruleStatusId, isActive: step.isActive !== false, isDeleted: false });
+
+// Body for PATCH WorkFlow/workflow-status-active-inactive that deletes a saved
+// step (a deleted step is also inactive).
+export const toDeleteStepBody = (step) => ({ ruleStatusID: step.ruleStatusId, isActive: false, isDeleted: true });
+
+// Same Start Rules = the same combination of set and empty fields, with
+// 0 / null / "" all treated as empty.
+export const sameRules = (a = {}, b = {}) => RULE_FIELDS.every(([k]) => ruleValue(a[k]) === ruleValue(b[k]));
+
+const RULE_API_KEYS = {
+  entityId: "entityID",
+  exportAddressId: "exportAuthorizeAddressID",
+  orderTypeId: "orderTypeID",
+  customerId: "customerCode",
+  shipId: "shipID",
+  billId: "billID",
+};
+
+// Body for PUT WorkFlow/modify-workflow-configuration (save type 5): only the
+// header fields that differ from the server copy; unchanged fields are left
+// out (the API reads a missing field as "leave as is"). Returns null when
+// nothing there changed. A rule set to "Any" is sent as 0, like on create:
+//   { ruleHeaderID: 10, entityID: 2, shipID: 0, billID: 0, workflowDescription: "…" }
+export function toModifyHeaderBody(local, server) {
+  const body = { ruleHeaderID: local.id };
+  if ((local.name || "").trim() !== (server.name || "").trim()) body.workflowDescription = local.name.trim();
+  RULE_FIELDS.forEach(([k]) => {
+    const lv = ruleValue(local.rules?.[k]);
+    if (lv !== ruleValue(server.rules?.[k])) body[RULE_API_KEYS[k]] = lv ?? 0;
+  });
+  if (local.status !== server.status) body.isActive = local.status === "Active";
+  return Object.keys(body).length > 1 ? body : null;
+}
+
+// Start Rules: any one or more of the six fields. An empty field means
+// "applies to all"; the page keeps it as null and sends it as 0 (the DTO's
+// ids are non-nullable long).
+export const RULE_FIELDS = [
+  ["entityId", "Entity"],
+  ["exportAddressId", "Export address"],
+  ["orderTypeId", "Order type"],
+  ["customerId", "Customer"],
+  ["shipId", "Ship-to"],
+  ["billId", "Bill-to"],
+];
+// 0, null, "" and undefined all count as empty.
+export const ruleValue = (v) => (v === "" || v == null || Number(v) <= 0 || Number.isNaN(Number(v)) ? null : Number(v));
+export const setRules = (rules = {}) => RULE_FIELDS.filter(([k]) => ruleValue(rules[k]) != null).map(([, label]) => label);
+export const hasAnyRule = (rules) => setRules(rules).length > 0;
+// All six rules on Any = the DEFAULT workflow: it matches every order, so it is
+// used only when no more specific route matches (most set fields wins).
+export const isDefaultRules = (rules) => !hasAnyRule(rules);
 
 // Problems that block saving.
 export function validateRoute(route) {

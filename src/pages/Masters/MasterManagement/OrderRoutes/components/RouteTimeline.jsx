@@ -166,6 +166,16 @@ const RouteTimeline = ({ route, statusById, selection, onSelect, onInsert, onMov
                             {stepTitle(step, statusById)}
                           </span>
                           {st && <span className="font-mono text-[11px] font-normal text-slate-400">#{st.id}</span>}
+                          {step.isActive === false && (
+                            <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                              Inactive
+                            </span>
+                          )}
+                          {!step.ruleStatusId && !String(route.id).startsWith("new_") && (
+                            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                              New
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-slate-500 dark:text-slate-400">
                           <span className={`rounded px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] ${KIND_STYLES[step.kind].pill}`}>

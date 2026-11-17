@@ -14,14 +14,15 @@ export const emptyRules = () => ({
   billId: null,
 });
 
-// Fallback only, used if workflow-details returns no orderTypes.
-export const ORDER_TYPE_OPTIONS = [
-  { id: 1, name: "Standard Sales Order" },
-  { id: 2, name: "Sales Agreement" },
-  { id: 3, name: "Make-to-Stock" },
-  { id: 4, name: "Trial / Sample" },
-  { id: 5, name: "Inter-Plant Transfer" },
-];
+// Empty lists until GET WorkFlow/workflow-details has loaded.
+export const EMPTY_RULE_OPTIONS = {
+  entities: [],
+  exportAddresses: [],
+  orderTypes: [],
+  customers: [],
+  shipAddresses: [],
+  billAddresses: [],
+};
 
 const joinParts = (...parts) =>
   parts
@@ -33,6 +34,13 @@ const joinParts = (...parts) =>
 const num = (...vals) => {
   const v = vals.find((x) => x !== undefined && x !== null && x !== "");
   return v === undefined ? null : Number(v);
+};
+
+// The API can send the same id twice (workflow-details returns duplicate
+// customers); the first row wins, and rows without a valid id are dropped.
+const uniqueById = (list) => {
+  const seen = new Set();
+  return list.filter((x) => Number.isFinite(x.id) && x.id > 0 && !seen.has(x.id) && seen.add(x.id));
 };
 
 // Maps `data` of GET WorkFlow/workflow-details →
@@ -75,24 +83,31 @@ export function mapWorkflowDetails(data = {}) {
     name: c.custFullName || c.customerName || "",
   }));
 
+  // ShipAddressDto is { shipID, companyName } (sp_List_Workflow_Details); other
+  // names are read in case the list grows. There is no bill-to list yet: a
+  // row flagged addressType 2 / "BILL_TO" goes to billAddresses.
   const addresses = (data.shipAddresses || []).map((a) => {
-    const id = Number(a.shipAddressId ?? a.shipAddressID ?? a.addressId ?? a.id);
+    const id = Number(a.shipID ?? a.shipId ?? a.shipAddressId ?? a.shipAddressID ?? a.addressId ?? a.id);
     return {
       id,
-      label: joinParts(a.addressName, a.address, a.city, a.stateName, a.country) || `Address ${id}`,
+      label: joinParts(a.companyName, a.addressName, a.address, a.city, a.stateName, a.country) || `Address ${id}`,
       customerId: num(a.customerID, a.customerId, a.custID),
       billId: num(a.billID, a.billId, a.billAddressId),
       isBill: Number(a.addressType) === 2 || a.addressType === "BILL_TO",
     };
   });
+  const billRows = (data.billAddresses || []).map((a) => {
+    const id = Number(a.billID ?? a.billId ?? a.id);
+    return { id, label: joinParts(a.companyName, a.addressName, a.address) || `Address ${id}`, customerId: num(a.customerID, a.customerId, a.custID), isBill: true };
+  });
 
   return {
-    entities,
-    exportAddresses,
-    orderTypes: orderTypes.length ? orderTypes : ORDER_TYPE_OPTIONS,
-    customers,
-    shipAddresses: addresses.filter((a) => !a.isBill),
-    billAddresses: addresses.filter((a) => a.isBill),
+    entities: uniqueById(entities),
+    exportAddresses: uniqueById(exportAddresses),
+    orderTypes: uniqueById(orderTypes),
+    customers: uniqueById(customers),
+    shipAddresses: uniqueById(addresses.filter((a) => !a.isBill)),
+    billAddresses: uniqueById([...billRows, ...addresses.filter((a) => a.isBill)]),
   };
 }
 
@@ -103,49 +118,46 @@ export const exportAddressesFor = (options, entityId) => ownedBy(options.exportA
 export const shipAddressesFor = (options, customerId) => ownedBy(options.shipAddresses, "customerId", customerId);
 export const billAddressesFor = (options, customerId) => ownedBy(options.billAddresses, "customerId", customerId);
 
-// Used only when workflow-details cannot be reached.
-export const SAMPLE_RULE_OPTIONS = {
-  entities: [
-    { id: 1, code: "SIPL", name: "SUNDARAM INDUSTRIES PRIVATE LIMITED", meta: "SI001" },
-    { id: 2, code: "SLTL", name: "SUNDARAM LANKA TYRES LIMITED", meta: "SL001" },
-    { id: 3, code: "SITL", name: "SUN INDUSTRIAL TYRES LIMITED", meta: "SI002" },
-    { id: 4, code: "STA", name: "SUN TWS AMERICA", meta: "ST002" },
-  ],
-  exportAddresses: [],
-  orderTypes: ORDER_TYPE_OPTIONS,
-  customers: [],
-  shipAddresses: [],
-  billAddresses: [],
+// Name the server sent for a saved rule (route.ruleNames from
+// workflow-rule-status), only while the rule still has that id.
+export const savedRuleName = (ruleNames, field, id) => {
+  const n = ruleNames?.[field];
+  return n && id != null && n.id === id && n.name ? n.name : "";
 };
 
+// Readable label for one rule value: the loaded option first, then the name
+// the server sent with the route, then the id.
+export function ruleLabel(field, id, options, ruleNames) {
+  if (id == null) return "";
+  const find = (list) => (list || []).find((x) => x.id === id);
+  let fromList = "";
+  if (field === "entityId") {
+    const e = find(options.entities);
+    fromList = e ? e.code || e.name : "";
+  } else if (field === "customerId") {
+    const c = find(options.customers);
+    fromList = c ? `${c.name}${c.code ? ` (${c.code})` : ""}` : "";
+  } else if (field === "orderTypeId") fromList = find(options.orderTypes)?.name || "";
+  else if (field === "exportAddressId") fromList = find(options.exportAddresses)?.label || "";
+  else if (field === "shipId") fromList = find(options.shipAddresses)?.label || "";
+  else if (field === "billId") fromList = find(options.billAddresses)?.label || "";
+  return fromList || savedRuleName(ruleNames, field, id) || `#${id}`;
+}
+
+const RULE_TOKENS = [
+  ["entityId", "entity", "Entity is"],
+  ["exportAddressId", "exportAddress", "Export address is"],
+  ["orderTypeId", "orderType", "Order type is"],
+  ["customerId", "customer", "Customer is"],
+  ["shipId", "ship", "Ship-to is"],
+  ["billId", "bill", "Bill-to is"],
+];
+
 // Readable labels for the current rule values (for the Start card).
-export function describeRules(rules, options) {
-  const find = (list, id) => (list || []).find((x) => x.id === id);
-  const entity = find(options.entities, rules.entityId);
-  const customer = find(options.customers, rules.customerId);
-  const out = [];
-  if (rules.entityId != null) out.push({ key: "entity", label: "Entity is", value: entity ? entity.code || entity.name : `#${rules.entityId}` });
-  if (rules.exportAddressId != null) {
-    const a = find(options.exportAddresses, rules.exportAddressId);
-    out.push({ key: "exportAddress", label: "Export address is", value: a ? a.label : `#${rules.exportAddressId}` });
-  }
-  if (rules.orderTypeId != null) {
-    const t = find(options.orderTypes, rules.orderTypeId);
-    out.push({ key: "orderType", label: "Order type is", value: t ? t.name : `#${rules.orderTypeId}` });
-  }
-  if (rules.customerId != null)
-    out.push({
-      key: "customer",
-      label: "Customer is",
-      value: customer ? `${customer.name}${customer.code ? ` (${customer.code})` : ""}` : `#${rules.customerId}`,
-    });
-  if (rules.shipId != null) {
-    const a = find(options.shipAddresses, rules.shipId);
-    out.push({ key: "ship", label: "Ship-to is", value: a ? a.label : `#${rules.shipId}` });
-  }
-  if (rules.billId != null) {
-    const a = find(options.billAddresses, rules.billId);
-    out.push({ key: "bill", label: "Bill-to is", value: a ? a.label : `#${rules.billId}` });
-  }
-  return out;
+export function describeRules(rules, options, ruleNames) {
+  return RULE_TOKENS.filter(([field]) => rules[field] != null).map(([field, key, label]) => ({
+    key,
+    label,
+    value: ruleLabel(field, rules[field], options, ruleNames),
+  }));
 }

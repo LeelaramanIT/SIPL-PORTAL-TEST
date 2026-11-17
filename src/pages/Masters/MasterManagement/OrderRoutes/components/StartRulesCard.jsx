@@ -1,10 +1,13 @@
 import React from "react";
 import { describeRules } from "../data/ruleOptions";
+import { RULE_FIELDS, isDefaultRules, setRules } from "../helpers";
 
 // The "Start" card at the top of the timeline: a readable summary of which
 // orders follow this route. Clicking it opens the Start Rules editor.
-const StartRulesCard = ({ rules, options, selected, onSelect }) => {
-  const tokens = describeRules(rules, options);
+// All six on Any = the default workflow (used when no other route matches).
+const StartRulesCard = ({ rules, ruleNames, options, selected, onSelect }) => {
+  const tokens = describeRules(rules, options, ruleNames);
+  const setCount = setRules(rules).length;
 
   return (
     <section
@@ -33,8 +36,10 @@ const StartRulesCard = ({ rules, options, selected, onSelect }) => {
         </p>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {tokens.length === 0 && (
-          <p className="m-0 text-[13px] text-slate-500 dark:text-slate-400">No rules yet, so every new order follows this route.</p>
+        {isDefaultRules(rules) && (
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12.5px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+            Default workflow · all rules on Any
+          </span>
         )}
         {tokens.map((t) => (
           <span
@@ -49,6 +54,11 @@ const StartRulesCard = ({ rules, options, selected, onSelect }) => {
           + Add rule
         </span>
       </div>
+      <p className="m-0 text-[12px] text-slate-500 dark:text-slate-400">
+        {isDefaultRules(rules)
+          ? "Used for any order that no more specific route matches. Only one active default is allowed."
+          : `${setCount} of ${RULE_FIELDS.length} fields set; the rest apply to all. When an order matches several routes, the one with the most fields set wins.`}
+      </p>
     </section>
   );
 };

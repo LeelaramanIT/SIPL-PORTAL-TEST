@@ -5,11 +5,12 @@ import toast from "react-hot-toast";
 import { Braces, Info, Save, Trash2 } from "lucide-react";
 import {
   deleteOrderRoute,
+  deleteSavedStep,
   getOrderRouteMasters,
   getOrderRoutes,
   saveOrderRoute,
 } from "../../../../Redux/Slices/Master/OrderRoutes/OrderRoutesSlice";
-import { STATUS_TYPES } from "./data/statusMaster";
+import { statusTypeLabel } from "./data/statusMaster";
 import {
   ROUTE_STATUSES,
   STEP_KINDS,
@@ -21,7 +22,6 @@ import {
   routeSummary,
   stepTitle,
   toCreateWorkflowBody,
-  toInsertStatusBody,
   uid,
   usedStatusIds,
   validateRoute,
@@ -73,7 +73,7 @@ const EmptyInspector = () => (
 
 const OrderRoutes = () => {
   const dispatch = useDispatch();
-  const { routes: savedRoutes, statuses, ruleOptions, saving, loading, error, mock } = useSelector((s) => s.orderRoutes);
+  const { routes: savedRoutes, statuses, statusTypes, ruleOptions, saving, loading, error, canDeleteOnServer } = useSelector((s) => s.orderRoutes);
 
   // Local working copies; edits stay here until Save.
   const [routes, setRoutes] = useState([]);
@@ -89,7 +89,7 @@ const OrderRoutes = () => {
   }, [dirty]);
 
   useEffect(() => {
-    // Statuses first: the route list uses them to tell Sales Order from Inward.
+    // Masters first: the route list uses the statuses to work out each route's status type.
     dispatch(getOrderRouteMasters())
       .catch((e) => toast.error(e.message))
       .then(() => dispatch(getOrderRoutes()))
@@ -192,58 +192,68 @@ const OrderRoutes = () => {
   };
 
   const addRoute = () => {
-    const r = newRoute();
+    const r = newRoute(statusTypes[0]?.id ?? null);
     setRoutes((prev) => [...prev, r]);
     setDirty((d) => ({ ...d, [r.id]: true }));
     setCurrentId(r.id);
     setSelection("rules");
   };
 
+  // Replace the local copy `oldId` with `next`; keep it marked unsaved if asked.
+  const replaceLocalRoute = (oldId, next, stillDirty) => {
+    setRoutes((prev) => {
+      const i = prev.findIndex((r) => r.id === oldId);
+      const rest = prev.filter((r) => r.id !== oldId && r.id !== next.id);
+      rest.splice(i < 0 ? rest.length : Math.min(i, rest.length), 0, clone(next));
+      return rest;
+    });
+    setDirty((d) => {
+      const n = { ...d };
+      delete n[oldId];
+      delete n[next.id];
+      if (stillDirty) n[next.id] = true;
+      return n;
+    });
+    setCurrentId(next.id);
+  };
+
+  // Save picks the API calls from what changed (see planSave in the slice):
+  // new route → create; added steps → insert + reorder; moved steps → reorder;
+  // Active switch → active/inactive. Calls stop at the first failure.
   const handleSave = () => {
+    if (saving) return; // one request at a time: no duplicate workflows
     const errors = validateRoute(route);
     if (errors.length) {
+      if (errors.some((e) => /Start Rule/.test(e))) setSelection("rules");
       toast.error(errors.slice(0, 3).join("\n") + (errors.length > 3 ? `\n+${errors.length - 3} more` : ""));
       return;
     }
     const oldId = route.id;
-    const isNew = isNewRouteId(oldId);
-    const bodies = { create: toCreateWorkflowBody(route, statusById), insert: toInsertStatusBody(route, statusById) };
-    dispatch(saveOrderRoute(route, bodies, isNew))
-      .then(({ route: saved, sentToServer, insertedCount, notSaved }) => {
-        setRoutes((prev) => {
-          const i = prev.findIndex((r) => r.id === oldId);
-          const rest = prev.filter((r) => r.id !== oldId && r.id !== saved.id);
-          rest.splice(i < 0 ? rest.length : Math.min(i, rest.length), 0, clone(saved));
-          return rest;
-        });
-        setDirty((d) => {
-          const next = { ...d };
-          delete next[oldId];
-          delete next[saved.id];
-          return next;
-        });
-        setCurrentId(saved.id);
-        if (isNew) {
-          if (sentToServer) toast.success("Order route created");
-          else toast("Saved for this session only: creating on the server is switched off", { icon: "ℹ️", duration: 6000 });
-          return;
-        }
-        if (sentToServer) toast.success(`Added ${insertedCount} step${insertedCount === 1 ? "" : "s"} to the route on the server`);
+    dispatch(saveOrderRoute(route, statusById))
+      .then(({ route: saved, messages, notSaved, sent }) => {
+        replaceLocalRoute(oldId, saved, notSaved.length > 0);
+        if (sent) toast.success(messages.join("\n"), { duration: 5000 });
         if (notSaved.length) {
           toast(`Not saved on the server (no API yet): ${notSaved.join(", ")}. These changes last until you reload.`, {
             icon: "ℹ️",
             duration: 8000,
           });
-        } else if (!sentToServer) {
+        } else if (!sent) {
           toast("Nothing new to send. Step types, owners and SLAs are kept on this page only for now.", { icon: "ℹ️", duration: 6000 });
+        if (sent && saved.id !== oldId) return;
         }
       })
-      .catch((e) => toast.error(`Could not save: ${e.message}`));
+      .catch((e) => {
+        // Keep what already reached the server (new step ids, saved order), still unsaved.
+        if (e.route) replaceLocalRoute(oldId, e.route, true);
+        const done = e.messages?.length ? `\nAlready saved: ${e.messages.join(" ")}` : "";
+        toast.error(`Could not save: ${e.message}${done}`, { duration: 8000 });
+      });
   };
 
   const handleDelete = () => {
     const id = route.id;
-    const finish = () => {
+    const finish = (message) => {
       setRoutes((prev) => prev.filter((r) => r.id !== id));
       setDirty((d) => {
         const next = { ...d };
@@ -252,10 +262,10 @@ const OrderRoutes = () => {
       });
       setCurrentId(null);
       setSelection(null);
-      if (isNewRouteId(id) || !mock.remove) toast.success("Order route deleted");
-      else toast("Hidden for this session only: there is no delete API yet, so it comes back when you reload", { icon: "ℹ️", duration: 6000 });
+      toast.success(message || "Order route deleted");
     };
     if (isNewRouteId(id)) return finish();
+    if (!canDeleteOnServer) return toast.error("Deleting on the server is not available.");
     dispatch(deleteOrderRoute(id))
       .then(finish)
       .catch((e) => toast.error(`Could not delete: ${e.message}`));
@@ -264,7 +274,7 @@ const OrderRoutes = () => {
   const duplicateStep = () => {
     const i = route.steps.findIndex((s) => s.id === selection);
     // A copy is a new step for the server: drop the original's server ids.
-    const copy = { ...clone(route.steps[i]), id: uid("s_"), ruleStatusId: undefined, persisted: false };
+    const copy = { ...clone(route.steps[i]), id: uid("s_"), ruleStatusId: undefined, wayPointOrderId: undefined, serverActive: undefined, isActive: true };
     copy.sendBack = (copy.sendBack || []).map((b) => ({ ...b, id: uid("b_") }));
     updateRoute((r) => r.steps.splice(i + 1, 0, copy));
     setSelection(copy.id);
@@ -272,11 +282,39 @@ const OrderRoutes = () => {
   };
 
   const deleteStep = () => {
-    updateRoute((r) => {
-      r.steps = r.steps.filter((s) => s.id !== selection);
-    });
-    setSelection(null);
-    toast.success("Step deleted");
+    const step = selectedStep;
+    if (!step) return;
+    // A step that is not on the server yet is just dropped from the page.
+    if (!step.ruleStatusId) {
+      updateRoute((r) => {
+        r.steps = r.steps.filter((s) => s.id !== step.id);
+      });
+      setSelection(null);
+      toast.success("Step deleted");
+      return;
+    }
+    if (saving) return;
+    if (route.steps.length <= 1) {
+      toast.error("A workflow needs at least one step. Add another step first, or delete the whole route.");
+      return;
+    }
+    // A saved step is deleted on the server right away
+    // (PATCH workflow-status-active-inactive { isDeleted: true }).
+    const routeId = route.id;
+    dispatch(deleteSavedStep(route, step))
+      .then(({ messages }) => {
+        setRoutes((prev) => prev.map((r) => (r.id === routeId ? { ...r, steps: r.steps.filter((s) => s.id !== step.id) } : r)));
+        setSelection(null);
+        toast.success(messages.join("\n"));
+      })
+      .catch((e) => {
+        if (e.stepDeleted) {
+          // The delete went through; a later call (renumbering) failed.
+          setRoutes((prev) => prev.map((r) => (r.id === routeId ? { ...r, steps: r.steps.filter((s) => s.id !== step.id) } : r)));
+          setSelection(null);
+        }
+        toast.error(`Could not ${e.stepDeleted ? "finish deleting" : "delete"} the step: ${e.message}`, { duration: 8000 });
+      });
   };
 
   let inspector = <EmptyInspector />;
@@ -285,6 +323,7 @@ const OrderRoutes = () => {
       <StartRulesInspector
         routeName={route.name}
         rules={route.rules}
+        ruleNames={route.ruleNames}
         options={ruleOptions}
         onChange={(mutate) => updateRoute((r) => mutate(r.rules))}
         onClose={() => setSelection(null)}
@@ -297,6 +336,7 @@ const OrderRoutes = () => {
         route={route}
         step={selectedStep}
         statuses={statuses}
+        statusTypes={statusTypes}
         statusById={statusById}
         onChange={(mutate) => updateStep(selectedStep.id, mutate)}
         onClose={() => setSelection(null)}
@@ -314,7 +354,8 @@ const OrderRoutes = () => {
         dirty={dirty}
         onSelectRoute={selectRoute}
         onNewRoute={addRoute}
-        statusTypeId={route?.statusTypeId ?? 1}
+        statusTypeId={route?.statusTypeId ?? null}
+        statusTypes={statusTypes}
         statuses={statuses}
         usedIds={usedIds}
         query={libQuery}
@@ -358,18 +399,21 @@ const OrderRoutes = () => {
                   <option key={s}>{s}</option>
                 ))}
               </select>
-              <select
-                aria-label="Status master type"
-                value={route.statusTypeId}
-                onChange={(e) => updateRoute((r) => (r.statusTypeId = Number(e.target.value)))}
-                className={selectClass}
-              >
-                {Object.entries(STATUS_TYPES).map(([id, label]) => (
-                  <option key={id} value={id}>
-                    Type {id} · {label}
-                  </option>
-                ))}
-              </select>
+              {statusTypes.length > 0 && (
+                <select
+                  aria-label="Status master type"
+                  value={route.statusTypeId ?? ""}
+                  onChange={(e) => updateRoute((r) => (r.statusTypeId = e.target.value === "" ? null : Number(e.target.value)))}
+                  className={selectClass}
+                >
+                  <option value="">All status types</option>
+                  {statusTypes.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {statusTypeLabel(statusTypes, t.id)}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button type="button" onClick={() => setJsonOpen(true)} className={btnClass}>
                 <Braces className="h-3.5 w-3.5" /> Export JSON
               </button>
@@ -388,19 +432,14 @@ const OrderRoutes = () => {
               </button>
             </div>
 
-            {(isNewRouteId(route.id) ? mock.create : true) ? (
+            {!isNewRouteId(route.id) && (
               <p className="m-0 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                 <Info className="mt-0.5 h-3.5 w-3.5 flex-none" />
                 <span>
-                  {isNewRouteId(route.id)
-                    ? mock.create
-                      ? "Creating on the server is switched off, so this route lasts only until you reload. "
-                      : ""
-                    : mock.insertSteps
-                      ? "This route is saved on the server. Changes here last only until you reload. "
-                      : "This route is saved on the server. Save sends the steps you add; other changes (name, start rules, reorder, remove) have no API yet and last until you reload. "}                </span>
+                  This route is saved on the server. Save sends the name, start rules, the Active/Inactive switch, added steps, the step order and each step's Active switch. Changing a saved step's status has no API yet and lasts until you reload.
+                </span>
               </p>
-            ) : null}
+            )}
 
             <div className="flex flex-wrap overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
               <Stat label="Steps" value={summary.steps} />
@@ -412,6 +451,7 @@ const OrderRoutes = () => {
 
             <StartRulesCard
               rules={route.rules}
+              ruleNames={route.ruleNames}
               options={ruleOptions}
               selected={selection === "rules"}
               onSelect={() => setSelection("rules")}

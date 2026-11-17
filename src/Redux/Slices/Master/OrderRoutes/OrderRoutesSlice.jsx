@@ -1,94 +1,115 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { api } from "../../../../utils/axios";
-import { SAMPLE_STATUSES, normalizeStatuses } from "../../../../pages/Masters/MasterManagement/OrderRoutes/data/statusMaster";
+import { workflowApi } from "./workflowApi";
+import { mapStatusTypes, normalizeStatuses } from "../../../../pages/Masters/MasterManagement/OrderRoutes/data/statusMaster";
 import {
-  SAMPLE_RULE_OPTIONS,
+  EMPTY_RULE_OPTIONS,
   emptyRules,
   mapWorkflowDetails,
 } from "../../../../pages/Masters/MasterManagement/OrderRoutes/data/ruleOptions";
-import { buildSampleRoutes } from "../../../../pages/Masters/MasterManagement/OrderRoutes/data/sampleRoutes";
+import {
+  isActiveChanged,
+  isOrderChanged,
+  isUnsavedStep,
+  isDefaultRules,
+  sameRules,
+  toActiveBody,
+  toCreateWorkflowBody,
+  toDeleteStepBody,
+  toInsertStatusBody,
+  toModifyHeaderBody,
+  toReorderBody,
+} from "../../../../pages/Masters/MasterManagement/OrderRoutes/helpers";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// API HOOK-UP
-// Each call is switched on separately. A call marked `true` in MOCK uses sample
-// data or stays in memory (lost on reload). When an API is ready: set its flag
-// to false, put its path in ORDER_ROUTE_ENDPOINTS and check its mapper.
-// Paths are relative to VITE_BASE_URL (e.g. http://localhost:5300/api/).
-// ─────────────────────────────────────────────────────────────────────────────
-export const MOCK = {
-  masters: false, // live: GET WorkFlow/workflow-details (statuses + all Start Rules lists)
-  list: false, // live: GET WorkFlow/workflow-rule-status
-  create: false, // live: POST WorkFlow/create-workflow
-  insertSteps: false, // live: POST WorkFlow/insert-workflow-status (steps added to a saved route)
-  remove: true, // TODO: no delete API yet
-};
+// "D-14 SOUTH SIDE, B-BLOCK ,~AUTO NAGAR" -> "D-14 SOUTH SIDE, B-BLOCK, AUTO NAGAR"; blank -> "".
+const cleanText = (v) =>
+  String(v ?? "")
+    .replace(/~/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/\s+/g, " ")
+    .trim();
 
-export const ORDER_ROUTE_ENDPOINTS = {
-  masters: "WorkFlow/workflow-details",
-  list: "WorkFlow/workflow-rule-status",
-  create: "WorkFlow/create-workflow",
-  insertSteps: "WorkFlow/insert-workflow-status",
-  remove: (routeId) => `WorkFlow/delete-workflow/${routeId}`, // TODO: real path
-};
+// A rule's id with the name the API sent for it; null when the rule is "Any".
+const named = (id, name) => (id ? { id: Number(id), name: cleanText(name) } : null);
 
-// GET WorkFlow/workflow-rule-status returns, per workflow, only its header and
-// ordered statuses:
+// GET WorkFlow/workflow-rule-status returns, per workflow, its header, start
+// rules (ids + display names) and ordered statuses:
 //   { ruleHeaderID, workflowDescription,
-//     orderStatus: [{ ruleStatusID, statusName, statusMasterID, wayPointOrderID }] }
-// Start rules, step types, owners and SLAs are not in this response yet, so
-// they get defaults: every status becomes a Waypoint.
+//     entityID, entityName, customerCode, customerName, orderTypeID, orderTypeName,
+//     shipID, shipAddress, billID, billAddress, exportAuthorizeAddressID, exportAddress,
+//     orderStatus: [{ ruleStatusID, statusName, statusMasterID, wayPointOrderID, isActive? }] }
+// A rule id of 0 means "Any". Step types, owners and SLAs are not in this
+// response yet, so they get defaults: every status becomes a Waypoint.
 const mapWorkflowRuleStatus = (w, statuses) => {
   const steps = (w.orderStatus || [])
     .slice()
     .sort((a, b) => (a.wayPointOrderID ?? 0) - (b.wayPointOrderID ?? 0))
-    .map((s) => ({
-      id: `rs_${s.ruleStatusID}`,
-      ruleStatusId: s.ruleStatusID,
-      kind: "waypoint",
-      statusId: Number(s.statusMasterID),
-      name: "",
-      assigneeType: "Internal User",
-      assignment: "Direct",
-      assignee: "",
-      slaHours: null,
-      sendBack: [],
-    }));
-  // The response has no status type; infer it from the statuses used.
-  const types = new Set(steps.map((s) => statuses.find((x) => x.id === s.statusId)?.typeId).filter(Boolean));
+    .map((s) => {
+      // isActive is not in the GET yet: treat a step as active unless it says otherwise.
+      const active = s.isActive ?? s.IsActive;
+      return {
+        id: `rs_${s.ruleStatusID}`,
+        ruleStatusId: s.ruleStatusID,
+        wayPointOrderId: Number(s.wayPointOrderID) || null,
+        kind: "waypoint",
+        statusId: Number(s.statusMasterID),
+        name: "",
+        assigneeType: "Internal User",
+        assignment: "Direct",
+        assignee: "",
+        slaHours: null,
+        sendBack: [],
+        isActive: active == null ? null : Boolean(active),
+        serverActive: active == null ? null : Boolean(active),
+      };
+    });
+  // Use the route's type when the API sends it; otherwise infer it from the
+  // statuses used (null when they are mixed or untyped).
+  const types = new Set(steps.map((s) => statuses.find((x) => x.id === s.statusId)?.typeId).filter((t) => t != null));
+  const apiType = w.statusTypeId ?? w.typeId ?? w.typeID;
+  // Header isActive is not in the GET yet; a workflow counts as Active unless it says otherwise.
+  const headerActive = w.isActive ?? w.IsActive;
   return {
     id: w.ruleHeaderID,
     name: w.workflowDescription ?? "",
-    status: "Active",
-    statusTypeId: types.size === 1 ? [...types][0] : 1,
-    // Read the rule ids too, in case the GET starts returning them.
+    status: headerActive === false ? "Inactive" : "Active",
+    statusTypeId: apiType != null ? Number(apiType) : types.size === 1 ? [...types][0] : null,
     rules: {
       ...emptyRules(),
-      entityId: w.entityID || null,
-      exportAddressId: w.exportAuthorizeAddressID || null,
-      orderTypeId: w.orderTypeID || null,
-      customerId: w.customerCode || null,
-      shipId: w.shipID || null,
-      billId: w.billID || null,
+      entityId: Number(w.entityID) || null,
+      exportAddressId: Number(w.exportAuthorizeAddressID) || null,
+      orderTypeId: Number(w.orderTypeID) || null,
+      customerId: Number(w.customerCode) || null,
+      shipId: Number(w.shipID) || null,
+      billId: Number(w.billID) || null,
+    },
+    // Names the server sent for the saved rules, used when an id is not in
+    // the workflow-details lists. Each one applies only while its id is unchanged.
+    ruleNames: {
+      entityId: named(w.entityID, w.entityName),
+      exportAddressId: named(w.exportAuthorizeAddressID, w.exportAddress),
+      orderTypeId: named(w.orderTypeID, w.orderTypeName),
+      customerId: named(w.customerCode, w.customerName),
+      shipId: named(w.shipID, w.shipAddress),
+      billId: named(w.billID, w.billAddress),
     },
     steps,
   };
 };
 
-const errorMessage = (error) => error?.response?.data?.message || error?.message || String(error);
-
-const ensureSuccess = (res, fallback) => {
-  if (res.status < 200 || res.status >= 300) throw new Error("Unexpected response status: " + res.status);
-  if (res.data?.isSuccess === false) throw new Error(res.data?.message || fallback);
-};
-
 const initialState = {
   routes: [],
-  statuses: SAMPLE_STATUSES,
-  ruleOptions: SAMPLE_RULE_OPTIONS,
+  statuses: [],
+  statusTypes: [],
+  ruleOptions: EMPTY_RULE_OPTIONS,
   loading: false,
   saving: false,
   error: null,
-  mock: MOCK,
+  canDeleteOnServer: true, // PUT modify-workflow-configuration { isDelete: true }
+  // Active/Inactive set through modify-workflow-configuration, kept here
+  // because the GET does not return the header's isActive yet.
+  headerStatus: {},
+  // Ids deleted this session: the delete is soft and the GET still returns them.
+  deletedIds: [],
 };
 
 const orderRoutesSlice = createSlice({
@@ -106,21 +127,25 @@ const orderRoutesSlice = createSlice({
     setStatuses: (state, action) => {
       state.statuses = action.payload;
     },
+    setStatusTypes: (state, action) => {
+      state.statusTypes = action.payload;
+    },
     setRuleOptions: (state, action) => {
       state.ruleOptions = action.payload;
     },
     setSaving: (state, action) => {
       state.saving = action.payload;
     },
-    upsertRoute: (state, action) => {
-      const { route, replaceId } = action.payload;
-      const i = state.routes.findIndex((r) => r.id === (replaceId ?? route.id));
-      if (i >= 0) state.routes[i] = route;
-      else state.routes.push(route);
-      state.saving = false;
-    },
     removeRoute: (state, action) => {
       state.routes = state.routes.filter((r) => r.id !== action.payload);
+      delete state.headerStatus[action.payload];
+      if (!state.deletedIds.includes(action.payload)) state.deletedIds.push(action.payload);
+    },
+    setHeaderStatus: (state, action) => {
+      const { id, status } = action.payload;
+      state.headerStatus[id] = status;
+      const r = state.routes.find((x) => x.id === id);
+      if (r) r.status = status;
     },
     setRoutesError: (state, action) => {
       state.loading = false;
@@ -129,135 +154,129 @@ const orderRoutesSlice = createSlice({
   },
 });
 
-export const { setRoutesLoading, setRoutes, setStatuses, setRuleOptions, setSaving, upsertRoute, removeRoute, setRoutesError } =
-  orderRoutesSlice.actions;
+export const {
+  setRoutesLoading,
+  setRoutes,
+  setStatuses,
+  setStatusTypes,
+  setRuleOptions,
+  setSaving,
+  removeRoute,
+  setHeaderStatus,
+  setRoutesError,
+} = orderRoutesSlice.actions;
 
-// GET WorkFlow/workflow-details: status master + every Start Rules list
-// (legal entities, export addresses, order types, customers, ship addresses).
-// Lists that come back empty keep the sample fallback.
+// GET WorkFlow/workflow-details: status master, status types and every Start
+// Rules list (legal entities, export addresses, order types, customers, ship
+// addresses).
 export const getOrderRouteMasters = () => async (dispatch) => {
-  if (MOCK.masters) return;
   try {
-    const res = await api.get(ORDER_ROUTE_ENDPOINTS.masters);
-    ensureSuccess(res, "Could not load the workflow details.");
-    const data = res.data?.data || {};
-    const statuses = normalizeStatuses(data.orderStatuses || []);
-    if (statuses.length) dispatch(setStatuses(statuses));
-    const mapped = mapWorkflowDetails(data);
-    dispatch(setRuleOptions({ ...mapped, entities: mapped.entities.length ? mapped.entities : SAMPLE_RULE_OPTIONS.entities }));
+    const { data = {} } = await workflowApi.getDetails();
+    const statuses = normalizeStatuses(data?.orderStatuses || []);
+    dispatch(setStatuses(statuses));
+    dispatch(setStatusTypes(mapStatusTypes(data || {}, statuses)));
+    dispatch(setRuleOptions(mapWorkflowDetails(data || {})));
   } catch (error) {
     console.error("Failed to fetch workflow details:", error);
-    return Promise.reject(new Error(`Could not load statuses, entities and customers (${errorMessage(error)})`));
+    return Promise.reject(new Error(`Could not load statuses, entities and customers (${error.message})`));
   }
 };
 
 const fetchRoutes = async (getState) => {
-  const res = await api.get(ORDER_ROUTE_ENDPOINTS.list);
-  ensureSuccess(res, "The server could not return the workflows.");
-  const statuses = getState().orderRoutes?.statuses || SAMPLE_STATUSES;
-  const rows = Array.isArray(res.data?.data) ? res.data.data : [];
-  return rows.map((r) => mapWorkflowRuleStatus(r, statuses));
+  const { data } = await workflowApi.getWorkflows();
+  const { statuses = [], headerStatus = {}, deletedIds = [] } = getState().orderRoutes || {};
+  return (Array.isArray(data) ? data : [])
+    .filter((r) => !deletedIds.includes(r.ruleHeaderID) && r.isDelete !== true && r.IsDelete !== true)
+    .map((r) => {
+      const route = mapWorkflowRuleStatus(r, statuses);
+      const known = headerStatus[route.id];
+      return known && (r.isActive ?? r.IsActive) == null ? { ...route, status: known } : route;
+    });
 };
 
 // GET: all order routes
 export const getOrderRoutes = () => async (dispatch, getState) => {
   dispatch(setRoutesLoading());
-  if (MOCK.list) {
-    dispatch(setRoutes(buildSampleRoutes()));
-    return;
-  }
   try {
     dispatch(setRoutes(await fetchRoutes(getState)));
   } catch (error) {
     console.error("Failed to fetch order routes:", error);
-    dispatch(setRoutesError(errorMessage(error)));
-    return Promise.reject(new Error(errorMessage(error)));
+    dispatch(setRoutesError(error.message));
+    return Promise.reject(error);
   }
 };
 
-// Save one route.
-// - New route: POST create-workflow with bodies.create (toCreateWorkflowBody).
-// - Saved route: steps added since the last save go to POST
-//   insert-workflow-status with bodies.insert (toInsertStatusBody). There is
-//   no API yet for other edits (name, start rules, reorder, remove, change a
-//   step's status); those stay in memory and are listed in `notSaved`.
-// Resolves with { route, sentToServer, insertedCount, notSaved }.
-export const saveOrderRoute = (route, bodies, isNew) => async (dispatch, getState) => {
-  dispatch(setSaving(true));
-  try {
-    if (isNew) {
-      if (MOCK.create) {
-        const saved = { ...route, id: `route_${Date.now()}` };
-        dispatch(upsertRoute({ route: saved, replaceId: route.id }));
-        return { route: saved, sentToServer: false, insertedCount: 0, notSaved: [] };
-      }
-      const before = new Set(getState().orderRoutes.routes.map((r) => r.id));
-      const res = await api.post(ORDER_ROUTE_ENDPOINTS.create, bodies.create);
-      ensureSuccess(res, "The server could not create the workflow.");
-
-      // The create response shape is not fixed yet: use its ruleHeaderID when
-      // present, otherwise reload the list and pick the workflow that is new.
-      let newId = res.data?.data?.ruleHeaderID ?? res.data?.ruleHeaderID ?? null;
-      let serverRoute = null;
-      if (!MOCK.list) {
-        try {
-          const routes = await fetchRoutes(getState);
-          dispatch(setRoutes(routes));
-          if (newId == null) {
-            const added = routes.filter((r) => !before.has(r.id));
-            newId = (added.find((r) => r.name === bodies.create.workflowDescription) || added[added.length - 1])?.id ?? null;
-          }
-          serverRoute = routes.find((r) => r.id === newId) || null;
-        } catch (error) {
-          console.error("Created, but reloading the workflows failed:", error);
-        }
-      }
-      const saved = serverRoute
-        ? mergeServerRoute(serverRoute, route)
-        : { ...route, id: newId ?? `route_${Date.now()}`, steps: route.steps.map((s) => ({ ...s, persisted: true })) };
-      if (serverRoute) dispatch(setSaving(false));
-      else dispatch(upsertRoute({ route: saved, replaceId: newId ?? route.id }));
-      return { route: saved, sentToServer: true, insertedCount: 0, notSaved: [] };
-    }
-
-    // Existing route
-    const serverCopy = getState().orderRoutes.routes.find((r) => r.id === route.id);
-    const notSaved = unsupportedChanges(route, serverCopy);
-    const toInsert = bodies.insert.workFlows;
-
-    // The store keeps the server's copy, so later saves can still tell which
-    // edits never reached the server.
-    if (!toInsert.length || MOCK.insertSteps) {
-      dispatch(setSaving(false));
-      return { route, sentToServer: false, insertedCount: 0, notSaved: toInsert.length ? [...notSaved, "added steps"] : notSaved };
-    }
-
-    const res = await api.post(ORDER_ROUTE_ENDPOINTS.insertSteps, bodies.insert);
-    ensureSuccess(res, "The server could not add the steps.");
-
-    let saved = { ...route, steps: route.steps.map((s) => (s.ruleStatusId ? s : { ...s, persisted: true })) };
-    if (!MOCK.list) {
-      try {
-        const routes = await fetchRoutes(getState);
-        dispatch(setRoutes(routes));
-        const fresh = routes.find((r) => r.id === route.id);
-        if (fresh) saved = mergeServerRoute(fresh, route);
-      } catch (error) {
-        console.error("Steps added, but reloading the workflows failed:", error);
-      }
-    }
-    dispatch(setSaving(false));
-    return { route: saved, sentToServer: true, insertedCount: toInsert.length, notSaved };
-  } catch (error) {
-    console.error("Failed to save order route:", error);
-    dispatch(setSaving(false));
-    return Promise.reject(new Error(errorMessage(error)));
+// ─── Save ────────────────────────────────────────────────────────────────────
+// Which calls a save needs, from the route's current state:
+//   no ruleHeaderID (new route)          → 1  POST  create-workflow (full ordered list)
+//   saved route with steps added         → 2  POST  insert-workflow-status (new steps, at their positions)
+//                                           4  PUT   update-workflow-status-order (full ordered list)
+//   saved route with steps reordered     → 4  PUT   update-workflow-status-order (full ordered list)
+//   saved steps removed                  → 3  PATCH workflow-status-active-inactive { isDeleted: true } (one call per step)
+//                                           4  PUT   update-workflow-status-order (renumber 1, 2, 3…)
+//   saved steps switched on / off        → 3  PATCH workflow-status-active-inactive { isActive } (one call per step)
+//   name, start rules, workflow on / off → 5  PUT   modify-workflow-configuration (changed fields only)
+// Calls run in this order: deletes → 2 → 4 → 3 → 5, and stop at the first failure.
+//
+// Throws (before any call) when the route cannot be saved as it is.
+export function planSave(route, serverCopy, allRoutes, statusById) {
+  if (!serverCopy) {
+    // Same combination of set and empty fields as an active workflow.
+    const duplicate = allRoutes.find((r) => r.id !== route.id && r.status !== "Inactive" && sameRules(r.rules, route.rules));
+    if (duplicate)
+      throw new Error(
+        isDefaultRules(route.rules)
+          ? `A default workflow (all Start Rules on Any) is already active: “${duplicate.name || `#${duplicate.id}`}”. Only one default is allowed: open that one and change it, or switch it to Inactive first.`
+          : `An active workflow already has exactly these Start Rules: “${duplicate.name || `#${duplicate.id}`}”. Open that workflow and change it instead.`,
+      );
+    return { kind: "create", create: toCreateWorkflowBody(route, statusById), notSaved: [] };
   }
-};
+
+  // Saved steps the user removed from the page: deleted on the server.
+  const deletes = serverCopy.steps.filter((s) => !route.steps.some((l) => l.ruleStatusId === s.ruleStatusId));
+
+  const header = toModifyHeaderBody(route, serverCopy);
+  if (header && !sameRules(route.rules, serverCopy.rules)) {
+    const duplicate = allRoutes.find((r) => r.id !== route.id && r.status !== "Inactive" && sameRules(r.rules, route.rules));
+    if (duplicate)
+      throw new Error(
+        isDefaultRules(route.rules)
+          ? `A default workflow (all Start Rules on Any) is already active: “${duplicate.name || `#${duplicate.id}`}”.`
+          : `An active workflow already has exactly these Start Rules: “${duplicate.name || `#${duplicate.id}`}”.`,
+      );
+  }
+  const insert = route.steps.some(isUnsavedStep) ? toInsertStatusBody(route, statusById) : null;
+  return {
+    kind: "update",
+    deletes, // type 3 (delete)
+    insert, // type 2
+    reorder: Boolean(insert) || deletes.length > 0 || isOrderChanged(route), // type 4: also renumbers after a delete
+    toggles: route.steps.filter(isActiveChanged), // type 3
+    header, // type 5
+    notSaved: unsupportedChanges(route, serverCopy),
+  };
+}
+
+// Gives local steps that have no ruleStatusID the id of the matching server
+// row: by position (insert response) or by status (reloaded list). Keeps the
+// local order.
+function fillStepIds(route, serverRows) {
+  const claimed = new Set(route.steps.map((s) => s.ruleStatusId).filter(Boolean));
+  const pool = serverRows.filter((r) => r.ruleStatusId && !claimed.has(r.ruleStatusId));
+  const steps = route.steps.map((s, i) => {
+    if (s.ruleStatusId) return s;
+    let k = pool.findIndex((r) => r.wayPointOrderId === i + 1 && (r.statusId == null || r.statusId === s.statusId));
+    if (k < 0) k = pool.findIndex((r) => r.statusId === s.statusId);
+    if (k < 0) return s;
+    const row = pool.splice(k, 1)[0];
+    return { ...s, ruleStatusId: row.ruleStatusId, wayPointOrderId: row.wayPointOrderId ?? i + 1 };
+  });
+  return { ...route, steps };
+}
 
 // Server copy of a route + the local copy: take the server's step ids and
-// order, and keep the local-only details (step type, owner, SLA, send-back)
-// and start rules for this session.
+// order, and keep the local-only details (step type, owner, SLA, send-back,
+// active flag when the GET does not return it) and start rules for this session.
 function mergeServerRoute(server, local) {
   const unmatched = local.steps.filter((s) => !s.ruleStatusId);
   const steps = server.steps.map((ss) => {
@@ -266,37 +285,195 @@ function mergeServerRoute(server, local) {
       const i = unmatched.findIndex((l) => l.statusId === ss.statusId);
       if (i >= 0) ls = unmatched.splice(i, 1)[0];
     }
-    return ls ? { ...ls, id: ss.id, ruleStatusId: ss.ruleStatusId, statusId: ss.statusId } : ss;
+    if (!ls) return ss;
+    const isActive = ss.isActive ?? ls.isActive;
+    const serverActive = ss.serverActive ?? ls.serverActive;
+    return { ...ls, id: ss.id, ruleStatusId: ss.ruleStatusId, statusId: ss.statusId, wayPointOrderId: ss.wayPointOrderId, isActive, serverActive };
   });
-  return { ...server, rules: local.rules, status: local.status, statusTypeId: local.statusTypeId, steps };
+  return { ...server, rules: local.rules, ruleNames: server.ruleNames, status: local.status, statusTypeId: local.statusTypeId, steps };
 }
 
 // Edits to a saved route that no API can store yet.
 function unsupportedChanges(local, server) {
-  if (!server) return [];
   const notes = [];
-  if ((local.name || "").trim() !== (server.name || "").trim()) notes.push("route name");
-  if (JSON.stringify(local.rules) !== JSON.stringify(server.rules)) notes.push("start rules");
-  const localSaved = local.steps.filter((s) => s.ruleStatusId);
-  const serverSaved = server.steps.filter((s) => s.ruleStatusId);
-  if (serverSaved.some((s) => !localSaved.some((l) => l.ruleStatusId === s.ruleStatusId))) notes.push("removed steps");
-  if (localSaved.some((l) => serverSaved.find((s) => s.ruleStatusId === l.ruleStatusId)?.statusId !== l.statusId)) notes.push("changed statuses");
-  const order = (steps) => steps.map((s) => s.ruleStatusId).filter((id) => localSaved.some((l) => l.ruleStatusId === id) && serverSaved.some((x) => x.ruleStatusId === id));
-  if (order(localSaved).join(",") !== order(serverSaved).join(",")) notes.push("step order");
+  if (local.steps.some((l) => l.ruleStatusId && server.steps.find((s) => s.ruleStatusId === l.ruleStatusId)?.statusId !== l.statusId))
+    notes.push("changed statuses");
   return notes;
 }
 
-// DELETE: one saved route
-export const deleteOrderRoute = (routeId) => async (dispatch) => {
-  if (!MOCK.remove) {
-    try {
-      await api.delete(ORDER_ROUTE_ENDPOINTS.remove(routeId));
-    } catch (error) {
-      console.error("Failed to delete order route:", error);
-      return Promise.reject(new Error(errorMessage(error)));
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+// Save one route: works out the save types (planSave), runs them in order and
+// stops at the first failure, then reloads the workflow list.
+// Resolves with { route, messages, notSaved, sent }.
+// Rejects with an Error that also carries `route` (the local copy including
+// whatever did reach the server) and `messages` (the calls that succeeded).
+export const saveOrderRoute = (route, statusById) => async (dispatch, getState) => {
+  const state = getState().orderRoutes;
+  if (state.saving) throw new Error("A save is already in progress.");
+  const serverCopy = state.routes.find((r) => r.id === route.id) || null;
+  const plan = planSave(route, serverCopy, state.routes, statusById);
+
+  dispatch(setSaving(true));
+  const messages = [];
+  let working = route;
+  let reloaded = null;
+  const reload = async () => {
+    reloaded = await fetchRoutes(getState);
+    dispatch(setRoutes(reloaded));
+    return reloaded;
+  };
+
+  try {
+    if (plan.kind === "create") {
+      // Save type 1
+      const { message, data } = await workflowApi.create(plan.create);
+      const sent = plan.create.workFlowRuleStatus.length;
+      const inserted = Number(data?.totalStatusInserted);
+      messages.push(message || `Workflow created with ${plural(sent, "step")}.`);
+      if (Number.isFinite(inserted) && inserted < sent) messages.push(`Warning: the server stored ${inserted} of ${sent} steps.`);
+
+      const routes = await reload();
+      let newId = Number(data?.ruleHeaderID) || null;
+      if (!newId) {
+        const known = new Set(state.routes.map((r) => r.id));
+        newId = routes.find((r) => !known.has(r.id))?.id ?? null;
+      }
+      // Created workflows are active; switch off now if the user chose Inactive.
+      if (newId && route.status === "Inactive") {
+        const { message } = await workflowApi.modifyHeader({ ruleHeaderID: newId, isActive: false });
+        messages.push(message || "Workflow set to Inactive.");
+        dispatch(setHeaderStatus({ id: newId, status: "Inactive" }));
+      }
+      const fresh = routes.find((r) => r.id === newId);
+      return { route: fresh ? mergeServerRoute(fresh, route) : route, messages, notSaved: [], sent: true };
     }
+
+    const nothingToSend = !plan.deletes.length && !plan.insert && !plan.reorder && !plan.toggles.length && !plan.header;
+    if (nothingToSend) return { route, messages, notSaved: plan.notSaved, sent: false };
+
+    // Save type 3 (delete): saved steps removed on the page go first, so the
+    // positions of the steps added below are counted without them
+    let deleteMessage = "";
+    for (const step of plan.deletes) {
+      ({ message: deleteMessage } = await workflowApi.deleteStatus(toDeleteStepBody(step)));
+    }
+    if (plan.deletes.length === 1) messages.push(deleteMessage || "Step deleted.");
+    else if (plan.deletes.length > 1) messages.push(`Deleted ${plural(plan.deletes.length, "step")}.`);
+
+    // Save type 2: add the new steps at their positions
+    if (plan.insert) {
+      const { message, data } = await workflowApi.insertStatus(plan.insert);
+      messages.push(message || `Added ${plural(plan.insert.workFlows.length, "step")}.`);
+      const rows = data.map((r) => ({ ruleStatusId: r.ruleStatusID, wayPointOrderId: Number(r.wayPointOrderID) || null, statusId: null }));
+      working = fillStepIds(working, rows);
+      if (working.steps.some(isUnsavedStep)) {
+        // The response did not identify every new row: take the ids from the reloaded list.
+        const fresh = (await reload()).find((r) => r.id === route.id);
+        if (fresh) working = fillStepIds(working, fresh.steps);
+      }
+    }
+
+    // Save type 4: full ordered list, positions 1, 2, 3…
+    if (plan.reorder) {
+      if (working.steps.some(isUnsavedStep))
+        throw new Error("The new steps were added, but the server did not return their ids, so the step order could not be saved. Reload the page and save the order again.");
+      const { message, data } = await workflowApi.reorder(toReorderBody(working));
+      messages.push(message || `Step order saved (${plural(Number(data?.updatedRecords) || working.steps.length, "step")}).`);
+      working = { ...working, steps: working.steps.map((s, i) => ({ ...s, wayPointOrderId: i + 1 })) };
+    }
+
+    // Save type 3: one call per step whose Active switch changed
+    for (const step of plan.toggles) {
+      const body = toActiveBody(step);
+      const { message } = await workflowApi.setStatusActive(body);
+      messages.push(message || `Step #${step.statusId} ${body.isActive ? "activated" : "deactivated"}.`);
+      working = {
+        ...working,
+        steps: working.steps.map((s) => (s.ruleStatusId === step.ruleStatusId ? { ...s, serverActive: body.isActive } : s)),
+      };
+    }
+
+    // Save type 5: name, start rules, whole-workflow switch (changed fields only)
+    if (plan.header) {
+      const { message } = await workflowApi.modifyHeader(plan.header);
+      messages.push(message || "Workflow details updated.");
+      if (plan.header.isActive != null) dispatch(setHeaderStatus({ id: route.id, status: plan.header.isActive ? "Active" : "Inactive" }));
+    }
+
+    const fresh = (await reload()).find((r) => r.id === route.id);
+    return { route: fresh ? mergeServerRoute(fresh, working) : working, messages, notSaved: plan.notSaved, sent: true };
+  } catch (error) {
+    console.error("Failed to save order route:", error);
+    // Show the newest server state for whatever did succeed.
+    if (messages.length && !reloaded) {
+      try {
+        await reload();
+      } catch (e) {
+        console.error("Reloading the workflows failed:", e);
+      }
+    }
+    const err = new Error(error.message);
+    err.route = working;
+    err.messages = messages;
+    throw err;
+  } finally {
+    dispatch(setSaving(false));
   }
-  dispatch(removeRoute(routeId));
+};
+
+// Delete ONE saved step right away (the Delete step button):
+//   PATCH workflow-status-active-inactive { ruleStatusID, isActive: false, isDeleted: true }
+// then PUT update-workflow-status-order renumbers the remaining saved steps
+// 1, 2, 3… in the server's own order (so a reorder the user has not saved yet
+// is not saved by accident), then the list is reloaded.
+// Resolves with { messages }; rejects with an Error carrying `messages` when a
+// later call fails after the delete already went through.
+export const deleteSavedStep = (route, step) => async (dispatch, getState) => {
+  const state = getState().orderRoutes;
+  if (state.saving) throw new Error("A save is already in progress.");
+  const serverCopy = state.routes.find((r) => r.id === route.id);
+  dispatch(setSaving(true));
+  const messages = [];
+  try {
+    const { message } = await workflowApi.deleteStatus(toDeleteStepBody(step));
+    messages.push(message || "Step deleted.");
+    const rest = (serverCopy?.steps || []).filter((s) => s.ruleStatusId && s.ruleStatusId !== step.ruleStatusId);
+    if (rest.length) {
+      const { message: m } = await workflowApi.reorder({
+        ruleHeaderID: route.id,
+        workflowStatuses: rest.map((s, i) => ({ ruleStatusID: s.ruleStatusId, wayPointOrderID: i + 1 })),
+      });
+      messages.push(m || "Step order saved.");
+    }
+    try {
+      dispatch(setRoutes(await fetchRoutes(getState)));
+    } catch (e) {
+      console.error("Step deleted, but reloading the workflows failed:", e);
+    }
+    return { messages };
+  } catch (error) {
+    console.error("Failed to delete the step:", error);
+    const err = new Error(error.message);
+    err.messages = messages;
+    err.stepDeleted = messages.length > 0;
+    throw err;
+  } finally {
+    dispatch(setSaving(false));
+  }
+};
+
+// Delete one saved route: PUT modify-workflow-configuration { isDelete: true }.
+// Resolves with the server's message.
+export const deleteOrderRoute = (routeId) => async (dispatch) => {
+  try {
+    const { message } = await workflowApi.remove(routeId);
+    dispatch(removeRoute(routeId));
+    return message;
+  } catch (error) {
+    console.error("Failed to delete order route:", error);
+    return Promise.reject(error);
+  }
 };
 
 export default orderRoutesSlice.reducer;

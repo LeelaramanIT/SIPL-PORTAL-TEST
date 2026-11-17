@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, Search } from "lucide-react";
-import { CATEGORY_ORDER, STATUS_TYPES, prettyStatus } from "../data/statusMaster";
+import { CATEGORY_ORDER, matchesType, prettyStatus, statusTypeLabel } from "../data/statusMaster";
 
 // Left column: list of order routes + status library for the current route's
 // status type. Statuses can be clicked (added after the selected step) or
@@ -12,6 +12,7 @@ const RouteRail = ({
   onSelectRoute,
   onNewRoute,
   statusTypeId,
+  statusTypes,
   statuses,
   usedIds,
   query,
@@ -19,7 +20,7 @@ const RouteRail = ({
   onAddStatus,
 }) => {
   const q = query.trim().toUpperCase();
-  const list = statuses.filter((s) => s.typeId === statusTypeId && (!q || s.text.includes(q) || String(s.id) === q));
+  const list = statuses.filter((s) => matchesType(s, statusTypeId) && (!q || s.text.includes(q) || String(s.id) === q));
 
   return (
     <aside className="flex min-h-0 flex-col gap-4 lg:w-[250px] lg:flex-none">
@@ -44,7 +45,7 @@ const RouteRail = ({
                   <span className="truncate">{r.name || "Untitled order route"}</span>
                 </span>
                 <span className="text-[11.5px] text-slate-500 dark:text-slate-400">
-                  {r.status} · {r.steps.length} steps · {STATUS_TYPES[r.statusTypeId]}
+                  {r.status} · {r.steps.length} steps{r.statusTypeId != null ? ` · ${statusTypeLabel(statusTypes, r.statusTypeId)}` : ""}
                 </span>
               </button>
             );
@@ -62,7 +63,7 @@ const RouteRail = ({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 max-lg:max-h-[320px]">
         <div className="flex flex-col gap-1.5 px-3 pt-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-            Status library · Type {statusTypeId} {STATUS_TYPES[statusTypeId]}
+            Status library{statusTypeId != null ? ` · ${statusTypeLabel(statusTypes, statusTypeId)}` : ""}
           </p>
           <p className="text-[12px] text-slate-500 dark:text-slate-400">
             Click to add after the selected step, or drag into the timeline.
